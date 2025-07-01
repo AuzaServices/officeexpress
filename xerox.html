@@ -190,7 +190,6 @@
   right: 8px;
 }
 
-
 #botao-whatsapp {
   background-color: #25D366;
   color: #fff;
@@ -204,6 +203,8 @@
   gap: 10px;
   transition: background 0.3s ease;
   width: 100%;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 #botao-whatsapp:hover:enabled {
@@ -212,24 +213,24 @@
 }
 
 #botao-whatsapp:disabled {
-  background-color: #c9e9d7;
+  background-color: #c3e9d4;
   color: #666;
   cursor: not-allowed;
 }
 
-@keyframes atencaoZap {
+.botao-whatsapp-destaque {
+  animation: pulseZap 0.6s ease-in-out 3;
+}
+
+@keyframes pulseZap {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 15px 6px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 0 12px 6px rgba(37, 211, 102, 0.4);
   }
-}
-
-.botao-whatsapp-destaque {
-  animation: atencaoZap 0.6s ease-in-out 3;
 }
   </style>
 </head>
@@ -464,21 +465,12 @@ function gerarPDF() {
       slot.style.padding = s.padding;
       slot.style.boxSizing = s.boxSizing;
 
-const botaoZap = document.getElementById("botao-whatsapp");
+      const botaoZap = document.getElementById("botao-whatsapp");
 botaoZap.disabled = false;
 botaoZap.style.opacity = "1";
 botaoZap.style.cursor = "pointer";
-
-// ADICIONA CLASSE COM ANIMAÇÃO
-botaoZap.classList.add("botao-whatsapp-destaque");
-
-// REMOVE DEPOIS DE RODAR PRA NÃO REAPLICAR SEM QUERER
-setTimeout(() => {
-  botaoZap.classList.remove("botao-whatsapp-destaque");
-}, 1800);
-
 botaoZap.onclick = () => {
-  const msg = encodeURIComponent("📄 Olá! Segue em anexo o PDF para impressão.");
+  const msg = encodeURIComponent("Olá! Segue em anexo o PDF para impressão.");
   window.open(`https://wa.me/5585991340658?text=${msg}`, "_blank");
 };
     });
