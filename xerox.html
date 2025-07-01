@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Xerox - Office Express</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      background-color: #00324a;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .folha-a4 {
+      background: white;
+      width: 100%;
+      max-width: 320px;
+      aspect-ratio: 794 / 1123;
+      display: grid;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+      box-sizing: border-box;
+    }
+
+    .layout-documentos {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .layout-comprovante {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+      place-items: center;
+    }
+
+    .layout-outros {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .slot {
+      background: white;
+      border: 2px dashed #999;
+      border-radius: 10px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+.slot.comprovante {
+  background-color: white;
+  border: 2px dashed #999;
+  width: 60%;
+  height: 90%;
+  align-self: center;
+  justify-self: center;
+}
+
+    .slot.outros {
+      border-color: #999;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slot input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .slot img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .remover-btn {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      background: rgba(255, 0, 0, 0.6);
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+      z-index: 3;
+    }
+
+    .slot:hover .remover-btn {
+      display: block;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 30px;
+    }
+
+    select {
+      padding: 8px 12px;
+      font-size: 1rem;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      color: #00324a;
+      border: none;
+    }
+
+    .botao-principal {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #eaa800;
+      color: #00324a;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .voltar {
+      margin-top: 10px;
+      text-decoration: none;
+      padding: 10px 20px;
+      background: white;
+      color: #00324a;
+      font-weight: bold;
+      border-radius: 6px;
+    }
+
+    .icone-svg {
+  width: 48px;
+  height: 48px;
+  fill: #aaa;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.faixa-topo {
+  background-color: black;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 0;
+  border-radius: 10px;
+  margin-bottom: -0px;
+  margin-top: 4px;
+  width: 100%;
+  max-width: 320px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.rotulo-frente,
+.rotulo-verso {
+  position: absolute;
+  bottom: 6px;
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rotulo-frente {
+  left: 8px;
+}
+
+.rotulo-verso {
+  right: 8px;
+}
+  </style>
+</head>
+<body>
+  <h1>Envie seus arquivos</h1>
+  <label for="tipo">Escolha o tipo de documento:</label>
+  <select id="tipo" onchange="trocarTipo()">
+    <option value="documentos">Documentos</option>
+    <option value="comprovante">Comprovante de Endereço</option>
+    <option value="outros">Outros</option>
+  </select>
+
+  <div class="faixa-topo">Folha de Papel A4</div>
+  <div id="folha" class="folha-a4"></div>
+
+  <button class="botao-principal" onclick="gerarPDF()">Enviar para Impressão</button>
+  <a class="voltar" href="index.html">← Voltar</a>
+
+  <script>
+    const folha = document.getElementById("folha");
+
+function trocarTipo() {
+  folha.innerHTML = "";
+  folha.classList.remove("layout-documentos", "layout-comprovante", "layout-outros");
+
+  const tipo = document.getElementById("tipo").value;
+
+  if (tipo === "documentos") {
+    folha.classList.add("layout-documentos");
+    for (let i = 0; i < 8; i++) {
+      folha.appendChild(criarSlot("", i)); // 👉 passa index para aplicar Frente/Verso
+    }
+
+  } else if (tipo === "comprovante") {
+    folha.classList.add("layout-comprovante");
+    folha.appendChild(criarSlot("comprovante")); // 👉 sem índice
+  } else if (tipo === "outros") {
+    folha.classList.add("layout-outros");
+    folha.appendChild(criarSlot("outros")); // 👉 sem índice
+  }
+}
+
+function criarSlot(extraClass = "", index = null) {
+  const slot = document.createElement("div");
+  slot.className = "slot" + (extraClass ? " " + extraClass : "");
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = () => preview(input);
+
+  const remover = document.createElement("button");
+  remover.className = "remover-btn";
+  remover.textContent = "x";
+  remover.onclick = () => removerImagem(remover);
+
+  const icone = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icone.setAttribute("class", "icone-svg");
+  icone.setAttribute("viewBox", "0 0 24 24");
+  icone.innerHTML = `
+    <path d="M21 19V5c0-1.1-.9-2-2-2H5a2 
+             2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2
+             2 0 0 0 2-2ZM8.5 13.5l2.5 3.01L14.5
+             12l4.5 6H5l3.5-4.5ZM6.5 9A1.5 1.5 
+             0 1 1 8 10.5 1.5 1.5 0 0 1 6.5 9Z"/>
+  `;
+
+  // Só adiciona rótulo se o índice for número (ou seja, veio da opção Documentos)
+  if (typeof index === "number") {
+    const rotulo = document.createElement("div");
+    rotulo.className = (index % 2 === 0 ? "rotulo-frente" : "rotulo-verso") + " so-na-tela";
+    rotulo.textContent = index % 2 === 0 ? "Frente" : "Verso";
+    slot.appendChild(rotulo);
+  }
+
+  slot.appendChild(input);
+  slot.appendChild(remover);
+  slot.appendChild(icone);
+  return slot;
+}
+
+function preview(input) {
+  const slot = input.parentElement;
+
+  // Remove imagem antiga, se existir
+  const imgAntiga = slot.querySelector("img");
+  if (imgAntiga) slot.removeChild(imgAntiga);
+
+  // Remove o ícone SVG se estiver presente
+  const icone = slot.querySelector(".icone-svg");
+  if (icone) slot.removeChild(icone);
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const img = document.createElement("img");
+    img.src = e.target.result;
+    slot.appendChild(img);
+    slot.querySelector(".remover-btn").style.display = "block";
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removerImagem(button) {
+  const slot = button.parentElement;
+  const img = slot.querySelector("img");
+  const input = slot.querySelector("input[type='file']");
+  if (img) slot.removeChild(img);
+  input.value = "";
+  button.style.display = "none";
+
+  // Reinsere o ícone SVG se estiver ausente
+  if (!slot.querySelector(".icone-svg")) {
+    const novoSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    novoSvg.setAttribute("class", "icone-svg");
+    novoSvg.setAttribute("viewBox", "0 0 24 24");
+    novoSvg.innerHTML = `
+      <path d="M21 19V5c0-1.1-.9-2-2-2H5a2 
+               2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2
+               2 0 0 0 2-2ZM8.5 13.5l2.5 3.01L14.5
+               12l4.5 6H5l3.5-4.5ZM6.5 9A1.5 1.5 
+               0 1 1 8 10.5 1.5 1.5 0 0 1 6.5 9Z"/>
+    `;
+    slot.appendChild(novoSvg);
+  }
+}
+
+    function esperarImagensCarregarem(container) {
+      const imagens = container.querySelectorAll("img");
+      return Promise.all([...imagens].map(img => {
+        return img.complete ? Promise.resolve() : new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      }));
+    }
+
+function gerarPDF() {
+  const folhaOriginal = document.getElementById("folha");
+
+  // Guarda estilos da folha
+  const estiloAnterior = {
+    maxWidth: folhaOriginal.style.maxWidth,
+    width: folhaOriginal.style.width,
+    height: folhaOriginal.style.height
+  };
+
+  folhaOriginal.style.maxWidth = "794px";
+  folhaOriginal.style.width = "794px";
+  folhaOriginal.style.height = "1123px";
+
+  // Ajuste dos slots (cada um ocupa a largura inteira)
+  const slots = folhaOriginal.querySelectorAll(".slot");
+  const slotEstiloAntigo = [];
+
+  slots.forEach((slot, i) => {
+    slotEstiloAntigo[i] = {
+      border: slot.style.border,
+      margin: slot.style.margin,
+      width: slot.style.width,
+      display: slot.style.display,
+      padding: slot.style.padding,
+      boxSizing: slot.style.boxSizing
+    };
+
+    slot.style.border = "none";
+    slot.style.margin = "0";
+    slot.style.width = "75%";
+    slot.style.display = "block";
+    slot.style.padding = "0";
+    slot.style.boxSizing = "border-box";
+  });
+
+  // Esconde botões "Remover"
+  const botoesRemover = folhaOriginal.querySelectorAll(".remover-btn");
+  botoesRemover.forEach(btn => {
+    btn.style.display = "none";
+  });
+
+  // Ajuste das imagens: ocupam tudo, respeitam proporção e não cortam
+  const imagens = folhaOriginal.querySelectorAll("img");
+  const tamanhosOriginais = [];
+
+  imagens.forEach((img, i) => {
+    tamanhosOriginais[i] = {
+      width: img.style.width,
+      height: img.style.height,
+      maxWidth: img.style.maxWidth,
+      objectFit: img.style.objectFit
+    };
+
+    img.style.width = "100%";
+    img.style.maxWidth = "100%";
+    img.style.height = "auto";
+    img.style.objectFit = "contain";
+    img.style.display = "block";
+    img.style.boxSizing = "border-box";
+  });
+
+  // Esconde "frente/verso"
+  const elementosSoNaTela = folhaOriginal.querySelectorAll(".so-na-tela");
+  elementosSoNaTela.forEach(el => el.style.display = "none");
+
+  const opt = {
+    margin: 0,
+    filename: "pedido-xerox.pdf",
+    image: { type: "jpeg", quality: 1 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+
+  html2pdf().from(folhaOriginal).set(opt).save().then(() => {
+    // Restaura "frente/verso"
+    elementosSoNaTela.forEach(el => el.style.display = "block");
+
+    // Restaura folha
+    folhaOriginal.style.maxWidth = estiloAnterior.maxWidth;
+    folhaOriginal.style.width = estiloAnterior.width;
+    folhaOriginal.style.height = estiloAnterior.height;
+
+    // Restaura slots
+    slots.forEach((slot, i) => {
+      const s = slotEstiloAntigo[i];
+      slot.style.border = s.border;
+      slot.style.margin = s.margin;
+      slot.style.width = s.width;
+      slot.style.display = s.display;
+      slot.style.padding = s.padding;
+      slot.style.boxSizing = s.boxSizing;
+    });
+
+    // Restaura imagens
+    imagens.forEach((img, i) => {
+      img.style.width = tamanhosOriginais[i].width;
+      img.style.height = tamanhosOriginais[i].height;
+      img.style.maxWidth = tamanhosOriginais[i].maxWidth;
+      img.style.objectFit = tamanhosOriginais[i].objectFit;
+    });
+
+    // Restaura botões
+    botoesRemover.forEach(btn => {
+      btn.style.display = "block";
+    });
+
+    // Abre WhatsApp
+    const msg = encodeURIComponent("PDF finalizado com imagens grandes e sem cortes! Tá na mão.");
+    window.open(`https://wa.me/5585991340658?text=${msg}`, "_blank");
+  });
+}
+    
+    trocarTipo();
+    
+  </script>
+</body>
+</html>

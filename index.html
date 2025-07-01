@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Office Express</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #00324a;
+      color: white;
+      text-align: center;
+    }
+
+    header {
+      padding: 20px;
+    }
+
+    header img {
+      max-width: 200px;
+      height: auto;
+    }
+
+    .descricao {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1.2rem;
+    }
+
+    .grid-imagens {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .grid-imagens a {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.2s;
+      text-decoration: none;
+    }
+
+    .grid-imagens a:hover {
+      transform: scale(1.05);
+    }
+
+    .grid-imagens img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+
+    .legenda {
+      background-color: #000;
+      color: #fff;
+      padding: 10px 0;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo.jpg" alt="Logo da Empresa" />
+  </header>
+
+  <div class="descricao">
+    <p>
+      Somos uma empresa especializada em impressão de currículos, xerox, boletos, IPVA e outros serviços rápidos e acessíveis para facilitar o seu dia.
+    </p>
+  </div>
+
+  <div class="grid-imagens">
+    <a href="#curriculo">
+      <img src="imagem1.png" alt="Impressão de Currículo" />
+      <div class="legenda">Impressão</div>
+    </a>
+<a href="xerox.html">
+  <img src="imagem2.jpg" alt="Serviço de Xerox" />
+  <div class="legenda">Xerox</div>
+</a>
+  </div>
+</body>
+</html>
