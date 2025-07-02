@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Visualização do Currículo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      background: #eaeaea;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    .a4 {
+      width: 794px;
+      height: 1123px;
+      margin: 40px auto;
+      background: white;
+      padding: 50px 60px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #00324a;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-top: 30px;
+      color: #00324a;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    .info-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+    }
+
+    .dados {
+      flex: 1;
+    }
+
+    .foto {
+      width: 120px;
+      height: 120px;
+      border-radius: 60px;
+      object-fit: cover;
+      border: 2px solid #ccc;
+      margin-left: 30px;
+    }
+
+    p, li {
+      font-size: 14px;
+      margin: 6px 0;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    .botoes {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .botoes button {
+      margin: 0 10px;
+      background-color: #00324a;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media screen and (max-width: 850px) {
+      .a4 {
+        width: 100%;
+        height: auto;
+        margin: 10px;
+        padding: 20px;
+      }
+
+      .info-topo {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .foto {
+        margin: 20px 0 0 0;
+      }
+
+      .botoes button {
+        margin-top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="a4" id="curriculo">
+    <div class="info-topo">
+      <div class="dados">
+        <h1 id="c-nome"></h1>
+        <p id="c-email"></p>
+        <p id="c-telefone"></p>
+        <p id="c-endereco"></p>
+      </div>
+      <img id="foto-preview" class="foto" src="" alt="Foto" style="display:none;" />
+    </div>
+
+    <div id="secao-objetivo"></div>
+    <div id="secao-experiencia"></div>
+    <div id="secao-formacao"></div>
+    <div id="secao-habilidades"></div>
+    <div id="secao-hobbies"></div>
+  </div>
+
+  <div class="botoes">
+    <button onclick="history.back()">⬅ Voltar</button>
+    <button onclick="gerarPDF()">📄 Baixar PDF</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+
+    document.getElementById("c-nome").textContent = dados.nome || "";
+    if (dados.email) document.getElementById("c-email").innerHTML = "<strong>Email:</strong> " + dados.email;
+    if (dados.telefone) document.getElementById("c-telefone").innerHTML = "<strong>Telefone:</strong> " + dados.telefone;
+    if (dados.endereco) document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + dados.endereco;
+
+    if (dados.foto) {
+      const img = document.getElementById("foto-preview");
+      img.src = dados.foto;
+      img.style.display = "block";
+    }
+
+    const addSecao = (id, titulo, texto) => {
+      if (texto && texto.trim()) {
+        document.getElementById(id).innerHTML = `<h2>${titulo}</h2><p>${texto}</p>`;
+      }
+    };
+
+    addSecao("secao-objetivo", "Objetivo", dados.objetivo);
+    addSecao("secao-formacao", "Formação Acadêmica", dados.formacao);
+    addSecao("secao-habilidades", "Habilidades", dados.habilidades);
+    addSecao("secao-hobbies", "Hobbies", dados.hobbies);
+
+    if (Array.isArray(dados.empresa)) {
+      let html = "";
+      for (let i = 0; i < dados.empresa.length; i++) {
+        const empresa = dados.empresa[i]?.trim();
+        const cargo = dados.cargo[i]?.trim();
+        const periodo = dados.periodo[i]?.trim();
+        const atividades = dados.atividades[i]?.trim();
+
+        if (empresa || cargo || periodo || atividades) {
+          html += "<li>";
+          if (empresa) html += `<strong>${empresa}</strong>`;
+          if (cargo) html += ` — ${cargo}`;
+          if (periodo) html += ` <em>(${periodo})</em>`;
+          if (atividades) html += `<br><span>${atividades}</span>`;
+          html += "</li>";
+        }
+      }
+
+      if (html) {
+        document.getElementById("secao-experiencia").innerHTML =
+          `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
+      }
+    }
+
+    async function gerarPDF() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const canvas = await html2canvas(document.getElementById("curriculo"), { scale: 2 });
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const width = pdf.internal.pageSize.getWidth();
+      const height = canvas.height * (width / canvas.width);
+      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+      pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+    }
+  </script>
+</body>
+</html>

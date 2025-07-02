@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Criar Currículo | Office Express</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00324a;
+      --accent: #00c896;
+      --background: #f4f7fa;
+      --card: #ffffff;
+      --border: #d9e2ec;
+      --text: #1f2933;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 30px;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 6px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #fff;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .form-row > div {
+      flex: 1 1 45%;
+    }
+
+    .experiencia {
+      background-color: #f0f4f8;
+      border-left: 4px solid var(--accent);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .botao {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      padding: 16px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 30px;
+    }
+
+    .botao:hover {
+      background-color: #005877;
+    }
+
+    .sub-botao {
+      background-color: var(--accent);
+      color: #fff;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row > div {
+        flex: 1 1 100%;
+      }
+
+      .container {
+        padding: 25px;
+        margin: 20px;
+      }
+
+      input, textarea {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Criar Currículo Profissional</h1>
+    <form id="formulario">
+      <label>Foto</label>
+      <input type="file" id="foto" accept="image/*" />
+
+      <div class="form-row">
+        <div>
+          <label>Nome Completo</label>
+          <input type="text" name="nome" required />
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" name="email" required />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Telefone</label>
+          <input type="text" name="telefone" />
+        </div>
+        <div>
+          <label>Endereço</label>
+          <input type="text" name="endereco" />
+        </div>
+      </div>
+
+      <label>Objetivo</label>
+      <textarea name="objetivo" required></textarea>
+
+      <label>Experiência Profissional</label>
+      <div id="experiencias">
+        <div class="experiencia">
+          <input type="text" name="empresa[]" placeholder="Empresa" />
+          <input type="text" name="cargo[]" placeholder="Cargo" />
+          <input type="text" name="periodo[]" placeholder="Período (ex: 2020–2023)" />
+          <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+        </div>
+      </div>
+
+      <button type="button" class="botao sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
+
+      <label>Formação Acadêmica</label>
+      <textarea name="formacao" required></textarea>
+
+      <label>Habilidades</label>
+      <textarea name="habilidades"></textarea>
+
+      <label>Hobbies</label>
+      <textarea name="hobbies"></textarea>
+
+      <button type="submit" class="botao">Visualizar Currículo</button>
+    </form>
+  </div>
+
+  <script>
+    function adicionarExperiencia() {
+      const container = document.getElementById("experiencias");
+      const nova = document.createElement("div");
+      nova.className = "experiencia";
+      nova.innerHTML = `
+        <input type="text" name="empresa[]" placeholder="Empresa" />
+        <input type="text" name="cargo[]" placeholder="Cargo" />
+        <input type="text" name="periodo[]" placeholder="Período (ex: 2020–2023)" />
+        <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+      `;
+      container.appendChild(nova);
+    }
+
+    document.getElementById("formulario").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = e.target;
+
+      const valores = nome => Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map(el => el.value.trim());
+
+      const dados = {
+        nome: form.nome.value.trim(),
+        email: form.email.value.trim(),
+        telefone: form.telefone.value.trim(),
+        endereco: form.endereco.value.trim(),
+        objetivo: form.objetivo.value.trim(),
+        formacao: form.formacao.value.trim(),
+        habilidades: form.habilidades.value.trim(),
+        hobbies: form.hobbies.value.trim(),
+        empresa: valores("empresa"),
+        cargo: valores("cargo"),
+        periodo: valores("periodo"),
+        atividades: valores("atividades"),
+        foto: null
+      };
+
+      const foto = document.getElementById("foto");
+      if (foto.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          dados.foto = event.target.result;
+          salvar(dados);
+        };
+        reader.readAsDataURL(foto.files[0]);
+      } else {
+        salvar(dados);
+      }
+    });
+
+    function salvar(dados) {
+      localStorage.setItem("curriculo", JSON.stringify(dados));
+      window.location.href = "visualizar.html";
+    }
+  </script>
+</body>
+</html
