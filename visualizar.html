@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Visualização do Currículo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=794, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     html, body {
       margin: 0;
@@ -22,13 +22,13 @@
     }
 
     h1 {
-      font-size: 28px;
+      font-size: 32px;
       margin-bottom: 10px;
       color: #00324a;
     }
 
     h2 {
-      font-size: 18px;
+      font-size: 20px;
       margin-top: 30px;
       color: #00324a;
       border-bottom: 1px solid #ccc;
@@ -56,8 +56,9 @@
     }
 
     p, li {
-      font-size: 14px;
-      margin: 6px 0;
+      font-size: 16px;
+      margin: 8px 0;
+      line-height: 1.6;
     }
 
     ul {
@@ -71,36 +72,18 @@
     }
 
     .botoes button {
-      margin: 0 10px;
+      margin: 0 12px;
       background-color: #00324a;
       color: white;
-      padding: 12px 20px;
+      padding: 16px 28px;
+      font-size: 18px;
       border: none;
-      font-size: 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
     }
 
-    @media screen and (max-width: 850px) {
-      .a4 {
-        width: 100%;
-        height: auto;
-        margin: 10px;
-        padding: 20px;
-      }
-
-      .info-topo {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .foto {
-        margin: 20px 0 0 0;
-      }
-
-      .botoes button {
-        margin-top: 15px;
-      }
+    .botoes button:hover {
+      background-color: #005066;
     }
   </style>
 </head>
