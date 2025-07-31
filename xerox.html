@@ -284,6 +284,14 @@ function trocarTipo() {
   }
 }
 
+function recortarImagem(botaoTesoura) {
+  const slot = botaoTesoura.parentElement;
+  const img = slot.querySelector("img");
+  if (img) {
+    img.classList.toggle("img-recortada");
+  }
+}
+
 function criarSlot(extraClass = "", index = null) {
   const slot = document.createElement("div");
   slot.className = "slot" + (extraClass ? " " + extraClass : "");
@@ -372,14 +380,6 @@ function removerImagem(button) {
     `;
     slot.appendChild(novoSvg);
   }
-
-function recortarImagem(botaoTesoura) {
-  const slot = botaoTesoura.parentElement;
-  const img = slot.querySelector("img");
-  if (img) {
-    img.classList.toggle("img-recortada");
-  }
-}
 
 }
 
