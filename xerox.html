@@ -232,6 +232,12 @@
     box-shadow: 0 0 12px 6px rgba(37, 211, 102, 0.4);
   }
 }
+
+.img-recortada {
+  clip-path: inset(50px 50px 50px 50px); /* top right bottom left */
+  transition: clip-path 0.3s ease;
+}
+
   </style>
 </head>
 <body>
@@ -292,6 +298,13 @@ function criarSlot(extraClass = "", index = null) {
   remover.textContent = "x";
   remover.onclick = () => removerImagem(remover);
 
+  // ✂️ Botão da tesoura
+  const tesoura = document.createElement("button");
+  tesoura.className = "tesoura-btn";
+  tesoura.textContent = "✂️";
+  tesoura.onclick = () => recortarImagem(slot);
+
+  // Ícone SVG (mantido como está)
   const icone = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   icone.setAttribute("class", "icone-svg");
   icone.setAttribute("viewBox", "0 0 24 24");
@@ -303,6 +316,20 @@ function criarSlot(extraClass = "", index = null) {
              0 1 1 8 10.5 1.5 1.5 0 0 1 6.5 9Z"/>
   `;
 
+  // Adiciona tudo ao slot
+  slot.appendChild(input);
+  slot.appendChild(remover);
+  slot.appendChild(tesoura);
+  slot.appendChild(icone);
+
+  return slot;
+
+function recortarImagem(slot) {
+  const img = slot.querySelector("img");
+  if (img) {
+    img.classList.toggle("img-recortada");
+  }
+}
   // Só adiciona rótulo se o índice for número (ou seja, veio da opção Documentos)
   if (typeof index === "number") {
     const rotulo = document.createElement("div");
