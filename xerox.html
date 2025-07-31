@@ -379,14 +379,17 @@ function gerarPDF() {
   const estiloAnterior = {
     maxWidth: folhaOriginal.style.maxWidth,
     width: folhaOriginal.style.width,
-    height: folhaOriginal.style.height
+    height: folhaOriginal.style.height,
+    minHeight: folhaOriginal.style.minHeight
   };
 
+  // Define tamanho padrão A4 em pixels (96 DPI)
   folhaOriginal.style.maxWidth = "794px";
   folhaOriginal.style.width = "794px";
   folhaOriginal.style.height = "1123px";
+  folhaOriginal.style.minHeight = "1123px";
 
-  // Ajuste dos slots (cada um ocupa a largura inteira)
+  // Ajuste dos slots
   const slots = folhaOriginal.querySelectorAll(".slot");
   const slotEstiloAntigo = [];
 
@@ -402,7 +405,7 @@ function gerarPDF() {
 
     slot.style.border = "none";
     slot.style.margin = "0";
-    slot.style.width = "75%";
+    slot.style.width = "100%"; // ocupa toda a largura
     slot.style.display = "block";
     slot.style.padding = "0";
     slot.style.boxSizing = "border-box";
@@ -414,7 +417,7 @@ function gerarPDF() {
     btn.style.display = "none";
   });
 
-  // Ajuste das imagens: ocupam tudo, respeitam proporção e não cortam
+  // Ajuste das imagens
   const imagens = folhaOriginal.querySelectorAll("img");
   const tamanhosOriginais = [];
 
@@ -434,26 +437,34 @@ function gerarPDF() {
     img.style.boxSizing = "border-box";
   });
 
-  // Esconde "frente/verso"
+  // Esconde elementos só da tela
   const elementosSoNaTela = folhaOriginal.querySelectorAll(".so-na-tela");
   elementosSoNaTela.forEach(el => el.style.display = "none");
+
+  // Garante que a seção "Outros" preencha a folha
+  const outros = folhaOriginal.querySelector(".outros");
+  if (outros) {
+    outros.style.minHeight = "1000px";
+    outros.style.width = "100%";
+  }
 
   const opt = {
     margin: 0,
     filename: "pedido-xerox.pdf",
     image: { type: "jpeg", quality: 1 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
   };
 
   html2pdf().from(folhaOriginal).set(opt).save().then(() => {
-    // Restaura "frente/verso"
+    // Restaura elementos da tela
     elementosSoNaTela.forEach(el => el.style.display = "block");
 
     // Restaura folha
     folhaOriginal.style.maxWidth = estiloAnterior.maxWidth;
     folhaOriginal.style.width = estiloAnterior.width;
     folhaOriginal.style.height = estiloAnterior.height;
+    folhaOriginal.style.minHeight = estiloAnterior.minHeight;
 
     // Restaura slots
     slots.forEach((slot, i) => {
@@ -464,16 +475,30 @@ function gerarPDF() {
       slot.style.display = s.display;
       slot.style.padding = s.padding;
       slot.style.boxSizing = s.boxSizing;
-
-      const botaoZap = document.getElementById("botao-whatsapp");
-botaoZap.disabled = false;
-botaoZap.style.opacity = "1";
-botaoZap.style.cursor = "pointer";
-botaoZap.onclick = () => {
-  const msg = encodeURIComponent("Olá! Segue em anexo o PDF para impressão.");
-  window.open(`https://wa.me/5585991340658?text=${msg}`, "_blank");
-};
     });
+
+    // Restaura imagens
+    imagens.forEach((img, i) => {
+      img.style.width = tamanhosOriginais[i].width;
+      img.style.height = tamanhosOriginais[i].height;
+      img.style.maxWidth = tamanhosOriginais[i].maxWidth;
+      img.style.objectFit = tamanhosOriginais[i].objectFit;
+    });
+
+    // Restaura botões
+    botoesRemover.forEach(btn => {
+      btn.style.display = "block";
+    });
+
+    // Reativa botão WhatsApp
+    const botaoZap = document.getElementById("botao-whatsapp");
+    botaoZap.disabled = false;
+    botaoZap.style.opacity = "1";
+    botaoZap.style.cursor = "pointer";
+    botaoZap.onclick = () => {
+      const msg = encodeURIComponent("Olá! Segue em anexo o PDF para impressão.");
+      window.open(`https://wa.me/5585991340658?text=${msg}`, "_blank");
+    }
 
     // Restaura imagens
     imagens.forEach((img, i) => {
