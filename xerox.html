@@ -222,11 +222,6 @@
   animation: pulseZap 0.6s ease-in-out 3;
 }
 
-.img-recortada {
-  clip-path: inset(50px 50px 50px 50px); /* top right bottom left */
-  transition: clip-path 0.3s ease;
-}
-
 @keyframes pulseZap {
   0%, 100% {
     transform: scale(1);
@@ -236,7 +231,6 @@
     transform: scale(1.05);
     box-shadow: 0 0 12px 6px rgba(37, 211, 102, 0.4);
   }
-  
 }
   </style>
 </head>
@@ -284,14 +278,6 @@ function trocarTipo() {
   }
 }
 
-function recortarImagem(botaoTesoura) {
-  const slot = botaoTesoura.parentElement;
-  const img = slot.querySelector("img");
-  if (img) {
-    img.classList.toggle("img-recortada");
-  }
-}
-
 function criarSlot(extraClass = "", index = null) {
   const slot = document.createElement("div");
   slot.className = "slot" + (extraClass ? " " + extraClass : "");
@@ -305,12 +291,6 @@ function criarSlot(extraClass = "", index = null) {
   remover.className = "remover-btn";
   remover.textContent = "x";
   remover.onclick = () => removerImagem(remover);
-
-  const tesoura = document.createElement("button");
-tesoura.className = "tesoura-btn";
-tesoura.innerHTML = "✂️"; // ou use SVG se quiser
-tesoura.onclick = () => recortarImagem(tesoura);
-slot.appendChild(tesoura);
 
   const icone = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   icone.setAttribute("class", "icone-svg");
@@ -380,7 +360,6 @@ function removerImagem(button) {
     `;
     slot.appendChild(novoSvg);
   }
-
 }
 
     function esperarImagensCarregarem(container) {
@@ -400,17 +379,14 @@ function gerarPDF() {
   const estiloAnterior = {
     maxWidth: folhaOriginal.style.maxWidth,
     width: folhaOriginal.style.width,
-    height: folhaOriginal.style.height,
-    minHeight: folhaOriginal.style.minHeight
+    height: folhaOriginal.style.height
   };
 
-  // Define tamanho padrão A4 em pixels (96 DPI)
   folhaOriginal.style.maxWidth = "794px";
   folhaOriginal.style.width = "794px";
   folhaOriginal.style.height = "1123px";
-  folhaOriginal.style.minHeight = "1123px";
 
-  // Ajuste dos slots
+  // Ajuste dos slots (cada um ocupa a largura inteira)
   const slots = folhaOriginal.querySelectorAll(".slot");
   const slotEstiloAntigo = [];
 
@@ -426,7 +402,7 @@ function gerarPDF() {
 
     slot.style.border = "none";
     slot.style.margin = "0";
-    slot.style.width = "100%"; // ocupa toda a largura
+    slot.style.width = "75%";
     slot.style.display = "block";
     slot.style.padding = "0";
     slot.style.boxSizing = "border-box";
@@ -438,7 +414,7 @@ function gerarPDF() {
     btn.style.display = "none";
   });
 
-  // Ajuste das imagens
+  // Ajuste das imagens: ocupam tudo, respeitam proporção e não cortam
   const imagens = folhaOriginal.querySelectorAll("img");
   const tamanhosOriginais = [];
 
@@ -458,34 +434,26 @@ function gerarPDF() {
     img.style.boxSizing = "border-box";
   });
 
-  // Esconde elementos só da tela
+  // Esconde "frente/verso"
   const elementosSoNaTela = folhaOriginal.querySelectorAll(".so-na-tela");
   elementosSoNaTela.forEach(el => el.style.display = "none");
-
-  // Garante que a seção "Outros" preencha a folha
-  const outros = folhaOriginal.querySelector(".outros");
-  if (outros) {
-    outros.style.minHeight = "1000px";
-    outros.style.width = "100%";
-  }
 
   const opt = {
     margin: 0,
     filename: "pedido-xerox.pdf",
     image: { type: "jpeg", quality: 1 },
-    html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+    html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
   };
 
   html2pdf().from(folhaOriginal).set(opt).save().then(() => {
-    // Restaura elementos da tela
+    // Restaura "frente/verso"
     elementosSoNaTela.forEach(el => el.style.display = "block");
 
     // Restaura folha
     folhaOriginal.style.maxWidth = estiloAnterior.maxWidth;
     folhaOriginal.style.width = estiloAnterior.width;
     folhaOriginal.style.height = estiloAnterior.height;
-    folhaOriginal.style.minHeight = estiloAnterior.minHeight;
 
     // Restaura slots
     slots.forEach((slot, i) => {
@@ -496,30 +464,16 @@ function gerarPDF() {
       slot.style.display = s.display;
       slot.style.padding = s.padding;
       slot.style.boxSizing = s.boxSizing;
-    });
 
-    // Restaura imagens
-    imagens.forEach((img, i) => {
-      img.style.width = tamanhosOriginais[i].width;
-      img.style.height = tamanhosOriginais[i].height;
-      img.style.maxWidth = tamanhosOriginais[i].maxWidth;
-      img.style.objectFit = tamanhosOriginais[i].objectFit;
+      const botaoZap = document.getElementById("botao-whatsapp");
+botaoZap.disabled = false;
+botaoZap.style.opacity = "1";
+botaoZap.style.cursor = "pointer";
+botaoZap.onclick = () => {
+  const msg = encodeURIComponent("Olá! Segue em anexo o PDF para impressão.");
+  window.open(`https://wa.me/5585991340658?text=${msg}`, "_blank");
+};
     });
-
-    // Restaura botões
-    botoesRemover.forEach(btn => {
-      btn.style.display = "block";
-    });
-
-    // Reativa botão WhatsApp
-    const botaoZap = document.getElementById("botao-whatsapp");
-    botaoZap.disabled = false;
-    botaoZap.style.opacity = "1";
-    botaoZap.style.cursor = "pointer";
-    botaoZap.onclick = () => {
-      const msg = encodeURIComponent("Olá! Segue em anexo o PDF para impressão.");
-      window.open(`https://wa.me/5585991340658?text=${msg}`, "_blank");
-    };
 
     // Restaura imagens
     imagens.forEach((img, i) => {
@@ -542,6 +496,5 @@ function gerarPDF() {
     trocarTipo();
     
   </script>
-  
 </body>
 </html>
