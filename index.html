@@ -5,11 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="icon.png" type="image/png" />
   <title>Office Express</title>
-
-  <!-- Cropper.js -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
   <style>
     body {
       margin: 0;
@@ -44,6 +39,7 @@
       font-size: 1rem;
     }
 
+    /* Modal overlay */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -57,6 +53,7 @@
       z-index: 999;
     }
 
+    /* Modal content */
     .modal-content {
       background-color: #ffffff;
       color: #000000;
@@ -104,9 +101,7 @@
       padding: 20px;
     }
 
-    .grid-imagens a,
-    .grid-imagens .card {
-      position: relative;
+    .grid-imagens a {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -117,8 +112,7 @@
       text-decoration: none;
     }
 
-    .grid-imagens a:hover,
-    .grid-imagens .card:hover {
+    .grid-imagens a:hover {
       transform: scale(1.05);
     }
 
@@ -135,62 +129,6 @@
       font-weight: bold;
       font-size: 1rem;
     }
-
-    .botoes-imagem {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      display: flex;
-      gap: 5px;
-    }
-
-    .botoes-imagem button {
-      background-color: #ff9500;
-      border: none;
-      border-radius: 4px;
-      padding: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      color: white;
-    }
-
-    #modal-corte-img {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.7);
-      z-index: 10000;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #modal-corte-img .conteudo {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 90%;
-      max-height: 90%;
-      overflow: auto;
-      text-align: center;
-    }
-
-    #modal-corte-img img {
-      max-width: 100%;
-      max-height: 70vh;
-    }
-
-    #modal-corte-img button {
-      margin: 10px;
-      padding: 10px 20px;
-      background-color: #00324a;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -205,7 +143,7 @@
     <span class="taxas-link" onclick="abrirModal()">Clique aqui para ver as Taxas de Entrega</span>
   </div>
 
-  <!-- Modal Taxas -->
+  <!-- Modal -->
   <div id="modal" class="modal-overlay" onclick="fecharModal(event)">
     <div class="modal-content">
       <h3>Taxas de Entrega</h3>
@@ -220,110 +158,38 @@
     </div>
   </div>
 
-  <!-- Grid de Imagens com botão de corte -->
   <div class="grid-imagens">
-    <div class="card">
+    <a href="ultilidades.html">
       <img src="imagem1.png" alt="Ultilidades" />
-      <div class="botoes-imagem">
-        <button onclick="abrirCorteImagem(this)">✂️</button>
-      </div>
       <div class="legenda">Ultilidades</div>
-    </div>
+    </a>
 
-    <div class="card">
+    <a href="xerox.html">
       <img src="imagem2.jpg" alt="Serviço de Xerox" />
-      <div class="botoes-imagem">
-        <button onclick="abrirCorteImagem(this)">✂️</button>
-      </div>
       <div class="legenda">Xerox</div>
-    </div>
+    </a>
 
-    <div class="card">
+    <a href="curriculo.html">
       <img src="imagem3.jpg" alt="Currículo Digital" />
-      <div class="botoes-imagem">
-        <button onclick="abrirCorteImagem(this)">✂️</button>
-      </div>
       <div class="legenda">Curriculum</div>
-    </div>
+    </a>
 
-    <div class="card">
+    <a href="https://wa.me/5585991340658?text=Ol%C3%A1%20quero%20realizar%20um%20servi%C3%A7o%20de%3A" target="_blank">
       <img src="imagem4.jpg" alt="Entre em contato" />
-      <div class="botoes-imagem">
-        <button onclick="abrirCorteImagem(this)">✂️</button>
-      </div>
       <div class="legenda">Outros</div>
-    </div>
+    </a>
   </div>
 
-  <!-- Modal de Corte de Imagem -->
-  <div id="modal-corte-img">
-    <div class="conteudo">
-      <h3>Corte a imagem</h3>
-      <img id="imagem-corte" src="" alt="Imagem para cortar" />
-      <br>
-      <button onclick="confirmarCorteImagem()">Confirmar Corte</button>
-      <button onclick="cancelarCorteImagem()">Cancelar</button>
-    </div>
-  </div>
-
-<script>
-  function abrirModal() {
-    document.getElementById('modal').style.display = 'flex';
-  }
-
-  function fecharModal(event) {
-    if (event.target.classList.contains('modal-overlay')) {
-      document.getElementById('modal').style.display = 'none';
-    }
-  }
-
-  let cropper = null;
-  let imagemOriginal = null;
-
-  function abrirCorteImagem(botao) {
-    const card = botao.closest(".card");
-    const img = card.querySelector("img");
-    imagemOriginal = img;
-
-    const modal = document.getElementById("modal-corte-img");
-    const imgCorte = document.getElementById("imagem-corte");
-
-    imgCorte.src = img.src;
-    modal.style.display = "flex";
-
-    imgCorte.onload = () => {
-      cropper = new Cropper(imgCorte, {
-        aspectRatio: NaN,
-        viewMode: 1,
-        autoCropArea: 1,
-        movable: true,
-        zoomable: true,
-        scalable: true,
-        cropBoxResizable: true
-      });
-    };
-  }
-
-  function confirmarCorteImagem() {
-    if (cropper && imagemOriginal) {
-      const canvas = cropper.getCroppedCanvas({
-        width: imagemOriginal.naturalWidth,
-        height: imagemOriginal.naturalHeight
-      });
-
-      imagemOriginal.src = canvas.toDataURL("image/jpeg");
+  <script>
+    function abrirModal() {
+      document.getElementById('modal').style.display = 'flex';
     }
 
-    cancelarCorteImagem();
-  }
-
-  function cancelarCorteImagem() {
-    const modal = document.getElementById("modal-corte-img");
-    modal.style.display = "none";
-
-    if (cropper) {
-      cropper.destroy();
-      cropper = null;
+    function fecharModal(event) {
+      if (event.target.classList.contains('modal-overlay')) {
+        document.getElementById('modal').style.display = 'none';
+      }
     }
-  }
-</script>
+  </script>
+</body>
+</html>
