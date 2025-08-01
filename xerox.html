@@ -235,6 +235,12 @@
   </style>
 </head>
 <body>
+  <input type="file" id="uploadImage" accept="image/*" />
+<div>
+  <img id="previewImage" style="max-width: 100%;" />
+</div>
+<button id="cropButton">Recortar</button>
+<div id="slot"></div>
   <h1>Envie seus arquivos</h1>
   <label for="tipo">Escolha o tipo de documento:</label>
   <select id="tipo" onchange="trocarTipo()">
@@ -277,6 +283,43 @@ function trocarTipo() {
     folha.appendChild(criarSlot("outros")); // 👉 sem índice
   }
 }
+
+let cropper;
+const uploadInput = document.getElementById('uploadImage');
+const previewImage = document.getElementById('previewImage');
+const cropButton = document.getElementById('cropButton');
+const slot = document.getElementById('slot');
+
+uploadInput.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    previewImage.src = reader.result;
+
+    // Inicializa o Cropper
+    if (cropper) cropper.destroy();
+    cropper = new Cropper(previewImage, {
+      aspectRatio: 1, // ou qualquer proporção desejada
+      viewMode: 1,
+    });
+  };
+  reader.readAsDataURL(file);
+});
+
+cropButton.addEventListener('click', () => {
+  if (!cropper) return;
+
+  const canvas = cropper.getCroppedCanvas();
+  const croppedImageURL = canvas.toDataURL('image/png');
+
+  // Exibe no slot
+  slot.innerHTML = `<img src="${croppedImageURL}" style="max-width: 100%;" />`;
+
+  // Opcional: destruir o cropper após o uso
+  cropper.destroy();
+});
 
 function criarSlot(extraClass = "", index = null) {
   const slot = document.createElement("div");
