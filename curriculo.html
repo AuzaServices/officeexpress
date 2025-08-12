@@ -121,6 +121,10 @@
       display: none;
     }
 
+    .telefone-item {
+      margin-top: 10px;
+    }
+
     @media (max-width: 600px) {
       .form-row > div {
         flex: 1 1 100%;
@@ -161,7 +165,10 @@
 
       <label>Telefone</label>
       <div id="telefones">
-        <input type="text" name="telefone[]" />
+        <div class="telefone-item">
+          <input type="text" name="telefone[]" />
+          <label><input type="checkbox" name="telefoneNegrito[]" /> Negrito</label>
+        </div>
       </div>
       <button type="button" class="botao sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
 
@@ -238,12 +245,14 @@
 
     function adicionarTelefone() {
       const container = document.getElementById("telefones");
-      const novo = document.createElement("input");
-      novo.type = "text";
-      novo.name = "telefone[]";
-      novo.style.marginTop = "10px";
-      container.appendChild(novo);
-      aplicarMascaraTelefone(novo);
+      const div = document.createElement("div");
+      div.className = "telefone-item";
+      div.innerHTML = `
+        <input type="text" name="telefone[]" />
+        <label><input type="checkbox" name="telefoneNegrito[]" /> Negrito</label>
+      `;
+      container.appendChild(div);
+      aplicarMascaraTelefone(div.querySelector('input[type="text"]'));
     }
 
     const dropArea = document.getElementById("drop-area");
@@ -264,7 +273,7 @@
     dropArea.addEventListener("drop", e => {
       e.preventDefault();
       dropArea.style.borderColor = "var(--border)";
-        const file = e.dataTransfer.files[0];
+      const file = e.dataTransfer.files[0];
       if (file) {
         fileInput.files = e.dataTransfer.files;
         mostrarPreview(file);
@@ -296,6 +305,7 @@
         nome: form.nome.value.trim(),
         email: form.email.value.trim(),
         telefone: valores("telefone"),
+        telefoneNegrito: Array.from(form.querySelectorAll('[name="telefoneNegrito[]"]')).map(el => el.checked),
         endereco: form.endereco.value.trim(),
         objetivo: form.objetivo.value.trim(),
         formacao: form.formacao.value.trim(),
