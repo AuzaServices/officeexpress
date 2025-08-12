@@ -104,6 +104,23 @@
       margin-top: 20px;
     }
 
+    #drop-area {
+      border: 2px dashed var(--border);
+      padding: 20px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #preview {
+      margin-top: 10px;
+      max-width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+    }
+
     @media (max-width: 600px) {
       .form-row > div {
         flex: 1 1 100%;
@@ -125,7 +142,11 @@
     <h1>Criar Currículo Profissional</h1>
     <form id="formulario">
       <label>Foto</label>
-      <input type="file" id="foto" accept="image/*" />
+      <div id="drop-area">
+        <p>Arraste sua foto aqui ou clique para selecionar</p>
+        <input type="file" id="foto" accept="image/*" style="display: none;" />
+        <img id="preview" src="" alt="Pré-visualização" />
+      </div>
 
       <div class="form-row">
         <div>
@@ -138,16 +159,14 @@
         </div>
       </div>
 
-      <div class="form-row">
-        <div>
-          <label>Telefone</label>
-          <input type="text" name="telefone" />
-        </div>
-        <div>
-          <label>Endereço</label>
-          <input type="text" name="endereco" />
-        </div>
+      <label>Telefone</label>
+      <div id="telefones">
+        <input type="text" name="telefone[]" />
       </div>
+      <button type="button" class="botao sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
+
+      <label>Endereço</label>
+      <input type="text" name="endereco" />
 
       <label>Objetivo</label>
       <textarea name="objetivo" required></textarea>
@@ -161,7 +180,6 @@
           <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
         </div>
       </div>
-
       <button type="button" class="botao sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
 
       <label>Formação Acadêmica</label>
@@ -191,6 +209,55 @@
       container.appendChild(nova);
     }
 
+    function adicionarTelefone() {
+      const container = document.getElementById("telefones");
+      const novo = document.createElement("input");
+      novo.type = "text";
+      novo.name = "telefone[]";
+      novo.style.marginTop = "10px";
+      container.appendChild(novo);
+    }
+
+    const dropArea = document.getElementById("drop-area");
+    const fileInput = document.getElementById("foto");
+    const preview = document.getElementById("preview");
+
+    dropArea.addEventListener("click", () => fileInput.click());
+
+    dropArea.addEventListener("dragover", e => {
+      e.preventDefault();
+      dropArea.style.borderColor = "var(--accent)";
+    });
+
+    dropArea.addEventListener("dragleave", () => {
+      dropArea.style.borderColor = "var(--border)";
+    });
+
+    dropArea.addEventListener("drop", e => {
+      e.preventDefault();
+      dropArea.style.borderColor = "var(--border)";
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        fileInput.files = e.dataTransfer.files;
+        mostrarPreview(file);
+      }
+    });
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length > 0) {
+        mostrarPreview(fileInput.files[0]);
+      }
+    });
+
+    function mostrarPreview(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
     document.getElementById("formulario").addEventListener("submit", function(e) {
       e.preventDefault();
       const form = e.target;
@@ -200,7 +267,7 @@
       const dados = {
         nome: form.nome.value.trim(),
         email: form.email.value.trim(),
-        telefone: form.telefone.value.trim(),
+        telefone: valores("telefone"),
         endereco: form.endereco.value.trim(),
         objetivo: form.objetivo.value.trim(),
         formacao: form.formacao.value.trim(),
@@ -232,4 +299,4 @@
     }
   </script>
 </body>
-</html
+</html>
