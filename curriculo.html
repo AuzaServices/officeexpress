@@ -186,10 +186,26 @@
       <textarea name="formacao" required></textarea>
 
       <label>Habilidades</label>
-      <textarea name="habilidades"></textarea>
+      <input list="habilidades-list" name="habilidades" placeholder="Digite ou escolha..." />
+      <datalist id="habilidades-list">
+        <option value="Proativo(a)">
+        <option value="Trabalho em equipe">
+        <option value="Comunicação eficaz">
+        <option value="Liderança">
+        <option value="Organização">
+        <option value="Resolução de problemas">
+      </datalist>
 
       <label>Hobbies</label>
-      <textarea name="hobbies"></textarea>
+      <input list="hobbies-list" name="hobbies" placeholder="Digite ou escolha..." />
+      <datalist id="hobbies-list">
+        <option value="Leitura">
+        <option value="Esportes">
+        <option value="Música">
+        <option value="Culinária">
+        <option value="Fotografia">
+        <option value="Jogos">
+      </datalist>
 
       <button type="submit" class="botao">Visualizar Currículo</button>
     </form>
@@ -209,6 +225,17 @@
       container.appendChild(nova);
     }
 
+    function aplicarMascaraTelefone(input) {
+      input.addEventListener("input", function(e) {
+        let valor = input.value.replace(/\D/g, "");
+        if (valor.length > 11) valor = valor.slice(0, 11);
+        const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+        input.value = formatado;
+      });
+    }
+
+    document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
+
     function adicionarTelefone() {
       const container = document.getElementById("telefones");
       const novo = document.createElement("input");
@@ -216,6 +243,7 @@
       novo.name = "telefone[]";
       novo.style.marginTop = "10px";
       container.appendChild(novo);
+      aplicarMascaraTelefone(novo);
     }
 
     const dropArea = document.getElementById("drop-area");
@@ -236,7 +264,7 @@
     dropArea.addEventListener("drop", e => {
       e.preventDefault();
       dropArea.style.borderColor = "var(--border)";
-      const file = e.dataTransfer.files[0];
+        const file = e.dataTransfer.files[0];
       if (file) {
         fileInput.files = e.dataTransfer.files;
         mostrarPreview(file);
