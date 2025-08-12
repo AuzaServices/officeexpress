@@ -101,7 +101,11 @@
     .sub-botao {
       background-color: var(--accent);
       color: #fff;
-      margin-top: 20px;
+      margin-top: 10px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
     }
 
     #drop-area {
@@ -167,10 +171,10 @@
       <div id="telefones">
         <div class="telefone-item">
           <input type="text" name="telefone[]" />
-          <label><input type="checkbox" name="telefoneNegrito[]" /> Negrito</label>
+          <label><input type="checkbox" name="telefoneNegrito[]" onchange="toggleNegrito(this)" /> Negrito</label>
         </div>
       </div>
-      <button type="button" class="botao sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
+      <button type="button" class="sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
 
       <label>Endereço</label>
       <input type="text" name="endereco" />
@@ -187,7 +191,7 @@
           <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
         </div>
       </div>
-      <button type="button" class="botao sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
+      <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
 
       <label>Formação Acadêmica</label>
       <textarea name="formacao" required></textarea>
@@ -241,7 +245,15 @@
       });
     }
 
+    function toggleNegrito(checkbox) {
+      const input = checkbox.closest('.telefone-item').querySelector('input[type="text"]');
+      input.style.fontWeight = checkbox.checked ? 'bold' : 'normal';
+    }
+
     document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
+    document.querySelectorAll('[name="telefoneNegrito[]"]').forEach(cb => {
+      cb.addEventListener("change", () => toggleNegrito(cb));
+    });
 
     function adicionarTelefone() {
       const container = document.getElementById("telefones");
@@ -249,11 +261,35 @@
       div.className = "telefone-item";
       div.innerHTML = `
         <input type="text" name="telefone[]" />
-        <label><input type="checkbox" name="telefoneNegrito[]" /> Negrito</label>
+        <label style="margin-left: 10px;">
+          <input type="checkbox" name="telefoneNegrito[]" onchange="toggleNegrito(this)" />
+          Negrito
+        </label>
       `;
       container.appendChild(div);
-      aplicarMascaraTelefone(div.querySelector('input[type="text"]'));
+
+      const input = div.querySelector('input[type="text"]');
+      aplicarMascaraTelefone(input);
     }
+
+    function aplicarMascaraTelefone(input) {
+      input.addEventListener("input", function(e) {
+        let valor = input.value.replace(/\D/g, "");
+        if (valor.length > 11) valor = valor.slice(0, 11);
+        const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+        input.value = formatado;
+      });
+    }
+
+    function toggleNegrito(checkbox) {
+      const input = checkbox.closest('.telefone-item').querySelector('input[type="text"]');
+      input.style.fontWeight = checkbox.checked ? 'bold' : 'normal';
+    }
+
+    document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
+    document.querySelectorAll('[name="telefoneNegrito[]"]').forEach(cb => {
+      cb.addEventListener("change", () => toggleNegrito(cb));
+    });
 
     const dropArea = document.getElementById("drop-area");
     const fileInput = document.getElementById("foto");
