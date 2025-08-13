@@ -103,30 +103,9 @@
       color: #fff;
       margin-top: 10px;
       padding: 10px 20px;
-      border-radius: 8px;
       border: none;
+      border-radius: 8px;
       cursor: pointer;
-    }
-
-    #drop-area {
-      border: 2px dashed var(--border);
-      padding: 20px;
-      text-align: center;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    #preview {
-      margin-top: 10px;
-      max-width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 50%;
-      display: none;
-    }
-
-    .telefone-item {
-      margin-top: 10px;
     }
 
     @media (max-width: 600px) {
@@ -143,18 +122,44 @@
         font-size: 1.1rem;
       }
     }
+
+#drop-area {
+  position: relative;
+}
+
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Criar Currículo Profissional</h1>
     <form id="formulario">
-      <label>Foto</label>
-      <div id="drop-area">
-        <p>Arraste sua foto aqui ou clique para selecionar</p>
-        <input type="file" id="foto" accept="image/*" style="display: none;" />
-        <img id="preview" src="" alt="Pré-visualização" />
-      </div>
+<label>Foto</label>
+<div id="drop-area" style="display: flex; align-items: center; gap: 20px;">
+  <div id="upload-box"
+       style="flex: 1; padding: 20px; border: 2px dashed #ccc; border-radius: 10px; text-align: center; cursor: pointer;">
+    <p>Arraste a foto aqui ou clique para selecionar</p>
+    <input type="file" id="foto" accept="image/*" style="display: none;" />
+  </div>
+  <img id="preview-miniatura" src="" alt="Pré-visualização" style="width: 80px; height: 106px; object-fit: cover; border: 1px solid #ccc; border-radius: 6px; display: none;" />
+
+<div id="edit-icon" style="
+  position: absolute;
+  width: 80px;
+  height: 106px;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+">
+  <img src="https://cdn-icons-png.flaticon.com/512/84/84380.png" alt="Editar" style="
+    width: 32px;
+    opacity: 0.5;
+    pointer-events: auto;
+    cursor: pointer;
+  " onclick="abrirEditor()" />
+</div>
+
+</div>
 
       <div class="form-row">
         <div>
@@ -167,20 +172,62 @@
         </div>
       </div>
 
-      <label>Telefone</label>
-      <div id="telefones">
-        <div class="telefone-item">
-          <input type="text" name="telefone[]" />
-          <label><input type="checkbox" name="telefoneNegrito[]" onchange="toggleNegrito(this)" /> Negrito</label>
+      <div class="form-row">
+        <div>
+          <label>Telefones</label>
+          <div id="telefones">
+            <input type="text" name="telefone[]" />
+          </div>
+          <button type="button" class="sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
+        </div>
+        <div>
+          <label>Endereço (Rua)</label>
+          <input type="text" name="endereco" />
         </div>
       </div>
-      <button type="button" class="sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
 
-      <label>Endereço</label>
-      <input type="text" name="endereco" />
+      <div class="form-row">
+        <div>
+          <label>Número</label>
+          <input type="text" name="numero" />
+        </div>
+        <div>
+<label>Complemento <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+<input type="text" name="complemento" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Bairro</label>
+          <input type="text" name="bairro" />
+        </div>
+        <div>
+          <label>Cidade</label>
+          <input type="text" name="cidade" />
+        </div>
+      </div>
+
+<label>CEP</label>
+<input type="text" name="cep" />
+<small style="display:block; margin-top:6px;">
+  <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" style="color:#00324a; text-decoration:underline;">
+    Não sabe seu CEP? Clique aqui para buscar no site dos Correios
+  </a>
+</small>
 
       <label>Objetivo</label>
       <textarea name="objetivo" required></textarea>
+
+      <label>Cursos</label>
+<div id="cursos">
+  <div class="curso">
+    <input type="text" name="curso[]" placeholder="Nome do curso" />
+    <input type="text" name="instituicao[]" placeholder="Instituição (opcional)" />
+    <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" />
+  </div>
+</div>
+<button type="button" class="sub-botao" onclick="adicionarCurso()">+ Adicionar Curso</button>
 
       <label>Experiência Profissional</label>
       <div id="experiencias">
@@ -197,180 +244,157 @@
       <textarea name="formacao" required></textarea>
 
       <label>Habilidades</label>
-      <input list="habilidades-list" name="habilidades" placeholder="Digite ou escolha..." />
-      <datalist id="habilidades-list">
-        <option value="Proativo(a)">
-        <option value="Trabalho em equipe">
-        <option value="Comunicação eficaz">
-        <option value="Liderança">
-        <option value="Organização">
-        <option value="Resolução de problemas">
-      </datalist>
+      <textarea id="habilidades-texto" name="habilidades" placeholder="Ex: Comunicação, Liderança, Criatividade"></textarea>
 
       <label>Hobbies</label>
-      <input list="hobbies-list" name="hobbies" placeholder="Digite ou escolha..." />
-      <datalist id="hobbies-list">
-        <option value="Leitura">
-        <option value="Esportes">
-        <option value="Música">
-        <option value="Culinária">
-        <option value="Fotografia">
-        <option value="Jogos">
-      </datalist>
+      <textarea id="hobbies-texto" name="hobbies" placeholder="Ex: Darçar, Ler, Praticar Exercicios"></textarea>
 
       <button type="submit" class="botao">Visualizar Currículo</button>
     </form>
   </div>
 
-  <script>
-    function adicionarExperiencia() {
-      const container = document.getElementById("experiencias");
-      const nova = document.createElement("div");
-      nova.className = "experiencia";
-      nova.innerHTML = `
-        <input type="text" name="empresa[]" placeholder="Empresa" />
-        <input type="text" name="cargo[]" placeholder="Cargo" />
-        <input type="text" name="periodo[]" placeholder="Período (ex: 2020–2023)" />
-        <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
-      `;
-      container.appendChild(nova);
-    }
+<script>
+  function adicionarExperiencia() {
+    const container = document.getElementById("experiencias");
+    const nova = document.createElement("div");
+    nova.className = "experiencia";
+    nova.innerHTML = `
+      <input type="text" name="empresa[]" placeholder="Empresa" />
+      <input type="text" name="cargo[]" placeholder="Cargo" />
+      <input type="text" name="periodo[]" placeholder="Período (ex: 2020–2023)" />
+      <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+    `;
+    container.appendChild(nova);
+  }
 
-    function aplicarMascaraTelefone(input) {
-      input.addEventListener("input", function(e) {
-        let valor = input.value.replace(/\D/g, "");
-        if (valor.length > 11) valor = valor.slice(0, 11);
-        const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-        input.value = formatado;
-      });
-    }
-
-    function toggleNegrito(checkbox) {
-      const input = checkbox.closest('.telefone-item').querySelector('input[type="text"]');
-      input.style.fontWeight = checkbox.checked ? 'bold' : 'normal';
-    }
-
-    document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
-    document.querySelectorAll('[name="telefoneNegrito[]"]').forEach(cb => {
-      cb.addEventListener("change", () => toggleNegrito(cb));
+  function aplicarMascaraTelefone(input) {
+    input.addEventListener("input", function () {
+      let valor = input.value.replace(/\D/g, "");
+      if (valor.length > 11) valor = valor.slice(0, 11);
+      const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1)$2-$3");
+      input.value = formatado;
     });
+  }
 
-    function adicionarTelefone() {
-      const container = document.getElementById("telefones");
-      const div = document.createElement("div");
-      div.className = "telefone-item";
-      div.innerHTML = `
-        <input type="text" name="telefone[]" />
-        <label style="margin-left: 10px;">
-          <input type="checkbox" name="telefoneNegrito[]" onchange="toggleNegrito(this)" />
-          Negrito
-        </label>
-      `;
-      container.appendChild(div);
+  function adicionarTelefone() {
+    const container = document.getElementById("telefones");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.name = "telefone[]";
+    input.style.marginTop = "10px";
+    container.appendChild(input);
+    aplicarMascaraTelefone(input);
+  }
 
-      const input = div.querySelector('input[type="text"]');
-      aplicarMascaraTelefone(input);
-    }
+  document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
 
-    function aplicarMascaraTelefone(input) {
-      input.addEventListener("input", function(e) {
-        let valor = input.value.replace(/\D/g, "");
-        if (valor.length > 11) valor = valor.slice(0, 11);
-        const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-        input.value = formatado;
-      });
-    }
+  document.getElementById("formulario").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const form = e.target;
 
-    function toggleNegrito(checkbox) {
-      const input = checkbox.closest('.telefone-item').querySelector('input[type="text"]');
-      input.style.fontWeight = checkbox.checked ? 'bold' : 'normal';
-    }
+    const valores = nome => Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map(el => el.value.trim());
 
-    document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
-    document.querySelectorAll('[name="telefoneNegrito[]"]').forEach(cb => {
-      cb.addEventListener("change", () => toggleNegrito(cb));
-    });
+const dados = {
+  
+  nome: form.nome?.value.trim() || "",
+  email: form.email?.value.trim() || "",
+  telefone: valores("telefone").filter(t => t).join(" "),
+  endereco: form.endereco?.value.trim() || "",
+  numero: form.numero?.value.trim() || "",
+  complemento: form.complemento?.value.trim() || "",
+  bairro: form.bairro?.value.trim() || "",
+  cidade: form.cidade?.value.trim() || "",
+  cep: form.cep?.value.trim() || "",
+  objetivo: form.objetivo?.value.trim() || "",
+  formacao: form.formacao?.value.trim() || "",
+  habilidades: form.habilidades?.value.trim() || "",
+  hobbies: form.hobbies?.value.trim() || "",
+  empresa: valores("empresa"),
+  cargo: valores("cargo"),
+  periodo: valores("periodo"),
+  atividades: valores("atividades"),
+  curso: valores("curso"),
+instituicao: valores("instituicao"),
+carga: valores("carga"),
+  foto: null
+};
 
-    const dropArea = document.getElementById("drop-area");
-    const fileInput = document.getElementById("foto");
-    const preview = document.getElementById("preview");
-
-    dropArea.addEventListener("click", () => fileInput.click());
-
-    dropArea.addEventListener("dragover", e => {
-      e.preventDefault();
-      dropArea.style.borderColor = "var(--accent)";
-    });
-
-    dropArea.addEventListener("dragleave", () => {
-      dropArea.style.borderColor = "var(--border)";
-    });
-
-    dropArea.addEventListener("drop", e => {
-      e.preventDefault();
-      dropArea.style.borderColor = "var(--border)";
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        fileInput.files = e.dataTransfer.files;
-        mostrarPreview(file);
-      }
-    });
-
-    fileInput.addEventListener("change", () => {
-      if (fileInput.files.length > 0) {
-        mostrarPreview(fileInput.files[0]);
-      }
-    });
-
-    function mostrarPreview(file) {
+    const foto = document.getElementById("foto");
+    if (foto.files.length > 0) {
       const reader = new FileReader();
-      reader.onload = function(e) {
-        preview.src = e.target.result;
-        preview.style.display = "block";
-      };
-      reader.readAsDataURL(file);
-    }
-
-    document.getElementById("formulario").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const form = e.target;
-
-      const valores = nome => Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map(el => el.value.trim());
-
-      const dados = {
-        nome: form.nome.value.trim(),
-        email: form.email.value.trim(),
-        telefone: valores("telefone"),
-        telefoneNegrito: Array.from(form.querySelectorAll('[name="telefoneNegrito[]"]')).map(el => el.checked),
-        endereco: form.endereco.value.trim(),
-        objetivo: form.objetivo.value.trim(),
-        formacao: form.formacao.value.trim(),
-        habilidades: form.habilidades.value.trim(),
-        hobbies: form.hobbies.value.trim(),
-        empresa: valores("empresa"),
-        cargo: valores("cargo"),
-        periodo: valores("periodo"),
-        atividades: valores("atividades"),
-        foto: null
-      };
-
-      const foto = document.getElementById("foto");
-      if (foto.files.length > 0) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          dados.foto = event.target.result;
-          salvar(dados);
-        };
-        reader.readAsDataURL(foto.files[0]);
-      } else {
+      reader.onload = function(event) {
+        dados.foto = event.target.result;
         salvar(dados);
-      }
-    });
-
-    function salvar(dados) {
-      localStorage.setItem("curriculo", JSON.stringify(dados));
-      window.location.href = "visualizar.html";
+      };
+      reader.readAsDataURL(foto.files[0]);
+    } else {
+      salvar(dados);
     }
-  </script>
+  });
+
+  function salvar(dados) {
+    localStorage.setItem("curriculo", JSON.stringify(dados));
+    window.location.href = "visualizar.html";
+  }
+</script>
+<script>
+  const dropArea = document.getElementById("drop-area");
+  const uploadBox = document.getElementById("upload-box");
+  const inputFoto = document.getElementById("foto");
+  const preview = document.getElementById("preview-miniatura");
+
+  uploadBox.addEventListener("click", () => inputFoto.click());
+
+  ["dragenter", "dragover"].forEach(eventName => {
+    dropArea.addEventListener(eventName, e => {
+      e.preventDefault();
+      uploadBox.style.borderColor = "#00324a";
+      uploadBox.style.backgroundColor = "#f0f8ff";
+    });
+  });
+
+  ["dragleave", "drop"].forEach(eventName => {
+    dropArea.addEventListener(eventName, e => {
+      e.preventDefault();
+      uploadBox.style.borderColor = "#ccc";
+      uploadBox.style.backgroundColor = "#fff";
+    });
+  });
+
+  dropArea.addEventListener("drop", e => {
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      inputFoto.files = e.dataTransfer.files;
+      mostrarPreview(file);
+    }
+  });
+
+  inputFoto.addEventListener("change", () => {
+    const file = inputFoto.files[0];
+    if (file) mostrarPreview(file);
+  });
+
+  function mostrarPreview(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+
+function adicionarCurso() {
+  const container = document.getElementById("cursos");
+  const novo = document.createElement("div");
+  novo.className = "curso";
+  novo.innerHTML = `
+    <input type="text" name="curso[]" placeholder="Nome do curso" />
+    <input type="text" name="instituicao[]" placeholder="Instituição (opcional)" />
+    <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" />
+  `;
+  container.appendChild(novo);
+}
+
+</script>
 </body>
 </html>
