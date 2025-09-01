@@ -30,20 +30,6 @@ db.connect((err) => {
   console.log('Conectado ao MySQL');
 });
 
-// ✅ Nova rota para receber logs de ações
-app.post('/api/logs', (req, res) => {
-  const { acao, nome, timestamp } = req.body;
-
-  const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
-  db.query(query, [acao, nome, timestamp], (err) => {
-    if (err) {
-      console.error('Erro ao salvar log:', err.sqlMessage);
-      return res.status(500).send('Erro ao salvar log');
-    }
-    res.status(200).json({ mensagem: 'Log salvo com sucesso' });
-  });
-});
-
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
   const doc = new PDFDocument();
@@ -112,7 +98,7 @@ app.get('/baixar-pdf/:id', (req, res) => {
   });
 });
 
-// ✅ Nova rota para listar todos os PDFs salvos
+// Rota para listar PDFs
 app.get('/api/pdfs', (req, res) => {
   const query = 'SELECT id, filename FROM pdfs ORDER BY id DESC';
 
@@ -120,6 +106,33 @@ app.get('/api/pdfs', (req, res) => {
     if (err) {
       console.error('Erro ao buscar PDFs:', err.sqlMessage);
       return res.status(500).send('Erro ao buscar arquivos');
+    }
+    res.json(results);
+  });
+});
+
+// ✅ Rota para salvar logs de acesso
+app.post('/api/logs', (req, res) => {
+  const { acao, nome, timestamp } = req.body;
+
+  const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
+  db.query(query, [acao, nome, timestamp], (err) => {
+    if (err) {
+      console.error('Erro ao salvar log:', err.sqlMessage);
+      return res.status(500).send('Erro ao salvar log');
+    }
+    res.status(200).json({ mensagem: 'Log salvo com sucesso' });
+  });
+});
+
+// ✅ Rota para listar logs de acesso
+app.get('/api/logs', (req, res) => {
+  const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Erro ao buscar logs:', err.sqlMessage);
+      return res.status(500).send('Erro ao buscar logs');
     }
     res.json(results);
   });
