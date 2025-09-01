@@ -2,11 +2,15 @@ const express = require('express');
 const mysql = require('mysql');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
-const multer = require('multer'); // 👈 novo
-const storage = multer.memoryStorage(); // 👈 salva em memória
+const multer = require('multer');
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const app = express();
+
+// Serve arquivos da pasta public
+app.use(express.static('public'));
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -26,7 +30,7 @@ db.connect((err) => {
   console.log('Conectado ao MySQL');
 });
 
-// Rota para gerar e salvar PDF no banco (PDFKit)
+// Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
   const doc = new PDFDocument();
   const buffers = [];
@@ -50,7 +54,7 @@ app.post('/gerar-e-salvar-pdf', (req, res) => {
   doc.end();
 });
 
-// 🆕 Rota para receber PDF gerado no frontend e salvar no banco
+// Rota para receber PDF gerado no frontend e salvar no banco
 app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   if (!req.file) {
     return res.status(400).send('Nenhum arquivo enviado');
