@@ -1,15 +1,20 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Servir arquivos estáticos da pasta public
+app.use(express.static(path.join(__dirname, 'public')));
+
 const client = new MercadoPagoConfig({
-  accessToken: 'SEU_ACCESS_TOKEN_AQUI' // substitua pela sua chave real
+  accessToken: 'SEU_ACCESS_TOKEN_AQUI'
 });
 
+// Rota de pagamento
 app.post('/criar-preferencia', async (req, res) => {
   try {
     const preference = {
@@ -29,13 +34,13 @@ app.post('/criar-preferencia', async (req, res) => {
 
     const preferenceClient = new Preference(client);
     const response = await preferenceClient.create(preference);
-    res.json({ init_point: response.id ? response.init_point : null });
+    res.json({ init_point: response.init_point });
   } catch (error) {
-    console.error(error);
+    console.error('Erro ao criar preferência:', error);
     res.status(500).send('Erro ao criar preferência');
   }
 });
 
 app.listen(3000, () => {
-  console.log('Servidor rodando na porta 3000');
+  console.log('🚀 Servidor rodando na porta 3000');
 });
