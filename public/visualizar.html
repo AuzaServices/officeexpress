@@ -294,5 +294,32 @@ if (Array.isArray(dados.curso)) {
   }
 
   </script>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+  const mp = new MercadoPago('APP_USR-255646a6-5321-492f-a288-0c0c63582dcb', {
+    locale: 'pt-BR'
+  });
+
+  mp.bricks().create('payment', 'paymentBrick_container', {
+    initialization: {
+      amount: 2.00,
+    },
+    customization: {
+      paymentMethods: {
+        ticket: 'all',
+        creditCard: 'all',
+      }
+    },
+    callbacks: {
+      onReady: () => {},
+      onSubmit: (formData) => {
+        // Aqui você envia pro backend com a Access Token
+      },
+      onError: (error) => {
+        console.error(error);
+      }
+    }
+  });
+</script>
 </body>
 </html>
