@@ -2,14 +2,14 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { MercadoPagoConfig } = require('mercadopago'); // importa a classe certa
+const { MercadoPagoConfig } = require('mercadopago');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Instancia o cliente Mercado Pago com o Access Token
+// Instancia o Mercado Pago com a Access Token
 const mercadopago = new MercadoPagoConfig({
-  accessToken: 'APP_USR-7234319205572495-090113-51bcd26585f2b286e57738e30f58bf12-2659262227'
+  accessToken: 'APP_USR-7234319205572495-090113-51bcd26585f2b286e57738e30f58bf12-2659262227' // substitui pela tua token real
 });
 
 // Middleware
@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Rota para criar preferência de pagamento
+// Rota para criar preferência de pagamento via Pix
 app.post('/criar-preferencia', async (req, res) => {
   try {
     const { valor } = req.body;
@@ -36,9 +36,16 @@ app.post('/criar-preferencia', async (req, res) => {
           description: 'Download do currículo em PDF',
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: parseFloat(valor) || 2.00
+          unit_price: parseFloat(valor) || 5.00
         }
       ],
+      payment_methods: {
+        excluded_payment_types: [
+          { id: 'credit_card' },
+          { id: 'ticket' }
+        ],
+        default_payment_method_id: 'pix'
+      },
       back_urls: {
         success: 'https://teusite.com/sucesso',
         failure: 'https://teusite.com/erro',
