@@ -1,0 +1,25 @@
+<h2>Pagamento via Pix</h2>
+<p>Valor: <strong>R$2,00</strong></p>
+<p>Chave Pix: <strong id="pix">davi@pix.com.br</strong></p>
+<button onclick="copiarPix()">📋 Copiar chave Pix</button>
+
+<p>Após o pagamento, clique abaixo para confirmar:</p>
+<button onclick="liberarPDF()">✅ Já paguei</button>
+
+<div id="pdf" style="display:none;">
+  <p>Pagamento confirmado! Clique para baixar:</p>
+  <a href="curriculo.pdf" download>📄 Baixar PDF</a>
+</div>
+
+<script>
+function copiarPix() {
+  const chave = document.getElementById("pix").textContent;
+  navigator.clipboard.writeText(chave);
+  alert("Chave Pix copiada!");
+}
+
+function liberarPDF() {
+  alert("Obrigado! Aguarde a liberação.");
+  document.getElementById("pdf").style.display = "block";
+}
+</script>

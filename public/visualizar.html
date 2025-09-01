@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="icon" href="icon.png" type="image/png" />
+    <link rel="icon" href="icon.png" type="image/png" />
   <title>Visualização do Currículo</title>
   <style>
     html, body {
@@ -128,11 +128,6 @@
       display: none;
       background-color: #fff;
     }
-
-    #paymentBrick_container {
-      margin-top: 20px;
-      width: 100%;
-    }
   </style>
 </head>
 <body>
@@ -163,17 +158,12 @@
           <button onclick="history.back()">⬅ Voltar</button>
           <button onclick="iniciarPagamento()">📄 Baixar PDF</button>
         </div>
-
-        <!-- ✅ Container do Brick -->
-        <div id="paymentBrick_container"></div>
       </div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
-
   <script>
     const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
 
@@ -237,75 +227,82 @@
       }
     }
 
-    if (Array.isArray(dados.curso)) {
-      let html = "";
-      for (let i = 0; i < dados.curso.length; i++) {
-        const nome = dados.curso[i]?.trim();
-        const inst = dados.instituicao[i]?.trim();
-        const carga = dados.carga[i]?.trim();
+    async function gerarPDF() {
+      const { jsPDF } = window.jspdf;
+      const element = document.getElementById("curriculo");
 
-        if (nome || inst || carga) {
-          html += "<li>";
-          if (nome) html += `<strong>${nome}</strong>`;
-          if (inst) html += ` — ${inst}`;
-          if (carga) html += ` <em>(${carga})</em>`;
-          html += "</li>";
-        }
-      }
+      const clone = element.cloneNode(true);
+      clone.style.transform = "none";
+      clone.style.position = "absolute";
+      clone.style.left = "-10000px";
+      document.body.appendChild(clone);
 
-      if (html) {
-        document.getElementById("secao-cursos").innerHTML =
-          `<h2>Cursos</h2><ul>${html}</ul>`;
-      }
+      const canvas = await html2canvas(clone, { scale: 2 });
+      document.body.removeChild(clone);
+
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const width = pdf.internal.pageSize.getWidth();
+      const height = canvas.height * (width / canvas.width);
+      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+      pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
     }
 
-    // Função de pagamento via redirecionamento
-    async function iniciarPagamento() {
-      try {
-        const resposta = await fetch('https://officeexpress.onrender.com/criar-preferencia', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ valor: 2.00 })
-        });
+if (Array.isArray(dados.curso)) {
+  let html = "";
+  for (let i = 0; i < dados.curso.length; i++) {
+    const nome = dados.curso[i]?.trim();
+    const inst = dados.instituicao[i]?.trim();
+    const carga = dados.carga[i]?.trim();
 
-        if (!resposta.ok) {
-          const erro = await resposta.json();
-          throw new Error(erro.error || 'Erro desconhecido');
-        }
-
-        const dados = await resposta.json();
-        window.location.href = dados.init_point;
-      } catch (err) {
-        console.error('Erro ao iniciar pagamento:', err.message);
-        alert('Falha ao iniciar pagamento: ' + err.message);
-      }
-    }
-
-    // Inicializa o Brick de pagamento
-    const mp = new MercadoPago('APP_USR-255646a6-5321-492f-a288-0c0c63582dcb', {
-      locale: 'pt-BR'
-    });
-
-mp.bricks().create('payment', 'paymentBrick_container', {
-  initialization: {
-    amount: 5.00,
-  },
-  customization: {
-paymentMethods: {
-  ticket: 'all',
-  creditCard: 'all'
-}
-  },
-  callbacks: {
-    onReady: () => {},
-    onSubmit: (formData) => {
-      // Aqui você envia pro backend com a Access Token
-    },
-    onError: (error) => {
-      console.error(error);
+    if (nome || inst || carga) {
+      html += "<li>";
+      if (nome) html += `<strong>${nome}</strong>`;
+      if (inst) html += ` — ${inst}`;
+      if (carga) html += ` <em>(${carga})</em>`;
+      html += "</li>";
     }
   }
-});
+
+  if (html) {
+    document.getElementById("secao-cursos").innerHTML =
+      `<h2>Cursos</h2><ul>${html}</ul>`;
+  }
+}
+async function iniciarPagamento() {
+  const { jsPDF } = window.jspdf;
+  const element = document.getElementById("curriculo");
+
+  const clone = element.cloneNode(true);
+  clone.style.transform = "none";
+  clone.style.position = "absolute";
+  clone.style.left = "-10000px";
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone, { scale: 2 });
+  document.body.removeChild(clone);
+
+  const imgData = canvas.toDataURL("image/jpeg", 1.0);
+  const pdf = new jsPDF("p", "mm", "a4");
+  const width = pdf.internal.pageSize.getWidth();
+  const height = canvas.height * (width / canvas.width);
+  pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+
+  const pdfBlob = pdf.output("blob");
+  const formData = new FormData();
+  formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
+
+  try {
+    await fetch("https://officeexpress.onrender.com/api/upload", {
+      method: "POST",
+      body: formData
+    });
+    window.location.href = "pagamento.html";
+  } catch (err) {
+    alert("Erro ao enviar PDF. Tente novamente.");
+    console.error(err);
+  }
+}
   </script>
 </body>
 </html>
