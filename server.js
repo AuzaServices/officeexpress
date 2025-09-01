@@ -1,59 +1,57 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
-const { MercadoPagoConfig, Preference } = require('mercadopago');
+const mercadopago = require('mercadopago');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configura o Mercado Pago com sua Access Token
+mercadopago.configure({
+  access_token: 'APP_USR-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' // substitui pela tua token real
+});
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Servindo arquivos da pasta public
-
-// Configuração do Mercado Pago
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || 'APP_USR-7234319205572495-090113-51bcd26585f2b286e57738e30f58bf12-2659262227'
-});
 
 // Rota para criar preferência de pagamento
 app.post('/criar-preferencia', async (req, res) => {
   try {
-    const preferenceClient = new Preference(client);
-    const response = await preferenceClient.create({
-      body: {
-        items: [{
-          title: 'Download do Currículo em PDF',
+    const { valor } = req.body;
+
+    const preference = {
+      items: [
+        {
+          title: 'Currículo PDF',
+          description: 'Download do currículo em PDF',
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: 2.00
-        }],
-        back_urls: {
-          success: 'https://officeexpress.onrender.com/sucesso.html',
-          failure: 'https://officeexpress.onrender.com/erro.html',
-          pending: 'https://officeexpress.onrender.com/pendente.html'
-        },
-        auto_return: 'approved',
-        external_reference: 'officeexpress-2659262227' // ID da conta Mercado Pago
-      }
-    });
+          unit_price: parseFloat(valor) || 2.00
+        }
+      ],
+      back_urls: {
+        success: 'https://seusite.com/sucesso',
+        failure: 'https://seusite.com/erro',
+        pending: 'https://seusite.com/pendente'
+      },
+      auto_return: 'approved'
+    };
 
-    if (!response?.body?.init_point) {
-      console.error('Preferência não criada corretamente:', response);
-      return res.status(500).json({ error: 'Erro ao criar preferência: resposta inválida da API' });
-    }
-
-    console.log('Preferência criada com sucesso:', response.body.init_point);
+    const response = await mercadopago.preferences.create(preference);
     res.json({ init_point: response.body.init_point });
-  } catch (error) {
-    console.error('Erro ao criar preferência:', {
-      message: error.message,
-      status: error.status,
-      cause: error.cause,
-      stack: error.stack
-    });
-    res.status(500).json({ error: 'Erro ao criar preferência' });
+  } catch (err) {
+    console.error('Erro ao criar preferência:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Erro ao criar preferência: resposta inválida da API' });
   }
 });
 
-// Inicializa o servidor
-const PORT = process.env.PORT || 3000;
+// Rota de teste
+app.get('/', (req, res) => {
+  res.send('Servidor Mercado Pago rodando 🔥');
+});
+
+// Inicia o servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
