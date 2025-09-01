@@ -63,12 +63,12 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   const { originalname, mimetype, buffer } = req.file;
 
   const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
-  db.query(query, [originalname, mimetype, buffer], (err) => {
+  db.query(query, [originalname, mimetype, buffer], (err, result) => {
     if (err) {
       console.error('Erro ao salvar PDF enviado:', err.sqlMessage);
       return res.status(500).send('Erro ao salvar PDF');
     }
-    res.status(200).send('PDF enviado e salvo com sucesso');
+    res.status(200).json({ message: 'PDF enviado e salvo com sucesso', id: result.insertId });
   });
 });
 
@@ -84,7 +84,6 @@ app.get('/baixar-pdf/:id', (req, res) => {
 
     let { filename, data } = results[0];
 
-    // Garante que o nome tenha .pdf
     if (!filename.toLowerCase().endsWith('.pdf')) {
       filename += '.pdf';
     }
@@ -96,6 +95,19 @@ app.get('/baixar-pdf/:id', (req, res) => {
     });
 
     res.end(data);
+  });
+});
+
+// ✅ Nova rota para listar todos os PDFs salvos
+app.get('/api/pdfs', (req, res) => {
+  const query = 'SELECT id, filename FROM pdfs ORDER BY id DESC';
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Erro ao buscar PDFs:', err.sqlMessage);
+      return res.status(500).send('Erro ao buscar arquivos');
+    }
+    res.json(results);
   });
 });
 
