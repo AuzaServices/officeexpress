@@ -2,44 +2,19 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="icon" href="icon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visualização do Currículo</title>
+  <link rel="icon" href="icon.png" type="image/png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      overflow: hidden;
-      position: fixed;
-      height: 100%;
-      background-color: #eaeaea;
+      padding: 20px;
       font-family: "Segoe UI", sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      background-color: #eaeaea;
     }
-
-    .wrapper {
-      width: 100%;
-      overflow-x: auto;
-      padding: 40px 20px;
-    }
-
-    .preview-container {
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
-      padding-left: 10px;
-      margin-left: -26px;
-    }
-
-    .preview-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .a4 {
+    #curriculo {
       width: 794px;
       height: 1123px;
       background: white;
@@ -47,16 +22,13 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       border-radius: 8px;
       box-sizing: border-box;
-      transform: scale(0.4);
-      transform-origin: top left;
+      margin: auto;
     }
-
     h1 {
       font-size: 32px;
       margin-bottom: 10px;
       color: #00324a;
     }
-
     h2 {
       font-size: 20px;
       margin-top: 30px;
@@ -64,170 +36,56 @@
       border-bottom: 1px solid #ccc;
       padding-bottom: 4px;
     }
-
-    .info-topo {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 30px;
-    }
-
-    .dados {
-      flex: 1;
-    }
-
-    .foto {
-      width: 120px;
-      height: 160px;
-      border-radius: 5px;
-      object-fit: cover;
-      border: 1px solid #ccc;
-      margin-left: 30px;
-    }
-
     p, li {
       font-size: 16px;
       margin: 8px 0;
       line-height: 1.6;
     }
-
     ul {
       padding-left: 20px;
       margin-top: 10px;
     }
-
-    .botoes {
-      margin-top: -650px;
-      margin-left: -470px;
-      text-align: center;
-      width: 100%;
-    }
-
-    .botoes button {
+    button {
+      margin-top: 30px;
+      padding: 10px 20px;
       background-color: #00324a;
       color: white;
-      padding: 5px 10px;
-      font-size: 12px;
       border: none;
       border-radius: 10px;
-      margin: 10px;
       cursor: pointer;
       transition: background 0.3s ease;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
-
-    .botoes button:hover {
+    button:hover {
       background-color: #005066;
-    }
-
-    #preview-miniatura {
-      width: 80px;
-      height: 106px;
-      object-fit: contain;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      display: none;
-      background-color: #fff;
     }
   </style>
 </head>
 <body>
 
-  <div class="wrapper">
-    <div class="preview-container">
-      <div class="preview-block">
-        <div class="a4" id="curriculo">
-          <div class="info-topo">
-            <div class="dados">
-              <h1 id="c-nome"></h1>
-              <p id="c-email"></p>
-              <p id="c-telefone"></p>
-              <p id="c-endereco"></p>
-            </div>
-            <img id="foto-preview" class="foto" src="" alt="Foto" style="display:none;" />
-          </div>
-
-          <div id="secao-objetivo"></div>
-          <div id="secao-cursos"></div>
-          <div id="secao-experiencia"></div>
-          <div id="secao-formacao"></div>
-          <div id="secao-habilidades"></div>
-          <div id="secao-hobbies"></div>
-        </div>
-
-        <div class="botoes">
-          <button onclick="history.back()">⬅ Voltar</button>
-          <button onclick="iniciarPagamento()">📄 Baixar PDF</button>
-        </div>
-      </div>
-    </div>
+  <div id="curriculo">
+    <h1 id="c-nome">Davi Nervoso</h1>
+    <p><strong>Email:</strong> davi@exemplo.com</p>
+    <p><strong>Telefone:</strong> (85) 99999-9999</p>
+    <h2>Objetivo</h2>
+    <p>Dominar o backend e mandar ver na Render</p>
+    <h2>Formação</h2>
+    <p>Curso de Desenvolvimento Full Stack — 2025</p>
+    <h2>Habilidades</h2>
+    <ul>
+      <li>Node.js</li>
+      <li>Express</li>
+      <li>MySQL</li>
+      <li>HTML, CSS, JS</li>
+    </ul>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <button onclick="enviarPDF()">📄 Enviar PDF pro servidor</button>
+
   <script>
-    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-
-    document.getElementById("c-nome").textContent = dados.nome || "";
-    if (dados.email) document.getElementById("c-email").innerHTML = "<strong>Email:</strong> " + dados.email;
-    if (dados.telefone) document.getElementById("c-telefone").innerHTML = "<strong>Telefone:</strong> " + dados.telefone;
-
-    let enderecoCompleto = "";
-    if (dados.endereco) enderecoCompleto += dados.endereco;
-    if (dados.numero) enderecoCompleto += ", " + dados.numero;
-    if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
-    if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-    if (dados.cidade) {
-      const cidadeFormatada = dados.cidade.charAt(0).toUpperCase() + dados.cidade.slice(1).toLowerCase();
-      enderecoCompleto += ", " + cidadeFormatada;
-    }
-    if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
-
-    if (enderecoCompleto) {
-      document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + enderecoCompleto;
-    }
-
-    if (dados.foto) {
-      const img = document.getElementById("foto-preview");
-      img.src = dados.foto;
-      img.style.display = "block";
-    }
-
-    const addSecao = (id, titulo, texto) => {
-      if (texto && texto.trim()) {
-        document.getElementById(id).innerHTML = `<h2>${titulo}</h2><p>${texto}</p>`;
-      }
-    };
-
-    addSecao("secao-objetivo", "Objetivo", dados.objetivo);
-    addSecao("secao-formacao", "Formação Acadêmica", dados.formacao);
-    addSecao("secao-habilidades", "Habilidades", dados.habilidades);
-    addSecao("secao-hobbies", "Hobbies", dados.hobbies);
-
-    if (Array.isArray(dados.empresa)) {
-      let html = "";
-      for (let i = 0; i < dados.empresa.length; i++) {
-        const empresa = dados.empresa[i]?.trim();
-        const cargo = dados.cargo[i]?.trim();
-        const periodo = dados.periodo[i]?.trim();
-        const atividades = dados.atividades[i]?.trim();
-
-        if (empresa || cargo || periodo || atividades) {
-          html += "<li>";
-          if (empresa) html += `<strong>${empresa}</strong>`;
-          if (cargo) html += ` — ${cargo}`;
-          if (periodo) html += ` <em>(${periodo})</em>`;
-          if (atividades) html += `<br><span>${atividades}</span>`;
-          html += "</li>";
-        }
-      }
-
-      if (html) {
-        document.getElementById("secao-experiencia").innerHTML =
-          `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
-      }
-    }
-
-    async function gerarPDF() {
+    async function enviarPDF() {
       const { jsPDF } = window.jspdf;
       const element = document.getElementById("curriculo");
 
@@ -245,64 +103,28 @@
       const width = pdf.internal.pageSize.getWidth();
       const height = canvas.height * (width / canvas.width);
       pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-      pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+
+      const pdfBlob = pdf.output("blob");
+      const formData = new FormData();
+      formData.append("arquivo", pdfBlob, "curriculo-davi.pdf");
+
+      try {
+        const res = await fetch("https://officeexpress.onrender.com/api/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        if (res.ok) {
+          alert("PDF enviado com sucesso!");
+        } else {
+          alert("Erro ao enviar PDF.");
+        }
+      } catch (err) {
+        console.error("Erro:", err);
+        alert("Falha na conexão com o servidor.");
+      }
     }
-
-if (Array.isArray(dados.curso)) {
-  let html = "";
-  for (let i = 0; i < dados.curso.length; i++) {
-    const nome = dados.curso[i]?.trim();
-    const inst = dados.instituicao[i]?.trim();
-    const carga = dados.carga[i]?.trim();
-
-    if (nome || inst || carga) {
-      html += "<li>";
-      if (nome) html += `<strong>${nome}</strong>`;
-      if (inst) html += ` — ${inst}`;
-      if (carga) html += ` <em>(${carga})</em>`;
-      html += "</li>";
-    }
-  }
-
-  if (html) {
-    document.getElementById("secao-cursos").innerHTML =
-      `<h2>Cursos</h2><ul>${html}</ul>`;
-  }
-}
-async function iniciarPagamento() {
-  const { jsPDF } = window.jspdf;
-  const element = document.getElementById("curriculo");
-
-  const clone = element.cloneNode(true);
-  clone.style.transform = "none";
-  clone.style.position = "absolute";
-  clone.style.left = "-10000px";
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone, { scale: 2 });
-  document.body.removeChild(clone);
-
-  const imgData = canvas.toDataURL("image/jpeg", 1.0);
-  const pdf = new jsPDF("p", "mm", "a4");
-  const width = pdf.internal.pageSize.getWidth();
-  const height = canvas.height * (width / canvas.width);
-  pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-
-  const pdfBlob = pdf.output("blob");
-  const formData = new FormData();
-  formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
-
-  try {
-    await fetch("https://officeexpress.onrender.com/api/upload", {
-      method: "POST",
-      body: formData
-    });
-    window.location.href = "pagamento.html";
-  } catch (err) {
-    alert("Erro ao enviar PDF. Tente novamente.");
-    console.error(err);
-  }
-}
   </script>
+
 </body>
 </html>
