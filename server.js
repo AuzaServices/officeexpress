@@ -5,12 +5,14 @@ const { MercadoPagoConfig, Preference } = require('mercadopago');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // ← Aqui serve os arquivos da pasta public
+app.use(express.static('public')); // Servindo arquivos da pasta public
 
+// Configuração do Mercado Pago
 const client = new MercadoPagoConfig({
   accessToken: 'APP_USR-6806578338398236-090109-52cf5ad78f0a4d300d432a1ed5108fa2-2659262227'
 });
 
+// Rota para criar preferência de pagamento
 app.post('/criar-preferencia', async (req, res) => {
   try {
     const preferenceClient = new Preference(client);
@@ -33,11 +35,17 @@ app.post('/criar-preferencia', async (req, res) => {
 
     res.json({ init_point: response.body.init_point });
   } catch (error) {
-    console.error('Erro ao criar preferência:', error);
+    console.error('Erro ao criar preferência:', {
+      message: error.message,
+      cause: error.cause,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Erro ao criar preferência' });
   }
 });
 
-app.listen(3000, () => {
-  console.log('Servidor rodando na porta 3000');
+// Inicializa o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
