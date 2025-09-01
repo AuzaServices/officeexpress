@@ -286,29 +286,27 @@
       locale: 'pt-BR'
     });
 
-    mp.bricks().create('payment', 'paymentBrick_container', {
-      initialization: {
-        amount: 2.00,
-      },
-      customization: {
-        paymentMethods: {
-          ticket: 'all',
-          creditCard: 'all',
-        }
-      },
-      callbacks: {
-        onReady: () => {
-          console.log('Brick pronto');
-        },
-        onSubmit: (formData) => {
-          console.log('Form enviado:', formData);
-          // Aqui você pode enviar pro backend se quiser processar manualmente
-        },
-        onError: (error) => {
-          console.error('Erro no Brick:', error);
-        }
-      }
-    });
+mp.bricks().create('payment', 'paymentBrick_container', {
+  initialization: {
+    amount: 2.00,
+  },
+  customization: {
+paymentMethods: {
+  ticket: 'all',
+  creditCard: 'all',
+  pix: 'all' // 👈 isso aqui ativa o Pix
+}
+  },
+  callbacks: {
+    onReady: () => {},
+    onSubmit: (formData) => {
+      // Aqui você envia pro backend com a Access Token
+    },
+    onError: (error) => {
+      console.error(error);
+    }
+  }
+});
   </script>
 </body>
 </html>
