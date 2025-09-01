@@ -9,7 +9,7 @@ app.use(express.static('public')); // Servindo arquivos da pasta public
 
 // Configuração do Mercado Pago
 const client = new MercadoPagoConfig({
-  accessToken: 'APP_USR-6806578338398236-090109-52cf5ad78f0a4d300d432a1ed5108fa2-2659262227'
+  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || 'APP_USR-6806578338398236-090109-52cf5ad78f0a4d300d432a1ed5108fa2-2659262227'
 });
 
 // Rota para criar preferência de pagamento
@@ -33,10 +33,18 @@ app.post('/criar-preferencia', async (req, res) => {
       }
     });
 
+    // Verifica se a resposta veio corretamente
+    if (!response || !response.body || !response.body.init_point) {
+      console.error('Resposta inválida da API:', response);
+      return res.status(500).json({ error: 'Erro ao criar preferência: resposta inválida da API' });
+    }
+
+    console.log('Preferência criada com sucesso:', response.body.init_point);
     res.json({ init_point: response.body.init_point });
   } catch (error) {
     console.error('Erro ao criar preferência:', {
       message: error.message,
+      status: error.status,
       cause: error.cause,
       stack: error.stack
     });
