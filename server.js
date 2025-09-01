@@ -2,14 +2,14 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const mercadopago = require('mercadopago');
+const { MercadoPagoConfig } = require('mercadopago'); // importa a classe certa
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configura o Mercado Pago com o Access Token
-mercadopago.configure({
-  access_token: 'APP_USR-7234319205572495-090113-51bcd26585f2b286e57738e30f58bf12-2659262227' // substitui pela tua token real
+// Instancia o cliente Mercado Pago com o Access Token
+const mercadopago = new MercadoPagoConfig({
+  accessToken: 'APP_USR-7234319205572495-090113-51bcd26585f2b286e57738e30f58bf12-2659262227'
 });
 
 // Middleware
@@ -47,8 +47,8 @@ app.post('/criar-preferencia', async (req, res) => {
       auto_return: 'approved'
     };
 
-    const response = await mercadopago.preferences.create(preference);
-    res.json({ init_point: response.body.init_point });
+    const response = await mercadopago.preference.create({ body: preference });
+    res.json({ init_point: response.init_point });
   } catch (err) {
     console.error('Erro ao criar preferência:', JSON.stringify(err.response?.data || err.message, null, 2));
     res.status(500).json({ error: 'Erro ao criar preferência: resposta inválida da API' });
