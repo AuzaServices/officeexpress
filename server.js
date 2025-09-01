@@ -3,6 +3,9 @@ const multer = require('multer');
 const path = require('path');
 const app = express();
 
+// Servir arquivos estáticos da pasta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
 const storage = multer.diskStorage({
   destination: 'uploads/',
   filename: (req, file, cb) => {
