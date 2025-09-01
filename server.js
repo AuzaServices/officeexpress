@@ -75,26 +75,27 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
 // Rota para baixar o PDF do banco
 app.get('/baixar-pdf/:id', (req, res) => {
   const id = req.params.id;
-  const query = 'SELECT filename, mimetype, data FROM pdfs WHERE id = ?';
+  const query = 'SELECT filename, data FROM pdfs WHERE id = ?';
 
   db.query(query, [id], (err, results) => {
     if (err || results.length === 0) {
       return res.status(404).send('PDF não encontrado');
     }
 
-    let { filename, mimetype, data } = results[0];
+    let { filename, data } = results[0];
 
     // Garante que o nome tenha .pdf
     if (!filename.toLowerCase().endsWith('.pdf')) {
       filename += '.pdf';
     }
 
-    // Força o tipo correto
-    mimetype = 'application/pdf';
+    res.writeHead(200, {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': data.length,
+    });
 
-    res.setHeader('Content-Type', mimetype);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(data);
+    res.end(data);
   });
 });
 
