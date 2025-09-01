@@ -9,7 +9,7 @@ app.use(express.static('public')); // Servindo arquivos da pasta public
 
 // Configuração do Mercado Pago
 const client = new MercadoPagoConfig({
-  accessToken: 'TEST-6806578338398236-090109-2c0ad86fd0d53d39251fb213f2469ec6-2659262227'
+  accessToken: 'APP_USR-6806578338398236-090109-52cf5ad78f0a4d300d432a1ed5108fa2-2659262227'
 });
 
 // Rota para criar preferência de pagamento
