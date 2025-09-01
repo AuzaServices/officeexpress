@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Arquivos</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    a { color: blue; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Painel de Arquivos PDF</h1>
+  <table id="tabela-arquivos">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Data</th>
+        <th>Ação</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Os dados serão inseridos aqui via JavaScript -->
+    </tbody>
+  </table>
+
+  <script>
+    fetch('/api/listar-pdfs')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#tabela-arquivos tbody');
+        data.forEach(arquivo => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${arquivo.id}</td>
+            <td>${arquivo.filename}</td>
+            <td>${new Date(arquivo.updated_at).toLocaleString()}</td>
+            <td><a href="/painel/download/${arquivo.id}">Baixar PDF</a></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>

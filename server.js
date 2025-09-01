@@ -63,6 +63,43 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   });
 });
 
+// Rota para listar arquivos no painel
+app.get('/api/listar-pdfs', (req, res) => {
+  const query = 'SELECT id, filename, updated_at FROM pdfs ORDER BY updated_at DESC';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Erro ao listar PDFs:', err.sqlMessage);
+      return res.status(500).json({ status: 'erro', mensagem: 'Erro ao buscar arquivos' });
+    }
+    res.json(results);
+  });
+});
+
+// Rota para download seguro via painel
+app.get('/painel/download/:id', (req, res) => {
+  const id = req.params.id;
+
+  const query = 'SELECT * FROM pdfs WHERE id = ?';
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Erro ao buscar no banco:', err.sqlMessage);
+      return res.status(500).send('Erro interno');
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send('Arquivo não encontrado');
+    }
+
+    const { filepath, filename, mimetype } = results[0];
+
+    res.setHeader('Content-Type', mimetype);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}.pdf"`);
+
+    const fileStream = fs.createReadStream(filepath);
+    fileStream.pipe(res);
+  });
+});
+
 // Porta dinâmica para produção
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
