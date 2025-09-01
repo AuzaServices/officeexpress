@@ -42,8 +42,8 @@ fetch('/api/pdfs')
       tr.innerHTML = `
         <td>${arquivo.id}</td>
         <td>${arquivo.filename}</td>
-        <td>${arquivo.Uploaded_at ? new Date(arquivo.Uploaded_at).toLocaleString() : '—'}</td>
-        <td><a href="/painel/download/${arquivo.id}">Baixar PDF</a></td>
+        <td>—</td>
+        <td><a href="/baixar-pdf/${arquivo.id}">Baixar PDF</a></td>
       `;
       tbody.appendChild(tr);
     });
