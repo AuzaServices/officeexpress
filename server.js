@@ -82,7 +82,16 @@ app.get('/baixar-pdf/:id', (req, res) => {
       return res.status(404).send('PDF não encontrado');
     }
 
-    const { filename, mimetype, data } = results[0];
+    let { filename, mimetype, data } = results[0];
+
+    // Garante que o nome tenha .pdf no final
+    if (!filename.endsWith('.pdf')) {
+      filename += '.pdf';
+    }
+
+    // Garante que o tipo seja application/pdf
+    mimetype = 'application/pdf';
+
     res.setHeader('Content-Type', mimetype);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(data);
