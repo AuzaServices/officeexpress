@@ -28,21 +28,27 @@
   </table>
 
   <script>
-    fetch('/api/pdfs')
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.querySelector('#tabela-arquivos tbody');
-        data.forEach(arquivo => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${arquivo.id}</td>
-            <td>${arquivo.filename}</td>
-            <td>${new Date(arquivo.updated_at).toLocaleString()}</td>
-            <td><a href="/painel/download/${arquivo.id}">Baixar PDF</a></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      });
+fetch('/api/pdfs')
+  .then(res => res.json())
+  .then(data => {
+    if (!Array.isArray(data)) {
+      console.error('Resposta inesperada:', data);
+      return;
+    }
+
+    const tbody = document.querySelector('#tabela-arquivos tbody');
+    data.forEach(arquivo => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${arquivo.id}</td>
+        <td>${arquivo.filename}</td>
+        <td>${arquivo.updated_at ? new Date(arquivo.updated_at).toLocaleString() : '—'}</td>
+        <td><a href="/painel/download/${arquivo.id}">Baixar PDF</a></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  })
+  .catch(err => console.error('Erro ao buscar arquivos:', err));
   </script>
 </body>
 </html>
