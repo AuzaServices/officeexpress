@@ -92,7 +92,12 @@ app.get('/painel/download/:id', (req, res) => {
 
     const { filepath, filename, mimetype } = results[0];
 
-    res.setHeader('Content-Type', mimetype);
+    // Verifica se o arquivo existe
+    if (!fs.existsSync(filepath)) {
+      return res.status(404).send('Arquivo não encontrado no servidor');
+    }
+
+    res.setHeader('Content-Type', 'application/octet-stream'); // força download
     res.setHeader('Content-Disposition', `attachment; filename="${filename}.pdf"`);
 
     const fileStream = fs.createReadStream(filepath);
