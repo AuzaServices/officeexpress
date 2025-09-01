@@ -1,19 +1,30 @@
 // server.js
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const MercadoPago = require('mercadopago');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Cria instância do MercadoPago com a Access Token
+// Instancia o Mercado Pago com a Access Token
 const client = new MercadoPago.MercadoPagoConfig({
-  accessToken: 'APP_USR-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+  accessToken: 'APP_USR-7234319205572495-090113-51bcd26585f2b286e57738e30f58bf12-2659262227' // substitui pela tua token real
 });
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Serve arquivos estáticos da pasta public
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Rota principal
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Rota para criar preferência de pagamento
 app.post('/criar-preferencia', async (req, res) => {
   try {
     const { valor } = req.body;
@@ -22,9 +33,10 @@ app.post('/criar-preferencia', async (req, res) => {
       items: [
         {
           title: 'Currículo PDF',
+          description: 'Download do currículo em PDF',
           quantity: 1,
-          unit_price: parseFloat(valor) || 2.00,
-          currency_id: 'BRL'
+          currency_id: 'BRL',
+          unit_price: parseFloat(valor) || 2.00
         }
       ],
       back_urls: {
@@ -38,11 +50,12 @@ app.post('/criar-preferencia', async (req, res) => {
     const response = await client.preference.create({ body: preference });
     res.json({ init_point: response.init_point });
   } catch (err) {
-    console.error('Erro ao criar preferência:', err.message);
+    console.error('Erro ao criar preferência:', err.response?.data || err.message);
     res.status(500).json({ error: 'Erro ao criar preferência: resposta inválida da API' });
   }
 });
 
+// Inicia o servidor
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`🔥 Servidor rodando na porta ${PORT}`);
 });
