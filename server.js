@@ -4,20 +4,17 @@ const path = require('path');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 
 const app = express();
-
-// Middleware
 app.use(express.json());
 app.use(cors());
 
 // Servir arquivos estáticos da pasta public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuração do Mercado Pago com variável de ambiente
 const client = new MercadoPagoConfig({
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN
+  accessToken: 'APP_USR-4a680e3f-7155-4f06-ace7-dfcad4fa7d5a'
 });
 
-// Rota de criação de preferência de pagamento
+// Rota de pagamento
 app.post('/criar-preferencia', async (req, res) => {
   try {
     const preference = {
@@ -28,9 +25,9 @@ app.post('/criar-preferencia', async (req, res) => {
         unit_price: 2.00
       }],
       back_urls: {
-        success: 'https://officeexpress.onrender.com/sucesso.html',
-        failure: 'https://officeexpress.onrender.com/erro.html',
-        pending: 'https://officeexpress.onrender.com/pendente.html'
+        success: 'http://localhost:3000/sucesso.html',
+        failure: 'http://localhost:3000/erro.html',
+        pending: 'http://localhost:3000/pendente.html'
       },
       auto_return: 'approved'
     };
@@ -44,8 +41,6 @@ app.post('/criar-preferencia', async (req, res) => {
   }
 });
 
-// Porta dinâmica para Render
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+app.listen(3000, () => {
+  console.log('🚀 Servidor rodando na porta 3000');
 });
