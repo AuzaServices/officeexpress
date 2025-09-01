@@ -84,12 +84,12 @@ app.get('/baixar-pdf/:id', (req, res) => {
 
     let { filename, mimetype, data } = results[0];
 
-    // Garante que o nome tenha .pdf no final
+    // Garante que o nome tenha .pdf
     if (!filename.toLowerCase().endsWith('.pdf')) {
       filename += '.pdf';
     }
 
-    // Garante que o tipo seja application/pdf
+    // Força o tipo correto
     mimetype = 'application/pdf';
 
     res.setHeader('Content-Type', mimetype);
