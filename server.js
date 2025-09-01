@@ -5,6 +5,7 @@ const { MercadoPagoConfig, Preference } = require('mercadopago');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public')); // ← Aqui serve os arquivos da pasta public
 
 const client = new MercadoPagoConfig({
   accessToken: 'APP_USR-6806578338398236-090109-52cf5ad78f0a4d300d432a1ed5108fa2-2659262227'
