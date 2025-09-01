@@ -157,28 +157,6 @@
         <div class="botoes">
           <button onclick="history.back()">⬅ Voltar</button>
           <button onclick="iniciarPagamento()">📄 Baixar PDF</button>
-          <script>
-async function iniciarPagamento() {
-  try {
-    const resposta = await fetch('https://officeexpress.onrender.com/criar-preferencia', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ valor: 2.00 })
-    });
-
-    const dados = await resposta.json();
-
-    if (dados.init_point) {
-      window.location.href = dados.init_point;
-    } else {
-      alert('Erro ao iniciar pagamento. Tente novamente.');
-    }
-  } catch (error) {
-    console.error(error);
-    alert('Erro na comunicação com o servidor.');
-  }
-}
-</script>
         </div>
       </div>
     </div>
@@ -291,6 +269,29 @@ if (Array.isArray(dados.curso)) {
       `<h2>Cursos</h2><ul>${html}</ul>`;
   }
 }
+
+  async function iniciarPagamento() {
+    try {
+      const resposta = await fetch('https://officeexpress.onrender.com/criar-preferencia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ valor: 2.00 }) // se quiser enviar dados, pode incluir aqui
+      });
+
+      if (!resposta.ok) {
+        const erro = await resposta.json();
+        throw new Error(erro.error || 'Erro desconhecido');
+      }
+
+      const dados = await resposta.json();
+      window.location.href = dados.init_point; // redireciona pro Mercado Pago
+    } catch (err) {
+      console.error('Erro ao iniciar pagamento:', err.message);
+      alert('Falha ao iniciar pagamento: ' + err.message);
+    }
+  }
 
   </script>
 </body>
