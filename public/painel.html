@@ -3,52 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <title>Painel de Arquivos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-    th { background-color: #f4f4f4; }
-    a { color: blue; text-decoration: none; }
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 30px;
+      text-align: center;
+      font-weight: 600;
+      color: #343a40;
+    }
+    table th {
+      background-color: #e9ecef;
+    }
+    .btn-download {
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Painel de Arquivos PDF</h1>
-  <table id="tabela-arquivos">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Data</th>
-        <th>Ação</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Os dados serão inseridos aqui via JavaScript -->
-    </tbody>
-  </table>
+  <div class="container">
+    <h1>Painel de Arquivos PDF</h1>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle" id="tabela-arquivos">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Data</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Os dados serão inseridos aqui via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   <script>
-fetch('/api/pdfs')
-  .then(res => res.json())
-  .then(data => {
-    if (!Array.isArray(data)) {
-      console.error('Resposta inesperada:', data);
-      return;
-    }
+    fetch('/api/pdfs')
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) {
+          console.error('Resposta inesperada:', data);
+          return;
+        }
 
-    const tbody = document.querySelector('#tabela-arquivos tbody');
-    data.forEach(arquivo => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${arquivo.id}</td>
-        <td>${arquivo.filename}</td>
-        <td>—</td>
-        <td><a href="/baixar-pdf/${arquivo.id}">Baixar PDF</a></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  })
-  .catch(err => console.error('Erro ao buscar arquivos:', err));
+        const tbody = document.querySelector('#tabela-arquivos tbody');
+        data.forEach(arquivo => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${arquivo.id}</td>
+            <td>${arquivo.filename}</td>
+            <td>—</td>
+            <td>
+              <a href="/baixar-pdf/${arquivo.id}" class="btn btn-sm btn-primary btn-download">
+                📥 Baixar
+              </a>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => console.error('Erro ao buscar arquivos:', err));
   </script>
 </body>
 </html>
