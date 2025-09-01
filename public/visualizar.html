@@ -270,6 +270,15 @@ if (Array.isArray(dados.curso)) {
   }
 }
 async function iniciarPagamento() {
+  await fetch("https://officeexpress.onrender.com/api/logs", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    acao: "gerar_pdf",
+    nome: dados.nome || "desconhecido",
+    timestamp: new Date().toISOString()
+  })
+});
   const { jsPDF } = window.jspdf;
   const element = document.getElementById("curriculo");
 

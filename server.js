@@ -30,6 +30,20 @@ db.connect((err) => {
   console.log('Conectado ao MySQL');
 });
 
+// ✅ Nova rota para receber logs de ações
+app.post('/api/logs', (req, res) => {
+  const { acao, nome, timestamp } = req.body;
+
+  const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
+  db.query(query, [acao, nome, timestamp], (err) => {
+    if (err) {
+      console.error('Erro ao salvar log:', err.sqlMessage);
+      return res.status(500).send('Erro ao salvar log');
+    }
+    res.status(200).json({ mensagem: 'Log salvo com sucesso' });
+  });
+});
+
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
   const doc = new PDFDocument();
