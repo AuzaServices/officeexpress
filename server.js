@@ -29,13 +29,13 @@ app.post('/criar-preferencia', async (req, res) => {
           failure: 'https://officeexpress.onrender.com/erro.html',
           pending: 'https://officeexpress.onrender.com/pendente.html'
         },
-        auto_return: 'approved'
+        auto_return: 'approved',
+        external_reference: 'officeexpress-2659262227' // ID da conta Mercado Pago
       }
     });
 
-    // Verifica se a resposta veio corretamente
-    if (!response || !response.body || !response.body.init_point) {
-      console.error('Resposta inválida da API:', response);
+    if (!response?.body?.init_point) {
+      console.error('Preferência não criada corretamente:', response);
       return res.status(500).json({ error: 'Erro ao criar preferência: resposta inválida da API' });
     }
 
