@@ -2,6 +2,9 @@ const express = require('express');
 const mysql = require('mysql');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
+const multer = require('multer'); // 👈 novo
+const storage = multer.memoryStorage(); // 👈 salva em memória
+const upload = multer({ storage });
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -9,7 +12,7 @@ app.use(bodyParser.json());
 
 // Conexão com o banco
 const db = mysql.createConnection({
-  host: 'sql10.freesqldatabase.com',       // ou o host da Render
+  host: 'sql10.freesqldatabase.com',
   user: 'sql10792206',
   password: 'hKT4bm2WIP',
   database: 'sql10792206'
@@ -23,7 +26,7 @@ db.connect((err) => {
   console.log('Conectado ao MySQL');
 });
 
-// Rota para gerar e salvar PDF no banco
+// Rota para gerar e salvar PDF no banco (PDFKit)
 app.post('/gerar-e-salvar-pdf', (req, res) => {
   const doc = new PDFDocument();
   const buffers = [];
@@ -45,6 +48,24 @@ app.post('/gerar-e-salvar-pdf', (req, res) => {
 
   doc.text('Currículo de Davi: Desenvolvedor Full Stack nervoso 🔥');
   doc.end();
+});
+
+// 🆕 Rota para receber PDF gerado no frontend e salvar no banco
+app.post('/api/upload', upload.single('arquivo'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('Nenhum arquivo enviado');
+  }
+
+  const { originalname, mimetype, buffer } = req.file;
+
+  const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
+  db.query(query, [originalname, mimetype, buffer], (err) => {
+    if (err) {
+      console.error('Erro ao salvar PDF enviado:', err.sqlMessage);
+      return res.status(500).send('Erro ao salvar PDF');
+    }
+    res.status(200).send('PDF enviado e salvo com sucesso');
+  });
 });
 
 // Rota para baixar o PDF do banco
