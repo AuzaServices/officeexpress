@@ -160,7 +160,7 @@
           <script>
 async function iniciarPagamento() {
   try {
-    const resposta = await fetch('http://localhost:3000/criar-preferencia', {
+    const resposta = await fetch('https://officeexpress.onrender.com/criar-preferencia', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ valor: 2.00 })
