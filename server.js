@@ -64,7 +64,7 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
 });
 
 // Rota para listar arquivos no painel
-app.get('/api/listar-pdfs', (req, res) => {
+app.get('/api/pdfs', (req, res) => {
   const query = 'SELECT id, filename, updated_at FROM pdfs ORDER BY updated_at DESC';
   db.query(query, (err, results) => {
     if (err) {
