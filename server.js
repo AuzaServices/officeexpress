@@ -26,7 +26,7 @@ function handleDisconnect() {
   db.connect(err => {
     if (err) {
       console.error('Erro ao conectar no banco:', err.sqlMessage);
-      setTimeout(handleDisconnect, 2000); // tenta reconectar após 2s
+      setTimeout(handleDisconnect, 2000);
     } else {
       console.log('✅ Conectado ao MySQL');
     }
@@ -35,7 +35,7 @@ function handleDisconnect() {
   db.on('error', err => {
     console.error('⚠️ Erro de conexão:', err.code);
     if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-      handleDisconnect(); // reconecta automaticamente
+      handleDisconnect();
     } else {
       throw err;
     }
@@ -57,9 +57,9 @@ app.post('/gerar-e-salvar-pdf', (req, res) => {
     db.query(query, [filename, 'application/pdf', pdfBuffer], (err) => {
       if (err) {
         console.error('Erro ao salvar PDF no banco:', err.sqlMessage);
-        return res.status(500).send('Erro ao salvar PDF');
+        return res.status(500).json({ error: 'Erro ao salvar PDF' });
       }
-      res.send('PDF gerado e salvo com sucesso');
+      res.json({ message: 'PDF gerado e salvo com sucesso' });
     });
   });
 
@@ -70,7 +70,7 @@ app.post('/gerar-e-salvar-pdf', (req, res) => {
 // Rota para receber PDF gerado no frontend e salvar no banco
 app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   if (!req.file) {
-    return res.status(400).send('Nenhum arquivo enviado');
+    return res.status(400).json({ error: 'Nenhum arquivo enviado' });
   }
 
   const { originalname, mimetype, buffer } = req.file;
@@ -78,7 +78,7 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   db.query(query, [originalname, mimetype, buffer], (err, result) => {
     if (err) {
       console.error('Erro ao salvar PDF enviado:', err.sqlMessage);
-      return res.status(500).send('Erro ao salvar PDF');
+      return res.status(500).json({ error: 'Erro ao salvar PDF' });
     }
     res.status(200).json({ message: 'PDF enviado e salvo com sucesso', id: result.insertId });
   });
@@ -91,7 +91,7 @@ app.get('/baixar-pdf/:id', (req, res) => {
 
   db.query(query, [id], (err, results) => {
     if (err || results.length === 0) {
-      return res.status(404).send('PDF não encontrado');
+      return res.status(404).json({ error: 'PDF não encontrado' });
     }
 
     let { filename, data } = results[0];
@@ -115,7 +115,7 @@ app.get('/api/pdfs', (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.error('Erro ao buscar PDFs:', err.sqlMessage);
-      return res.status(500).send('Erro ao buscar arquivos');
+      return res.status(500).json({ error: 'Erro ao buscar arquivos' });
     }
     res.json(results);
   });
@@ -128,7 +128,7 @@ app.post('/api/logs', (req, res) => {
   db.query(query, [acao, nome, timestamp], (err) => {
     if (err) {
       console.error('Erro ao salvar log:', err.sqlMessage);
-      return res.status(500).send('Erro ao salvar log');
+      return res.status(500).json({ error: 'Erro ao salvar log' });
     }
     res.status(200).json({ mensagem: 'Log salvo com sucesso' });
   });
@@ -140,7 +140,7 @@ app.get('/api/logs', (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.error('Erro ao buscar logs:', err.sqlMessage);
-      return res.status(500).send('Erro ao buscar logs');
+      return res.status(500).json({ error: 'Erro ao buscar logs' });
     }
     res.json(results);
   });
