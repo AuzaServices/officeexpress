@@ -50,6 +50,11 @@ function isDbConnected() {
   return db && db.state === 'connected';
 }
 
+// 🔍 Log de estado da conexão a cada 10 segundos
+setInterval(() => {
+  console.log(`📡 Estado da conexão MySQL: ${db?.state}`);
+}, 10000);
+
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
   if (!isDbConnected()) {
@@ -180,6 +185,12 @@ app.get('/api/logs', (req, res) => {
     }
     res.json(results);
   });
+});
+
+// 🛡 Middleware global de erro
+app.use((err, req, res, next) => {
+  console.error('🔥 Erro não tratado:', err);
+  res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
 // Inicia o servidor
