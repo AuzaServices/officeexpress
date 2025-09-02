@@ -137,15 +137,26 @@ app.post('/api/logs', (req, res) => {
 // Rota para listar logs de acesso
 app.get('/api/logs', (req, res) => {
   const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
+
   db.query(query, (err, results) => {
     if (err) {
-      console.error('❌ Erro ao buscar logs:', err);
+      console.error('❌ Erro ao buscar logs:', {
+        mensagem: err.message,
+        codigo: err.code,
+        sql: err.sql
+      });
       return res.status(500).json({ error: 'Erro ao buscar logs' });
     }
-    console.log('📋 Logs retornados:', results);
+
+    if (!Array.isArray(results)) {
+      console.warn('⚠️ Resposta inesperada do banco:', results);
+      return res.status(500).json({ error: 'Formato inválido de resposta' });
+    }
+
     res.json(results);
   });
 });
+
 
 // Inicia o servidor
 const PORT = process.env.PORT || 3000;
