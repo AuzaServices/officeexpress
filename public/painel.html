@@ -67,26 +67,39 @@
 
   <script>
     // Tabela de PDFs
-    fetch('/api/pdfs')
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.querySelector('#tabela-arquivos tbody');
-        data.forEach(arquivo => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${arquivo.id}</td>
-            <td>${arquivo.filename}</td>
-            <td>—</td>
-            <td>
-              <a href="/baixar-pdf/${arquivo.id}" class="btn btn-sm btn-primary btn-download">
-                📥 Baixar
-              </a>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      })
-      .catch(err => console.error('Erro ao buscar arquivos:', err));
+fetch('/api/pdfs')
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(err => {
+        throw new Error(err.error || 'Erro ao buscar arquivos');
+      }).catch(() => {
+        throw new Error('Resposta inválida do servidor');
+      });
+    }
+    return res.json();
+  })
+  .then(data => {
+    if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
+    const tbody = document.querySelector('#tabela-arquivos tbody');
+    data.forEach(arquivo => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${arquivo.id}</td>
+        <td>${arquivo.filename}</td>
+        <td>—</td>
+        <td>
+          <a href="/baixar-pdf/${arquivo.id}" class="btn btn-sm btn-primary btn-download">
+            📥 Baixar
+          </a>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Erro ao buscar arquivos:', err.message);
+    alert('Falha ao carregar arquivos: ' + err.message);
+  });
 
     // Tabela de Acessos
 fetch('/api/logs')
@@ -95,12 +108,13 @@ fetch('/api/logs')
       return res.json().then(err => {
         throw new Error(err.error || 'Erro ao buscar acessos');
       }).catch(() => {
-        throw new Error('Erro ao buscar acessos (resposta inválida)');
+        throw new Error('Resposta inválida do servidor');
       });
     }
     return res.json();
   })
   .then(data => {
+    if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
     const tbody = document.querySelector('#tabela-acessos tbody');
     data.forEach(log => {
       const tr = document.createElement('tr');
