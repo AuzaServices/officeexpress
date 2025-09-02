@@ -66,7 +66,7 @@
   </div>
 
   <script>
-    // Tabela de PDFs
+  function carregarPDFs() {
     fetch('/api/pdfs')
       .then(async res => {
         if (!res.ok) {
@@ -103,14 +103,14 @@
         const tbody = document.querySelector('#tabela-arquivos tbody');
         tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
       });
+  }
 
-    // Tabela de Acessos
+  function carregarLogs() {
     fetch('/api/logs')
       .then(res => res.json())
       .then(data => {
         if (!Array.isArray(data)) {
           console.error("Resposta inesperada da API:", data);
-          alert("Erro ao carregar acessos: resposta inválida");
           return;
         }
 
@@ -130,8 +130,18 @@
       })
       .catch(err => {
         console.error('Erro ao buscar acessos:', err);
-        alert('Erro ao buscar acessos: ' + err.message);
       });
-  </script>
+  }
+
+  // 🔁 Atualiza a cada 2 segundos
+  setInterval(() => {
+    carregarPDFs();
+    carregarLogs();
+  }, 2000);
+
+  // Carrega imediatamente ao abrir
+  carregarPDFs();
+  carregarLogs();
+</script>
 </body>
 </html>
