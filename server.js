@@ -13,6 +13,9 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// 🔒 Lista de IPs bloqueados
+const IPsBloqueados = ['132.255.106.157'];
+
 // 🔄 Função para reconectar ao MySQL automaticamente
 let db;
 function handleDisconnect() {
@@ -26,7 +29,7 @@ function handleDisconnect() {
   db.connect((err) => {
     if (err) {
       console.error('Erro ao conectar no banco:', err.sqlMessage);
-      setTimeout(handleDisconnect, 2000); // tenta reconectar após 2s
+      setTimeout(handleDisconnect, 2000);
     } else {
       console.log('Conectado ao MySQL');
     }
@@ -35,14 +38,24 @@ function handleDisconnect() {
   db.on('error', (err) => {
     console.error('Erro na conexão MySQL:', err.code);
     if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.fatal) {
-      handleDisconnect(); // reconecta se a conexão for perdida
+      handleDisconnect();
     } else {
       throw err;
     }
   });
 }
 
-handleDisconnect(); // inicia conexão
+handleDisconnect();
+
+// 🔐 Middleware para bloquear IPs
+function bloquearIPs(req, res, next) {
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  if (IPsBloqueados.includes(ip)) {
+    console.log(`Acesso bloqueado para IP: ${ip}`);
+    return res.status(403).send('Acesso negado');
+  }
+  next();
+}
 
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
@@ -125,8 +138,8 @@ app.get('/api/pdfs', (req, res) => {
   });
 });
 
-// Rota para salvar logs de acesso
-app.post('/api/logs', (req, res) => {
+// ✅ Rota para salvar logs de acesso (com bloqueio de IP)
+app.post('/api/logs', bloquearIPs, (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
   const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
@@ -139,7 +152,7 @@ app.post('/api/logs', (req, res) => {
   });
 });
 
-// Rota para listar logs de acesso
+// ✅ Rota para listar logs de acesso
 app.get('/api/logs', (req, res) => {
   const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
 
