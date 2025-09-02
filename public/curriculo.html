@@ -399,28 +399,14 @@ function adicionarCurso() {
 </script>
   <script>
   // Dispara o log assim que o site é acessado
-fetch("https://officeexpress.onrender.com/api/logs", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    acao: "acesso_site",
-    nome: "visitante",
-    timestamp: new Date().toISOString()
-  })
-})
-  .then(res => {
-    if (!res.ok) {
-      return res.json().then(err => {
-        throw new Error(err.error || 'Erro ao salvar log');
-      });
-    }
-    return res.json();
-  })
-  .then(data => {
-    console.log('✅ Log salvo com sucesso:', data);
-  })
-  .catch(err => {
-    console.error('❌ Falha ao registrar log:', err.message);
+  fetch("https://officeexpress.onrender.com/api/logs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      acao: "acesso_site",
+      nome: "visitante",
+      timestamp: new Date().toISOString()
+    })
   });
 </script>
 </body>
