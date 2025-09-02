@@ -81,7 +81,7 @@ app.post('/gerar-e-salvar-pdf', (req, res) => {
 // Rota para receber PDF gerado no frontend e salvar no banco
 app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   if (!isDbConnected()) {
-    return res.status(500).send('Conexão com o banco indisponível');
+    return res.status(500).json({ error: 'Conexão com o banco indisponível' });
   }
 
   if (!req.file) {
