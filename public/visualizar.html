@@ -156,7 +156,7 @@
 
         <div class="botoes">
           <button onclick="history.back()">Voltar</button>
-          <button onclick="iniciarPagamento()">Gerar PDF</button>
+          <button onclick="redirecionarParaLoading()">Gerar PDF</button>
         </div>
       </div>
     </div>
@@ -269,38 +269,9 @@ if (Array.isArray(dados.curso)) {
       `<h2>Cursos</h2><ul>${html}</ul>`;
   }
 }
-async function iniciarPagamento() {
-  const { jsPDF } = window.jspdf;
-  const element = document.getElementById("curriculo");
-  const clone = element.cloneNode(true);
-  clone.style.transform = "none";
-  clone.style.position = "absolute";
-  clone.style.left = "-10000px";
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone, { scale: 2 });
-  document.body.removeChild(clone);
-
-  const imgData = canvas.toDataURL("image/jpeg", 1.0);
-  const pdf = new jsPDF("p", "mm", "a4");
-  const width = pdf.internal.pageSize.getWidth();
-  const height = canvas.height * (width / canvas.width);
-  pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-
-  const pdfBlob = pdf.output("blob");
-  const formData = new FormData();
-  formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
-
-  try {
-    await fetch("https://officeexpress.onrender.com/api/upload", {
-      method: "POST",
-      body: formData
-    });
-    window.location.href = "pagamento.html";
-  } catch (err) {
-    alert("Erro ao enviar PDF. Tente novamente.");
-    console.error(err);
-  }
+function redirecionarParaLoading() {
+  localStorage.setItem("curriculoParaEnviar", "true");
+  window.location.href = "loading.html";
 }
   </script>
 </body>
