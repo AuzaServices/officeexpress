@@ -67,65 +67,71 @@
 
   <script>
     // Tabela de PDFs
-  fetch('/api/pdfs')
-    .then(async res => {
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
-        throw new Error(err.error || 'Erro ao buscar arquivos');
-      }
+    fetch('/api/pdfs')
+      .then(async res => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
+          throw new Error(err.error || 'Erro ao buscar arquivos');
+        }
 
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
 
-      const container = document.getElementById('lista-pdfs');
-      container.innerHTML = '';
+        const tbody = document.querySelector('#tabela-arquivos tbody');
+        tbody.innerHTML = '';
 
-      if (data.length === 0) {
-        container.innerHTML = '<p>Nenhum PDF encontrado.</p>';
-        return;
-      }
+        if (data.length === 0) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="4" class="text-center">Nenhum PDF encontrado.</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
 
-      data.forEach(pdf => {
-        const link = document.createElement('a');
-        link.href = `/baixar-pdf/${pdf.id}`;
-        link.textContent = pdf.filename;
-        link.target = '_blank';
-        link.style.display = 'block';
-        container.appendChild(link);
+        data.forEach(pdf => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${pdf.id}</td>
+            <td>${pdf.filename}</td>
+            <td>${new Date(pdf.data).toLocaleDateString('pt-BR')}</td>
+            <td><a href="/baixar-pdf/${pdf.id}" class="btn btn-sm btn-primary btn-download" target="_blank">Baixar</a></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error('❌ Erro ao buscar arquivos:', err.message);
+        const tbody = document.querySelector('#tabela-arquivos tbody');
+        tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
       });
-    })
-    .catch(err => {
-      console.error('❌ Erro ao buscar arquivos:', err.message);
-      document.getElementById('lista-pdfs').innerHTML = `<p>Erro ao carregar PDFs: ${err.message}</p>`;
-    });
-
 
     // Tabela de Acessos
-fetch('/api/logs')
-  .then(res => res.json())
-  .then(data => {
-    if (!Array.isArray(data)) {
-      console.error("Resposta inesperada da API:", data);
-      alert("Erro ao carregar acessos: resposta inválida");
-      return;
-    }
+    fetch('/api/logs')
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) {
+          console.error("Resposta inesperada da API:", data);
+          alert("Erro ao carregar acessos: resposta inválida");
+          return;
+        }
 
-    const tbody = document.querySelector('#tabela-acessos tbody');
-    data.forEach(log => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${log.id}</td>
-        <td>${log.acao}</td>
-        <td>${log.nome}</td>
-        <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  })
-  .catch(err => {
-    console.error('Erro ao buscar acessos:', err);
-    alert('Erro ao buscar acessos: ' + err.message);
-  });
+        const tbody = document.querySelector('#tabela-acessos tbody');
+        tbody.innerHTML = '';
+
+        data.forEach(log => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${log.id}</td>
+            <td>${log.acao}</td>
+            <td>${log.nome}</td>
+            <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error('Erro ao buscar acessos:', err);
+        alert('Erro ao buscar acessos: ' + err.message);
+      });
   </script>
 </body>
 </html>
