@@ -16,6 +16,25 @@ app.use(bodyParser.json());
 // 🔒 Lista de IPs bloqueados
 const IPsBloqueados = ['132.255.106.157'];
 
+// 🔐 Middleware para bloquear IPs
+function bloquearIPs(req, res, next) {
+  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+  // Normaliza IP IPv6 para IPv4
+  if (ip.includes('::ffff:')) {
+    ip = ip.split('::ffff:')[1];
+  }
+
+  console.log(`🔍 IP detectado: ${ip}`);
+
+  if (IPsBloqueados.includes(ip)) {
+    console.log(`🚫 Acesso bloqueado para IP: ${ip}`);
+    return res.status(403).send('Acesso negado');
+  }
+
+  next();
+}
+
 // 🔄 Função para reconectar ao MySQL automaticamente
 let db;
 function handleDisconnect() {
@@ -31,12 +50,12 @@ function handleDisconnect() {
       console.error('Erro ao conectar no banco:', err.sqlMessage);
       setTimeout(handleDisconnect, 2000);
     } else {
-      console.log('Conectado ao MySQL');
+      console.log('✅ Conectado ao MySQL');
     }
   });
 
   db.on('error', (err) => {
-    console.error('Erro na conexão MySQL:', err.code);
+    console.error('⚠️ Erro na conexão MySQL:', err.code);
     if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.fatal) {
       handleDisconnect();
     } else {
@@ -46,16 +65,6 @@ function handleDisconnect() {
 }
 
 handleDisconnect();
-
-// 🔐 Middleware para bloquear IPs
-function bloquearIPs(req, res, next) {
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  if (IPsBloqueados.includes(ip)) {
-    console.log(`Acesso bloqueado para IP: ${ip}`);
-    return res.status(403).send('Acesso negado');
-  }
-  next();
-}
 
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
@@ -168,5 +177,5 @@ app.get('/api/logs', (req, res) => {
 // Inicia o servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
