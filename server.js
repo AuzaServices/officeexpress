@@ -16,24 +16,25 @@ app.use(bodyParser.json());
 // 🔒 Lista de IPs bloqueados
 const IPsBloqueados = ['132.255.106.157'];
 
-// 🔐 Middleware para bloquear IPs
-function bloquearIPs(req, res, next) {
-  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+// 🔐 Middleware global para bloquear IPs
+app.use((req, res, next) => {
+  let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
 
-  // Normaliza IP IPv6 para IPv4
-  if (ip.includes('::ffff:')) {
-    ip = ip.split('::ffff:')[1];
+  // Normaliza IP (ex: "::ffff:132.255.106.157" → "132.255.106.157")
+  ip = ip.split(',')[0].trim();
+  if (ip.startsWith('::ffff:')) {
+    ip = ip.replace('::ffff:', '');
   }
 
   console.log(`🔍 IP detectado: ${ip}`);
 
   if (IPsBloqueados.includes(ip)) {
-    console.log(`🚫 Acesso bloqueado para IP: ${ip}`);
+    console.log(`🚫 Bloqueado: ${ip}`);
     return res.status(403).send('Acesso negado');
   }
 
   next();
-}
+});
 
 // 🔄 Função para reconectar ao MySQL automaticamente
 let db;
@@ -147,8 +148,8 @@ app.get('/api/pdfs', (req, res) => {
   });
 });
 
-// ✅ Rota para salvar logs de acesso (com bloqueio de IP)
-app.post('/api/logs', bloquearIPs, (req, res) => {
+// Rota para salvar logs de acesso
+app.post('/api/logs', (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
   const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
@@ -161,7 +162,7 @@ app.post('/api/logs', bloquearIPs, (req, res) => {
   });
 });
 
-// ✅ Rota para listar logs de acesso
+// Rota para listar logs de acesso
 app.get('/api/logs', (req, res) => {
   const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
 
