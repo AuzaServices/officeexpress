@@ -13,29 +13,6 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 🔒 Lista de IPs bloqueados
-const IPsBloqueados = ['132.255.106.157'];
-
-// 🔐 Middleware global para bloquear IPs
-app.use((req, res, next) => {
-  let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
-
-  // Normaliza IP (ex: "::ffff:132.255.106.157" → "132.255.106.157")
-  ip = ip.split(',')[0].trim();
-  if (ip.startsWith('::ffff:')) {
-    ip = ip.replace('::ffff:', '');
-  }
-
-  console.log(`🔍 IP detectado: ${ip}`);
-
-  if (IPsBloqueados.includes(ip)) {
-    console.log(`🚫 Bloqueado: ${ip}`);
-    return res.status(403).send('Acesso negado');
-  }
-
-  next();
-});
-
 // 🔄 Função para reconectar ao MySQL automaticamente
 let db;
 function handleDisconnect() {
@@ -49,23 +26,23 @@ function handleDisconnect() {
   db.connect((err) => {
     if (err) {
       console.error('Erro ao conectar no banco:', err.sqlMessage);
-      setTimeout(handleDisconnect, 2000);
+      setTimeout(handleDisconnect, 2000); // tenta reconectar após 2s
     } else {
-      console.log('✅ Conectado ao MySQL');
+      console.log('Conectado ao MySQL');
     }
   });
 
   db.on('error', (err) => {
-    console.error('⚠️ Erro na conexão MySQL:', err.code);
+    console.error('Erro na conexão MySQL:', err.code);
     if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.fatal) {
-      handleDisconnect();
+      handleDisconnect(); // reconecta se a conexão for perdida
     } else {
       throw err;
     }
   });
 }
 
-handleDisconnect();
+handleDisconnect(); // inicia conexão
 
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
@@ -178,5 +155,5 @@ app.get('/api/logs', (req, res) => {
 // Inicia o servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
