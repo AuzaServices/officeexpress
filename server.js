@@ -26,7 +26,7 @@ function handleDisconnect() {
   db.connect((err) => {
     if (err) {
       console.error('❌ Erro ao conectar no banco:', err.sqlMessage);
-      setTimeout(handleDisconnect, 2000); // tenta reconectar após 2s
+      setTimeout(handleDisconnect, 2000);
     } else {
       console.log('✅ Conectado ao MySQL');
     }
@@ -43,7 +43,7 @@ function handleDisconnect() {
   });
 }
 
-handleDisconnect(); // inicia conexão
+handleDisconnect();
 
 // ✅ Verifica se a conexão está ativa
 function isDbConnected() {
@@ -53,7 +53,7 @@ function isDbConnected() {
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
   if (!isDbConnected()) {
-    return res.status(500).send('Conexão com o banco indisponível');
+    return res.status(500).json({ error: 'Conexão com o banco indisponível' });
   }
 
   const doc = new PDFDocument();
@@ -68,9 +68,9 @@ app.post('/gerar-e-salvar-pdf', (req, res) => {
     db.query(query, [filename, 'application/pdf', pdfBuffer], (err) => {
       if (err) {
         console.error('Erro ao salvar PDF no banco:', err.sqlMessage);
-        return res.status(500).send('Erro ao salvar PDF');
+        return res.status(500).json({ error: 'Erro ao salvar PDF' });
       }
-      res.send('PDF gerado e salvo com sucesso');
+      res.json({ message: 'PDF gerado e salvo com sucesso' });
     });
   });
 
@@ -85,7 +85,7 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   }
 
   if (!req.file) {
-    return res.status(400).send('Nenhum arquivo enviado');
+    return res.status(400).json({ error: 'Nenhum arquivo enviado' });
   }
 
   const { originalname, mimetype, buffer } = req.file;
@@ -94,7 +94,7 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
   db.query(query, [originalname, mimetype, buffer], (err, result) => {
     if (err) {
       console.error('Erro ao salvar PDF enviado:', err.sqlMessage);
-      return res.status(500).send('Erro ao salvar PDF');
+      return res.status(500).json({ error: 'Erro ao salvar PDF' });
     }
     res.status(200).json({ message: 'PDF enviado e salvo com sucesso', id: result.insertId });
   });
@@ -103,7 +103,7 @@ app.post('/api/upload', upload.single('arquivo'), (req, res) => {
 // Rota para baixar o PDF do banco
 app.get('/baixar-pdf/:id', (req, res) => {
   if (!isDbConnected()) {
-    return res.status(500).send('Conexão com o banco indisponível');
+    return res.status(500).json({ error: 'Conexão com o banco indisponível' });
   }
 
   const id = req.params.id;
@@ -111,7 +111,7 @@ app.get('/baixar-pdf/:id', (req, res) => {
 
   db.query(query, [id], (err, results) => {
     if (err || results.length === 0) {
-      return res.status(404).send('PDF não encontrado');
+      return res.status(404).json({ error: 'PDF não encontrado' });
     }
 
     let { filename, data } = results[0];
@@ -133,7 +133,7 @@ app.get('/baixar-pdf/:id', (req, res) => {
 // Rota para listar PDFs
 app.get('/api/pdfs', (req, res) => {
   if (!isDbConnected()) {
-    return res.status(500).send('Conexão com o banco indisponível');
+    return res.status(500).json({ error: 'Conexão com o banco indisponível' });
   }
 
   const query = 'SELECT id, filename FROM pdfs ORDER BY id DESC';
@@ -141,7 +141,7 @@ app.get('/api/pdfs', (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.error('Erro ao buscar PDFs:', err.sqlMessage);
-      return res.status(500).send('Erro ao buscar arquivos');
+      return res.status(500).json({ error: 'Erro ao buscar arquivos' });
     }
     res.json(results);
   });
@@ -150,7 +150,7 @@ app.get('/api/pdfs', (req, res) => {
 // Rota para salvar logs de acesso
 app.post('/api/logs', (req, res) => {
   if (!isDbConnected()) {
-    return res.status(500).send('Conexão com o banco indisponível');
+    return res.status(500).json({ error: 'Conexão com o banco indisponível' });
   }
 
   const { acao, nome, timestamp } = req.body;
@@ -159,7 +159,7 @@ app.post('/api/logs', (req, res) => {
   db.query(query, [acao, nome, timestamp], (err) => {
     if (err) {
       console.error('Erro ao salvar log:', err.sqlMessage);
-      return res.status(500).send('Erro ao salvar log');
+      return res.status(500).json({ error: 'Erro ao salvar log' });
     }
     res.status(200).json({ mensagem: 'Log salvo com sucesso' });
   });
@@ -168,7 +168,7 @@ app.post('/api/logs', (req, res) => {
 // Rota para listar logs de acesso
 app.get('/api/logs', (req, res) => {
   if (!isDbConnected()) {
-    return res.status(500).send('Conexão com o banco indisponível');
+    return res.status(500).json({ error: 'Conexão com o banco indisponível' });
   }
 
   const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
@@ -176,7 +176,7 @@ app.get('/api/logs', (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.error('Erro ao buscar logs:', err.sqlMessage);
-      return res.status(500).send('Erro ao buscar logs');
+      return res.status(500).json({ error: 'Erro ao buscar logs' });
     }
     res.json(results);
   });
