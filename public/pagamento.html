@@ -42,7 +42,7 @@
       <button onclick="copiarPix()" class="btn btn-outline-primary">📋 Copiar chave Pix</button>
     </div>
 
-    <p class="mb-2">Após o pagamento, clique abaixo para confirmar:</p>
+    <p class="mb-2">Após o pagamento, clique abaixo para confirmar e receber seu Curriculum em PDF:</p>
     <div class="d-grid gap-3">
       <button onclick="liberarPDF()" class="btn btn-success">✅ Já paguei</button>
     </div>
@@ -64,7 +64,6 @@
     function copiarPix() {
       const chave = document.getElementById("pix").textContent;
       navigator.clipboard.writeText(chave);
-      alert("Chave Pix copiada!");
     }
 
     function liberarPDF() {
