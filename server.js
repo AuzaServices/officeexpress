@@ -10,25 +10,39 @@ const app = express();
 
 // Serve arquivos da pasta public
 app.use(express.static('public'));
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Conexão com o banco
-const db = mysql.createConnection({
-  host: 'sql10.freesqldatabase.com',
-  user: 'sql10792206',
-  password: 'hKT4bm2WIP',
-  database: 'sql10792206'
-});
+// 🔄 Função para reconectar ao MySQL automaticamente
+let db;
+function handleDisconnect() {
+  db = mysql.createConnection({
+    host: 'sql10.freesqldatabase.com',
+    user: 'sql10792206',
+    password: 'hKT4bm2WIP',
+    database: 'sql10792206'
+  });
 
-db.connect((err) => {
-  if (err) {
-    console.error('Erro ao conectar no banco:', err.sqlMessage);
-    return;
-  }
-  console.log('Conectado ao MySQL');
-});
+  db.connect((err) => {
+    if (err) {
+      console.error('Erro ao conectar no banco:', err.sqlMessage);
+      setTimeout(handleDisconnect, 2000); // tenta reconectar após 2s
+    } else {
+      console.log('Conectado ao MySQL');
+    }
+  });
+
+  db.on('error', (err) => {
+    console.error('Erro na conexão MySQL:', err.code);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.fatal) {
+      handleDisconnect(); // reconecta se a conexão for perdida
+    } else {
+      throw err;
+    }
+  });
+}
+
+handleDisconnect(); // inicia conexão
 
 // Rota para gerar e salvar PDF no banco
 app.post('/gerar-e-salvar-pdf', (req, res) => {
@@ -111,7 +125,7 @@ app.get('/api/pdfs', (req, res) => {
   });
 });
 
-// ✅ Rota para salvar logs de acesso
+// Rota para salvar logs de acesso
 app.post('/api/logs', (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
@@ -125,7 +139,7 @@ app.post('/api/logs', (req, res) => {
   });
 });
 
-// ✅ Rota para listar logs de acesso
+// Rota para listar logs de acesso
 app.get('/api/logs', (req, res) => {
   const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
 
