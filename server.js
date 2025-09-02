@@ -139,9 +139,10 @@ app.get('/api/logs', (req, res) => {
   const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
   db.query(query, (err, results) => {
     if (err) {
-      console.error('Erro ao buscar logs:', err.sqlMessage);
+      console.error('❌ Erro ao buscar logs:', err);
       return res.status(500).json({ error: 'Erro ao buscar logs' });
     }
+    console.log('📋 Logs retornados:', results);
     res.json(results);
   });
 });
