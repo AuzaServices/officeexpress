@@ -22,6 +22,23 @@
       margin-top: 20px;
       color: #343a40;
     }
+    #curriculo {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 794px;
+      height: 1123px;
+      padding: 60px;
+      background: white;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    h1, h2 {
+      color: #00324a;
+    }
+    p, li {
+      font-size: 16px;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
@@ -31,41 +48,83 @@
     <p class="text-muted">Aguarde alguns instantes</p>
   </div>
 
-<script>
-  async function enviarCurriculo() {
-    const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
-    if (!precisaEnviar) return;
+  <div id="curriculo"></div>
 
-    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-    const { jsPDF } = window.jspdf;
-    const element = document.createElement("div");
-    element.innerHTML = localStorage.getItem("curriculoHTML"); // ou recria o DOM
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    async function enviarCurriculo() {
+      const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
+      if (!precisaEnviar) return;
 
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    const pdf = new jsPDF("p", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = canvas.height * (width / canvas.width);
-    pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+      const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+      const container = document.getElementById("curriculo");
 
-    const pdfBlob = pdf.output("blob");
-    const formData = new FormData();
-    formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
+      // Monta o currículo dinamicamente
+      container.innerHTML = `
+        <h1>${dados.nome || ""}</h1>
+        <p><strong>Email:</strong> ${dados.email || ""}</p>
+        <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+        <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
+        ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
+        ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
+        ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
+        ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
+      `;
 
-    try {
-      await fetch("https://officeexpress.onrender.com/api/upload", {
-        method: "POST",
-        body: formData
-      });
-      localStorage.removeItem("curriculoParaEnviar");
-      window.location.href = "pagamento.html";
-    } catch (err) {
-      alert("Erro ao enviar PDF. Tente novamente.");
-      console.error(err);
+      if (Array.isArray(dados.curso)) {
+        let cursos = "";
+        for (let i = 0; i < dados.curso.length; i++) {
+          const nome = dados.curso[i]?.trim();
+          const inst = dados.instituicao[i]?.trim();
+          const carga = dados.carga[i]?.trim();
+          if (nome || inst || carga) {
+            cursos += `<li><strong>${nome}</strong> — ${inst} <em>(${carga})</em></li>`;
+          }
+        }
+        if (cursos) container.innerHTML += `<h2>Cursos</h2><ul>${cursos}</ul>`;
+      }
+
+      if (Array.isArray(dados.empresa)) {
+        let exp = "";
+        for (let i = 0; i < dados.empresa.length; i++) {
+          const empresa = dados.empresa[i]?.trim();
+          const cargo = dados.cargo[i]?.trim();
+          const periodo = dados.periodo[i]?.trim();
+          const atividades = dados.atividades[i]?.trim();
+          if (empresa || cargo || periodo || atividades) {
+            exp += `<li><strong>${empresa}</strong> — ${cargo} <em>(${periodo})</em><br>${atividades}</li>`;
+          }
+        }
+        if (exp) container.innerHTML += `<h2>Experiência Profissional</h2><ul>${exp}</ul>`;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const canvas = await html2canvas(container, { scale: 2 });
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const width = pdf.internal.pageSize.getWidth();
+      const height = canvas.height * (width / canvas.width);
+      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+
+      const pdfBlob = pdf.output("blob");
+      const formData = new FormData();
+      formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
+
+      try {
+        await fetch("https://officeexpress.onrender.com/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        localStorage.removeItem("curriculoParaEnviar");
+        window.location.href = "pagamento.html";
+      } catch (err) {
+        alert("Erro ao enviar PDF. Tente novamente.");
+        console.error(err);
+      }
     }
-  }
 
-  setTimeout(enviarCurriculo, 2000); // simula tempo de carregamento
-</script>
+    setTimeout(enviarCurriculo, 2000);
+  </script>
 </body>
 </html>
