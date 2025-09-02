@@ -67,20 +67,38 @@
 
   <script>
     // Tabela de PDFs
-fetch('/api/pdfs')
-  .then(async res => {
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
-      throw new Error(err.error || 'Erro ao buscar arquivos');
-    }
-    const data = await res.json();
-    if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
-    // renderiza os dados...
-  })
-  .catch(err => {
-    console.error('❌ Erro ao buscar arquivos:', err.message);
-    alert('Falha ao carregar arquivos: ' + err.message);
-  });
+  fetch('/api/pdfs')
+    .then(async res => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
+        throw new Error(err.error || 'Erro ao buscar arquivos');
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
+
+      const container = document.getElementById('lista-pdfs');
+      container.innerHTML = '';
+
+      if (data.length === 0) {
+        container.innerHTML = '<p>Nenhum PDF encontrado.</p>';
+        return;
+      }
+
+      data.forEach(pdf => {
+        const link = document.createElement('a');
+        link.href = `/baixar-pdf/${pdf.id}`;
+        link.textContent = pdf.filename;
+        link.target = '_blank';
+        link.style.display = 'block';
+        container.appendChild(link);
+      });
+    })
+    .catch(err => {
+      console.error('❌ Erro ao buscar arquivos:', err.message);
+      document.getElementById('lista-pdfs').innerHTML = `<p>Erro ao carregar PDFs: ${err.message}</p>`;
+    });
+
 
     // Tabela de Acessos
 fetch('/api/logs')
