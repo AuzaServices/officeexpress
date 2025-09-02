@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -7,97 +7,83 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Serve arquivos da pasta public
+// Middleware
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 🔁 Conexão com reconexão automática
-let db;
-function handleDisconnect() {
-  db = mysql.createConnection({
-    host: 'sql10.freesqldatabase.com',
-    user: 'sql10792206',
-    password: 'hKT4bm2WIP',
-    database: 'sql10792206'
-  });
+// 🔁 Pool de conexões MySQL
+const pool = mysql.createPool({
+  host: 'sql10.freesqldatabase.com',
+  user: 'sql10792206',
+  password: 'hKT4bm2WIP',
+  database: 'sql10792206',
+  port: 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-  db.connect(err => {
-    if (err) {
-      console.error('Erro ao conectar no banco:', err.sqlMessage);
-      setTimeout(handleDisconnect, 2000);
-    } else {
-      console.log('✅ Conectado ao MySQL');
-    }
-  });
+//////////////////////////
+// 📄 Gerar e salvar PDF
+//////////////////////////
+app.post('/gerar-e-salvar-pdf', async (req, res) => {
+  try {
+    const doc = new PDFDocument();
+    const buffers = [];
 
-  db.on('error', err => {
-    console.error('⚠️ Erro de conexão:', err.code);
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-      handleDisconnect();
-    } else {
-      throw err;
-    }
-  });
-}
-handleDisconnect();
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', async () => {
+      const pdfBuffer = Buffer.concat(buffers);
+      const filename = `${Date.now()}-curriculo.pdf`;
 
-// Rota para gerar e salvar PDF no banco
-app.post('/gerar-e-salvar-pdf', (req, res) => {
-  const doc = new PDFDocument();
-  const buffers = [];
+      const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
+      await pool.query(query, [filename, 'application/pdf', pdfBuffer]);
 
-  doc.on('data', buffers.push.bind(buffers));
-  doc.on('end', () => {
-    const pdfBuffer = Buffer.concat(buffers);
-    const filename = `${Date.now()}-curriculo.pdf`;
-
-    const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
-    db.query(query, [filename, 'application/pdf', pdfBuffer], (err) => {
-      if (err) {
-        console.error('Erro ao salvar PDF no banco:', err.sqlMessage);
-        return res.status(500).json({ error: 'Erro ao salvar PDF' });
-      }
       res.json({ message: 'PDF gerado e salvo com sucesso' });
     });
-  });
 
-  doc.text('Currículo de Davi: Desenvolvedor Full Stack nervoso 🔥');
-  doc.end();
+    doc.text('Currículo de Davi: Desenvolvedor Full Stack nervoso 🔥');
+    doc.end();
+  } catch (err) {
+    console.error('Erro ao salvar PDF:', err.message);
+    res.status(500).json({ error: 'Erro ao salvar PDF' });
+  }
 });
 
-// Rota para receber PDF gerado no frontend e salvar no banco
-app.post('/api/upload', upload.single('arquivo'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-  }
+//////////////////////////
+// 📤 Upload de PDF
+//////////////////////////
+app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
 
   const { originalname, mimetype, buffer } = req.file;
-  const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
-  db.query(query, [originalname, mimetype, buffer], (err, result) => {
-    if (err) {
-      console.error('Erro ao salvar PDF enviado:', err.sqlMessage);
-      return res.status(500).json({ error: 'Erro ao salvar PDF' });
-    }
+  try {
+    const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
+    const [result] = await pool.query(query, [originalname, mimetype, buffer]);
+
     res.status(200).json({ message: 'PDF enviado e salvo com sucesso', id: result.insertId });
-  });
+  } catch (err) {
+    console.error('Erro ao salvar PDF enviado:', err.message);
+    res.status(500).json({ error: 'Erro ao salvar PDF' });
+  }
 });
 
-// Rota para baixar o PDF do banco
-app.get('/baixar-pdf/:id', (req, res) => {
+//////////////////////////
+// 📥 Baixar PDF
+//////////////////////////
+app.get('/baixar-pdf/:id', async (req, res) => {
   const id = req.params.id;
-  const query = 'SELECT filename, data FROM pdfs WHERE id = ?';
+  try {
+    const query = 'SELECT filename, data FROM pdfs WHERE id = ?';
+    const [results] = await pool.query(query, [id]);
 
-  db.query(query, [id], (err, results) => {
-    if (err || results.length === 0) {
-      return res.status(404).json({ error: 'PDF não encontrado' });
-    }
+    if (results.length === 0) return res.status(404).json({ error: 'PDF não encontrado' });
 
     let { filename, data } = results[0];
-    if (!filename.toLowerCase().endsWith('.pdf')) {
-      filename += '.pdf';
-    }
+    if (!filename.toLowerCase().endsWith('.pdf')) filename += '.pdf';
 
     res.writeHead(200, {
       'Content-Type': 'application/pdf',
@@ -106,47 +92,48 @@ app.get('/baixar-pdf/:id', (req, res) => {
     });
 
     res.end(data);
-  });
+  } catch (err) {
+    console.error('Erro ao baixar PDF:', err.message);
+    res.status(500).json({ error: 'Erro ao baixar PDF' });
+  }
 });
 
-// Rota para listar PDFs
-app.get('/api/pdfs', (req, res) => {
-  const query = 'SELECT id, filename FROM pdfs ORDER BY id DESC';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Erro ao buscar PDFs:', err.sqlMessage);
-      return res.status(500).json({ error: 'Erro ao buscar arquivos' });
-    }
+//////////////////////////
+// 📋 Listar PDFs
+//////////////////////////
+app.get('/api/pdfs', async (req, res) => {
+  try {
+    const query = 'SELECT id, filename FROM pdfs ORDER BY id DESC';
+    const [results] = await pool.query(query);
     res.json(results);
-  });
+  } catch (err) {
+    console.error('Erro ao buscar PDFs:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar arquivos' });
+  }
 });
 
-// Rota para salvar logs de acesso
-app.post('/api/logs', (req, res) => {
+//////////////////////////
+// 📝 Salvar log de acesso
+//////////////////////////
+app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
-  const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
-  db.query(query, [acao, nome, timestamp], (err) => {
-    if (err) {
-      console.error('Erro ao salvar log:', err.sqlMessage);
-      return res.status(500).json({ error: 'Erro ao salvar log' });
-    }
+  try {
+    const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
+    await pool.query(query, [acao, nome, timestamp]);
     res.status(200).json({ mensagem: 'Log salvo com sucesso' });
-  });
+  } catch (err) {
+    console.error('Erro ao salvar log:', err.message);
+    res.status(500).json({ error: 'Erro ao salvar log' });
+  }
 });
 
-// Rota para listar logs de acesso
-app.get('/api/logs', (req, res) => {
-  const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('❌ Erro ao buscar logs:', {
-        mensagem: err.message,
-        codigo: err.code,
-        sql: err.sql
-      });
-      return res.status(500).json({ error: 'Erro ao buscar logs' });
-    }
+//////////////////////////
+// 📜 Listar logs de acesso
+//////////////////////////
+app.get('/api/logs', async (req, res) => {
+  try {
+    const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
+    const [results] = await pool.query(query);
 
     if (!Array.isArray(results)) {
       console.warn('⚠️ Resposta inesperada do banco:', results);
@@ -154,12 +141,19 @@ app.get('/api/logs', (req, res) => {
     }
 
     res.json(results);
-  });
+  } catch (err) {
+    console.error('❌ Erro ao buscar logs:', {
+      mensagem: err.message,
+      codigo: err.code,
+      sql: err.sql
+    });
+    res.status(500).json({ error: 'Erro ao buscar logs' });
+  }
 });
 
-
-// Inicia o servidor
-const PORT = process.env.PORT || 3000;
+//////////////////////////
+// 🚀 Iniciar servidor
+//////////////////////////
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
