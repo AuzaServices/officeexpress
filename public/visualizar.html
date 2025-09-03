@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="icon" href="icon.png" type="image/png" />
+  <link rel="icon" href="icon.png" type="image/png" />
   <title>Visualização do Currículo</title>
   <style>
     html, body {
@@ -87,8 +87,8 @@
 
     p, li {
       font-size: 16px;
-      margin: 8px 0;
-      line-height: 1.6;
+      margin: 0;
+      line-height: 1.4;
     }
 
     ul {
@@ -139,9 +139,7 @@
           <div class="info-topo">
             <div class="dados">
               <h1 id="c-nome"></h1>
-              <p id="c-email"></p>
-              <p id="c-telefone"></p>
-              <p id="c-endereco"></p>
+              <div id="c-dados-gerais"></div>
             </div>
             <img id="foto-preview" class="foto" src="" alt="Foto" style="display:none;" />
           </div>
@@ -168,8 +166,10 @@
     const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
 
     document.getElementById("c-nome").textContent = dados.nome || "";
-    if (dados.email) document.getElementById("c-email").innerHTML = "<strong>Email:</strong> " + dados.email;
-    if (dados.telefone) document.getElementById("c-telefone").innerHTML = "<strong>Telefone:</strong> " + dados.telefone;
+
+    let html = "";
+    if (dados.email) html += `<p><strong>Email:</strong> ${dados.email}</p>`;
+    if (dados.telefone) html += `<p><strong>Telefone:</strong> ${dados.telefone}</p>`;
 
     let enderecoCompleto = "";
     if (dados.endereco) enderecoCompleto += dados.endereco;
@@ -182,9 +182,9 @@
     }
     if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
 
-    if (enderecoCompleto) {
-      document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + enderecoCompleto;
-    }
+    if (enderecoCompleto) html += `<p><strong>Endereço:</strong> ${enderecoCompleto}</p>`;
+
+    document.getElementById("c-dados-gerais").innerHTML = html;
 
     if (dados.foto) {
       const img = document.getElementById("foto-preview");
@@ -227,52 +227,58 @@
       }
     }
 
+    if (Array.isArray(dados.curso)) {
+      let html = "";
+      for (let i = 0; i < dados.curso.length; i++) {
+        const nome = dados.curso[i]?.trim();
+        const inst = dados.instituicao[i]?.trim();
+        const carga = dados.carga[i]?.trim();
+
+        if (nome || inst || carga) {
+          html += "<li>";
+          if (nome) html += `<strong>${nome}</strong>`;
+          if (inst) html += ` — ${inst}`;
+          if (carga) html += ` <em>(${carga})</em>`;
+          html += "</li>";
+        }
+      }
+
+      if (html) {
+        document.getElementById("secao-cursos").innerHTML =
+          `<h2>Cursos</h2><ul>${html}</ul>`;
+      }
+    }
+
     async function gerarPDF() {
       const { jsPDF } = window.jspdf;
       const element = document.getElementById("curriculo");
 
+      // Clona o elemento e remove transformações para renderização correta
       const clone = element.cloneNode(true);
       clone.style.transform = "none";
       clone.style.position = "absolute";
       clone.style.left = "-10000px";
       document.body.appendChild(clone);
 
+      // Renderiza o clone em canvas
       const canvas = await html2canvas(clone, { scale: 2 });
       document.body.removeChild(clone);
 
+      // Converte o canvas em imagem
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
       const width = pdf.internal.pageSize.getWidth();
       const height = canvas.height * (width / canvas.width);
+
+      // Adiciona imagem ao PDF e salva
       pdf.addImage(imgData, "JPEG", 0, 0, width, height);
       pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
     }
 
-if (Array.isArray(dados.curso)) {
-  let html = "";
-  for (let i = 0; i < dados.curso.length; i++) {
-    const nome = dados.curso[i]?.trim();
-    const inst = dados.instituicao[i]?.trim();
-    const carga = dados.carga[i]?.trim();
-
-    if (nome || inst || carga) {
-      html += "<li>";
-      if (nome) html += `<strong>${nome}</strong>`;
-      if (inst) html += ` — ${inst}`;
-      if (carga) html += ` <em>(${carga})</em>`;
-      html += "</li>";
+    function redirecionarParaLoading() {
+      localStorage.setItem("curriculoParaEnviar", "true");
+      window.location.href = "loading.html";
     }
-  }
-
-  if (html) {
-    document.getElementById("secao-cursos").innerHTML =
-      `<h2>Cursos</h2><ul>${html}</ul>`;
-  }
-}
-function redirecionarParaLoading() {
-  localStorage.setItem("curriculoParaEnviar", "true");
-  window.location.href = "loading.html";
-}
   </script>
 </body>
 </html>
