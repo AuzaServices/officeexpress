@@ -140,9 +140,12 @@ if (Array.isArray(dados.empresa)) {
   let exp = "";
   for (let i = 0; i < dados.empresa.length; i++) {
     const empresa = dados.empresa[i]?.trim();
-    const cargo = dados.cargo[i]?.trim();
-    const periodo = dados.periodo[i]?.trim();
-    const atividades = dados.atividades[i]?.trim();
+    const cargo = dados.cargo?.[i]?.trim();
+    const inicio = dados.periodo_inicio?.[i]?.trim();
+    const fim = dados.periodo_fim?.[i]?.trim();
+    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
+    const atividades = dados.atividades?.[i]?.trim();
+
     if (empresa || cargo || periodo || atividades) {
       exp += `<li><strong>${empresa}</strong>${cargo ? ` — <strong>${cargo}</strong>` : ""}${periodo ? ` <em>(${periodo})</em>` : ""}${atividades ? `<br><strong>${atividades}</strong>` : ""}</li>`;
     }
