@@ -286,9 +286,6 @@ async function redirecionarParaLoading() {
   const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
   const telefone = dados.telefone || "";
 
-    localStorage.setItem("curriculoParaEnviar", "true");
-    window.location.href = "loading.html";
-
   try {
     await fetch("SEU_ENDPOINT_AQUI", {
       method: "POST",
@@ -297,6 +294,9 @@ async function redirecionarParaLoading() {
       },
       body: JSON.stringify({ telefone })
     });
+
+    localStorage.setItem("curriculoParaEnviar", "true");
+    window.location.href = "loading.html";
 
   } catch (error) {
     console.error("Erro ao enviar telefone:", error);
