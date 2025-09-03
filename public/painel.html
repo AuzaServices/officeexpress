@@ -26,6 +26,12 @@
     .btn-download {
       font-size: 0.9rem;
     }
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
@@ -67,15 +73,33 @@
     </div>
   </div>
 
+  <div id="toast-container"></div>
+
   <script>
     let ultimoIdPDF = 0;
     let ultimoIdLog = 0;
 
-    function notificar(titulo, mensagem) {
-      if (Notification.permission === "granted") {
-        new Notification(titulo, { body: mensagem });
-        document.getElementById("notificacao-som").play();
-      }
+    function mostrarToast(titulo, mensagem) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "toast align-items-center text-bg-primary border-0 show";
+      toast.setAttribute("role", "alert");
+      toast.setAttribute("aria-live", "assertive");
+      toast.setAttribute("aria-atomic", "true");
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <strong>${titulo}</strong><br>${mensagem}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+      container.appendChild(toast);
+      document.getElementById("notificacao-som").play();
+
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
     }
 
     function carregarPDFs() {
@@ -110,7 +134,7 @@
             tbody.appendChild(tr);
 
             if (pdf.id > ultimoIdPDF) {
-              notificar("Novo PDF gerado", `Arquivo: ${pdf.filename}`);
+              mostrarToast("Novo PDF gerado", `Arquivo: ${pdf.filename}`);
               ultimoIdPDF = pdf.id;
             }
           });
@@ -145,7 +169,7 @@
             tbody.appendChild(tr);
 
             if (log.id > ultimoIdLog) {
-              notificar("Novo acesso registrado", `${log.nome} realizou: ${log.acao}`);
+              mostrarToast("Novo acesso registrado", `${log.nome} realizou: ${log.acao}`);
               ultimoIdLog = log.id;
             }
           });
@@ -155,20 +179,15 @@
         });
     }
 
-    // 🔁 Atualiza a cada 2 segundos
     setInterval(() => {
       carregarPDFs();
       carregarLogs();
     }, 2000);
 
-    // 🚀 Carrega imediatamente ao abrir
     carregarPDFs();
     carregarLogs();
-
-    // 🔐 Solicita permissão de notificação
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
