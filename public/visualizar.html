@@ -266,7 +266,10 @@ if (Array.isArray(dados.curso)) {
   for (let i = 0; i < dados.curso.length; i++) {
     const nome = dados.curso[i]?.trim();
     const inst = dados.instituicao[i]?.trim();
-    const carga = dados.carga[i]?.trim();
+    let carga = dados.carga[i]?.trim();
+if (carga && /^\d+$/.test(carga)) {
+  carga = `${carga}hs`;
+}
 
     if (nome || inst || carga) {
       html += "<li>";

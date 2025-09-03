@@ -38,12 +38,13 @@
     box-sizing: border-box;
   }
 
-  body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background-color: var(--background);
-    color: var(--text);
-  }
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+  background-size: cover;
+  color: var(--text);
+}
 
 .container {
   max-width: 900px;
@@ -260,7 +261,7 @@
   <div class="curso">
     <input type="text" name="curso[]" placeholder="Nome do curso" />
     <input type="text" name="instituicao[]" placeholder="Instituição (opcional)" />
-    <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" />
+    <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" class="carga-input" />
   </div>
 </div>
 <button type="button" class="sub-botao" onclick="adicionarCurso()">+ Adicionar Curso</button>
@@ -270,6 +271,7 @@
   <div class="experiencia">
     <input type="text" name="empresa[]" placeholder="Empresa" />
     <input type="text" name="cargo[]" placeholder="Cargo" />
+    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
 
 <label>Início:</label>
 <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano">
@@ -277,7 +279,6 @@
 <label>Fim:</label>
 <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano">
 
-    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
   </div>
 </div>
       <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
@@ -484,11 +485,11 @@ function adicionarExperiencia() {
   nova.innerHTML = `
     <input type="text" name="empresa[]" placeholder="Empresa" />
     <input type="text" name="cargo[]" placeholder="Cargo" />
+    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
     <label>Início:</label>
     <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
     <label>Fim:</label>
     <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
-    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
   `;
   container.appendChild(nova);
 
@@ -517,6 +518,12 @@ function adicionarExperiencia() {
     ],
     locale: "pt"
   });
+
+  document.querySelectorAll('.carga-input').forEach(input => {
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/\D/g, ''); // Remove tudo que não for número
+  });
+});
 </script>
 </body>
 </html>
