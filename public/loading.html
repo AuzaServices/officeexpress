@@ -70,14 +70,26 @@ p, li {
       margin-bottom: 30px;
     }
 
-    .foto {
-      width: 120px;
-      height: 160px;
-      border-radius: 5px;
-      object-fit: cover;
-      border: 1px solid #ccc;
-      margin-left: 30px;
-    }
+.foto-container {
+  width: 150px;
+  height: 200px;
+  margin: 40px auto; /* centraliza horizontalmente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+.foto {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 5px;
+}
+    
   </style>
 </head>
 <body>
@@ -114,9 +126,9 @@ container.innerHTML = `
       <p><strong>Email:</strong> ${dados.email || ""}</p>
       <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
       <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
-    </div>
-    ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
-  </div>
+<div class="foto-container">
+  <img id="foto-preview" class="foto" src="" alt="Foto" />
+</div>
   ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p><strong>${dados.objetivo}</strong></p>` : ""}
   ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p><strong>${dados.formacao}</strong></p>` : ""}
 `;
