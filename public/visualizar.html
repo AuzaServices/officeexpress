@@ -2,31 +2,61 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" href="icon.png" type="image/png" />
   <title>Visualização do Currículo</title>
-  <link rel="icon" href="icon.png" type="image/png" />
   <style>
-    body {
+    html, body {
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", sans-serif;
+      overflow: hidden;
+      position: fixed;
+      height: 100%;
       background-color: #eaeaea;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
     }
+
     .wrapper {
-      padding: 40px;
+      width: 100%;
+      overflow-x: auto;
+      padding: 40px 20px;
     }
+
+    .preview-container {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding-left: 10px;
+      margin-left: -26px;
+    }
+
+    .preview-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .a4 {
       width: 794px;
+      height: 1123px;
       background: white;
       padding: 60px;
-      margin: auto;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       border-radius: 8px;
+      box-sizing: border-box;
+      transform: scale(0.4);
+      transform-origin: top left;
     }
+
     h1 {
       font-size: 32px;
+      margin-bottom: 10px;
       color: #00324a;
     }
+
     h2 {
       font-size: 20px;
       margin-top: 30px;
@@ -34,59 +64,104 @@
       border-bottom: 1px solid #ccc;
       padding-bottom: 4px;
     }
-    p, li {
-      font-size: 16px;
-      line-height: 1.6;
+
+    .info-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
     }
-    ul {
-      padding-left: 20px;
+
+    .dados {
+      flex: 1;
     }
-    .botoes {
-      text-align: center;
-      margin-top: 30px;
-    }
-    .botoes button {
-      background-color: #00324a;
-      color: white;
-      padding: 10px 20px;
-      font-size: 14px;
-      border: none;
-      border-radius: 6px;
-      margin: 10px;
-      cursor: pointer;
-    }
+
     .foto {
       width: 120px;
       height: 160px;
+      border-radius: 5px;
       object-fit: cover;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      margin-left: 30px;
+    }
+
+    p, li {
+      font-size: 16px;
+      margin: 8px 0;
+      line-height: 1.6;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    .botoes {
+      margin-top: -650px;
+      margin-left: -470px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .botoes button {
+      background-color: #00324a;
+      color: white;
+      padding: 5px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 10px;
+      margin: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .botoes button:hover {
+      background-color: #005066;
+    }
+
+    #preview-miniatura {
+      width: 80px;
+      height: 106px;
+      object-fit: contain;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      display: none;
+      background-color: #fff;
     }
   </style>
 </head>
 <body>
+
   <div class="wrapper">
-    <div class="a4" id="curriculo">
-      <div class="info-topo">
-        <h1 id="c-nome"></h1>
-        <p id="c-email"></p>
-        <p id="c-telefone"></p>
-        <p id="c-endereco"></p>
-        <img id="foto-preview" class="foto" src="" alt="Foto" style="display:none;" />
+    <div class="preview-container">
+      <div class="preview-block">
+        <div class="a4" id="curriculo">
+          <div class="info-topo">
+            <div class="dados">
+              <h1 id="c-nome"></h1>
+              <p id="c-email"></p>
+              <p id="c-telefone"></p>
+              <p id="c-endereco"></p>
+            </div>
+            <img id="foto-preview" class="foto" src="" alt="Foto" style="display:none;" />
+          </div>
+
+          <div id="secao-objetivo"></div>
+          <div id="secao-cursos"></div>
+          <div id="secao-experiencia"></div>
+          <div id="secao-formacao"></div>
+          <div id="secao-habilidades"></div>
+          <div id="secao-hobbies"></div>
+        </div>
+
+        <div class="botoes">
+          <button onclick="history.back()">Voltar</button>
+          <button onclick="redirecionarParaLoading()">Gerar PDF</button>
+        </div>
       </div>
-      <div id="secao-objetivo"></div>
-      <div id="secao-formacao"></div>
-      <div id="secao-habilidades"></div>
-      <div id="secao-hobbies"></div>
-      <div id="secao-experiencia"></div>
-      <div id="secao-cursos"></div>
-    </div>
-    <div class="botoes">
-      <button onclick="history.back()">Voltar</button>
-      <button onclick="gerarPDF()">Gerar PDF</button>
     </div>
   </div>
-
+ 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
@@ -100,9 +175,15 @@
     if (dados.numero) enderecoCompleto += ", " + dados.numero;
     if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
     if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-    if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
+    if (dados.cidade) {
+      const cidadeFormatada = dados.cidade.charAt(0).toUpperCase() + dados.cidade.slice(1).toLowerCase();
+      enderecoCompleto += ", " + cidadeFormatada;
+    }
     if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
-    if (enderecoCompleto) document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + enderecoCompleto;
+
+    if (enderecoCompleto) {
+      document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + enderecoCompleto;
+    }
 
     if (dados.foto) {
       const img = document.getElementById("foto-preview");
@@ -138,129 +219,147 @@
           html += "</li>";
         }
       }
+
       if (html) {
         document.getElementById("secao-experiencia").innerHTML =
           `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
       }
     }
 
-    if (Array.isArray(dados.curso)) {
-      let html = "";
-      for (let i = 0; i < dados.curso.length; i++) {
-        const nome = dados.curso[i]?.trim();
-        const inst = dados.instituicao[i]?.trim();
-        const carga = dados.carga[i]?.trim();
+async function gerarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-        if (nome || inst || carga) {
-          html += "<li>";
-          if (nome) html += `<strong>${nome}</strong>`;
-          if (inst) html += ` — ${inst}`;
-          if (carga) html += ` <em>(${carga})</em>`;
-          html += "</li>";
-        }
-      }
-      if (html) {
-        document.getElementById("secao-cursos").innerHTML =
-          `<h2>Cursos</h2><ul>${html}</ul>`;
-      }
-    }
+  let y = 20;
 
-    async function gerarPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 20;
+  doc.setFont("times", "bold");
+  doc.setFontSize(18);
+  doc.text("Currículo", 20, y);
+  y += 10;
 
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+
+  if (dados.nome) {
+    doc.text(`Nome: ${dados.nome}`, 20, y);
+    y += 8;
+  }
+  if (dados.email) {
+    doc.text(`Email: ${dados.email}`, 20, y);
+    y += 8;
+  }
+  if (dados.telefone) {
+    doc.text(`Telefone: ${dados.telefone}`, 20, y);
+    y += 8;
+  }
+  if (enderecoCompleto) {
+    doc.text(`Endereço: ${enderecoCompleto}`, 20, y);
+    y += 8;
+  }
+
+  const addSecaoTexto = (titulo, texto) => {
+    if (texto && texto.trim()) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.text("Currículo", 20, y);
-      y += 10;
-
+      doc.text(titulo, 20, y);
+      y += 6;
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
-
-      if (dados.nome) doc.text(`Nome: ${dados.nome}`, 20, y), y += 8;
-      if (dados.email) doc.text(`Email: ${dados.email}`, 20, y), y += 8;
-      if (dados.telefone) doc.text(`Telefone: ${dados.telefone}`, 20, y), y += 8;
-      if (enderecoCompleto) doc.text(`Endereço: ${enderecoCompleto}`, 20, y), y += 8;
-
-      const addSecaoTexto = (titulo, texto) => {
-        if (texto && texto.trim()) {
-          doc.setFont("helvetica", "bold");
-          doc.text(titulo, 20, y);
-          y += 6;
-          doc.setFont("helvetica", "normal");
-          const linhas = doc.splitTextToSize(texto, 170);
-          doc.text(linhas, 20, y);
-          y += linhas.length * 6;
-        }
-      };
-
-      addSecaoTexto("Objetivo", dados.objetivo);
-      addSecaoTexto("Formação Acadêmica", dados.formacao);
-      addSecaoTexto("Habilidades", dados.habilidades);
-      addSecaoTexto("Hobbies", dados.hobbies);
-
-      if (Array.isArray(dados.empresa)) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Experiência Profissional", 20, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-
-        for (let i = 0; i < dados.empresa.length; i++) {
-          const empresa = dados.empresa[i]?.trim();
-          const cargo = dados.cargo[i]?.trim();
-          const periodo = dados.periodo[i]?.trim();
-          const atividades = dados.atividades[i]?.trim();
-
-          let linha = "";
-          if (empresa) linha += empresa;
-          if (cargo) linha += ` — ${cargo}`;
-          if (periodo) linha += ` (${periodo})`;
-
-          doc.text(linha, 20, y);
-          y += 6;
-
-          if (atividades) {
-            const atividadesFormatadas = doc.splitTextToSize(atividades, 170);
-            doc.text(atividadesFormatadas, 25, y);
-            y += atividadesFormatadas.length * 6;
-          }
-
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
-          }
-        }
-      }
-
-      if (Array.isArray(dados.curso)) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Cursos", 20, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-
-        for (let i = 0; i < dados.curso.length; i++) {
-          const nome = dados.curso[i]?.trim();
-          const inst = dados.instituicao[i]?.trim();
-          const carga = dados.carga[i]?.trim();
-
-          let linha = "";
-          if (nome) linha += nome;
-          if (inst) linha += ` — ${inst}`;
-          if (carga) linha += ` (${carga})`;
-
-          doc.text(linha, 20, y);
-          y += 6;
-
-          if (y > 270) {
-            doc.addPage();
-            y = 20;
-          }
-        }
-      }
-
-      doc.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+      const linhas = doc.splitTextToSize(texto, 170);
+      doc.text(linhas, 20, y);
+      y += linhas.length * 6;
     }
+  };
+
+  addSecaoTexto("Objetivo", dados.objetivo);
+  addSecaoTexto("Formação Acadêmica", dados.formacao);
+  addSecaoTexto("Habilidades", dados.habilidades);
+  addSecaoTexto("Hobbies", dados.hobbies);
+
+  if (Array.isArray(dados.empresa)) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Experiência Profissional", 20, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+
+    for (let i = 0; i < dados.empresa.length; i++) {
+      const empresa = dados.empresa[i]?.trim();
+      const cargo = dados.cargo[i]?.trim();
+      const periodo = dados.periodo[i]?.trim();
+      const atividades = dados.atividades[i]?.trim();
+
+      let linha = "";
+      if (empresa) linha += empresa;
+      if (cargo) linha += ` — ${cargo}`;
+      if (periodo) linha += ` (${periodo})`;
+      doc.text(linha, 20, y);
+      y += 6;
+
+      if (atividades) {
+        const atividadesFormatadas = doc.splitTextToSize(atividades, 170);
+        doc.text(atividadesFormatadas, 25, y);
+        y += atividadesFormatadas.length * 6;
+      }
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    }
+  }
+
+  if (Array.isArray(dados.curso)) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Cursos", 20, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+
+    for (let i = 0; i < dados.curso.length; i++) {
+      const nome = dados.curso[i]?.trim();
+      const inst = dados.instituicao[i]?.trim();
+      const carga = dados.carga[i]?.trim();
+
+      let linha = "";
+      if (nome) linha += nome;
+      if (inst) linha += ` — ${inst}`;
+      if (carga) linha += ` (${carga})`;
+
+      doc.text(linha, 20, y);
+      y += 6;
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    }
+  }
+
+  doc.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+}
+
+if (Array.isArray(dados.curso)) {
+  let html = "";
+  for (let i = 0; i < dados.curso.length; i++) {
+    const nome = dados.curso[i]?.trim();
+    const inst = dados.instituicao[i]?.trim();
+    const carga = dados.carga[i]?.trim();
+
+    if (nome || inst || carga) {
+      html += "<li>";
+      if (nome) html += `<strong>${nome}</strong>`;
+      if (inst) html += ` — ${inst}`;
+      if (carga) html += ` <em>(${carga})</em>`;
+      html += "</li>";
+    }
+  }
+
+  if (html) {
+    document.getElementById("secao-cursos").innerHTML =
+      `<h2>Cursos</h2><ul>${html}</ul>`;
+  }
+}
+function redirecionarParaLoading() {
+  localStorage.setItem("curriculoParaEnviar", "true");
+  window.location.href = "loading.html";
+}
   </script>
 </body>
 </html>
