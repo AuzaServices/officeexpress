@@ -228,57 +228,75 @@
 
 async function gerarPDF() {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF("p", "mm", "a4"); // retrato, milímetros, A4
 
-  let y = 20;
+  let y = 20; // posição vertical inicial
+  const margemEsquerda = 20;
+  const larguraTexto = 170; // 210 - 2×20
 
-  doc.setFont("times", "bold");
+  // Título
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.text("Currículo", 20, y);
+  doc.text("Currículo", margemEsquerda, y);
   y += 10;
 
+  // Dados pessoais
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
 
   if (dados.nome) {
-    doc.text(`Nome: ${dados.nome}`, 20, y);
+    doc.text(`Nome: ${dados.nome}`, margemEsquerda, y);
     y += 8;
   }
   if (dados.email) {
-    doc.text(`Email: ${dados.email}`, 20, y);
+    doc.text(`Email: ${dados.email}`, margemEsquerda, y);
     y += 8;
   }
   if (dados.telefone) {
-    doc.text(`Telefone: ${dados.telefone}`, 20, y);
+    doc.text(`Telefone: ${dados.telefone}`, margemEsquerda, y);
     y += 8;
   }
   if (enderecoCompleto) {
-    doc.text(`Endereço: ${enderecoCompleto}`, 20, y);
+    doc.text(`Endereço: ${enderecoCompleto}`, margemEsquerda, y);
     y += 8;
   }
 
+  // Função auxiliar para seções de texto
   const addSecaoTexto = (titulo, texto) => {
     if (texto && texto.trim()) {
       doc.setFont("helvetica", "bold");
-      doc.text(titulo, 20, y);
+      doc.setFontSize(14);
+      doc.text(titulo, margemEsquerda, y);
       y += 6;
+
       doc.setFont("helvetica", "normal");
-      const linhas = doc.splitTextToSize(texto, 170);
-      doc.text(linhas, 20, y);
+      doc.setFontSize(12);
+      const linhas = doc.splitTextToSize(texto, larguraTexto);
+      doc.text(linhas, margemEsquerda, y);
       y += linhas.length * 6;
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
     }
   };
 
+  // Seções principais
   addSecaoTexto("Objetivo", dados.objetivo);
   addSecaoTexto("Formação Acadêmica", dados.formacao);
   addSecaoTexto("Habilidades", dados.habilidades);
   addSecaoTexto("Hobbies", dados.hobbies);
 
+  // Experiência Profissional
   if (Array.isArray(dados.empresa)) {
     doc.setFont("helvetica", "bold");
-    doc.text("Experiência Profissional", 20, y);
+    doc.setFontSize(14);
+    doc.text("Experiência Profissional", margemEsquerda, y);
     y += 6;
+
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
 
     for (let i = 0; i < dados.empresa.length; i++) {
       const empresa = dados.empresa[i]?.trim();
@@ -290,12 +308,13 @@ async function gerarPDF() {
       if (empresa) linha += empresa;
       if (cargo) linha += ` — ${cargo}`;
       if (periodo) linha += ` (${periodo})`;
-      doc.text(linha, 20, y);
+
+      doc.text(linha, margemEsquerda, y);
       y += 6;
 
       if (atividades) {
-        const atividadesFormatadas = doc.splitTextToSize(atividades, 170);
-        doc.text(atividadesFormatadas, 25, y);
+        const atividadesFormatadas = doc.splitTextToSize(atividades, larguraTexto - 5);
+        doc.text(atividadesFormatadas, margemEsquerda + 5, y);
         y += atividadesFormatadas.length * 6;
       }
 
@@ -306,11 +325,15 @@ async function gerarPDF() {
     }
   }
 
+  // Cursos
   if (Array.isArray(dados.curso)) {
     doc.setFont("helvetica", "bold");
-    doc.text("Cursos", 20, y);
+    doc.setFontSize(14);
+    doc.text("Cursos", margemEsquerda, y);
     y += 6;
+
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
 
     for (let i = 0; i < dados.curso.length; i++) {
       const nome = dados.curso[i]?.trim();
@@ -322,7 +345,7 @@ async function gerarPDF() {
       if (inst) linha += ` — ${inst}`;
       if (carga) linha += ` (${carga})`;
 
-      doc.text(linha, 20, y);
+      doc.text(linha, margemEsquerda, y);
       y += 6;
 
       if (y > 270) {
@@ -332,6 +355,7 @@ async function gerarPDF() {
     }
   }
 
+  // Finaliza e salva
   doc.save(`curriculo-${dados.nome || "usuario"}.pdf`);
 }
 
