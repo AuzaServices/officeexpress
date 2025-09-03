@@ -90,7 +90,7 @@
 
           data.forEach(pdf => {
             const tr = document.createElement('tr');
-            const numeroLimpo = (pdf.telefone || "").replace(/\D/g, "");
+            const numeroLimpo = "55" + (pdf.telefone || "").replace(/\D/g, "");
             const mensagem = encodeURIComponent("Olá, vi que você gerou um Curriculum, para recebe-lo basta realizar o pagamento de *R$2,00*.");
             const linkWhatsapp = `https://wa.me/${numeroLimpo}?text=${mensagem}`;
 
