@@ -269,9 +269,25 @@ if (Array.isArray(dados.curso)) {
       `<h2>Cursos</h2><ul>${html}</ul>`;
   }
 }
-function redirecionarParaLoading() {
-  localStorage.setItem("curriculoParaEnviar", "true");
-  window.location.href = "loading.html";
+async function redirecionarParaLoading() {
+  const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+  const telefone = dados.telefone || "";
+
+  try {
+    await fetch("SEU_ENDPOINT_AQUI", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ telefone })
+    });
+
+    localStorage.setItem("curriculoParaEnviar", "true");
+    window.location.href = "loading.html";
+  } catch (error) {
+    console.error("Erro ao enviar telefone:", error);
+    alert("Falha ao conectar com o servidor.");
+  }
 }
   </script>
 </body>

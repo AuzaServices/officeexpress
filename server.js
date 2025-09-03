@@ -60,13 +60,15 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
 
   const { originalname, mimetype, buffer } = req.file;
-  try {
-    const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
-    const [result] = await pool.query(query, [originalname, mimetype, buffer]);
+  const { telefone } = req.body;
 
-    res.status(200).json({ message: 'PDF enviado e salvo com sucesso', id: result.insertId });
+  try {
+    const query = 'INSERT INTO pdfs (filename, mimetype, data, telephone) VALUES (?, ?, ?, ?)';
+    const [result] = await pool.query(query, [originalname, mimetype, buffer, telefone]);
+
+    res.status(200).json({ message: 'PDF e telefone salvos com sucesso', id: result.insertId });
   } catch (err) {
-    console.error('Erro ao salvar PDF enviado:', err.message);
+    console.error('Erro ao salvar PDF e telefone:', err.message);
     res.status(500).json({ error: 'Erro ao salvar PDF' });
   }
 });
@@ -74,27 +76,14 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
 //////////////////////////
 // 📥 Baixar PDF
 //////////////////////////
-app.get('/baixar-pdf/:id', async (req, res) => {
-  const id = req.params.id;
+app.get('/api/pdfs', async (req, res) => {
   try {
-    const query = 'SELECT filename, data FROM pdfs WHERE id = ?';
-    const [results] = await pool.query(query, [id]);
-
-    if (results.length === 0) return res.status(404).json({ error: 'PDF não encontrado' });
-
-    let { filename, data } = results[0];
-    if (!filename.toLowerCase().endsWith('.pdf')) filename += '.pdf';
-
-    res.writeHead(200, {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      'Content-Length': data.length,
-    });
-
-    res.end(data);
+    const query = 'SELECT id, filename, telefone, created_at FROM pdfs ORDER BY id DESC';
+    const [results] = await pool.query(query);
+    res.json(results);
   } catch (err) {
-    console.error('Erro ao baixar PDF:', err.message);
-    res.status(500).json({ error: 'Erro ao baixar PDF' });
+    console.error('Erro ao buscar PDFs:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar arquivos' });
   }
 });
 

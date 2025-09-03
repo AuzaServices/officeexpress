@@ -67,42 +67,24 @@
 
   <script>
   function carregarPDFs() {
-    fetch('/api/pdfs')
-      .then(async res => {
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
-          throw new Error(err.error || 'Erro ao buscar arquivos');
-        }
-
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
-
-        const tbody = document.querySelector('#tabela-arquivos tbody');
-        tbody.innerHTML = '';
-
-        if (data.length === 0) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td colspan="4" class="text-center">Nenhum PDF encontrado.</td>`;
-          tbody.appendChild(tr);
-          return;
-        }
-
-        data.forEach(pdf => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${pdf.id}</td>
-            <td>${pdf.filename}</td>
-            <td>${new Date(pdf.data).toLocaleDateString('pt-BR')}</td>
-            <td><a href="/baixar-pdf/${pdf.id}" class="btn btn-sm btn-primary btn-download" target="_blank">Baixar</a></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      })
-      .catch(err => {
-        console.error('❌ Erro ao buscar arquivos:', err.message);
-        const tbody = document.querySelector('#tabela-arquivos tbody');
-        tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
-      });
+fetch('/api/pdfs')
+  .then(res => res.json())
+  .then(data => {
+    const tabela = document.getElementById('tabela-pdfs');
+    data.forEach(pdf => {
+      const linha = document.createElement('tr');
+      linha.innerHTML = `
+        <td>${pdf.id}</td>
+        <td>${pdf.filename}</td>
+        <td>${pdf.telephone || '—'}</td>
+        <td>${new Date(pdf.created_at).toLocaleString()}</td>
+        <td>
+          <a href="https://wa.me/55${pdf.telephone}" target="_blank">📲 WhatsApp</a>
+        </td>
+      `;
+      tabela.appendChild(linha);
+    });
+  });
   }
 
   function carregarLogs() {
