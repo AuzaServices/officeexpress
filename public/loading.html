@@ -27,7 +27,7 @@
       left: -9999px;
       top: 0;
       width: 794px;
-      min-height: 1123px;
+      height: 1123px;
       padding: 60px;
       background: white;
       font-family: 'Segoe UI', sans-serif;
@@ -57,27 +57,26 @@
       const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
       if (!precisaEnviar) return;
 
-      const dados = JSON.parse(localStorage.getItem("curriculo") || "{}");
+      const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
       const container = document.getElementById("curriculo");
 
-      // Monta o currículo
-      container.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
-          <div>
-            <h1>${dados.nome || "Nome não informado"}</h1>
-            <p><strong>Email:</strong> ${dados.email || "—"}</p>
-            <p><strong>Telefone:</strong> ${dados.telefone || "—"}</p>
-            <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
-          </div>
-          ${dados.foto ? `<img src="${dados.foto}" style="width:120px; height:160px; object-fit:cover; border:1px solid #ccc; border-radius:5px;" />` : ""}
-        </div>
-        ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
-        ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
-        ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
-        ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
-      `;
+      // Monta o currículo dinamicamente
+container.innerHTML = `
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+    <div>
+      <h1>${dados.nome || ""}</h1>
+      <p><strong>Email:</strong> ${dados.email || ""}</p>
+      <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+      <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
+    </div>
+    ${dados.foto ? `<img src="${dados.foto}" style="width:120px; height:160px; object-fit:cover; border:1px solid #ccc; border-radius:5px;" />` : ""}
+  </div>
+  ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
+  ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
+  ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
+  ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
+`;
 
-      // Cursos
       if (Array.isArray(dados.curso)) {
         let cursos = "";
         for (let i = 0; i < dados.curso.length; i++) {
@@ -91,7 +90,6 @@
         if (cursos) container.innerHTML += `<h2>Cursos</h2><ul>${cursos}</ul>`;
       }
 
-      // Experiência
       if (Array.isArray(dados.empresa)) {
         let exp = "";
         for (let i = 0; i < dados.empresa.length; i++) {
@@ -106,7 +104,6 @@
         if (exp) container.innerHTML += `<h2>Experiência Profissional</h2><ul>${exp}</ul>`;
       }
 
-      // Gera PDF
       const { jsPDF } = window.jspdf;
       const canvas = await html2canvas(container, { scale: 2 });
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
@@ -115,25 +112,20 @@
       const height = canvas.height * (width / canvas.width);
       pdf.addImage(imgData, "JPEG", 0, 0, width, height);
 
-      // Envia pro backend
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
       formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
-      formData.append("telefone", dados.telefone || "");
 
       try {
-        const resposta = await fetch("https://officeexpress.onrender.com/api/upload", {
+        await fetch("https://officeexpress.onrender.com/api/upload", {
           method: "POST",
           body: formData
         });
-
-        if (!resposta.ok) throw new Error("Falha no envio");
-
         localStorage.removeItem("curriculoParaEnviar");
         window.location.href = "pagamento.html";
       } catch (err) {
         alert("Erro ao enviar PDF. Tente novamente.");
-        console.error("Erro:", err);
+        console.error(err);
       }
     }
 

@@ -236,6 +236,7 @@
       clone.style.position = "absolute";
       clone.style.left = "-10000px";
       document.body.appendChild(clone);
+
       const canvas = await html2canvas(clone, { scale: 2 });
       document.body.removeChild(clone);
 
@@ -269,19 +270,9 @@ if (Array.isArray(dados.curso)) {
   }
 }
 function redirecionarParaLoading() {
-  // Captura o HTML do currículo
-  const curriculoHTML = document.getElementById("curriculo").outerHTML;
-  sessionStorage.setItem("curriculoHTML", curriculoHTML);
-
-  // Captura dados extras, se quiser usar no loading.html
-  const nome = document.getElementById("nome")?.textContent || "";
-  const telefone = document.getElementById("telefone")?.textContent || "";
-  sessionStorage.setItem("nome", nome);
-  sessionStorage.setItem("telefone", telefone);
-
-  // Redireciona para a página de geração de PDF
-  window.location.href = "loading.html";}
-  
+  localStorage.setItem("curriculoParaEnviar", "true");
+  window.location.href = "loading.html";
+}
   </script>
 </body>
 </html>
