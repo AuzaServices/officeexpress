@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="icon" href="icon.png" type="image/png" />
@@ -162,8 +161,7 @@
       </div>
     </div>
   </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+ 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
@@ -229,41 +227,112 @@
     }
 
 async function gerarPDF() {
-  const element = document.getElementById("curriculo");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-  // Remove escala temporariamente
-  const originalTransform = element.style.transform;
-  element.style.transform = "none";
+  let y = 20;
 
-  const opt = {
-    margin: 0,
-    filename: `curriculo-${dados.nome || "usuario"}.pdf`,
-    image: { type: 'jpeg', quality: 1 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("Currículo", 20, y);
+  y += 10;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+
+  if (dados.nome) {
+    doc.text(`Nome: ${dados.nome}`, 20, y);
+    y += 8;
+  }
+  if (dados.email) {
+    doc.text(`Email: ${dados.email}`, 20, y);
+    y += 8;
+  }
+  if (dados.telefone) {
+    doc.text(`Telefone: ${dados.telefone}`, 20, y);
+    y += 8;
+  }
+  if (enderecoCompleto) {
+    doc.text(`Endereço: ${enderecoCompleto}`, 20, y);
+    y += 8;
+  }
+
+  const addSecaoTexto = (titulo, texto) => {
+    if (texto && texto.trim()) {
+      doc.setFont("helvetica", "bold");
+      doc.text(titulo, 20, y);
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      const linhas = doc.splitTextToSize(texto, 170);
+      doc.text(linhas, 20, y);
+      y += linhas.length * 6;
+    }
   };
 
-  // Gera o PDF como Blob
-  const worker = html2pdf().set(opt).from(element);
-  const blob = await worker.outputPdf('blob');
+  addSecaoTexto("Objetivo", dados.objetivo);
+  addSecaoTexto("Formação Acadêmica", dados.formacao);
+  addSecaoTexto("Habilidades", dados.habilidades);
+  addSecaoTexto("Hobbies", dados.hobbies);
 
-  // Restaura escala original
-  element.style.transform = originalTransform;
+  if (Array.isArray(dados.empresa)) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Experiência Profissional", 20, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
 
-  // Envia para o backend
-  const formData = new FormData();
-  formData.append('arquivo', blob, `curriculo-${dados.nome || "usuario"}.pdf`);
+    for (let i = 0; i < dados.empresa.length; i++) {
+      const empresa = dados.empresa[i]?.trim();
+      const cargo = dados.cargo[i]?.trim();
+      const periodo = dados.periodo[i]?.trim();
+      const atividades = dados.atividades[i]?.trim();
 
-  fetch('/api/upload', {
-    method: 'POST',
-    body: formData
-  }).then(res => {
-    if (res.ok) {
-      alert('PDF enviado com sucesso!');
-    } else {
-      alert('Erro ao enviar PDF.');
+      let linha = "";
+      if (empresa) linha += empresa;
+      if (cargo) linha += ` — ${cargo}`;
+      if (periodo) linha += ` (${periodo})`;
+      doc.text(linha, 20, y);
+      y += 6;
+
+      if (atividades) {
+        const atividadesFormatadas = doc.splitTextToSize(atividades, 170);
+        doc.text(atividadesFormatadas, 25, y);
+        y += atividadesFormatadas.length * 6;
+      }
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
     }
-  });
+  }
+
+  if (Array.isArray(dados.curso)) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Cursos", 20, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+
+    for (let i = 0; i < dados.curso.length; i++) {
+      const nome = dados.curso[i]?.trim();
+      const inst = dados.instituicao[i]?.trim();
+      const carga = dados.carga[i]?.trim();
+
+      let linha = "";
+      if (nome) linha += nome;
+      if (inst) linha += ` — ${inst}`;
+      if (carga) linha += ` (${carga})`;
+
+      doc.text(linha, 20, y);
+      y += 6;
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    }
+  }
+
+  doc.save(`curriculo-${dados.nome || "usuario"}.pdf`);
 }
 
 if (Array.isArray(dados.curso)) {
