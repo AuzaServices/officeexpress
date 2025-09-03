@@ -7,137 +7,152 @@
   <meta property="og:image" content="https://i.imgur.com/4YeH0xg.png">
   <meta property="og:url" content="https://seusite.com">
   <meta property="og:type" content="website">
-
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Criar Currículo | Office Express</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="icon.png" type="image/png" />
   <style>
-    :root {
-      --primary: #00324a;
-      --accent: #e09d00;
-      --background: #f4f7fa;
-      --card: #ffffff;
-      --border: #d9e2ec;
-      --text: #1f2933;
-    }
+  :root {
+    --primary: #00324a;
+    --accent: #e09d00;
+    --background: #f4f7fa;
+    --card: rgba(255, 255, 255, 0.25); /* vidro branco translúcido */
+    --border: #d9e2ec;
+    --text: #1f2933;
+  }
 
-    * {
-      box-sizing: border-box;
-    }
+  * {
+    box-sizing: border-box;
+  }
 
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background-color: var(--background);
-      color: var(--text);
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+  }
+
+.container {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2); /* branco translúcido */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1; /* garante que fique acima das partículas */
+}
+
+  h1 {
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 30px;
+  }
+
+  label {
+    font-weight: 600;
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 6px;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: #fff;
+    transition: border-color 0.3s ease;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .form-row > div {
+    flex: 1 1 45%;
+  }
+
+  .experiencia {
+    background-color: #f0f4f8;
+    border-left: 4px solid var(--accent);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+
+  .botao {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    padding: 16px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 30px;
+  }
+
+  .botao:hover {
+    background-color: #005877;
+  }
+
+  .sub-botao {
+    background-color: var(--accent);
+    color: #fff;
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    .form-row > div {
+      flex: 1 1 100%;
     }
 
     .container {
-      max-width: 900px;
-      margin: 50px auto;
-      background: var(--card);
-      border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    }
-
-    h1 {
-      text-align: center;
-      color: var(--primary);
-      margin-bottom: 30px;
-    }
-
-    label {
-      font-weight: 600;
-      display: block;
-      margin-top: 20px;
-      margin-bottom: 6px;
+      padding: 25px;
+      margin: 20px;
     }
 
     input, textarea {
-      width: 100%;
-      padding: 14px;
-      font-size: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background-color: #fff;
-      transition: border-color 0.3s ease;
+      font-size: 1.1rem;
     }
+  }
 
-    input:focus, textarea:focus {
-      border-color: var(--accent);
-      outline: none;
-    }
+  #drop-area {
+    position: relative;
+  }
 
-    .form-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .form-row > div {
-      flex: 1 1 45%;
-    }
-
-    .experiencia {
-      background-color: #f0f4f8;
-      border-left: 4px solid var(--accent);
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 20px;
-    }
-
-    .botao {
-      width: 100%;
-      background: var(--primary);
-      color: white;
-      padding: 16px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      margin-top: 30px;
-    }
-
-    .botao:hover {
-      background-color: #005877;
-    }
-
-    .sub-botao {
-      background-color: var(--accent);
-      color: #fff;
-      margin-top: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    @media (max-width: 600px) {
-      .form-row > div {
-        flex: 1 1 100%;
-      }
-
-      .container {
-        padding: 25px;
-        margin: 20px;
-      }
-
-      input, textarea {
-        font-size: 1.1rem;
-      }
-    }
-
-#drop-area {
-  position: relative;
-}
-
-  </style>
+  #particles-js {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: var(--background);
+  }
+</style>
 </head>
 <body>
+  <div id="particles-js"></div>
   <div class="container">
     <h1>Criar Currículo Profissional</h1>
     <form id="formulario">
@@ -414,6 +429,28 @@ function adicionarCurso() {
       nome: "visitante",
       timestamp: new Date().toISOString()
     })
+  });
+</script>
+
+<script>
+  tsParticles.load("particles-js", {
+    fullScreen: { enable: false },
+    particles: {
+      number: { value: 60 },
+      color: { value: "#e09d00" },
+      shape: { type: "circle" },
+      opacity: { value: 0.3 },
+      size: { value: 4 },
+      move: {
+        enable: true,
+        speed: 1.5,
+        direction: "none",
+        outModes: { default: "bounce" }
+      }
+    },
+    background: {
+      color: { value: "#f4f7fa" }
+    }
   });
 </script>
 </body>
