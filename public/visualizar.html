@@ -269,9 +269,19 @@ if (Array.isArray(dados.curso)) {
   }
 }
 function redirecionarParaLoading() {
-  localStorage.setItem("curriculoParaEnviar", "true");
-  window.location.href = "loading.html";
-}
+  // Captura o HTML do currículo
+  const curriculoHTML = document.getElementById("curriculo").outerHTML;
+  sessionStorage.setItem("curriculoHTML", curriculoHTML);
+
+  // Captura dados extras, se quiser usar no loading.html
+  const nome = document.getElementById("nome")?.textContent || "";
+  const telefone = document.getElementById("telefone")?.textContent || "";
+  sessionStorage.setItem("nome", nome);
+  sessionStorage.setItem("telefone", telefone);
+
+  // Redireciona para a página de geração de PDF
+  window.location.href = "loading.html";}
+  
   </script>
 </body>
 </html>
