@@ -11,7 +11,7 @@
       padding: 40px;
     }
     .container {
-      max-width: 1000px;
+      max-width: 900px;
       margin: auto;
     }
     h1 {
@@ -23,7 +23,7 @@
     table th {
       background-color: #e9ecef;
     }
-    .btn-download, .btn-whatsapp {
+    .btn-download {
       font-size: 0.9rem;
     }
   </style>
@@ -38,7 +38,6 @@
             <th>ID</th>
             <th>Nome</th>
             <th>Data</th>
-            <th>WhatsApp</th>
             <th>Ação</th>
           </tr>
         </thead>
@@ -67,91 +66,82 @@
   </div>
 
   <script>
-    function carregarPDFs() {
-      fetch('/api/pdfs')
-        .then(async res => {
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
-            throw new Error(err.error || 'Erro ao buscar arquivos');
-          }
+  function carregarPDFs() {
+    fetch('/api/pdfs')
+      .then(async res => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
+          throw new Error(err.error || 'Erro ao buscar arquivos');
+        }
 
-          const data = await res.json();
-          if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
 
-          const tbody = document.querySelector('#tabela-arquivos tbody');
-          tbody.innerHTML = '';
+        const tbody = document.querySelector('#tabela-arquivos tbody');
+        tbody.innerHTML = '';
 
-          if (data.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td colspan="5" class="text-center">Nenhum PDF encontrado.</td>`;
-            tbody.appendChild(tr);
-            return;
-          }
+        if (data.length === 0) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="4" class="text-center">Nenhum PDF encontrado.</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
 
-          data.forEach(pdf => {
-            const tr = document.createElement('tr');
-            const numeroLimpo = "55" + (pdf.telefone || "").replace(/\D/g, "");
-            const mensagem = encodeURIComponent("Olá, vi que você gerou um Curriculum, para recebe-lo basta realizar o pagamento de *R$2,00*.");
-            const linkWhatsapp = `https://wa.me/${numeroLimpo}?text=${mensagem}`;
-
-            tr.innerHTML = `
-              <td>${pdf.id}</td>
-              <td>${pdf.filename}</td>
-              <td>${new Date(pdf.data).toLocaleDateString('pt-BR')}</td>
-              <td>
-                ${numeroLimpo
-                  ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-sm btn-success btn-whatsapp">WhatsApp</a>`
-                  : `<span class="text-muted">Sem número</span>`}
-              </td>
-              <td><a href="/baixar-pdf/${pdf.id}" class="btn btn-sm btn-primary btn-download" target="_blank">Baixar</a></td>
-            `;
-            tbody.appendChild(tr);
-          });
-        })
-        .catch(err => {
-          console.error('❌ Erro ao buscar arquivos:', err.message);
-          const tbody = document.querySelector('#tabela-arquivos tbody');
-          tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
+        data.forEach(pdf => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${pdf.id}</td>
+            <td>${pdf.filename}</td>
+            <td>${new Date(pdf.data).toLocaleDateString('pt-BR')}</td>
+            <td><a href="/baixar-pdf/${pdf.id}" class="btn btn-sm btn-primary btn-download" target="_blank">Baixar</a></td>
+          `;
+          tbody.appendChild(tr);
         });
-    }
+      })
+      .catch(err => {
+        console.error('❌ Erro ao buscar arquivos:', err.message);
+        const tbody = document.querySelector('#tabela-arquivos tbody');
+        tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
+      });
+  }
 
-    function carregarLogs() {
-      fetch('/api/logs')
-        .then(res => res.json())
-        .then(data => {
-          if (!Array.isArray(data)) {
-            console.error("Resposta inesperada da API:", data);
-            return;
-          }
+  function carregarLogs() {
+    fetch('/api/logs')
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) {
+          console.error("Resposta inesperada da API:", data);
+          return;
+        }
 
-          const tbody = document.querySelector('#tabela-acessos tbody');
-          tbody.innerHTML = '';
+        const tbody = document.querySelector('#tabela-acessos tbody');
+        tbody.innerHTML = '';
 
-          data.forEach(log => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${log.id}</td>
-              <td>${log.acao}</td>
-              <td>${log.nome}</td>
-              <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        })
-        .catch(err => {
-          console.error('Erro ao buscar acessos:', err);
+        data.forEach(log => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${log.id}</td>
+            <td>${log.acao}</td>
+            <td>${log.nome}</td>
+            <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+          `;
+          tbody.appendChild(tr);
         });
-    }
+      })
+      .catch(err => {
+        console.error('Erro ao buscar acessos:', err);
+      });
+  }
 
-    // 🔁 Atualiza a cada 2 segundos
-    setInterval(() => {
-      carregarPDFs();
-      carregarLogs();
-    }, 2000);
-
-    // Carrega imediatamente ao abrir
+  // 🔁 Atualiza a cada 2 segundos
+  setInterval(() => {
     carregarPDFs();
     carregarLogs();
-  </script>
+  }, 2000);
+
+  // Carrega imediatamente ao abrir
+  carregarPDFs();
+  carregarLogs();
+</script>
 </body>
 </html>
