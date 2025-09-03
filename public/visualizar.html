@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="icon" href="icon.png" type="image/png" />
@@ -227,26 +228,43 @@
       }
     }
 
-    async function gerarPDF() {
-      const { jsPDF } = window.jspdf;
-      const element = document.getElementById("curriculo");
+async function gerarPDF() {
+  const element = document.getElementById("curriculo");
 
-      const clone = element.cloneNode(true);
-      clone.style.transform = "none";
-      clone.style.position = "absolute";
-      clone.style.left = "-10000px";
-      document.body.appendChild(clone);
+  // Remove escala temporariamente
+  const originalTransform = element.style.transform;
+  element.style.transform = "none";
 
-      const canvas = await html2canvas(clone, { scale: 2 });
-      document.body.removeChild(clone);
+  const opt = {
+    margin: 0,
+    filename: `curriculo-${dados.nome || "usuario"}.pdf`,
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
 
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      const pdf = new jsPDF("p", "mm", "a4");
-      const width = pdf.internal.pageSize.getWidth();
-      const height = canvas.height * (width / canvas.width);
-      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-      pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+  // Gera o PDF como Blob
+  const worker = html2pdf().set(opt).from(element);
+  const blob = await worker.outputPdf('blob');
+
+  // Restaura escala original
+  element.style.transform = originalTransform;
+
+  // Envia para o backend
+  const formData = new FormData();
+  formData.append('arquivo', blob, `curriculo-${dados.nome || "usuario"}.pdf`);
+
+  fetch('/api/upload', {
+    method: 'POST',
+    body: formData
+  }).then(res => {
+    if (res.ok) {
+      alert('PDF enviado com sucesso!');
+    } else {
+      alert('Erro ao enviar PDF.');
     }
+  });
+}
 
 if (Array.isArray(dados.curso)) {
   let html = "";
