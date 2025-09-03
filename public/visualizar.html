@@ -208,17 +208,29 @@ p, li {
       for (let i = 0; i < dados.empresa.length; i++) {
         const empresa = dados.empresa[i]?.trim();
         const cargo = dados.cargo[i]?.trim();
-        const periodo = dados.periodo[i]?.trim();
+        const inicio = dados.periodo_inicio[i]?.trim();
+        const fim = dados.periodo_fim[i]?.trim();
+        const periodo = inicio && fim ? `${inicio}–${fim}` : inicio || fim || "";
         const atividades = dados.atividades[i]?.trim();
 
-        if (empresa || cargo || periodo || atividades) {
-          html += "<li>";
-          if (empresa) html += `<strong>${empresa}</strong>`;
-          if (cargo) html += ` — ${cargo}`;
-          if (periodo) html += ` <em>(${periodo})</em>`;
-          if (atividades) html += `<br><span>${atividades}</span>`;
-          html += "</li>";
-        }
+if (empresa || cargo || (inicio || fim) || atividades) {
+  html += "<li>";
+
+  // Empresa + período na mesma linha
+  if (empresa) {
+    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
+    html += `<strong>${empresa}</strong>`;
+    if (periodo) html += ` — <em>${periodo}</em>`;
+  }
+
+  // Cargo embaixo
+  if (cargo) html += `<br>${cargo}`;
+
+  // Atividades
+  if (atividades) html += `<br><span>${atividades}</span>`;
+
+  html += "</li>";
+}
       }
 
       if (html) {

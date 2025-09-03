@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Month Select Plugin CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Month Select Plugin JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 <link rel="icon" href="icon.png" type="image/png" />
   <meta property="og:title" content="Office Express - Seu currículo pronto em 2 minutos por R$2,00">
   <meta property="og:description" content="Crie seu Currículo Profissional em poucos cliques. Rápido, acessível e direto ao ponto. Apenas R$2,00.">
@@ -255,14 +266,20 @@
 <button type="button" class="sub-botao" onclick="adicionarCurso()">+ Adicionar Curso</button>
 
       <label>Experiência Profissional</label>
-      <div id="experiencias">
-        <div class="experiencia">
-          <input type="text" name="empresa[]" placeholder="Empresa" />
-          <input type="text" name="cargo[]" placeholder="Cargo" />
-          <input type="text" name="periodo[]" placeholder="Período (ex: 2020–2023)" />
-          <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
-        </div>
-      </div>
+<div id="experiencias">
+  <div class="experiencia">
+    <input type="text" name="empresa[]" placeholder="Empresa" />
+    <input type="text" name="cargo[]" placeholder="Cargo" />
+
+<label>Início:</label>
+<input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano">
+
+<label>Fim:</label>
+<input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano">
+
+    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+  </div>
+</div>
       <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
 
       <label>Formação Acadêmica</label>
@@ -283,12 +300,15 @@
     const container = document.getElementById("experiencias");
     const nova = document.createElement("div");
     nova.className = "experiencia";
-    nova.innerHTML = `
-      <input type="text" name="empresa[]" placeholder="Empresa" />
-      <input type="text" name="cargo[]" placeholder="Cargo" />
-      <input type="text" name="periodo[]" placeholder="Período (ex: 2020–2023)" />
-      <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
-    `;
+nova.innerHTML = `
+  <input type="text" name="empresa[]" placeholder="Empresa" />
+  <input type="text" name="cargo[]" placeholder="Cargo" />
+  <label>Início:</label>
+  <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
+  <label>Fim:</label>
+  <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
+  <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+`;
     container.appendChild(nova);
   }
 
@@ -336,7 +356,8 @@ const dados = {
   hobbies: form.hobbies?.value.trim() || "",
   empresa: valores("empresa"),
   cargo: valores("cargo"),
-  periodo: valores("periodo"),
+  periodo_inicio: valores("periodo_inicio"),
+  periodo_fim: valores("periodo_fim"),
   atividades: valores("atividades"),
   curso: valores("curso"),
 instituicao: valores("instituicao"),
@@ -454,6 +475,35 @@ function adicionarCurso() {
       color: { value: "#f4f7fa" }
     }
   });
+</script>
+<script>
+function adicionarExperiencia() {
+  const container = document.getElementById("experiencias");
+  const nova = document.createElement("div");
+  nova.className = "experiencia";
+  nova.innerHTML = `
+    <input type="text" name="empresa[]" placeholder="Empresa" />
+    <input type="text" name="cargo[]" placeholder="Cargo" />
+    <label>Início:</label>
+    <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
+    <label>Fim:</label>
+    <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
+    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+  `;
+  container.appendChild(nova);
+
+  // Reaplica o Flatpickr nos novos campos
+  flatpickr(nova.querySelectorAll(".mesAno"), {
+    plugins: [
+      new monthSelectPlugin({
+        shorthand: false,
+        dateFormat: "m/Y",
+        altFormat: "F Y"
+      })
+    ],
+    locale: "pt"
+  });
+}
 </script>
 </body>
 </html>
