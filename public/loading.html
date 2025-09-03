@@ -147,10 +147,29 @@ if (Array.isArray(dados.empresa)) {
     const atividades = dados.atividades?.[i]?.trim();
 
     if (empresa || cargo || periodo || atividades) {
-      exp += `<li><strong>${empresa}</strong>${cargo ? ` — <strong>${cargo}</strong>` : ""}${periodo ? ` <em>(${periodo})</em>` : ""}${atividades ? `<br><strong>${atividades}</strong>` : ""}</li>`;
+      exp += "<li>";
+
+      // Empresa + período na mesma linha (sem parênteses)
+      if (empresa) {
+        exp += `<strong>${empresa}</strong>`;
+        if (periodo) exp += ` — <em>${periodo}</em>`;
+      } else if (periodo) {
+        exp += `<em>${periodo}</em>`;
+      }
+
+      // Cargo embaixo
+      if (cargo) exp += `<br>${cargo}`;
+
+      // Atividades embaixo
+      if (atividades) exp += `<br><span>${atividades}</span>`;
+
+      exp += "</li>";
     }
   }
-  if (exp) container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
+
+  if (exp) {
+    container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
+  }
 }
 
 if (dados.habilidades) {
