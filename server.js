@@ -60,9 +60,11 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
 
   const { originalname, mimetype, buffer } = req.file;
+  const { telefone } = req.body; // 👈 Captura o telefone enviado pelo front
+
   try {
-    const query = 'INSERT INTO pdfs (filename, mimetype, data) VALUES (?, ?, ?)';
-    const [result] = await pool.query(query, [originalname, mimetype, buffer]);
+    const query = 'INSERT INTO pdfs (filename, mimetype, data, telefone) VALUES (?, ?, ?, ?)';
+    const [result] = await pool.query(query, [originalname, mimetype, buffer, telefone || '']);
 
     res.status(200).json({ message: 'PDF enviado e salvo com sucesso', id: result.insertId });
   } catch (err) {
@@ -103,7 +105,7 @@ app.get('/baixar-pdf/:id', async (req, res) => {
 //////////////////////////
 app.get('/api/pdfs', async (req, res) => {
   try {
-    const query = 'SELECT id, filename FROM pdfs ORDER BY id DESC';
+    const query = 'SELECT id, filename, telefone FROM pdfs ORDER BY id DESC';
     const [results] = await pool.query(query);
     res.json(results);
   } catch (err) {

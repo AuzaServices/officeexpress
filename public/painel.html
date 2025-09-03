@@ -11,7 +11,7 @@
       padding: 40px;
     }
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: auto;
     }
     h1 {
@@ -23,15 +23,12 @@
     table th {
       background-color: #e9ecef;
     }
-    .btn-download {
+    .btn-download, .btn-whatsapp {
       font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <!-- 🔊 Áudio de notificação -->
-  <audio id="notificacao-som" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3f6c5c9b6d.mp3?filename=notification-113412.mp3" preload="auto"></audio>
-
   <div class="container">
     <h1>Painel de Arquivos PDF</h1>
     <div class="table-responsive">
@@ -41,6 +38,7 @@
             <th>ID</th>
             <th>Nome</th>
             <th>Data</th>
+            <th>WhatsApp</th>
             <th>Ação</th>
           </tr>
         </thead>
@@ -69,20 +67,6 @@
   </div>
 
   <script>
-    let ultimoIdPDF = 0;
-    let ultimoIdLog = 0;
-
-    // 🔓 Ativa o som após a primeira interação do usuário
-    document.addEventListener('click', () => {
-      const audio = document.getElementById("notificacao-som");
-      audio.play().catch(() => {});
-    }, { once: true });
-
-    function tocarSom() {
-      const audio = document.getElementById("notificacao-som");
-      audio.play().catch(() => {});
-    }
-
     function carregarPDFs() {
       fetch('/api/pdfs')
         .then(async res => {
@@ -99,31 +83,35 @@
 
           if (data.length === 0) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td colspan="4" class="text-center">Nenhum PDF encontrado.</td>`;
+            tr.innerHTML = `<td colspan="5" class="text-center">Nenhum PDF encontrado.</td>`;
             tbody.appendChild(tr);
             return;
           }
 
           data.forEach(pdf => {
             const tr = document.createElement('tr');
+            const numeroLimpo = (pdf.telefone || "").replace(/\D/g, "");
+            const mensagem = encodeURIComponent("Olá, vi que você gerou um Curriculum, para recebe-lo basta realizar o pagamento de *R$2,00*.");
+            const linkWhatsapp = `https://wa.me/${numeroLimpo}?text=${mensagem}`;
+
             tr.innerHTML = `
               <td>${pdf.id}</td>
               <td>${pdf.filename}</td>
               <td>${new Date(pdf.data).toLocaleDateString('pt-BR')}</td>
+              <td>
+                ${numeroLimpo
+                  ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-sm btn-success btn-whatsapp">WhatsApp</a>`
+                  : `<span class="text-muted">Sem número</span>`}
+              </td>
               <td><a href="/baixar-pdf/${pdf.id}" class="btn btn-sm btn-primary btn-download" target="_blank">Baixar</a></td>
             `;
             tbody.appendChild(tr);
-
-            if (pdf.id > ultimoIdPDF) {
-              tocarSom();
-              ultimoIdPDF = pdf.id;
-            }
           });
         })
         .catch(err => {
           console.error('❌ Erro ao buscar arquivos:', err.message);
           const tbody = document.querySelector('#tabela-arquivos tbody');
-          tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
         });
     }
 
@@ -148,11 +136,6 @@
               <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
             `;
             tbody.appendChild(tr);
-
-            if (log.id > ultimoIdLog) {
-              tocarSom();
-              ultimoIdLog = log.id;
-            }
           });
         })
         .catch(err => {
@@ -166,7 +149,7 @@
       carregarLogs();
     }, 2000);
 
-    // 🚀 Carrega imediatamente ao abrir
+    // Carrega imediatamente ao abrir
     carregarPDFs();
     carregarLogs();
   </script>

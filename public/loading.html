@@ -61,21 +61,21 @@
       const container = document.getElementById("curriculo");
 
       // Monta o currículo dinamicamente
-container.innerHTML = `
-  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
-    <div>
-      <h1>${dados.nome || ""}</h1>
-      <p><strong>Email:</strong> ${dados.email || ""}</p>
-      <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
-      <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
-    </div>
-    ${dados.foto ? `<img src="${dados.foto}" style="width:120px; height:160px; object-fit:cover; border:1px solid #ccc; border-radius:5px;" />` : ""}
-  </div>
-  ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
-  ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
-  ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
-  ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
-`;
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+          <div>
+            <h1>${dados.nome || ""}</h1>
+            <p><strong>Email:</strong> ${dados.email || ""}</p>
+            <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+            <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
+          </div>
+          ${dados.foto ? `<img src="${dados.foto}" style="width:120px; height:160px; object-fit:cover; border:1px solid #ccc; border-radius:5px;" />` : ""}
+        </div>
+        ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
+        ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
+        ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
+        ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
+      `;
 
       if (Array.isArray(dados.curso)) {
         let cursos = "";
@@ -115,6 +115,7 @@ container.innerHTML = `
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
       formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
+      formData.append("telefone", dados.telefone || ""); // 👈 envia o telefone junto
 
       try {
         await fetch("https://officeexpress.onrender.com/api/upload", {
