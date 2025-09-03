@@ -119,8 +119,8 @@ container.innerHTML = `
     </div>
     ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
   </div>
-  ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p><strong>${dados.objetivo}</strong></p>` : ""}
-  ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p><strong>${dados.formacao}</strong></p>` : ""}
+  ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
+  ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p>${dados.formacao}</p>` : ""}
 `;
 
 if (Array.isArray(dados.curso)) {
@@ -130,7 +130,7 @@ if (Array.isArray(dados.curso)) {
     const inst = dados.instituicao[i]?.trim();
     const carga = dados.carga[i]?.trim();
     if (nome || inst || carga) {
-      cursos += `<li><strong>${nome}</strong>${inst ? ` — <strong>${inst}</strong>` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
+      cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
     }
   }
   if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
@@ -173,11 +173,11 @@ if (Array.isArray(dados.empresa)) {
 }
 
 if (dados.habilidades) {
-  container.innerHTML += `<h2><strong>Habilidades</strong></h2><p><strong>${dados.habilidades}</strong></p>`;
+  container.innerHTML += `<h2><strong>Habilidades</strong></h2><p>${dados.habilidades}</p>`;
 }
 
 if (dados.hobbies) {
-  container.innerHTML += `<h2><strong>Hobbies</strong></h2><p><strong>${dados.hobbies}</strong></p>`;
+  container.innerHTML += `<h2><strong>Hobbies</strong></h2><p>${dados.hobbies}</p>`;
 }
 
       const { jsPDF } = window.jspdf;
