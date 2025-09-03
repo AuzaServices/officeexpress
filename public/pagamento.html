@@ -7,52 +7,93 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      background-color: #f8f9fa;
+      background-color: #f0f2f5;
       font-family: 'Segoe UI', sans-serif;
-      padding: 20px;
+      padding: 40px 20px;
     }
     .card {
-      max-width: 100%;
+      max-width: 500px;
       margin: auto;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
       padding: 30px;
+      text-align: center;
     }
     h2 {
       font-size: 2rem;
+      color: #00324a;
+      margin-bottom: 20px;
     }
-    p, span {
-      font-size: 1.5rem;
+    .pix-info {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+    .pix-label {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .pix-input {
+      font-weight: bold;
+      color: #0056b3;
+      background-color: #eef6ff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      width: 100%;
+      font-size: 1rem;
     }
     .btn {
-      font-size: 1.4rem;
-      padding: 16px;
+      font-size: 1.1rem;
+      padding: 12px 20px;
+      border-radius: 8px;
+    }
+    .btn-outline-primary:hover {
+      background-color: #0056b3;
+      color: #fff;
     }
     #pdf {
       margin-top: 30px;
+      display: none;
+      animation: fadeIn 0.5s ease-in-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2 class="text-center mb-4">Pagamento via Pix</h2>
-    <p><strong>Valor:</strong> R$2,00</p>
-    <p><strong>Chave Pix:</strong> <span id="pix">andrielysom@gmail.com</span></p>
+    <h2>Pagamento via Pix</h2>
+    <div class="pix-info">
+      <p><strong>Valor:</strong> R$2,00</p>
+      <p class="pix-label">Chave Pix:</p>
+      <input 
+        type="text" 
+        id="pix" 
+        class="pix-input" 
+        value="00020126430014BR.GOV.BCB.PIX0121andrielysom@gmail.com52040000530398654042.005802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63042FFD" 
+        readonly
+      >
+    </div>
 
     <div class="d-grid gap-3 mb-4">
       <button onclick="copiarPix()" class="btn btn-outline-primary">📋 Copiar chave Pix</button>
     </div>
 
-    <p class="mb-2">Após o pagamento, clique abaixo para confirmar e receber seu Curriculum em PDF:</p>
+    <p class="mb-3">Após o pagamento, clique abaixo para confirmar e receber seu currículo em PDF:</p>
     <div class="d-grid gap-3">
       <button onclick="liberarPDF()" class="btn btn-success">✅ Já paguei</button>
     </div>
 
-    <div id="pdf" style="display:none;">
+    <div id="pdf">
       <hr>
       <p class="mt-4">✅ Clique abaixo para solicitar o PDF:</p>
-      <a 
-        href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20e%20gostaria%20de%20receber%20meu%20Curriculum" 
-        target="_blank" 
+      <a
+        href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20e%20gostaria%20de%20receber%20meu%20Curriculum"
+        target="_blank"
         class="btn btn-outline-success"
       >
         Pedir PDF via WhatsApp
@@ -62,8 +103,9 @@
 
   <script>
     function copiarPix() {
-      const chave = document.getElementById("pix").textContent;
-      navigator.clipboard.writeText(chave);
+      const chave = document.getElementById("pix").value;
+      navigator.clipboard.writeText(chave).then(() => {
+      });
     }
 
     function liberarPDF() {
