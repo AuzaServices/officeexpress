@@ -70,13 +70,23 @@ p, li {
       margin-bottom: 30px;
     }
 
-.foto {
-  width: 120px;
-  height: 160px;
-  border-radius: 5px;
-  object-fit: cover;
+.foto-container {
+  width: 150px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #ccc;
-  margin-left: 30px;
+  border-radius: 8px;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+.foto {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 5px;
 }
     
   </style>
