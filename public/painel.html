@@ -86,9 +86,9 @@
               <td>${pdf.id}</td>
               <td>${pdf.filename}</td>
               <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
-              <td>
-                <a href="/baixar-pdf/${pdf.id}" class="btn btn-primary btn-sm">⬇️ Baixar</a>
-              </td>
+<td>
+  <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+</td>
               <td>
                 ${telefone ? `
                   <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
