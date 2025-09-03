@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="icon" href="icon.png" type="image/png" />
+  <link rel="icon" href="icon.png" type="image/png" />
   <title>Visualização do Currículo</title>
   <style>
     html, body {
@@ -156,14 +156,14 @@
 
         <div class="botoes">
           <button onclick="history.back()">Voltar</button>
-          <button onclick="redirecionarParaLoading()">Gerar PDF</button>
+          <button onclick="gerarPDF()">Gerar PDF</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
 
@@ -227,102 +227,50 @@
       }
     }
 
-async function gerarPDF() {
-  const { jsPDF } = window.jspdf;
-  const element = document.getElementById("curriculo");
+    if (Array.isArray(dados.curso)) {
+      let html = "";
+      for (let i = 0; i < dados.curso.length; i++) {
+        const nome = dados.curso[i]?.trim();
+        const inst = dados.instituicao[i]?.trim();
+        const carga = dados.carga[i]?.trim();
 
-  // Clona o currículo
-  const clone = element.cloneNode(true);
-  clone.style.position = "absolute";
-  clone.style.left = "-10000px";
-  clone.style.top = "0";
-  clone.style.zIndex = "-1";
-  clone.style.background = "white";
-  clone.style.transform = "none"; // remove escala
+        if (nome || inst || carga) {
+          html += "<li>";
+          if (nome) html += `<strong>${nome}</strong>`;
+          if (inst) html += ` — ${inst}`;
+          if (carga) html += ` <em>(${carga})</em>`;
+          html += "</li>";
+        }
+      }
 
-  // Embute estilos para garantir fidelidade visual
-  const style = document.createElement("style");
-  style.textContent = `
-    * {
-      box-sizing: border-box;
-      font-family: 'Segoe UI', sans-serif;
+      if (html) {
+        document.getElementById("secao-cursos").innerHTML =
+          `<h2>Cursos</h2><ul>${html}</ul>`;
+      }
     }
-    h1 {
-      font-size: 32px;
-      color: #00324a;
-      margin-bottom: 10px;
-    }
-    h2 {
-      font-size: 20px;
-      color: #00324a;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 4px;
-      margin-top: 30px;
-    }
-    p, li {
-      font-size: 16px;
-      margin: 8px 0;
-      line-height: 1.6;
-    }
-    ul {
-      padding-left: 20px;
-      margin-top: 10px;
-    }
-    .foto {
-      width: 120px;
-      height: 160px;
-      object-fit: cover;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .a4 {
-      width: 794px;
-      height: 1123px;
-      padding: 60px;
-      background: white;
-    }
-  `;
-  clone.prepend(style);
 
-  document.body.appendChild(clone);
+    function gerarPDF() {
+      const element = document.getElementById("curriculo");
+      const originalTransform = element.style.transform;
+      element.style.transform = element.style.transform = "none"; // Remove escala para gerar PDF fiel
 
-  const canvas = await html2canvas(clone, { scale: 2 });
-  document.body.removeChild(clone);
+      const opt = {
+        margin: 0,
+        filename: `curriculo-${dados.nome || "usuario"}.pdf`,
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
 
-  const imgData = canvas.toDataURL("image/jpeg", 1.0);
-  const pdf = new jsPDF("p", "mm", "a4");
-  const width = pdf.internal.pageSize.getWidth();
-  const height = canvas.height * (width / canvas.width);
-
-  pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-  pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
-}
-
-if (Array.isArray(dados.curso)) {
-  let html = "";
-  for (let i = 0; i < dados.curso.length; i++) {
-    const nome = dados.curso[i]?.trim();
-    const inst = dados.instituicao[i]?.trim();
-    const carga = dados.carga[i]?.trim();
-
-    if (nome || inst || carga) {
-      html += "<li>";
-      if (nome) html += `<strong>${nome}</strong>`;
-      if (inst) html += ` — ${inst}`;
-      if (carga) html += ` <em>(${carga})</em>`;
-      html += "</li>";
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.style.transform = originalTransform; // Restaura escala original
+      });
     }
-  }
 
-  if (html) {
-    document.getElementById("secao-cursos").innerHTML =
-      `<h2>Cursos</h2><ul>${html}</ul>`;
-  }
-}
-function redirecionarParaLoading() {
-  localStorage.setItem("curriculoParaEnviar", "true");
-  window.location.href = "loading.html";
-}
+    function redirecionarParaLoading() {
+      localStorage.setItem("curriculoParaEnviar", "true");
+      window.location.href = "loading.html";
+    }
   </script>
 </body>
 </html>
