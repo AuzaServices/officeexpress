@@ -115,9 +115,9 @@ container.innerHTML = `
       <p><strong>Email:</strong> ${dados.email || ""}</p>
       <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
       <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
-<div class="foto-container">
-  <img id="foto-preview" class="foto" src="" alt="Foto" />
-</div>
+    </div>
+    ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
+  </div>
   ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p><strong>${dados.objetivo}</strong></p>` : ""}
   ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p><strong>${dados.formacao}</strong></p>` : ""}
 `;
