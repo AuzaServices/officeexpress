@@ -51,7 +51,7 @@ body {
   margin: 50px auto;
   padding: 40px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.2); /* branco translúcido */
+  background: rgba(255, 255, 255, 0.3); /* branco translúcido */
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -152,15 +152,29 @@ body {
     position: relative;
   }
 
-  #particles-js {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background-color: var(--background);
+#particles-js {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png'), linear-gradient(135deg, #cceeff, #e6f7ff);
+  background-repeat: repeat;
+  background-size: auto, cover;
+}
+
+.container {
+  transition: all 0.5s ease-in-out;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
   }
+}
 </style>
 </head>
 <body>
