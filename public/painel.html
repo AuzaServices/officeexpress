@@ -77,7 +77,7 @@
           tabela.innerHTML = '';
 
           data.forEach(pdf => {
-            const telefone = pdf.telephone?.replace(/\D/g, '');
+            const telefone = pdf.telefone?.replace(/\D/g, '');
             const mensagem = encodeURIComponent("Olá, você gerou um curriculum conosco, gostaria de concluir para receber o PDF?");
             const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 

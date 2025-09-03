@@ -63,7 +63,7 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   const { telefone } = req.body;
 
   try {
-    const query = 'INSERT INTO pdfs (filename, mimetype, data, telephone) VALUES (?, ?, ?, ?)';
+    const query = 'INSERT INTO pdfs (filename, mimetype, data, telefone) VALUES (?, ?, ?, ?)';
     const [result] = await pool.query(query, [originalname, mimetype, buffer, telefone]);
 
     res.status(200).json({ message: 'PDF e telefone salvos com sucesso', id: result.insertId });
