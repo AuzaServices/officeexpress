@@ -203,41 +203,42 @@ p, li {
     addSecao("secao-habilidades", "Habilidades", dados.habilidades);
     addSecao("secao-hobbies", "Hobbies", dados.hobbies);
 
-    if (Array.isArray(dados.empresa)) {
-      let html = "";
-      for (let i = 0; i < dados.empresa.length; i++) {
-        const empresa = dados.empresa[i]?.trim();
-        const cargo = dados.cargo[i]?.trim();
-        const inicio = dados.periodo_inicio[i]?.trim();
-        const fim = dados.periodo_fim[i]?.trim();
-        const periodo = inicio && fim ? `${inicio}–${fim}` : inicio || fim || "";
-        const atividades = dados.atividades[i]?.trim();
-
-if (empresa || cargo || (inicio || fim) || atividades) {
-  html += "<li>";
-
-  // Empresa + período na mesma linha
-  if (empresa) {
+if (Array.isArray(dados.empresa)) {
+  let html = "";
+  for (let i = 0; i < dados.empresa.length; i++) {
+    const empresa = dados.empresa[i]?.trim();
+    const cargo = dados.cargo?.[i]?.trim();
+    const inicio = dados.periodo_inicio?.[i]?.trim();
+    const fim = dados.periodo_fim?.[i]?.trim();
+    const atividades = dados.atividades?.[i]?.trim();
     const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-    html += `<strong>${empresa}</strong>`;
-    if (periodo) html += ` — <em>${periodo}</em>`;
+
+    if (empresa || cargo || periodo || atividades) {
+      html += "<li>";
+
+      // Empresa + período
+      if (empresa) {
+        html += `<strong>${empresa}</strong>`;
+        if (periodo) html += ` — <em>${periodo}</em>`;
+      } else if (periodo) {
+        html += `<em>${periodo}</em>`;
+      }
+
+      // Cargo
+      if (cargo) html += `<br>${cargo}`;
+
+      // Atividades
+      if (atividades) html += `<br><span>${atividades}</span>`;
+
+      html += "</li>";
+    }
   }
 
-  // Cargo embaixo
-  if (cargo) html += `<br>${cargo}`;
-
-  // Atividades
-  if (atividades) html += `<br><span>${atividades}</span>`;
-
-  html += "</li>";
+  if (html) {
+    document.getElementById("secao-experiencia").innerHTML =
+      `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
+  }
 }
-      }
-
-      if (html) {
-        document.getElementById("secao-experiencia").innerHTML =
-          `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
-      }
-    }
 
     async function gerarPDF() {
       const { jsPDF } = window.jspdf;
@@ -288,6 +289,19 @@ async function redirecionarParaLoading() {
     localStorage.setItem("curriculoParaEnviar", "true");
     window.location.href = "loading.html";
 
+  try {
+    await fetch("SEU_ENDPOINT_AQUI", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ telefone })
+    });
+
+  } catch (error) {
+    console.error("Erro ao enviar telefone:", error);
+    alert("Falha ao conectar com o servidor.");
+  }
 }
   </script>
 </body>
