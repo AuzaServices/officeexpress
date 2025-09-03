@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Gerando seu Currículo...</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     body {
       background-color: #f8f9fa;
@@ -12,51 +12,72 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Arial', sans-serif;
     }
+
     .spinner-border {
       width: 4rem;
       height: 4rem;
     }
+
     h2 {
       margin-top: 20px;
       color: #343a40;
     }
-#curriculo {
-  position: absolute;
-  top: 0;
-  left: -9999px;
-  width: 794px;
-  height: auto;
-  padding: 60px;
-  background: white;
-  font-family: 'Arial', sans-serif;
-  box-sizing: border-box;
-}
 
-h1 {
-  font-size: 28px;
-  margin-bottom: 10px;
-  color: #00324a;
-}
+    #curriculo {
+      position: absolute;
+      top: 0;
+      left: -9999px;
+      width: 794px;
+      padding: 60px;
+      background: white;
+      font-family: 'Arial', sans-serif;
+      box-sizing: border-box;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
 
-h2 {
-  font-size: 20px;
-  margin-top: 30px;
-  color: #00324a;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 4px;
-}
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #00324a;
+    }
 
-p, li {
-  font-size: 16px;
-  line-height: 1.6;
-  margin: 8px 0;
-}
+    h2 {
+      font-size: 20px;
+      margin-top: 30px;
+      color: #00324a;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
 
-ul {
-  padding-left: 20px;
-}
+    p, li {
+      font-size: 16px;
+      line-height: 1.6;
+      margin: 8px 0;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    .info-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+    }
+
+    .foto {
+      width: 120px;
+      height: 160px;
+      border-radius: 5px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      margin-left: 30px;
+    }
   </style>
 </head>
 <body>
@@ -78,45 +99,56 @@ ul {
       const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
       const container = document.getElementById("curriculo");
 
-      // Monta o currículo dinamicamente
-container.innerHTML = `
-  <h1>${dados.nome || ""}</h1>
-  <p><strong>Email:</strong> ${dados.email || ""}</p>
-  <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
-  <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
+      let enderecoCompleto = "";
+      if (dados.endereco) enderecoCompleto += dados.endereco;
+      if (dados.numero) enderecoCompleto += ", " + dados.numero;
+      if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
+      if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
+      if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
+      if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
 
-  ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
-  ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
-  ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
-  ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
-`;
+      container.innerHTML = `
+        <div class="info-topo">
+          <div>
+            <h1>${dados.nome || ""}</h1>
+            <p><strong>Email:</strong> ${dados.email || ""}</p>
+            <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+            <p><strong>Endereço:</strong> ${enderecoCompleto}</p>
+          </div>
+          ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
+        </div>
+        ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
+        ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
+        ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
+        ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
+      `;
 
-if (Array.isArray(dados.curso)) {
-  let cursos = "";
-  for (let i = 0; i < dados.curso.length; i++) {
-    const nome = dados.curso[i]?.trim();
-    const inst = dados.instituicao[i]?.trim();
-    const carga = dados.carga[i]?.trim();
-    if (nome || inst || carga) {
-      cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
-    }
-  }
-  if (cursos) container.innerHTML += `<h2>Cursos</h2><ul>${cursos}</ul>`;
-}
+      if (Array.isArray(dados.curso)) {
+        let cursos = "";
+        for (let i = 0; i < dados.curso.length; i++) {
+          const nome = dados.curso[i]?.trim();
+          const inst = dados.instituicao[i]?.trim();
+          const carga = dados.carga[i]?.trim();
+          if (nome || inst || carga) {
+            cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
+          }
+        }
+        if (cursos) container.innerHTML += `<h2>Cursos</h2><ul>${cursos}</ul>`;
+      }
 
-if (Array.isArray(dados.empresa)) {
-  let exp = "";
-  for (let i = 0; i < dados.empresa.length; i++) {
-    const empresa = dados.empresa[i]?.trim();
-    const cargo = dados.cargo[i]?.trim();
-    const periodo = dados.periodo[i]?.trim();
-    const atividades = dados.atividades[i]?.trim();
-    if (empresa || cargo || periodo || atividades) {
-      exp += `<li><strong>${empresa}</strong>${cargo ? ` — ${cargo}` : ""}${periodo ? ` <em>(${periodo})</em>` : ""}${atividades ? `<br>${atividades}` : ""}</li>`;
-    }
-  }
-  if (exp) container.innerHTML += `<h2>Experiência Profissional</h2><ul>${exp}</ul>`;
-}
+      if (Array.isArray(dados.empresa)) {
+        let exp = "";
+        for (let i = 0; i < dados.empresa.length; i++) {
+          const empresa = dados.empresa[i]?.trim();
+          const cargo = dados.cargo[i]?.trim();
+          const periodo = dados.periodo[i]?.trim();
+          const atividades = dados.atividades[i]?.trim();
+          if (empresa || cargo || periodo || atividades) {
+            exp += `<li><strong>${empresa}</strong>${cargo ? ` — ${cargo}` : ""}${periodo ? ` <em>(${periodo})</em>` : ""}${atividades ? `<br>${atividades}` : ""}</li>`;
+          }
+        }
+        if (exp) container.innerHTML += `<h2>Experiência Profissional</h2><ul>${exp}</ul>`;
+      }
 
       const { jsPDF } = window.jspdf;
       const canvas = await html2canvas(container, { scale: 2 });
