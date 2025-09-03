@@ -505,5 +505,18 @@ function adicionarExperiencia() {
   });
 }
 </script>
+<script>
+  // Aplica Flatpickr nos campos já existentes ao carregar a página
+  flatpickr(document.querySelectorAll(".mesAno"), {
+    plugins: [
+      new monthSelectPlugin({
+        shorthand: false,
+        dateFormat: "m/Y",
+        altFormat: "F Y"
+      })
+    ],
+    locale: "pt"
+  });
+</script>
 </body>
 </html>
