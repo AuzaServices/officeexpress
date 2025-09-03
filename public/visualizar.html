@@ -249,31 +249,41 @@
       }
     }
 
-    async function gerarPDF() {
-      const { jsPDF } = window.jspdf;
-      const element = document.getElementById("curriculo");
+async function gerarPDF() {
+  const { jsPDF } = window.jspdf;
+  const element = document.getElementById("curriculo");
 
-      // Clona o elemento e remove transformações para renderização correta
-      const clone = element.cloneNode(true);
-      clone.style.transform = "none";
-      clone.style.position = "absolute";
-      clone.style.left = "-10000px";
-      document.body.appendChild(clone);
+  // Clona o currículo
+  const clone = element.cloneNode(true);
+  clone.style.transform = "none";
+  clone.style.position = "absolute";
+  clone.style.left = "-10000px";
 
-      // Renderiza o clone em canvas
-      const canvas = await html2canvas(clone, { scale: 2 });
-      document.body.removeChild(clone);
-
-      // Converte o canvas em imagem
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      const pdf = new jsPDF("p", "mm", "a4");
-      const width = pdf.internal.pageSize.getWidth();
-      const height = canvas.height * (width / canvas.width);
-
-      // Adiciona imagem ao PDF e salva
-      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-      pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+  // Embute os estilos diretamente no clone
+  const style = document.createElement("style");
+  style.textContent = `
+    p {
+      font-size: 16px;
+      margin: 0;
+      line-height: 1.2;
     }
+  `;
+  clone.prepend(style);
+
+  document.body.appendChild(clone);
+
+  // Renderiza com html2canvas
+  const canvas = await html2canvas(clone, { scale: 2 });
+  document.body.removeChild(clone);
+
+  const imgData = canvas.toDataURL("image/jpeg", 1.0);
+  const pdf = new jsPDF("p", "mm", "a4");
+  const width = pdf.internal.pageSize.getWidth();
+  const height = canvas.height * (width / canvas.width);
+
+  pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+  pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+}
 
     function redirecionarParaLoading() {
       localStorage.setItem("curriculoParaEnviar", "true");
