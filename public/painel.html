@@ -29,6 +29,8 @@
   </style>
 </head>
 <body>
+  <audio id="notificacao-som" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3f6c5c9b6d.mp3?filename=notification-113412.mp3" preload="auto"></audio>
+
   <div class="container">
     <h1>Painel de Arquivos PDF</h1>
     <div class="table-responsive">
@@ -66,82 +68,107 @@
   </div>
 
   <script>
-  function carregarPDFs() {
-    fetch('/api/pdfs')
-      .then(async res => {
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
-          throw new Error(err.error || 'Erro ao buscar arquivos');
-        }
+    let ultimoIdPDF = 0;
+    let ultimoIdLog = 0;
 
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
+    function notificar(titulo, mensagem) {
+      if (Notification.permission === "granted") {
+        new Notification(titulo, { body: mensagem });
+        document.getElementById("notificacao-som").play();
+      }
+    }
 
-        const tbody = document.querySelector('#tabela-arquivos tbody');
-        tbody.innerHTML = '';
+    function carregarPDFs() {
+      fetch('/api/pdfs')
+        .then(async res => {
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: 'Resposta inválida ou vazia do servidor' }));
+            throw new Error(err.error || 'Erro ao buscar arquivos');
+          }
 
-        if (data.length === 0) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td colspan="4" class="text-center">Nenhum PDF encontrado.</td>`;
-          tbody.appendChild(tr);
-          return;
-        }
+          const data = await res.json();
+          if (!Array.isArray(data)) throw new Error('Formato inesperado de dados');
 
-        data.forEach(pdf => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${pdf.id}</td>
-            <td>${pdf.filename}</td>
-            <td>${new Date(pdf.data).toLocaleDateString('pt-BR')}</td>
-            <td><a href="/baixar-pdf/${pdf.id}" class="btn btn-sm btn-primary btn-download" target="_blank">Baixar</a></td>
-          `;
-          tbody.appendChild(tr);
+          const tbody = document.querySelector('#tabela-arquivos tbody');
+          tbody.innerHTML = '';
+
+          if (data.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="4" class="text-center">Nenhum PDF encontrado.</td>`;
+            tbody.appendChild(tr);
+            return;
+          }
+
+          data.forEach(pdf => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${pdf.id}</td>
+              <td>${pdf.filename}</td>
+              <td>${new Date(pdf.data).toLocaleDateString('pt-BR')}</td>
+              <td><a href="/baixar-pdf/${pdf.id}" class="btn btn-sm btn-primary btn-download" target="_blank">Baixar</a></td>
+            `;
+            tbody.appendChild(tr);
+
+            if (pdf.id > ultimoIdPDF) {
+              notificar("Novo PDF gerado", `Arquivo: ${pdf.filename}`);
+              ultimoIdPDF = pdf.id;
+            }
+          });
+        })
+        .catch(err => {
+          console.error('❌ Erro ao buscar arquivos:', err.message);
+          const tbody = document.querySelector('#tabela-arquivos tbody');
+          tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
         });
-      })
-      .catch(err => {
-        console.error('❌ Erro ao buscar arquivos:', err.message);
-        const tbody = document.querySelector('#tabela-arquivos tbody');
-        tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center">Erro ao carregar PDFs: ${err.message}</td></tr>`;
-      });
-  }
+    }
 
-  function carregarLogs() {
-    fetch('/api/logs')
-      .then(res => res.json())
-      .then(data => {
-        if (!Array.isArray(data)) {
-          console.error("Resposta inesperada da API:", data);
-          return;
-        }
+    function carregarLogs() {
+      fetch('/api/logs')
+        .then(res => res.json())
+        .then(data => {
+          if (!Array.isArray(data)) {
+            console.error("Resposta inesperada da API:", data);
+            return;
+          }
 
-        const tbody = document.querySelector('#tabela-acessos tbody');
-        tbody.innerHTML = '';
+          const tbody = document.querySelector('#tabela-acessos tbody');
+          tbody.innerHTML = '';
 
-        data.forEach(log => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${log.id}</td>
-            <td>${log.acao}</td>
-            <td>${log.nome}</td>
-            <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
-          `;
-          tbody.appendChild(tr);
+          data.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${log.id}</td>
+              <td>${log.acao}</td>
+              <td>${log.nome}</td>
+              <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+            `;
+            tbody.appendChild(tr);
+
+            if (log.id > ultimoIdLog) {
+              notificar("Novo acesso registrado", `${log.nome} realizou: ${log.acao}`);
+              ultimoIdLog = log.id;
+            }
+          });
+        })
+        .catch(err => {
+          console.error('Erro ao buscar acessos:', err);
         });
-      })
-      .catch(err => {
-        console.error('Erro ao buscar acessos:', err);
-      });
-  }
+    }
 
-  // 🔁 Atualiza a cada 2 segundos
-  setInterval(() => {
+    // 🔁 Atualiza a cada 2 segundos
+    setInterval(() => {
+      carregarPDFs();
+      carregarLogs();
+    }, 2000);
+
+    // 🚀 Carrega imediatamente ao abrir
     carregarPDFs();
     carregarLogs();
-  }, 2000);
 
-  // Carrega imediatamente ao abrir
-  carregarPDFs();
-  carregarLogs();
-</script>
+    // 🔐 Solicita permissão de notificação
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  </script>
 </body>
 </html>
