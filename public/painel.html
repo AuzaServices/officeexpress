@@ -26,15 +26,10 @@
     .btn-download {
       font-size: 0.9rem;
     }
-    #toast-container {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
-    }
   </style>
 </head>
 <body>
+  <!-- 🔊 Áudio de notificação -->
   <audio id="notificacao-som" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3f6c5c9b6d.mp3?filename=notification-113412.mp3" preload="auto"></audio>
 
   <div class="container">
@@ -73,33 +68,19 @@
     </div>
   </div>
 
-  <div id="toast-container"></div>
-
   <script>
     let ultimoIdPDF = 0;
     let ultimoIdLog = 0;
 
-    function mostrarToast(titulo, mensagem) {
-      const container = document.getElementById("toast-container");
-      const toast = document.createElement("div");
-      toast.className = "toast align-items-center text-bg-primary border-0 show";
-      toast.setAttribute("role", "alert");
-      toast.setAttribute("aria-live", "assertive");
-      toast.setAttribute("aria-atomic", "true");
-      toast.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">
-            <strong>${titulo}</strong><br>${mensagem}
-          </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-      `;
-      container.appendChild(toast);
-      document.getElementById("notificacao-som").play();
+    // 🔓 Ativa o som após a primeira interação do usuário
+    document.addEventListener('click', () => {
+      const audio = document.getElementById("notificacao-som");
+      audio.play().catch(() => {});
+    }, { once: true });
 
-      setTimeout(() => {
-        toast.remove();
-      }, 5000);
+    function tocarSom() {
+      const audio = document.getElementById("notificacao-som");
+      audio.play().catch(() => {});
     }
 
     function carregarPDFs() {
@@ -134,7 +115,7 @@
             tbody.appendChild(tr);
 
             if (pdf.id > ultimoIdPDF) {
-              mostrarToast("Novo PDF gerado", `Arquivo: ${pdf.filename}`);
+              tocarSom();
               ultimoIdPDF = pdf.id;
             }
           });
@@ -169,7 +150,7 @@
             tbody.appendChild(tr);
 
             if (log.id > ultimoIdLog) {
-              mostrarToast("Novo acesso registrado", `${log.nome} realizou: ${log.acao}`);
+              tocarSom();
               ultimoIdLog = log.id;
             }
           });
@@ -179,15 +160,15 @@
         });
     }
 
+    // 🔁 Atualiza a cada 2 segundos
     setInterval(() => {
       carregarPDFs();
       carregarLogs();
     }, 2000);
 
+    // 🚀 Carrega imediatamente ao abrir
     carregarPDFs();
     carregarLogs();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
