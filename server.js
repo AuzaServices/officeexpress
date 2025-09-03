@@ -54,7 +54,7 @@ app.post('/gerar-e-salvar-pdf', async (req, res) => {
 });
 
 //////////////////////////
-// 📤 Upload de PDF
+// 📤 Upload de PDF + telefone
 //////////////////////////
 app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
@@ -74,16 +74,25 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
 });
 
 //////////////////////////
-// 📥 Baixar PDF
+// 📥 Baixar PDF por ID
 //////////////////////////
-app.get('/api/pdfs', async (req, res) => {
+app.get('/api/pdfs/:id/download', async (req, res) => {
+  const { id } = req.params;
   try {
-    const query = 'SELECT id, filename, telefone, created_at FROM pdfs ORDER BY id DESC';
-    const [results] = await pool.query(query);
-    res.json(results);
+    const query = 'SELECT filename, mimetype, data FROM pdfs WHERE id = ?';
+    const [results] = await pool.query(query, [id]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'PDF não encontrado' });
+    }
+
+    const { filename, mimetype, data } = results[0];
+    res.setHeader('Content-Type', mimetype);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(data);
   } catch (err) {
-    console.error('Erro ao buscar PDFs:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar arquivos' });
+    console.error('Erro ao baixar PDF:', err.message);
+    res.status(500).json({ error: 'Erro ao baixar PDF' });
   }
 });
 
@@ -92,7 +101,7 @@ app.get('/api/pdfs', async (req, res) => {
 //////////////////////////
 app.get('/api/pdfs', async (req, res) => {
   try {
-    const query = 'SELECT id, filename FROM pdfs ORDER BY id DESC';
+    const query = 'SELECT id, filename, telefone, created_at FROM pdfs ORDER BY id DESC';
     const [results] = await pool.query(query);
     res.json(results);
   } catch (err) {
