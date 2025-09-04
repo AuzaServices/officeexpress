@@ -133,12 +133,15 @@ app.get('/api/pdfs', async (req, res) => {
 //////////////////////////
 // 📝 Salvar log de acesso com localização
 //////////////////////////
+//////////////////////////
+// 📝 Salvar log de acesso com localização
+//////////////////////////
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
-  // IP fixo para teste
-  const ipRaw = '200.219.245.67';
-  const ipPublico = '200.219.245.67';
+  // IP fixo para teste — pode substituir por getPublicIP(req) se quiser tornar dinâmico
+  const ipRaw = getPublicIP(req);
+  const ipPublico = ipRaw.replace('::ffff:', '');
 
   console.log("🌐 IP público usado:", ipPublico);
 
@@ -151,12 +154,9 @@ app.post('/api/logs', async (req, res) => {
 
     console.log("📦 Resposta da API:", data);
 
-    if (data.city && data.region_code) {
-      cidade = data.city;
-      estado = data.region_code;
-    } else {
-      console.warn("⚠️ API não retornou cidade/estado válidos");
-    }
+    // Correção: garantir que os campos não sejam vazios
+    cidade = (data.city && data.city.trim() !== '') ? data.city : 'Desconhecida';
+    estado = (data.region_code && data.region_code.trim() !== '') ? data.region_code : 'XX';
   } catch (err) {
     console.warn("❌ Falha ao consultar localização:", err.message);
   }
@@ -164,7 +164,10 @@ app.post('/api/logs', async (req, res) => {
   const localizacao = `${cidade} - ${estado}`;
 
   try {
-    const query = 'INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico) VALUES (?, ?, ?, ?, ?, ?)';
+    const query = `
+      INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
     await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico]);
 
     res.status(200).json({ mensagem: 'Log salvo com sucesso', localizacao });
