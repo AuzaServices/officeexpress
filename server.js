@@ -3,7 +3,8 @@ const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const fetch = require('node-fetch'); // Certifique-se de instalar com: npm install node-fetch
+const fetch = require('node-fetch');
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -26,6 +27,24 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0
 });
+
+// 🔍 Função para extrair IP público
+function getPublicIP(req) {
+  const ipList = req.headers['x-forwarded-for']?.split(',') || [];
+  for (let ip of ipList) {
+    ip = ip.trim();
+    if (
+      !ip.startsWith('10.') &&
+      !ip.startsWith('192.') &&
+      !ip.startsWith('127.') &&
+      !ip.startsWith('::') &&
+      !ip.startsWith('172.')
+    ) {
+      return ip;
+    }
+  }
+  return req.connection.remoteAddress;
+}
 
 //////////////////////////
 // 📄 Gerar e salvar PDF
@@ -117,16 +136,15 @@ app.get('/api/pdfs', async (req, res) => {
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
-  // 🔍 Captura o IP do visitante
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  console.log("IP recebido:", ip);
+  const ipRaw = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const ipPublico = getPublicIP(req);
+  console.log("IP público usado:", ipPublico);
 
-  // 🌎 Consulta a localização
   let cidade = 'Desconhecida';
   let estado = 'XX';
 
   try {
-    const response = await fetch(`https://ipapi.co/${ip}/json/`);
+    const response = await fetch(`https://ipapi.co/${ipPublico}/json/`);
     const data = await response.json();
 
     cidade = data.city || cidade;
@@ -137,10 +155,9 @@ app.post('/api/logs', async (req, res) => {
 
   const localizacao = `${cidade} - ${estado}`;
 
-  // 💾 Salva no banco
   try {
-    const query = 'INSERT INTO logs (acao, nome, timestamp, localizacao) VALUES (?, ?, ?, ?)';
-    await pool.query(query, [acao, nome, timestamp, localizacao]);
+    const query = 'INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico) VALUES (?, ?, ?, ?, ?, ?)';
+    await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico]);
 
     res.status(200).json({ mensagem: 'Log salvo com sucesso', localizacao });
   } catch (err) {
@@ -154,7 +171,7 @@ app.post('/api/logs', async (req, res) => {
 //////////////////////////
 app.get('/api/logs', async (req, res) => {
   try {
-    const query = 'SELECT id, acao, nome, timestamp, localizacao FROM logs ORDER BY id DESC';
+    const query = 'SELECT id, acao, nome, timestamp, localizacao, ip_raw, ip_publico FROM logs ORDER BY id DESC';
     const [results] = await pool.query(query);
 
     if (!Array.isArray(results)) {
