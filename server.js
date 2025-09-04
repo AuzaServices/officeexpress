@@ -177,8 +177,7 @@ app.post('/api/logs', async (req, res) => {
     console.error('Erro ao salvar log com localização:', err.message);
     res.status(500).json({ error: 'Erro ao salvar log' });
   }
-});
-//////////////////////////
+});//////////////////////////
 // 📜 Listar logs de acesso
 //////////////////////////
 app.get('/api/logs', async (req, res) => {
