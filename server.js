@@ -16,7 +16,7 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 🔁 Pool de conexões MySQL
+// 🔁 Conexão com MySQL
 const pool = mysql.createPool({
   host: 'sql10.freesqldatabase.com',
   user: 'sql10792206',
@@ -146,6 +146,8 @@ app.post('/api/logs', async (req, res) => {
   try {
     const response = await fetch(`https://ipapi.co/${ipPublico}/json/`);
     const data = await response.json();
+
+    console.log("📦 Resposta da API:", data);
 
     cidade = data.city || cidade;
     estado = data.region_code || estado;
