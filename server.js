@@ -116,16 +116,29 @@ app.get('/api/pdfs', async (req, res) => {
 //////////////////////////
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
+
+  // 🔍 Captura o IP do visitante
   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  console.log("IP recebido:", ip);
+
+  // 🌎 Consulta a localização
+  let cidade = 'Desconhecida';
+  let estado = 'XX';
 
   try {
     const response = await fetch(`https://ipapi.co/${ip}/json/`);
     const data = await response.json();
 
-    const cidade = data.city || 'Desconhecida';
-    const estado = data.region_code || 'XX';
-    const localizacao = `${cidade} - ${estado}`;
+    cidade = data.city || cidade;
+    estado = data.region_code || estado;
+  } catch (err) {
+    console.warn("Falha ao consultar localização:", err.message);
+  }
 
+  const localizacao = `${cidade} - ${estado}`;
+
+  // 💾 Salva no banco
+  try {
     const query = 'INSERT INTO logs (acao, nome, timestamp, localizacao) VALUES (?, ?, ?, ?)';
     await pool.query(query, [acao, nome, timestamp, localizacao]);
 
