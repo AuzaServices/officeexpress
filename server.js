@@ -137,8 +137,17 @@ app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
   const ipRaw = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const ipPublico = getPublicIP(req);
-  console.log("IP público usado:", ipPublico);
+  const ipList = ipRaw.split(',').map(ip => ip.trim());
+  let ipPublico = ipList.find(ip =>
+    !ip.startsWith('10.') &&
+    !ip.startsWith('192.') &&
+    !ip.startsWith('127.') &&
+    !ip.startsWith('::') &&
+    !ip.startsWith('172.')
+  ) || req.connection.remoteAddress;
+
+  console.log("🧠 IPs recebidos:", ipList);
+  console.log("🌐 IP público usado:", ipPublico);
 
   let cidade = 'Desconhecida';
   let estado = 'XX';
@@ -149,10 +158,14 @@ app.post('/api/logs', async (req, res) => {
 
     console.log("📦 Resposta da API:", data);
 
-    cidade = data.city || cidade;
-    estado = data.region_code || estado;
+    if (data.city && data.region_code) {
+      cidade = data.city;
+      estado = data.region_code;
+    } else {
+      console.warn("⚠️ API não retornou cidade/estado válidos");
+    }
   } catch (err) {
-    console.warn("Falha ao consultar localização:", err.message);
+    console.warn("❌ Falha ao consultar localização:", err.message);
   }
 
   const localizacao = `${cidade} - ${estado}`;
