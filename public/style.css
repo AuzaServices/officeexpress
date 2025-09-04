@@ -1,0 +1,323 @@
+:root {
+    --primary: #00324a;
+    --accent: #e09d00;
+    --background: #f4f7fa;
+    --card: rgba(255, 255, 255, 0.25); /* vidro branco translúcido */
+    --border: #d9e2ec;
+    --text: #1f2933;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+  background-size: cover;
+  color: var(--text);
+}
+
+.container {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.3); /* branco translúcido */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1; /* garante que fique acima das partículas */
+}
+
+  h1 {
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 30px;
+  }
+
+  label {
+    font-weight: 600;
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 6px;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: #fff;
+    transition: border-color 0.3s ease;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .form-row > div {
+    flex: 1 1 45%;
+  }
+
+  .experiencia {
+    background-color: #f0f4f8;
+    border-left: 4px solid var(--accent);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+
+  .botao {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    padding: 16px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 30px;
+  }
+
+  .botao:hover {
+    background-color: #005877;
+  }
+
+  .sub-botao {
+    background-color: var(--accent);
+    color: #fff;
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    .form-row > div {
+      flex: 1 1 100%;
+    }
+
+    .container {
+      padding: 25px;
+      margin: 20px;
+    }
+
+    input, textarea {
+      font-size: 1.1rem;
+    }
+  }
+
+  #drop-area {
+    position: relative;
+  }
+
+#particles-js {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png'), linear-gradient(135deg, #cceeff, #e6f7ff);
+  background-repeat: repeat;
+  background-size: auto, cover;
+}
+
+.container {
+  transition: all 0.5s ease-in-out;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.barra-progresso {
+  width: 100%;
+  background-color: #eee;
+  height: 8px;
+  margin-bottom: 20px;
+}
+
+.progresso {
+  height: 8px;
+  background-color: #4CAF50;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+#progresso {
+  height: 12px;
+  background-color: #e09d00;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: width 0.4s ease-in-out;
+}
+
+#barra-progresso {
+  width: 100%;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  padding: 2px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.etapa {
+  display: none;
+}
+
+.etapa.ativa {
+  display: block;
+}
+
+.botao-navegacao {
+  background: linear-gradient(135deg, #00324a, #005f73);
+  color: #ffffff;
+  border: none;
+  border-radius: 40px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.botao-navegacao::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: left 0.4s ease;
+}
+
+.botao-navegacao:hover::after {
+  left: 0;
+}
+
+.botao-navegacao:hover {
+  background: linear-gradient(135deg, #005f73, #007f8c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.botao-navegacao:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.botao-navegacao.finalizar {
+  background: linear-gradient(135deg, #e09d00, #ffcc00);
+  color: #1f2933;
+  font-weight: 700;
+  padding: 12px 32px;
+  font-size: 18px;
+  border-radius: 50px;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 24px rgba(224, 157, 0, 0.4);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.botao-navegacao.finalizar::after {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  font-weight: bold;
+  color: #1f2933;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.botao-navegacao.finalizar:hover::after {
+  opacity: 1;
+}
+
+.botao-navegacao.finalizar:hover {
+  background: linear-gradient(135deg, #ffcc00, #ffe680);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(224, 157, 0, 0.5);
+}
+
+/* Estilo do botão Gerar e Adicionar */
+#gerarFrase,
+#adicionarObjetivo {
+  background-color: #00324a;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin-top: 10px;
+  margin-right: 10px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+#gerarFrase:hover,
+#adicionarObjetivo:hover {
+  background-color: #005a80;
+  transform: scale(1.03);
+}
+
+/* Estilo do select de intuito */
+#intuito {
+  padding: 10px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Estilo do campo de objetivo */
+[name="objetivo"] {
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+#fraseGerada {
+  margin-top: 15px;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: #1f2933;
+  background-color: #f0f4f8;
+  padding: 14px 18px;
+  border-left: 4px solid #e09d00;
+  border-radius: 6px;
+  max-width: 800px;
+}
