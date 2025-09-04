@@ -136,17 +136,10 @@ app.get('/api/pdfs', async (req, res) => {
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
-  const ipRaw = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const ipList = ipRaw.split(',').map(ip => ip.trim());
-  let ipPublico = ipList.find(ip =>
-    !ip.startsWith('10.') &&
-    !ip.startsWith('192.') &&
-    !ip.startsWith('127.') &&
-    !ip.startsWith('::') &&
-    !ip.startsWith('172.')
-  ) || req.connection.remoteAddress;
+  // IP fixo para teste
+  const ipRaw = '200.219.245.67';
+  const ipPublico = '200.219.245.67';
 
-  console.log("🧠 IPs recebidos:", ipList);
   console.log("🌐 IP público usado:", ipPublico);
 
   let cidade = 'Desconhecida';
@@ -180,7 +173,6 @@ app.post('/api/logs', async (req, res) => {
     res.status(500).json({ error: 'Erro ao salvar log' });
   }
 });
-
 //////////////////////////
 // 📜 Listar logs de acesso
 //////////////////////////
