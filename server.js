@@ -137,10 +137,10 @@ app.get('/api/pdfs', async (req, res) => {
 //////////////////////////
 // 📝 Salvar log de acesso com localização
 //////////////////////////
+
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
-  // IP fixo para teste — pode substituir por getPublicIP(req) se quiser tornar dinâmico
   const ipRaw = getPublicIP(req);
   const ipPublico = ipRaw.replace('::ffff:', '');
 
@@ -150,15 +150,15 @@ app.post('/api/logs', async (req, res) => {
   let estado = 'XX';
 
   try {
-
-const response = await axios.get(`https://ipapi.co/${ipPublico}/json/`);
-const data = response.data;
+    const response = await axios.get(`https://ipapi.co/${ipPublico}/json/`);
+    const data = response.data;
 
     console.log("📦 Resposta da API:", data);
 
-    // Correção: garantir que os campos não sejam vazios
     cidade = (data.city && data.city.trim() !== '') ? data.city : 'Desconhecida';
     estado = (data.region_code && data.region_code.trim() !== '') ? data.region_code : 'XX';
+
+    console.log(`📍 IP detectado: ${ipPublico} → ${cidade} - ${estado}`);
   } catch (err) {
     console.warn("❌ Falha ao consultar localização:", err.message);
   }
