@@ -4,6 +4,7 @@ const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const fetch = require('node-fetch');
+const axios = require('axios'); // certifique-se de ter isso no topo do arquivo
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -149,8 +150,9 @@ app.post('/api/logs', async (req, res) => {
   let estado = 'XX';
 
   try {
-    const response = await fetch(`https://ipapi.co/${ipPublico}/json/`);
-    const data = await response.json();
+
+const response = await axios.get(`https://ipapi.co/${ipPublico}/json/`);
+const data = response.data;
 
     console.log("📦 Resposta da API:", data);
 
