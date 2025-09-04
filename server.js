@@ -3,8 +3,7 @@ const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const fetch = require('node-fetch');
-const axios = require('axios'); // certifique-se de ter isso no topo do arquivo
+const axios = require('axios');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -132,11 +131,9 @@ app.get('/api/pdfs', async (req, res) => {
 });
 
 //////////////////////////
-// 📝 Salvar log de acesso com localização
+// 📝 Salvar log de acesso com localização (usando ipinfo.io)
 //////////////////////////
-//////////////////////////
-// 📝 Salvar log de acesso com localização
-//////////////////////////
+const IPINFO_TOKEN = '83e6d56256238e'; // 🔐 Substitua pelo seu token real
 
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
@@ -150,13 +147,13 @@ app.post('/api/logs', async (req, res) => {
   let estado = 'XX';
 
   try {
-    const response = await axios.get(`https://ipapi.co/${ipPublico}/json/`);
+    const response = await axios.get(`https://ipinfo.io/${ipPublico}/json?token=${IPINFO_TOKEN}`);
     const data = response.data;
 
-    console.log("📦 Resposta da API:", data);
+    console.log("📦 Resposta da ipinfo:", data);
 
     cidade = (data.city && data.city.trim() !== '') ? data.city : 'Desconhecida';
-    estado = (data.region_code && data.region_code.trim() !== '') ? data.region_code : 'XX';
+    estado = (data.region && data.region.trim() !== '') ? data.region : 'XX';
 
     console.log(`📍 IP detectado: ${ipPublico} → ${cidade} - ${estado}`);
   } catch (err) {
@@ -177,7 +174,9 @@ app.post('/api/logs', async (req, res) => {
     console.error('Erro ao salvar log com localização:', err.message);
     res.status(500).json({ error: 'Erro ao salvar log' });
   }
-});//////////////////////////
+});
+
+//////////////////////////
 // 📜 Listar logs de acesso
 //////////////////////////
 app.get('/api/logs', async (req, res) => {
