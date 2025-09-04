@@ -60,6 +60,7 @@
             <th>Ação</th>
             <th>Nome</th>
             <th>Horário</th>
+            <th>Localização</th> <!-- ✅ Nova coluna -->
           </tr>
         </thead>
         <tbody>
@@ -87,9 +88,9 @@
               <td>${pdf.id}</td>
               <td>${pdf.filename}</td>
               <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
-<td>
-  <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-</td>
+              <td>
+                <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+              </td>
               <td>
                 ${telefone ? `
                   <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
@@ -121,6 +122,7 @@
               <td>${log.acao}</td>
               <td>${log.nome}</td>
               <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+              <td>${log.localizacao || '—'}</td>
             `;
             tbody.appendChild(tr);
           });

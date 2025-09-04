@@ -3,6 +3,7 @@ const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const fetch = require('node-fetch'); // Certifique-se de instalar com: npm install node-fetch
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -111,16 +112,26 @@ app.get('/api/pdfs', async (req, res) => {
 });
 
 //////////////////////////
-// 📝 Salvar log de acesso
+// 📝 Salvar log de acesso com localização
 //////////////////////////
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
   try {
-    const query = 'INSERT INTO logs (acao, nome, timestamp) VALUES (?, ?, ?)';
-    await pool.query(query, [acao, nome, timestamp]);
-    res.status(200).json({ mensagem: 'Log salvo com sucesso' });
+    const response = await fetch(`https://ipapi.co/${ip}/json/`);
+    const data = await response.json();
+
+    const cidade = data.city || 'Desconhecida';
+    const estado = data.region_code || 'XX';
+    const localizacao = `${cidade} - ${estado}`;
+
+    const query = 'INSERT INTO logs (acao, nome, timestamp, localizacao) VALUES (?, ?, ?, ?)';
+    await pool.query(query, [acao, nome, timestamp, localizacao]);
+
+    res.status(200).json({ mensagem: 'Log salvo com sucesso', localizacao });
   } catch (err) {
-    console.error('Erro ao salvar log:', err.message);
+    console.error('Erro ao salvar log com localização:', err.message);
     res.status(500).json({ error: 'Erro ao salvar log' });
   }
 });
@@ -130,7 +141,7 @@ app.post('/api/logs', async (req, res) => {
 //////////////////////////
 app.get('/api/logs', async (req, res) => {
   try {
-    const query = 'SELECT id, acao, nome, timestamp FROM logs ORDER BY id DESC';
+    const query = 'SELECT id, acao, nome, timestamp, localizacao FROM logs ORDER BY id DESC';
     const [results] = await pool.query(query);
 
     if (!Array.isArray(results)) {
