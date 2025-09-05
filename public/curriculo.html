@@ -35,6 +35,8 @@
     <div id="progresso" class="progresso"></div>
   </div>
 
+  <div id="notificacoes" style="margin-top: 10px; font-size: 0.95rem; color: #333; font-family: 'Inter', sans-serif;"></div>
+
   <div class="container">
     <h1>Construa o Currículo Que Vai Abrir Portas</h1>
     <form id="formulario">
@@ -177,5 +179,74 @@ Você está a um clique de transformar sua história profissional. <strong>Final
 </div>
 
   <script src="script.js"></script>
+
+<script>
+  const nomesUnicos = [
+    "Adriana", "Aline", "Amanda", "Ana", "André", "Arthur", "Beatriz", "Bruna", "Caio", "Camila", "Carlos", "Carolina",
+    "Cássia", "Cecília", "Clara", "Daniel", "Daniele", "Débora", "Diego", "Eduardo", "Eliane", "Elias", "Emerson", "Estela",
+    "Fabiana", "Felipe", "Fernanda", "Flávia", "Gabriel", "Gisele", "Guilherme", "Helena", "Henrique", "Hugo", "Igor",
+    "Isabela", "Joana", "João", "Jorge", "José", "Juliana", "Karina", "Larissa", "Leonardo", "Letícia", "Lucas", "Luiz",
+    "Manuela", "Marcela", "Marcelo", "Marcos", "Maria", "Mariana", "Matheus", "Maurício", "Michele", "Milena", "Natália",
+    "Nicole", "Patrícia", "Paula", "Pedro", "Priscila", "Rafael", "Raquel", "Renata", "Ricardo", "Roberta", "Rodrigo",
+    "Rosa", "Samuel", "Sandra", "Sara", "Simone", "Sofia", "Sônia", "Stephanie", "Sueli", "Tainá", "Tatiane", "Thiago",
+    "Valéria", "Vanessa", "Vinícius", "Viviane", "Vitor", "Yasmin", "Zuleica", "Alan", "Alessandra", "Alex", "Alice",
+    "Almir", "Antônio", "Augusto", "Bárbara", "Benício", "Bernardo", "Bianca", "Bruno", "Caetano", "Calebe", "Carla",
+    "Cassiano", "Catarina", "Celina", "César", "Cristiane", "Cristina", "Daniela", "Davi", "Denise", "Diana", "Diogo",
+    "Domingos", "Dulce", "Edgar", "Edson", "Elaine", "Emanuel", "Erica", "Erick", "Ester", "Eunice", "Eva", "Evelyn",
+    "Fabiano", "Fabrícia", "Fátima", "Fernando", "Flávio", "Francisca", "Francisco", "Frederico", "Geovana", "Geraldo",
+    "Giovana", "Graziela", "Gustavo", "Heitor", "Heloísa", "Humberto", "Iara", "Ian", "Ieda", "Ilana", "Inês", "Irene",
+    "Irineu", "Isabel", "Ivan", "Jacqueline", "Jaqueline", "Jessica", "Jonas", "Jonathan", "Jordana", "Joséfa", "Josué",
+    "Júlia", "Juliano", "Jussara", "Karen", "Kelly", "Kleber", "Lara", "Laura", "Leandro", "Leda", "Lígia", "Lorena",
+    "Lourdes", "Luana", "Luciana", "Luciano", "Lúcio", "Ludmila", "Luísa", "Magda", "Maicon", "Maíra", "Malu", "Marcílio",
+    "Margarida", "Mariah", "Marilda", "Marina", "Marlene", "Marta", "Maurina", "Mayara", "Melissa", "Miguel", "Mirela",
+    "Moacir", "Murilo", "Nádia", "Naiane", "Nara", "Natan", "Neide", "Nelson", "Neusa", "Ney", "Nícolas", "Noemi", "Norma",
+    "Odair", "Olga", "Otávio", "Paloma", "Patrício", "Paulo", "Penélope", "Péricles", "Pietra", "Poliana", "Raimundo",
+    "Regina", "Reinaldo", "Renan", "Rita", "Robson", "Rodnei", "Rogério", "Romário", "Rosana", "Rose", "Roseli", "Rubens",
+    "Rute", "Sabrina", "Salete", "Samuel", "Sandra", "Sandro", "Sebastião", "Selma", "Sérgio", "Silvana", "Silvia",
+    "Simão", "Solange", "Sueli", "Tadeu", "Talita", "Tamara", "Tatiana", "Telma", "Teresa", "Tiago", "Túlio", "Valdemar",
+    "Valdir", "Valmir", "Vanda", "Vânia", "Vicente", "Vilma", "Vinicius", "Virgínia", "Vitor", "Vivian", "Wagner", "Walter",
+    "Wellington", "Willian", "Yara", "Yuri", "Zélia", "Zenaide", "Zilda", "Zuleide",
+    // Adicionando mais nomes fictícios para completar 500
+  ];
+
+  const acoes = ["Começou agora", "Está fazendo", "Terminou"];
+  const nomesUsados = new Set();
+  const tempos = [7000, 14000, 20000];
+  let tempoIndex = 0;
+
+  const container = document.getElementById("notificacoes");
+
+  function gerarNotificacao() {
+    if (nomesUsados.size >= nomesUnicos.length) return;
+
+    let nome;
+    do {
+      nome = nomesUnicos[Math.floor(Math.random() * nomesUnicos.length)];
+    } while (nomesUsados.has(nome));
+
+    nomesUsados.add(nome);
+    const acao = acoes[Math.floor(Math.random() * acoes.length)];
+    const texto = `${nome} ${acao} o currículo.`;
+
+    const div = document.createElement("div");
+    div.classList.add("notificacao");
+    div.textContent = texto;
+    container.appendChild(div);
+
+    const tempoAtual = tempos[tempoIndex];
+    tempoIndex = (tempoIndex + 1) % tempos.length;
+
+    setTimeout(() => {
+      div.remove();
+      gerarNotificacao();
+    }, tempoAtual);
+  }
+
+  gerarNotificacao();
+</script>
+
+
+
+
 </body>
 </html>
