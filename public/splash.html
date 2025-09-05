@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="icon" href="icon.png" type="image/png" />
+  <meta charset="UTF-8">
+  <title>Office Express | Seu Futuro Começa Aqui</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #001f33, #00324a);
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .fade-in {
+      animation: fadeIn 1.2s ease-in-out;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .top-image {
+      width: 280px;
+      height: auto;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #e09d00;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #f0f4f8;
+      margin-bottom: 20px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .label {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      margin-top: 6px;
+    }
+
+    .empresas-section {
+      margin-top: 10px;
+      margin-bottom: 30px;
+    }
+
+    .empresas-section h2 {
+      font-size: 0.95rem;
+      color: #ffcc66;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .logos {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .logos img {
+      height: 30px;
+      max-width: 80px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+      opacity: 0.8;
+      transition: transform 0.3s ease;
+    }
+
+    .logos img:hover {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+
+    .btn-entrar {
+      background-color: #e09d00;
+      color: #00324a;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-entrar:hover {
+      background-color: #ffb700;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      .stat {
+        font-size: 1.5rem;
+      }
+
+      .label {
+        font-size: 0.8rem;
+      }
+
+      .empresas-section h2 {
+        font-size: 0.85rem;
+      }
+
+      .btn-entrar {
+        padding: 10px 24px;
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+  .top-image {
+    width: 150px;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="fade-in">
+    <img src="/public/logo.jpg" alt="Logo Office Express" class="top-image">
+
+    <h1>Seu Futuro Começa Aqui</h1>
+    <p>Milhares já confiam na Office Express para transformar oportunidades em realidade. Faça parte dessa jornada de sucesso.</p>
+
+    <div class="stats">
+      <div>
+        <div class="stat" id="usuarios">0</div>
+        <div class="label">Pessoas usam nossos serviços</div>
+      </div>
+      <div>
+        <div class="stat" id="taxa">0%</div>
+        <div class="label">taxa de empregabilidade</div>
+      </div>
+    </div>
+
+    <div class="empresas-section">
+      <h2>Empresas que abriram portas para nossos usuários:</h2>
+      <div class="logos">
+<img src="1.png" alt="Empresa 1" style="margin-top: 20px;">
+<img src="3.png" alt="Empresa 2" style="height: 60px; max-width: 140px; transform: scale(1.0);">
+<img src="2.png" alt="Empresa 3" style="margin-top: 20px;">
+        <!-- Adicione mais logos conforme quiser -->
+      </div>
+    </div>
+
+    <button class="btn-entrar" onclick="entrar()">Entrar</button>
+  </div>
+
+  <script>
+    function animateValue(id, start, end, duration, suffix = '') {
+      const obj = document.getElementById(id);
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        obj.innerText = value.toLocaleString('pt-BR') + suffix;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    animateValue("usuarios", 0, 10258, 3500);
+    animateValue("taxa", 0, 97, 3500, '%');
+
+    setTimeout(() => {
+      window.location.href = "curriculo.html";
+    }, 20000);
+
+    function entrar() {
+      window.location.href = "curriculo.html";
+    }
+  </script>
+</body>
+</html>
