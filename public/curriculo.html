@@ -341,6 +341,17 @@ function limparPontuacaoFinal(texto) {
   return texto.replace(/\s*[.,!?;:]$/, "").trim();
 }
 
+function capitalizarCadaPalavra(texto) {
+  return texto
+    .split(" ")
+    .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
+    .join(" ");
+}
+
+function limparPontuacaoFinal(texto) {
+  return texto.replace(/\s*[.,!?;:]$/, "").trim();
+}
+
 function reconhecerVoz(idCampo) {
   const campo = document.getElementById(idCampo);
   const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -352,37 +363,13 @@ function reconhecerVoz(idCampo) {
 
   reconhecimento.onresult = function(event) {
     let resultado = event.results[0][0].transcript;
-resultado = capitalizarPrimeiraLetra(limparPontuacaoFinal(resultado));
-campo.value = resultado;
-  };
-
-  reconhecimento.onerror = function(event) {
-    alert('Erro no reconhecimento de voz: ' + event.error);
-  };
-}
-
-function reconhecerEndereco() {
-  const campo = document.getElementById("endereco");
-  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  reconhecimento.lang = 'pt-BR';
-  reconhecimento.interimResults = false;
-  reconhecimento.maxAlternatives = 1;
-
-  reconhecimento.start();
-
-  reconhecimento.onresult = function(event) {
-    let resultado = event.results[0][0].transcript;
-    resultado = capitalizarPrimeiraLetra(limparPontuacaoFinal(resultado)); // 👈 aqui também
+    resultado = capitalizarCadaPalavra(limparPontuacaoFinal(resultado));
     campo.value = resultado;
   };
 
   reconhecimento.onerror = function(event) {
     alert('Erro no reconhecimento de voz: ' + event.error);
   };
-}
-
-function capitalizarPrimeiraLetra(texto) {
-  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 function reconhecerCampo(idCampo) {
@@ -396,7 +383,7 @@ function reconhecerCampo(idCampo) {
 
   reconhecimento.onresult = function(event) {
     let resultado = event.results[0][0].transcript;
-    resultado = capitalizarPrimeiraLetra(limparPontuacaoFinal(resultado)); // 👈 aqui
+    resultado = capitalizarCadaPalavra(limparPontuacaoFinal(resultado));
     campo.value = resultado;
   };
 
@@ -413,7 +400,6 @@ function adicionarCurso() {
   div.className = "curso-bloco";
   div.style.marginBottom = "20px";
 
-  // Nome do curso
   const cursoLabel = document.createElement("label");
   cursoLabel.textContent = "Nome do curso";
   cursoLabel.setAttribute("for", `curso-${index}`);
@@ -440,7 +426,6 @@ function adicionarCurso() {
   cursoWrapper.appendChild(cursoInput);
   cursoWrapper.appendChild(cursoMic);
 
-  // Instituição
   const instLabel = document.createElement("label");
   instLabel.setAttribute("for", `instituicao-${index}`);
 
@@ -466,7 +451,6 @@ function adicionarCurso() {
   instWrapper.appendChild(instInput);
   instWrapper.appendChild(instMic);
 
-  // Carga horária (sem microfone)
   const cargaLabel = document.createElement("label");
   cargaLabel.setAttribute("for", `carga-${index}`);
 
@@ -476,7 +460,6 @@ function adicionarCurso() {
   cargaInput.id = `carga-${index}`;
   cargaInput.placeholder = "Ex: 40 horas";
 
-  // Monta tudo
   div.appendChild(cursoLabel);
   div.appendChild(cursoWrapper);
   div.appendChild(instLabel);
@@ -487,30 +470,6 @@ function adicionarCurso() {
   container.appendChild(div);
 }
 
-function limparPontuacaoFinal(texto) {
-  return texto.replace(/\s*[.,!?;:]$/, "").trim();
-}
-
-function reconhecerCampo(idCampo) {
-  const campo = document.getElementById(idCampo);
-  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  reconhecimento.lang = 'pt-BR';
-  reconhecimento.interimResults = false;
-  reconhecimento.maxAlternatives = 1;
-
-  reconhecimento.start();
-
-  reconhecimento.onresult = function(event) {
-    let resultado = event.results[0][0].transcript;
-    resultado = limparPontuacaoFinal(resultado);
-    campo.value = resultado;
-  };
-
-  reconhecimento.onerror = function(event) {
-    alert('Erro no reconhecimento de voz: ' + event.error);
-  };
-}
-
 function adicionarExperiencia() {
   const container = document.getElementById("experiencias");
   const index = document.querySelectorAll(".experiencia").length;
@@ -519,7 +478,6 @@ function adicionarExperiencia() {
   div.className = "experiencia";
   div.style.marginBottom = "20px";
 
-  // Empresa
   const empresaWrapper = document.createElement("div");
   empresaWrapper.style.display = "flex";
   empresaWrapper.style.alignItems = "center";
@@ -543,7 +501,6 @@ function adicionarExperiencia() {
   empresaWrapper.appendChild(empresaInput);
   empresaWrapper.appendChild(empresaMic);
 
-  // Cargo
   const cargoWrapper = document.createElement("div");
   cargoWrapper.style.display = "flex";
   cargoWrapper.style.alignItems = "center";
@@ -567,7 +524,6 @@ function adicionarExperiencia() {
   cargoWrapper.appendChild(cargoInput);
   cargoWrapper.appendChild(cargoMic);
 
-  // Atividades
   const atividadesWrapper = document.createElement("div");
   atividadesWrapper.style.display = "flex";
   atividadesWrapper.style.alignItems = "center";
@@ -590,7 +546,6 @@ function adicionarExperiencia() {
   atividadesWrapper.appendChild(atividadesTextarea);
   atividadesWrapper.appendChild(atividadesMic);
 
-  // Início
   const inicioLabel = document.createElement("label");
   inicioLabel.textContent = "Início:";
 
@@ -600,7 +555,6 @@ function adicionarExperiencia() {
   inicioInput.name = "periodo_inicio[]";
   inicioInput.placeholder = "Selecione mês e ano";
 
-  // Fim
   const fimLabel = document.createElement("label");
   fimLabel.textContent = "Fim:";
 
@@ -610,7 +564,6 @@ function adicionarExperiencia() {
   fimInput.name = "periodo_fim[]";
   fimInput.placeholder = "Selecione mês e ano";
 
-  // Monta tudo
   div.appendChild(empresaWrapper);
   div.appendChild(cargoWrapper);
   div.appendChild(atividadesWrapper);
@@ -621,7 +574,6 @@ function adicionarExperiencia() {
 
   container.appendChild(div);
 }
-
 </script>
 
 
