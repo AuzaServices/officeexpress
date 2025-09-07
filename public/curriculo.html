@@ -235,7 +235,7 @@
                 <h2>O Que Te Torna Único</h2>
 <label>Formação Acadêmica</label>
 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-  <textarea name="formacao" id="formacao" required></textarea>
+  <textarea name="formacao" id="formacao" required autocapitalize="sentences"></textarea>
   <button type="button" onclick="reconhecerCampo('formacao')" style="background: none; border: none; cursor: pointer;">
     <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
   </button>
@@ -243,7 +243,7 @@
 
 <label>Habilidades</label>
 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-  <textarea id="habilidades-texto" name="habilidades" placeholder="Ex: Comunicação, Liderança, Criatividade"></textarea>
+  <textarea id="habilidades-texto" name="habilidades" placeholder="Ex: Comunicação, Liderança, Criatividade" autocapitalize="sentences"></textarea>
   <button type="button" onclick="reconhecerCampo('habilidades-texto')" style="background: none; border: none; cursor: pointer;">
     <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
   </button>
@@ -251,7 +251,7 @@
 
 <label>Hobbies</label>
 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-  <textarea id="hobbies-texto" name="hobbies" placeholder="Ex: Dançar, Ler, Praticar Exercícios"></textarea>
+  <textarea id="hobbies-texto" name="hobbies" placeholder="Ex: Dançar, Ler, Praticar Exercícios" autocapitalize="sentences"></textarea>
   <button type="button" onclick="reconhecerCampo('hobbies-texto')" style="background: none; border: none; cursor: pointer;">
     <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
   </button>
@@ -352,8 +352,8 @@ function reconhecerVoz(idCampo) {
 
   reconhecimento.onresult = function(event) {
     let resultado = event.results[0][0].transcript;
-    resultado = limparPontuacaoFinal(resultado);
-    campo.value = resultado;
+resultado = capitalizarPrimeiraLetra(limparPontuacaoFinal(resultado));
+campo.value = resultado;
   };
 
   reconhecimento.onerror = function(event) {
@@ -379,6 +379,10 @@ function reconhecerEndereco() {
   reconhecimento.onerror = function(event) {
     alert('Erro no reconhecimento de voz: ' + event.error);
   };
+}
+
+function capitalizarPrimeiraLetra(texto) {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 function reconhecerCampo(idCampo) {
