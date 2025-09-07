@@ -372,7 +372,7 @@ function reconhecerEndereco() {
 
   reconhecimento.onresult = function(event) {
     let resultado = event.results[0][0].transcript;
-    resultado = limparPontuacaoFinal(resultado);
+    resultado = capitalizarPrimeiraLetra(limparPontuacaoFinal(resultado)); // 👈 aqui também
     campo.value = resultado;
   };
 
@@ -396,7 +396,7 @@ function reconhecerCampo(idCampo) {
 
   reconhecimento.onresult = function(event) {
     let resultado = event.results[0][0].transcript;
-    resultado = limparPontuacaoFinal(resultado);
+    resultado = capitalizarPrimeiraLetra(limparPontuacaoFinal(resultado)); // 👈 aqui
     campo.value = resultado;
   };
 
