@@ -323,3 +323,4 @@ document.getElementById("adicionarObjetivo").addEventListener("click", () => {
     campoObjetivo.value = frase;
   }
 });
+
