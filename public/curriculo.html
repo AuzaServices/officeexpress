@@ -200,26 +200,29 @@
       <div class="etapa">
         <h2>Histórico de Conquistas</h2>
 <label>Conte onde você já brilhou</label>
-        <div id="experiencias">
-          <div class="experiencia">
-<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-  <input type="text" name="empresa[]" id="empresa" placeholder="Empresa" />
-  <button type="button" onclick="reconhecerCampo('empresa')" style="background: none; border: none; cursor: pointer;">
-    <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-  </button>
-</div>
+<div id="experiencias">
+  <div class="experiencia">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+      <input type="text" name="empresa[]" id="empresa" placeholder="Empresa" />
+      <button type="button" onclick="reconhecerCampo('empresa')" style="background: none; border: none; cursor: pointer;">
+        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+      </button>
+    </div>
 
-<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-  <input type="text" name="cargo[]" id="cargo" placeholder="Cargo" />
-  <button type="button" onclick="reconhecerCampo('cargo')" style="background: none; border: none; cursor: pointer;">
-    <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-  </button>
-</div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-  <textarea name="atividades[]" id="atividades-texto" placeholder="Atividades desenvolvidas..."></textarea>
-  <button type="button" onclick="reconhecerCampo('atividades-texto')" style="background: none; border: none; cursor: pointer;">
-    <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-  </button>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+      <input type="text" name="cargo[]" id="cargo" placeholder="Cargo" />
+      <button type="button" onclick="reconhecerCampo('cargo')" style="background: none; border: none; cursor: pointer;">
+        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+      </button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+      <textarea name="atividades[]" id="atividades-texto" placeholder="Atividades desenvolvidas..."></textarea>
+      <button type="button" onclick="reconhecerAtividades('atividades-texto')" style="background: none; border: none; cursor: pointer;">
+        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+      </button>
+    </div>
+  </div>
 </div>
             <label>Início:</label>
             <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano">
@@ -370,6 +373,28 @@ function limparPontuacaoFinal(texto) {
   return texto.replace(/\s*[.,!?;:]$/, "").trim();
 }
 
+function reconhecerVoz(idCampo) {
+  const campo = document.getElementById(idCampo);
+  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+  reconhecimento.lang = 'pt-BR';
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
+
+  reconhecimento.start();
+
+  reconhecimento.onresult = function(event) {
+    let resultado = event.results[0][0].transcript;
+    resultado = capitalizarCadaPalavra(limparPontuacaoFinal(resultado));
+    campo.value = resultado;
+  };
+
+  reconhecimento.onerror = function(event) {
+    alert('Erro no reconhecimento de voz: ' + event.error);
+  };
+}
+
+
 // Reconhecimento para campos comuns (capitaliza cada palavra)
 function reconhecerCampo(idCampo) {
   const campo = document.getElementById(idCampo);
@@ -392,6 +417,8 @@ function reconhecerCampo(idCampo) {
 }
 
 // Reconhecimento exclusivo para atividades (capitaliza só a primeira letra)
+
+
 function reconhecerAtividades(idCampo) {
   const campo = document.getElementById(idCampo);
   const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
