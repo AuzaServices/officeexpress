@@ -222,8 +222,7 @@
         <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
       </button>
     </div>
-  </div>
-</div>
+  
             <label>Início:</label>
             <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano">
             <label>Fim:</label>
@@ -385,12 +384,12 @@ function reconhecerVoz(idCampo) {
 
   reconhecimento.onresult = function(event) {
     let resultado = event.results[0][0].transcript;
-    resultado = capitalizarCadaPalavra(limparPontuacaoFinal(resultado));
-    campo.value = resultado;
+    campo.value = resultado.trim();
   };
 
   reconhecimento.onerror = function(event) {
-    alert('Erro no reconhecimento de voz: ' + event.error);
+    console.error('Erro no reconhecimento de voz:', event.error);
+    alert('Erro ao usar o microfone: ' + event.error);
   };
 }
 
@@ -417,8 +416,6 @@ function reconhecerCampo(idCampo) {
 }
 
 // Reconhecimento exclusivo para atividades (capitaliza só a primeira letra)
-
-
 function reconhecerAtividades(idCampo) {
   const campo = document.getElementById(idCampo);
   const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
