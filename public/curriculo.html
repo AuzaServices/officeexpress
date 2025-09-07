@@ -59,7 +59,7 @@
 <div style="display: flex; align-items: center; gap: 10px;">
   <input type="text" name="nome" id="nome" required />
   <button type="button" onclick="reconhecerVoz('nome')" style="background: none; border: none; cursor: pointer;">
-    <img src="https://i.imgur.com/Uml1TSc.png" alt="Microfone" style="width: 24px;" />
+    <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
   </button>
 </div>
         
@@ -68,28 +68,64 @@
 
       <!-- Etapa 2 -->
       <div class="etapa">
-        <label>Email</label>
-        <input type="email" name="email" required />
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <label for="email">Email</label>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="email" name="email" id="email" required />
+  </div>
+</div>
         <label>Telefones</label>
         <div id="telefones">
           <input type="text" name="telefone[]" />
         </div>
         <button type="button" class="sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
 
-        <label>Endereço (Rua)</label>
-        <input type="text" name="endereco" />
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <label for="endereco">Endereço (Rua)</label>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="text" name="endereco" id="endereco" />
+
+    <button type="button" onclick="reconhecerEndereco()" style="background: none; border: none; cursor: pointer;">
+      <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+    </button>
+  </div>
+</div>
 
         <label>Número</label>
         <input type="text" name="numero" />
 
-        <label>Complemento <span style="font-weight: normal; color: #666;">(opcional)</span></label>
-        <input type="text" name="complemento" />
+<!-- Complemento (opcional) -->
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <label for="complemento">Complemento <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="text" name="complemento" id="complemento" />
+    <button type="button" onclick="reconhecerCampo('complemento')" style="background: none; border: none; cursor: pointer;">
+      <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+    </button>
+  </div>
+</div>
 
-        <label>Bairro</label>
-        <input type="text" name="bairro" />
+<!-- Bairro -->
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <label for="bairro">Bairro</label>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="text" name="bairro" id="bairro" />
+    <button type="button" onclick="reconhecerCampo('bairro')" style="background: none; border: none; cursor: pointer;">
+      <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+    </button>
+  </div>
+</div>
 
-        <label>Cidade</label>
-        <input type="text" name="cidade" />
+<!-- Cidade -->
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <label for="cidade">Cidade</label>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="text" name="cidade" id="cidade" />
+    <button type="button" onclick="reconhecerCampo('cidade')" style="background: none; border: none; cursor: pointer;">
+      <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+    </button>
+  </div>
+</div>
 
         <label>CEP</label>
         <input type="text" name="cep" />
@@ -134,8 +170,26 @@
 <label>Cursos que moldaram sua jornada</label>
         <div id="cursos">
           <div class="curso">
-            <input type="text" name="curso[]" placeholder="Nome do curso" />
-            <input type="text" name="instituicao[]" placeholder="Instituição (opcional)" />
+<!-- Nome do curso -->
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <label for="curso">Nome do curso</label>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="text" name="curso[]" id="curso" placeholder="Nome do curso" />
+    <button type="button" onclick="reconhecerCampo('curso')" style="background: none; border: none; cursor: pointer;">
+      <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+    </button>
+  </div>
+</div>
+
+<!-- Instituição -->
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <input type="text" name="instituicao[]" id="instituicao" placeholder="Instituição (opcional)" />
+    <button type="button" onclick="reconhecerCampo('instituicao')" style="background: none; border: none; cursor: pointer;">
+      <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+    </button>
+  </div>
+</div>
             <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" class="carga-input" />
           </div>
         </div>
@@ -148,9 +202,25 @@
 <label>Conte onde você já brilhou</label>
         <div id="experiencias">
           <div class="experiencia">
-            <input type="text" name="empresa[]" placeholder="Empresa" />
-            <input type="text" name="cargo[]" placeholder="Cargo" />
-            <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+  <input type="text" name="empresa[]" id="empresa" placeholder="Empresa" />
+  <button type="button" onclick="reconhecerCampo('empresa')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+  <input type="text" name="cargo[]" id="cargo" placeholder="Cargo" />
+  <button type="button" onclick="reconhecerCampo('cargo')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+  <textarea name="atividades[]" id="atividades-texto" placeholder="Atividades desenvolvidas..."></textarea>
+  <button type="button" onclick="reconhecerCampo('atividades-texto')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
             <label>Início:</label>
             <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano">
             <label>Fim:</label>
@@ -163,14 +233,29 @@
       <!-- Etapa 6 -->
       <div class="etapa">
                 <h2>O Que Te Torna Único</h2>
-        <label>Formação Acadêmica</label>
-        <textarea name="formacao" required></textarea>
+<label>Formação Acadêmica</label>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+  <textarea name="formacao" id="formacao" required></textarea>
+  <button type="button" onclick="reconhecerCampo('formacao')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
 
-        <label>Habilidades</label>
-        <textarea id="habilidades-texto" name="habilidades" placeholder="Ex: Comunicação, Liderança, Criatividade"></textarea>
+<label>Habilidades</label>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+  <textarea id="habilidades-texto" name="habilidades" placeholder="Ex: Comunicação, Liderança, Criatividade"></textarea>
+  <button type="button" onclick="reconhecerCampo('habilidades-texto')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
 
-        <label>Hobbies</label>
-        <textarea id="hobbies-texto" name="hobbies" placeholder="Ex: Dançar, Ler, Praticar Exercícios"></textarea>
+<label>Hobbies</label>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+  <textarea id="hobbies-texto" name="hobbies" placeholder="Ex: Dançar, Ler, Praticar Exercícios"></textarea>
+  <button type="button" onclick="reconhecerCampo('hobbies-texto')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
 
         <p style="text-align: center; font-size: 1.1rem; margin-top: 30px; color: #00324a;">
 Você está a um clique de transformar sua história profissional. <strong>Finalize e surpreenda-se com o resultado.</strong>
@@ -251,6 +336,11 @@ Você está a um clique de transformar sua história profissional. <strong>Final
   gerarNotificacao();
 </script>
 <script>
+function limparPontuacaoFinal(texto) {
+  // Remove qualquer pontuação no final da frase
+  return texto.replace(/\s*[.,!?;:]$/, "").trim();
+}
+
 function reconhecerVoz(idCampo) {
   const campo = document.getElementById(idCampo);
   const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -261,7 +351,8 @@ function reconhecerVoz(idCampo) {
   reconhecimento.start();
 
   reconhecimento.onresult = function(event) {
-    const resultado = event.results[0][0].transcript;
+    let resultado = event.results[0][0].transcript;
+    resultado = limparPontuacaoFinal(resultado);
     campo.value = resultado;
   };
 
@@ -269,6 +360,264 @@ function reconhecerVoz(idCampo) {
     alert('Erro no reconhecimento de voz: ' + event.error);
   };
 }
+
+function reconhecerEndereco() {
+  const campo = document.getElementById("endereco");
+  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  reconhecimento.lang = 'pt-BR';
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
+
+  reconhecimento.start();
+
+  reconhecimento.onresult = function(event) {
+    let resultado = event.results[0][0].transcript;
+    resultado = limparPontuacaoFinal(resultado);
+    campo.value = resultado;
+  };
+
+  reconhecimento.onerror = function(event) {
+    alert('Erro no reconhecimento de voz: ' + event.error);
+  };
+}
+
+function reconhecerCampo(idCampo) {
+  const campo = document.getElementById(idCampo);
+  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  reconhecimento.lang = 'pt-BR';
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
+
+  reconhecimento.start();
+
+  reconhecimento.onresult = function(event) {
+    let resultado = event.results[0][0].transcript;
+    resultado = limparPontuacaoFinal(resultado);
+    campo.value = resultado;
+  };
+
+  reconhecimento.onerror = function(event) {
+    alert('Erro no reconhecimento de voz: ' + event.error);
+  };
+}
+
+function adicionarCurso() {
+  const container = document.getElementById("cursos");
+  const index = document.querySelectorAll(".curso-bloco").length;
+
+  const div = document.createElement("div");
+  div.className = "curso-bloco";
+  div.style.marginBottom = "20px";
+
+  // Nome do curso
+  const cursoLabel = document.createElement("label");
+  cursoLabel.textContent = "Nome do curso";
+  cursoLabel.setAttribute("for", `curso-${index}`);
+
+  const cursoWrapper = document.createElement("div");
+  cursoWrapper.style.display = "flex";
+  cursoWrapper.style.alignItems = "center";
+  cursoWrapper.style.gap = "10px";
+
+  const cursoInput = document.createElement("input");
+  cursoInput.type = "text";
+  cursoInput.name = "curso[]";
+  cursoInput.id = `curso-${index}`;
+  cursoInput.placeholder = "Nome do curso";
+
+  const cursoMic = document.createElement("button");
+  cursoMic.type = "button";
+  cursoMic.innerHTML = `<img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />`;
+  cursoMic.style.background = "none";
+  cursoMic.style.border = "none";
+  cursoMic.style.cursor = "pointer";
+  cursoMic.onclick = () => reconhecerCampo(`curso-${index}`);
+
+  cursoWrapper.appendChild(cursoInput);
+  cursoWrapper.appendChild(cursoMic);
+
+  // Instituição
+  const instLabel = document.createElement("label");
+  instLabel.setAttribute("for", `instituicao-${index}`);
+
+  const instWrapper = document.createElement("div");
+  instWrapper.style.display = "flex";
+  instWrapper.style.alignItems = "center";
+  instWrapper.style.gap = "10px";
+
+  const instInput = document.createElement("input");
+  instInput.type = "text";
+  instInput.name = "instituicao[]";
+  instInput.id = `instituicao-${index}`;
+  instInput.placeholder = "Instituição (opcional)";
+
+  const instMic = document.createElement("button");
+  instMic.type = "button";
+  instMic.innerHTML = `<img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />`;
+  instMic.style.background = "none";
+  instMic.style.border = "none";
+  instMic.style.cursor = "pointer";
+  instMic.onclick = () => reconhecerCampo(`instituicao-${index}`);
+
+  instWrapper.appendChild(instInput);
+  instWrapper.appendChild(instMic);
+
+  // Carga horária (sem microfone)
+  const cargaLabel = document.createElement("label");
+  cargaLabel.setAttribute("for", `carga-${index}`);
+
+  const cargaInput = document.createElement("input");
+  cargaInput.type = "text";
+  cargaInput.name = "carga[]";
+  cargaInput.id = `carga-${index}`;
+  cargaInput.placeholder = "Ex: 40 horas";
+
+  // Monta tudo
+  div.appendChild(cursoLabel);
+  div.appendChild(cursoWrapper);
+  div.appendChild(instLabel);
+  div.appendChild(instWrapper);
+  div.appendChild(cargaLabel);
+  div.appendChild(cargaInput);
+
+  container.appendChild(div);
+}
+
+function limparPontuacaoFinal(texto) {
+  return texto.replace(/\s*[.,!?;:]$/, "").trim();
+}
+
+function reconhecerCampo(idCampo) {
+  const campo = document.getElementById(idCampo);
+  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  reconhecimento.lang = 'pt-BR';
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
+
+  reconhecimento.start();
+
+  reconhecimento.onresult = function(event) {
+    let resultado = event.results[0][0].transcript;
+    resultado = limparPontuacaoFinal(resultado);
+    campo.value = resultado;
+  };
+
+  reconhecimento.onerror = function(event) {
+    alert('Erro no reconhecimento de voz: ' + event.error);
+  };
+}
+
+function adicionarExperiencia() {
+  const container = document.getElementById("experiencias");
+  const index = document.querySelectorAll(".experiencia").length;
+
+  const div = document.createElement("div");
+  div.className = "experiencia";
+  div.style.marginBottom = "20px";
+
+  // Empresa
+  const empresaWrapper = document.createElement("div");
+  empresaWrapper.style.display = "flex";
+  empresaWrapper.style.alignItems = "center";
+  empresaWrapper.style.gap = "10px";
+  empresaWrapper.style.marginBottom = "10px";
+
+  const empresaInput = document.createElement("input");
+  empresaInput.type = "text";
+  empresaInput.name = "empresa[]";
+  empresaInput.id = `empresa-${index}`;
+  empresaInput.placeholder = "Empresa";
+
+  const empresaMic = document.createElement("button");
+  empresaMic.type = "button";
+  empresaMic.innerHTML = `<img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />`;
+  empresaMic.style.background = "none";
+  empresaMic.style.border = "none";
+  empresaMic.style.cursor = "pointer";
+  empresaMic.onclick = () => reconhecerCampo(`empresa-${index}`);
+
+  empresaWrapper.appendChild(empresaInput);
+  empresaWrapper.appendChild(empresaMic);
+
+  // Cargo
+  const cargoWrapper = document.createElement("div");
+  cargoWrapper.style.display = "flex";
+  cargoWrapper.style.alignItems = "center";
+  cargoWrapper.style.gap = "10px";
+  cargoWrapper.style.marginBottom = "10px";
+
+  const cargoInput = document.createElement("input");
+  cargoInput.type = "text";
+  cargoInput.name = "cargo[]";
+  cargoInput.id = `cargo-${index}`;
+  cargoInput.placeholder = "Cargo";
+
+  const cargoMic = document.createElement("button");
+  cargoMic.type = "button";
+  cargoMic.innerHTML = `<img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />`;
+  cargoMic.style.background = "none";
+  cargoMic.style.border = "none";
+  cargoMic.style.cursor = "pointer";
+  cargoMic.onclick = () => reconhecerCampo(`cargo-${index}`);
+
+  cargoWrapper.appendChild(cargoInput);
+  cargoWrapper.appendChild(cargoMic);
+
+  // Atividades
+  const atividadesWrapper = document.createElement("div");
+  atividadesWrapper.style.display = "flex";
+  atividadesWrapper.style.alignItems = "center";
+  atividadesWrapper.style.gap = "10px";
+  atividadesWrapper.style.marginBottom = "10px";
+
+  const atividadesTextarea = document.createElement("textarea");
+  atividadesTextarea.name = "atividades[]";
+  atividadesTextarea.id = `atividades-${index}`;
+  atividadesTextarea.placeholder = "Atividades desenvolvidas...";
+
+  const atividadesMic = document.createElement("button");
+  atividadesMic.type = "button";
+  atividadesMic.innerHTML = `<img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />`;
+  atividadesMic.style.background = "none";
+  atividadesMic.style.border = "none";
+  atividadesMic.style.cursor = "pointer";
+  atividadesMic.onclick = () => reconhecerCampo(`atividades-${index}`);
+
+  atividadesWrapper.appendChild(atividadesTextarea);
+  atividadesWrapper.appendChild(atividadesMic);
+
+  // Início
+  const inicioLabel = document.createElement("label");
+  inicioLabel.textContent = "Início:";
+
+  const inicioInput = document.createElement("input");
+  inicioInput.type = "text";
+  inicioInput.className = "mesAno";
+  inicioInput.name = "periodo_inicio[]";
+  inicioInput.placeholder = "Selecione mês e ano";
+
+  // Fim
+  const fimLabel = document.createElement("label");
+  fimLabel.textContent = "Fim:";
+
+  const fimInput = document.createElement("input");
+  fimInput.type = "text";
+  fimInput.className = "mesAno";
+  fimInput.name = "periodo_fim[]";
+  fimInput.placeholder = "Selecione mês e ano";
+
+  // Monta tudo
+  div.appendChild(empresaWrapper);
+  div.appendChild(cargoWrapper);
+  div.appendChild(atividadesWrapper);
+  div.appendChild(inicioLabel);
+  div.appendChild(inicioInput);
+  div.appendChild(fimLabel);
+  div.appendChild(fimInput);
+
+  container.appendChild(div);
+}
+
 </script>
 
 
