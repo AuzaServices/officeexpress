@@ -393,6 +393,26 @@ function reconhecerVoz(idCampo) {
   };
 }
 
+function reconhecerVoz(idCampo) {
+  const campo = document.getElementById(idCampo);
+  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+  reconhecimento.lang = 'pt-BR';
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
+
+  reconhecimento.start();
+
+  reconhecimento.onresult = function(event) {
+    let resultado = event.results[0][0].transcript;
+    campo.value = resultado.trim();
+  };
+
+  reconhecimento.onerror = function(event) {
+    console.error('Erro no reconhecimento de voz:', event.error);
+    alert('Erro ao usar o microfone: ' + event.error);
+  };
+}
 
 // Reconhecimento para campos comuns (capitaliza cada palavra)
 function reconhecerCampo(idCampo) {
