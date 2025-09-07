@@ -352,26 +352,25 @@ function limparPontuacaoFinal(texto) {
   return texto.replace(/\s*[.,!?;:]$/, "").trim();
 }
 
-function reconhecerVoz(idCampo) {
-  const campo = document.getElementById(idCampo);
-  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  reconhecimento.lang = 'pt-BR';
-  reconhecimento.interimResults = false;
-  reconhecimento.maxAlternatives = 1;
-
-  reconhecimento.start();
-
-  reconhecimento.onresult = function(event) {
-    let resultado = event.results[0][0].transcript;
-    resultado = capitalizarCadaPalavra(limparPontuacaoFinal(resultado));
-    campo.value = resultado;
-  };
-
-  reconhecimento.onerror = function(event) {
-    alert('Erro no reconhecimento de voz: ' + event.error);
-  };
+// Capitaliza só a primeira letra da frase
+function capitalizarPrimeiraLetra(texto) {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+// Capitaliza cada palavra
+function capitalizarCadaPalavra(texto) {
+  return texto
+    .split(" ")
+    .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
+    .join(" ");
+}
+
+// Remove pontuação final
+function limparPontuacaoFinal(texto) {
+  return texto.replace(/\s*[.,!?;:]$/, "").trim();
+}
+
+// Reconhecimento para campos comuns (capitaliza cada palavra)
 function reconhecerCampo(idCampo) {
   const campo = document.getElementById(idCampo);
   const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -392,6 +391,28 @@ function reconhecerCampo(idCampo) {
   };
 }
 
+// Reconhecimento exclusivo para atividades (capitaliza só a primeira letra)
+function reconhecerAtividades(idCampo) {
+  const campo = document.getElementById(idCampo);
+  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  reconhecimento.lang = 'pt-BR';
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
+
+  reconhecimento.start();
+
+  reconhecimento.onresult = function(event) {
+    let resultado = event.results[0][0].transcript;
+    resultado = capitalizarPrimeiraLetra(limparPontuacaoFinal(resultado));
+    campo.value = resultado;
+  };
+
+  reconhecimento.onerror = function(event) {
+    alert('Erro no reconhecimento de voz: ' + event.error);
+  };
+}
+
+// Adiciona bloco de curso
 function adicionarCurso() {
   const container = document.getElementById("cursos");
   const index = document.querySelectorAll(".curso-bloco").length;
@@ -470,6 +491,7 @@ function adicionarCurso() {
   container.appendChild(div);
 }
 
+// Adiciona bloco de experiência
 function adicionarExperiencia() {
   const container = document.getElementById("experiencias");
   const index = document.querySelectorAll(".experiencia").length;
@@ -541,7 +563,7 @@ function adicionarExperiencia() {
   atividadesMic.style.background = "none";
   atividadesMic.style.border = "none";
   atividadesMic.style.cursor = "pointer";
-  atividadesMic.onclick = () => reconhecerCampo(`atividades-${index}`);
+  atividadesMic.onclick = () => reconhecerAtividades(`atividades-${index}`);
 
   atividadesWrapper.appendChild(atividadesTextarea);
   atividadesWrapper.appendChild(atividadesMic);
@@ -564,6 +586,7 @@ function adicionarExperiencia() {
   fimInput.name = "periodo_fim[]";
   fimInput.placeholder = "Selecione mês e ano";
 
+  // Monta tudo
   div.appendChild(empresaWrapper);
   div.appendChild(cargoWrapper);
   div.appendChild(atividadesWrapper);
@@ -574,6 +597,7 @@ function adicionarExperiencia() {
 
   container.appendChild(div);
 }
+
 </script>
 
 
