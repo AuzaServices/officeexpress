@@ -82,13 +82,12 @@
 
 <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
   <label for="endereco">Endereço (Rua)</label>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="text" name="endereco" id="endereco" />
-
-    <button type="button" onclick="reconhecerEndereco()" style="background: none; border: none; cursor: pointer;">
-      <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-    </button>
-  </div>
+<div style="display: flex; align-items: center; gap: 10px;">
+  <input type="text" id="endereco" name="endereco" placeholder="Endereço completo" />
+  <button type="button" onclick="reconhecerCampo('endereco')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
 </div>
 
         <label>Número</label>
