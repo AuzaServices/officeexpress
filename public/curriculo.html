@@ -55,8 +55,14 @@
           </div>
         </div>
 
-        <label>Seu Nome Completo <span style="font-weight: normal; color: #666;">(Como você quer ser lembrado)</span></label>
-        <input type="text" name="nome" required />
+<label>Seu Nome Completo <span style="font-weight: normal; color: #666;">(Como você quer ser lembrado)</span></label>
+<div style="display: flex; align-items: center; gap: 10px;">
+  <input type="text" name="nome" id="nome" required />
+  <button type="button" onclick="reconhecerVoz('nome')" style="background: none; border: none; cursor: pointer;">
+    <img src="https://i.imgur.com/Uml1TSc.png" alt="Microfone" style="width: 24px;" />
+  </button>
+</div>
+        
 
       </div>
 
@@ -244,7 +250,26 @@ Você está a um clique de transformar sua história profissional. <strong>Final
 
   gerarNotificacao();
 </script>
+<script>
+function reconhecerVoz(idCampo) {
+  const campo = document.getElementById(idCampo);
+  const reconhecimento = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  reconhecimento.lang = 'pt-BR';
+  reconhecimento.interimResults = false;
+  reconhecimento.maxAlternatives = 1;
 
+  reconhecimento.start();
+
+  reconhecimento.onresult = function(event) {
+    const resultado = event.results[0][0].transcript;
+    campo.value = resultado;
+  };
+
+  reconhecimento.onerror = function(event) {
+    alert('Erro no reconhecimento de voz: ' + event.error);
+  };
+}
+</script>
 
 
 
