@@ -347,27 +347,48 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     const relatorio = analisarCurriculo(texto);
 
     // Gerar PDF com o relatório
-    const doc = new PDFDocument();
-    const buffers = [];
+const PDFDocument = require('pdfkit');
+const doc = new PDFDocument({ margin: 50 });
+const buffers = [];
 
-    doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', async () => {
-      const pdfBuffer = Buffer.concat(buffers);
-      const filename = `relatorio-${Date.now()}.pdf`;
+doc.on('data', buffers.push.bind(buffers));
+doc.on('end', async () => {
+  const pdfBuffer = Buffer.concat(buffers);
+  const filename = `relatorio-${Date.now()}.pdf`;
 
-      // Salvar na tabela analises
-      const query = `
-        INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
-        VALUES (?, ?, ?, ?, ?)
-      `;
-      await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
+  const query = `
+    INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
 
-      res.json({ sucesso: true });
-    });
+  res.json({ sucesso: true });
+});
 
-    doc.fontSize(14).text('📋 Relatório de Análise do Currículo\n\n');
-    doc.fontSize(12).text(relatorio);
-    doc.end();
+// Cabeçalho
+doc.font('Helvetica-Bold').fontSize(20).fillColor('#e09d00').text('📋 Relatório de Análise do Currículo', { align: 'center' });
+doc.moveDown();
+
+// Dados do candidato
+doc.font('Helvetica').fontSize(12).fillColor('#333').text(`Nome: ${nome}`);
+doc.text(`Telefone: ${telefone}`);
+doc.moveDown();
+
+// Conteúdo do relatório
+doc.fontSize(12).fillColor('#333').text('Resumo da Avaliação:', { underline: true });
+doc.moveDown();
+
+doc.fillColor('#c0392b').text('⚠ Perfil não identificado');
+doc.text('⚠ Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
+doc.text('⚠ Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
+doc.moveDown();
+
+doc.fillColor('#2980b9').text('💡 Sugestões de melhoria:');
+doc.text('- Use bullet points para facilitar leitura e escaneabilidade.');
+doc.text('- Adicione seções como experiência, formação, habilidades, idiomas, cursos.');
+doc.moveDown();
+
+doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err.message);
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
