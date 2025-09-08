@@ -48,41 +48,35 @@ function getPublicIP(req) {
 }
 
 // 🧠 Função de análise de currículo
-const secoesEsperadas = {
-  experiencia: ['experiência', 'trajetória', 'histórico profissional'],
-  formacao: ['formação', 'educação', 'escolaridade', 'ensino'],
-  habilidades: ['habilidades', 'competências', 'skills'],
-  idiomas: ['idiomas', 'línguas', 'língua estrangeira'],
-  cursos: ['cursos', 'capacitações', 'certificações']
-};
-
-function detectarSecoes(textoLower) {
-  const faltando = [];
-
-  for (const [secao, termos] of Object.entries(secoesEsperadas)) {
-    const presente = termos.some(t => textoLower.includes(t));
-    if (!presente) {
-      faltando.push(secao);
-    }
-  }
-
-  return faltando;
-}
-
 function analisarCurriculo(texto) {
-  const alertas = [];
   const elogios = [];
+  const alertas = [];
+  const sugestoes = [];
   const textoLower = texto.toLowerCase();
 
-  // Verificação semântica de seções
-  const faltando = detectarSecoes(textoLower);
+  // 🔍 Seções esperadas com sinônimos
+  const secoesEsperadas = {
+    experiencia: ['experiência', 'trajetória', 'histórico profissional'],
+    formacao: ['formação', 'educação', 'escolaridade', 'ensino'],
+    habilidades: ['habilidades', 'competências', 'skills'],
+    idiomas: ['idiomas', 'línguas', 'língua estrangeira'],
+    cursos: ['cursos', 'capacitações', 'certificações']
+  };
+
+  // 🔍 Detectar seções
+  const faltando = [];
+  for (const [secao, termos] of Object.entries(secoesEsperadas)) {
+    const presente = termos.some(t => textoLower.includes(t));
+    if (!presente) faltando.push(secao);
+  }
+
   if (faltando.length > 0) {
     alertas.push(`⚠️ Seções ausentes ou não detectadas: ${faltando.join(', ')}`);
   } else {
     elogios.push('✅ Todas as seções principais foram encontradas.');
   }
 
-  // Tamanho do texto
+  // 📏 Tamanho do texto
   if (texto.length < 500) {
     alertas.push('📄 Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
   } else if (texto.length > 3000) {
@@ -91,7 +85,7 @@ function analisarCurriculo(texto) {
     elogios.push('📏 Tamanho do currículo está adequado.');
   }
 
-  // Datas
+  // 📅 Datas
   const temDatas = /\b(19|20)\d{2}\b/.test(textoLower);
   if (!temDatas) {
     alertas.push('📅 Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
@@ -99,17 +93,17 @@ function analisarCurriculo(texto) {
     elogios.push('📅 Datas detectadas. Experiências parecem contextualizadas.');
   }
 
-  // Bullet points
+  // 📌 Bullet points
   const temBullets = texto.includes('•') || texto.includes('- ');
   if (!temBullets) {
-    alertas.push('📌 Texto corrido detectado. Use bullet points para facilitar leitura.');
+    sugestoes.push('📌 Use bullet points para facilitar leitura e escaneabilidade.');
   } else {
     elogios.push('📌 Uso de bullet points detectado. Boa escaneabilidade.');
   }
 
-  // Verbos fracos
+  // 🔍 Verbos fracos
   const verbosFracos = ['fiz', 'ajudei', 'trabalhei', 'mexi', 'liderei'];
-  const sugestoes = {
+  const sugestoesVerbo = {
     fiz: 'implementei',
     ajudei: 'colaborei',
     trabalhei: 'atuei',
@@ -118,18 +112,18 @@ function analisarCurriculo(texto) {
   };
   verbosFracos.forEach(verbo => {
     if (textoLower.includes(verbo)) {
-      alertas.push(`🔍 Substitua '${verbo}' por algo como '${sugestoes[verbo]}' para dar mais força à sua descrição.`);
+      sugestoes.push(`🔍 Substitua '${verbo}' por algo como '${sugestoesVerbo[verbo]}' para dar mais força à sua descrição.`);
     }
   });
 
-  // Primeira pessoa
+  // 🗣️ Primeira pessoa
   const primeiraPessoa = ['eu ', 'meu ', 'minha ', 'me ', 'mim '];
   const usoPessoal = primeiraPessoa.filter(p => textoLower.includes(p));
   if (usoPessoal.length > 2) {
     alertas.push('🗣️ Uso excessivo de primeira pessoa. Prefira frases objetivas e impessoais.');
   }
 
-  // Repetição de palavras
+  // 🔁 Repetição de termos
   const palavras = textoLower.split(/\s+/);
   const contagem = {};
   palavras.forEach(p => {
@@ -141,21 +135,27 @@ function analisarCurriculo(texto) {
     alertas.push(`🔁 Repetição excessiva de termos: ${termos}`);
   }
 
-  // Classificação por perfil
+  // 🧠 Perfil
   let perfil = '🔰 Perfil não identificado';
-  if (textoLower.includes('estágio') || textoLower.includes('iniciação')) {
+  if (textoLower.includes('estágio') || textoLower.includes('iniciação') || textoLower.includes('júnior')) {
     perfil = '🟢 Perfil Júnior / Estagiário';
-  } else if (textoLower.includes('coordenei') || textoLower.includes('gerenciei')) {
+  } else if (
+    textoLower.includes('coordenei') ||
+    textoLower.includes('gerenciei') ||
+    textoLower.includes('liderança') ||
+    textoLower.includes('pleno') ||
+    textoLower.includes('sênior')
+  ) {
     perfil = '🔵 Perfil Pleno / Sênior';
   }
 
-  // Score final
+  // 🧮 Score
   const score = Math.max(0, 100 - alertas.length * 10);
   const nota = score >= 80 ? '🟢 Excelente estrutura' :
                score >= 60 ? '🟡 Estrutura boa, com ajustes' :
                '🔴 Estrutura fraca, precisa revisão';
 
-  // Resultado
+  // 📋 Resultado final
   return `
 📋 Relatório de Análise do Currículo
 
@@ -164,9 +164,9 @@ ${nota} (Score: ${score}/100)
 
 ${elogios.join('\n')}
 ${alertas.length > 0 ? '\n' + alertas.join('\n') : '\n✅ Nenhum problema crítico detectado.'}
+${sugestoes.length > 0 ? '\n\n💡 Sugestões de melhoria:\n' + sugestoes.join('\n') : ''}
   `.trim();
 }
-
 //////////////////////////
 // 📤 Upload + Análise
 //////////////////////////
