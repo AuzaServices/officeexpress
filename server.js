@@ -50,29 +50,102 @@ function getPublicIP(req) {
 // 🧠 Função de análise de currículo
 function analisarCurriculo(texto) {
   const alertas = [];
+  const elogios = [];
   const textoLower = texto.toLowerCase();
 
-  if (!textoLower.includes('experiência')) {
-    alertas.push("⚠️ Seção 'Experiência' não encontrada.");
-  }
-  if (!textoLower.includes('formação') && !textoLower.includes('educação')) {
-    alertas.push("⚠️ Seção 'Formação Acadêmica' não encontrada.");
-  }
-  if (!textoLower.includes('habilidades') && !textoLower.includes('competências')) {
-    alertas.push("⚠️ Seção 'Habilidades' ou 'Competências' não encontrada.");
-  }
-  if (texto.length < 500) {
-    alertas.push("📄 Currículo parece muito curto. Considere detalhar mais suas experiências.");
+  // Seções obrigatórias
+  const secoes = ['experiência', 'formação', 'educação', 'habilidades', 'competências', 'idiomas'];
+  const presentes = secoes.filter(secao => textoLower.includes(secao));
+  const faltando = secoes.filter(secao => !textoLower.includes(secao));
+  if (faltando.length > 0) {
+    alertas.push(`⚠️ Seções ausentes ou não detectadas: ${faltando.join(', ')}`);
+  } else {
+    elogios.push('✅ Todas as seções principais foram encontradas.');
   }
 
+  // Tamanho do texto
+  if (texto.length < 500) {
+    alertas.push('📄 Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
+  } else if (texto.length > 3000) {
+    alertas.push('📄 Currículo muito longo. Pode estar cansativo ou repetitivo.');
+  } else {
+    elogios.push('📏 Tamanho do currículo está adequado.');
+  }
+
+  // Datas
+  const temDatas = /\b(19|20)\d{2}\b/.test(textoLower);
+  if (!temDatas) {
+    alertas.push('📅 Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
+  } else {
+    elogios.push('📅 Datas detectadas. Experiências parecem contextualizadas.');
+  }
+
+  // Bullet points
+  const temBullets = texto.includes('•') || texto.includes('- ');
+  if (!temBullets) {
+    alertas.push('📌 Texto corrido detectado. Use bullet points para facilitar leitura.');
+  } else {
+    elogios.push('📌 Uso de bullet points detectado. Boa escaneabilidade.');
+  }
+
+  // Verbos fracos
   const verbosFracos = ['fiz', 'ajudei', 'trabalhei', 'mexi', 'liderei'];
+  const sugestoes = {
+    fiz: 'implementei',
+    ajudei: 'colaborei',
+    trabalhei: 'atuei',
+    mexi: 'utilizei',
+    liderei: 'coordenei'
+  };
   verbosFracos.forEach(verbo => {
     if (textoLower.includes(verbo)) {
-      alertas.push(`🔍 Considere substituir o verbo '${verbo}' por algo mais específico e impactante.`);
+      alertas.push(`🔍 Substitua '${verbo}' por algo como '${sugestoes[verbo]}' para dar mais força à sua descrição.`);
     }
   });
 
-  return alertas.length > 0 ? alertas.join('\n') : '✅ Currículo parece estar bem estruturado!';
+  // Primeira pessoa
+  const primeiraPessoa = ['eu ', 'meu ', 'minha ', 'me ', 'mim '];
+  const usoPessoal = primeiraPessoa.filter(p => textoLower.includes(p));
+  if (usoPessoal.length > 2) {
+    alertas.push('🗣️ Uso excessivo de primeira pessoa. Prefira frases objetivas e impessoais.');
+  }
+
+  // Repetição de palavras
+  const palavras = textoLower.split(/\s+/);
+  const contagem = {};
+  palavras.forEach(p => {
+    contagem[p] = (contagem[p] || 0) + 1;
+  });
+  const repetidas = Object.entries(contagem).filter(([p, c]) => c > 10 && p.length > 3);
+  if (repetidas.length > 0) {
+    const termos = repetidas.map(([p]) => p).join(', ');
+    alertas.push(`🔁 Repetição excessiva de termos: ${termos}`);
+  }
+
+  // Classificação por perfil
+  let perfil = '🔰 Perfil não identificado';
+  if (textoLower.includes('estágio') || textoLower.includes('iniciação')) {
+    perfil = '🟢 Perfil Júnior / Estagiário';
+  } else if (textoLower.includes('coordenei') || textoLower.includes('gerenciei')) {
+    perfil = '🔵 Perfil Pleno / Sênior';
+  }
+
+  // Score final
+  const score = 100 - alertas.length * 10;
+  const nota = score >= 80 ? '🟢 Excelente estrutura' :
+               score >= 60 ? '🟡 Estrutura boa, com ajustes' :
+               '🔴 Estrutura fraca, precisa revisão';
+
+  // Resultado
+  return `
+📋 Relatório de Análise do Currículo
+
+${perfil}
+${nota} (Score: ${score}/100)
+
+${elogios.join('\n')}
+${alertas.length > 0 ? '\n' + alertas.join('\n') : '\n✅ Nenhum problema crítico detectado.'}
+  `.trim();
 }
 
 //////////////////////////
