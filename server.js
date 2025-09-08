@@ -366,29 +366,41 @@ doc.on('end', async () => {
 });
 
 // Cabeçalho
-doc.font('Helvetica-Bold').fontSize(20).fillColor('#e09d00').text('📋 Relatório de Análise do Currículo', { align: 'center' });
+// Cabeçalho
+doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
+   .text('Relatório de Análise do Currículo', { align: 'center' });
 doc.moveDown();
 
-doc.font('Helvetica').fontSize(12).fillColor('#333').text(`Nome: ${nome}`);
+doc.font('Helvetica').fontSize(12).fillColor('#333333')
+   .text(`Nome: ${nome}`);
 doc.moveDown();
 
-// Gráfico de avaliação
-doc.text('Avaliação Geral:', { underline: true });
+// Avaliação Geral
+doc.font('Helvetica-Bold').fontSize(14).text('Avaliação Geral');
 doc.moveDown();
-drawScoreChart(doc, score); // função que desenha o gráfico
+doc.font('Helvetica').fontSize(12).text(
+  'O currículo apresenta limitações que dificultam uma análise mais precisa. Abaixo estão os principais pontos observados:'
+);
+doc.moveDown();
+doc.list([
+  'Perfil não identificado.',
+  'Currículo muito curto, possivelmente incompleto ou pouco detalhado.',
+  'Ausência de datas, o que compromete a contextualização das experiências profissionais.'
+]);
 doc.moveDown(2);
 
-// Resumo
-doc.fontSize(12).text('Resumo da Avaliação:', { underline: true });
+// Sugestões de Melhoria
+doc.font('Helvetica-Bold').fontSize(14).text('Sugestões de Melhoria');
 doc.moveDown();
-doc.fillColor('#c0392b').text('⚠ Perfil não identificado');
-doc.text('⚠ Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
-doc.text('⚠ Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
+doc.font('Helvetica').fontSize(12).text(
+  'Para aprimorar a apresentação e aumentar a efetividade do currículo, recomenda-se:'
+);
 doc.moveDown();
-
-doc.fillColor('#2980b9').text('💡 Sugestões de melhoria:');
-doc.text('- Use bullet points para facilitar leitura e escaneabilidade.');
-doc.text('- Adicione seções como experiência, formação, habilidades, idiomas, cursos.');
+doc.list([
+  'Utilizar tópicos (bullet points) para facilitar a leitura e escaneabilidade.',
+  'Incluir seções claras como: Experiência Profissional, Formação Acadêmica, Habilidades Técnicas, Idiomas e Cursos Complementares.',
+  'Adicionar datas e descrições objetivas para cada experiência.'
+]);
 doc.moveDown();
 
 doc.end();
