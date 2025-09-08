@@ -369,15 +369,18 @@ doc.on('end', async () => {
 doc.font('Helvetica-Bold').fontSize(20).fillColor('#e09d00').text('📋 Relatório de Análise do Currículo', { align: 'center' });
 doc.moveDown();
 
-// Dados do candidato
 doc.font('Helvetica').fontSize(12).fillColor('#333').text(`Nome: ${nome}`);
-doc.text(`Telefone: ${telefone}`);
 doc.moveDown();
 
-// Conteúdo do relatório
-doc.fontSize(12).fillColor('#333').text('Resumo da Avaliação:', { underline: true });
+// Gráfico de avaliação
+doc.text('Avaliação Geral:', { underline: true });
 doc.moveDown();
+drawScoreChart(doc, score); // função que desenha o gráfico
+doc.moveDown(2);
 
+// Resumo
+doc.fontSize(12).text('Resumo da Avaliação:', { underline: true });
+doc.moveDown();
 doc.fillColor('#c0392b').text('⚠ Perfil não identificado');
 doc.text('⚠ Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
 doc.text('⚠ Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
