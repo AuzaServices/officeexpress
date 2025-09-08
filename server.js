@@ -54,7 +54,7 @@ function analisarCurriculo(texto) {
   const sugestoes = [];
   const textoLower = texto.toLowerCase();
 
-  // 🔍 Seções esperadas com sinônimos
+  // Seções esperadas com sinônimos
   const secoesEsperadas = {
     experiencia: ['experiência', 'trajetória', 'histórico profissional'],
     formacao: ['formação', 'educação', 'escolaridade', 'ensino'],
@@ -63,7 +63,7 @@ function analisarCurriculo(texto) {
     cursos: ['cursos', 'capacitações', 'certificações']
   };
 
-  // 🔍 Detectar seções
+  // Detectar seções ausentes
   const faltando = [];
   for (const [secao, termos] of Object.entries(secoesEsperadas)) {
     const presente = termos.some(t => textoLower.includes(t));
@@ -71,37 +71,37 @@ function analisarCurriculo(texto) {
   }
 
   if (faltando.length > 0) {
-    alertas.push(`⚠️ Seções ausentes ou não detectadas: ${faltando.join(', ')}`);
+    alertas.push(`Seções ausentes ou não detectadas: ${faltando.join(', ')}`);
   } else {
-    elogios.push('✅ Todas as seções principais foram encontradas.');
+    elogios.push('Todas as seções principais foram encontradas.');
   }
 
-  // 📏 Tamanho do texto
+  // Tamanho do texto
   if (texto.length < 500) {
-    alertas.push('📄 Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
+    alertas.push('Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
   } else if (texto.length > 3000) {
-    alertas.push('📄 Currículo muito longo. Pode estar cansativo ou repetitivo.');
+    alertas.push('Currículo muito longo. Pode estar cansativo ou repetitivo.');
   } else {
-    elogios.push('📏 Tamanho do currículo está adequado.');
+    elogios.push('Tamanho do currículo está adequado.');
   }
 
-  // 📅 Datas
+  // Verificação de datas
   const temDatas = /\b(19|20)\d{2}\b/.test(textoLower);
   if (!temDatas) {
-    alertas.push('📅 Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
+    alertas.push('Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
   } else {
-    elogios.push('📅 Datas detectadas. Experiências parecem contextualizadas.');
+    elogios.push('Datas detectadas. Experiências parecem contextualizadas.');
   }
 
-  // 📌 Bullet points
+  // Bullet points
   const temBullets = texto.includes('•') || texto.includes('- ');
   if (!temBullets) {
-    sugestoes.push('📌 Use bullet points para facilitar leitura e escaneabilidade.');
+    sugestoes.push('Use tópicos (bullet points) para facilitar leitura e escaneabilidade.');
   } else {
-    elogios.push('📌 Uso de bullet points detectado. Boa escaneabilidade.');
+    elogios.push('Uso de bullet points detectado. Boa escaneabilidade.');
   }
 
-  // 🔍 Verbos fracos
+  // Verbos fracos
   const verbosFracos = ['fiz', 'ajudei', 'trabalhei', 'mexi', 'liderei'];
   const sugestoesVerbo = {
     fiz: 'implementei',
@@ -112,18 +112,18 @@ function analisarCurriculo(texto) {
   };
   verbosFracos.forEach(verbo => {
     if (textoLower.includes(verbo)) {
-      sugestoes.push(`🔍 Substitua '${verbo}' por algo como '${sugestoesVerbo[verbo]}' para dar mais força à sua descrição.`);
+      sugestoes.push(`Considere substituir '${verbo}' por '${sugestoesVerbo[verbo]}' para fortalecer a descrição.`);
     }
   });
 
-  // 🗣️ Primeira pessoa
+  // Primeira pessoa
   const primeiraPessoa = ['eu ', 'meu ', 'minha ', 'me ', 'mim '];
   const usoPessoal = primeiraPessoa.filter(p => textoLower.includes(p));
   if (usoPessoal.length > 2) {
-    alertas.push('🗣️ Uso excessivo de primeira pessoa. Prefira frases objetivas e impessoais.');
+    alertas.push('Uso excessivo de primeira pessoa. Prefira frases objetivas e impessoais.');
   }
 
-  // 🔁 Repetição de termos
+  // Repetição de termos
   const palavras = textoLower.split(/\s+/);
   const contagem = {};
   palavras.forEach(p => {
@@ -132,39 +132,34 @@ function analisarCurriculo(texto) {
   const repetidas = Object.entries(contagem).filter(([p, c]) => c > 10 && p.length > 3);
   if (repetidas.length > 0) {
     const termos = repetidas.map(([p]) => p).join(', ');
-    alertas.push(`🔁 Repetição excessiva de termos: ${termos}`);
+    alertas.push(`Repetição excessiva de termos: ${termos}`);
   }
 
-  // 🧠 Perfil
-  let perfil = '🔰 Perfil não identificado';
-  if (textoLower.includes('estágio') || textoLower.includes('iniciação') || textoLower.includes('júnior')) {
-    perfil = '🟢 Perfil Júnior / Estagiário';
-  } else if (
-    textoLower.includes('coordenei') ||
-    textoLower.includes('gerenciei') ||
-    textoLower.includes('liderança') ||
-    textoLower.includes('pleno') ||
-    textoLower.includes('sênior')
-  ) {
-    perfil = '🔵 Perfil Pleno / Sênior';
+  // Verificação de dados de contato
+  const temTelefone = /\b\d{4,5}[-.\s]?\d{4}\b/.test(textoLower);
+  const temEmail = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(texto);
+  if (!temTelefone) {
+    alertas.push('Telefone não encontrado no currículo.');
+  }
+  if (!temEmail) {
+    alertas.push('E-mail não encontrado no currículo.');
   }
 
-  // 🧮 Score
+  // Score final
   const score = Math.max(0, 100 - alertas.length * 10);
-  const nota = score >= 80 ? '🟢 Excelente estrutura' :
-               score >= 60 ? '🟡 Estrutura boa, com ajustes' :
-               '🔴 Estrutura fraca, precisa revisão';
+  const nota = score >= 80 ? 'Excelente estrutura' :
+               score >= 60 ? 'Estrutura boa, com ajustes' :
+               'Estrutura fraca, precisa revisão';
 
-  // 📋 Resultado final
+  // Resultado final formatado
   return `
-📋 Relatório de Análise do Currículo
+Relatório de Análise do Currículo
 
-${perfil}
-${nota} (Score: ${score}/100)
+Estrutura geral: ${nota} (Score: ${score}/100)
 
-${elogios.join('\n')}
-${alertas.length > 0 ? '\n' + alertas.join('\n') : '\n✅ Nenhum problema crítico detectado.'}
-${sugestoes.length > 0 ? '\n\n💡 Sugestões de melhoria:\n' + sugestoes.join('\n') : ''}
+${elogios.length > 0 ? 'Pontos positivos:\n- ' + elogios.join('\n- ') : ''}
+${alertas.length > 0 ? '\n\nPontos de atenção:\n- ' + alertas.join('\n- ') : ''}
+${sugestoes.length > 0 ? '\n\nSugestões de melhoria:\n- ' + sugestoes.join('\n- ') : ''}
   `.trim();
 }
 //////////////////////////
