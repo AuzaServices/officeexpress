@@ -342,6 +342,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     const relatorio = analisarCurriculo(texto);
 
     // Gerar PDF com o relatório
+// Gerar PDF com o relatório
 const PDFDocument = require('pdfkit');
 const doc = new PDFDocument({ margin: 50 });
 const buffers = [];
@@ -361,7 +362,6 @@ doc.on('end', async () => {
 });
 
 // Cabeçalho
-// Cabeçalho
 doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
    .text('Relatório de Análise do Currículo', { align: 'center' });
 doc.moveDown();
@@ -370,33 +370,14 @@ doc.font('Helvetica').fontSize(12).fillColor('#333333')
    .text(`Nome: ${nome}`);
 doc.moveDown();
 
-// Avaliação Geral
-doc.font('Helvetica-Bold').fontSize(14).text('Avaliação Geral');
-doc.moveDown();
-doc.font('Helvetica').fontSize(12).text(
-  'O currículo apresenta limitações que dificultam uma análise mais precisa. Abaixo estão os principais pontos observados:'
-);
-doc.moveDown();
-doc.list([
-  'Perfil não identificado.',
-  'Currículo muito curto, possivelmente incompleto ou pouco detalhado.',
-  'Ausência de datas, o que compromete a contextualização das experiências profissionais.'
-]);
-doc.moveDown(2);
-
-// Sugestões de Melhoria
-doc.font('Helvetica-Bold').fontSize(14).text('Sugestões de Melhoria');
-doc.moveDown();
-doc.font('Helvetica').fontSize(12).text(
-  'Para aprimorar a apresentação e aumentar a efetividade do currículo, recomenda-se:'
-);
-doc.moveDown();
-doc.list([
-  'Utilizar tópicos (bullet points) para facilitar a leitura e escaneabilidade.',
-  'Incluir seções claras como: Experiência Profissional, Formação Acadêmica, Habilidades Técnicas, Idiomas e Cursos Complementares.',
-  'Adicionar datas e descrições objetivas para cada experiência.'
-]);
-doc.moveDown();
+// Corpo do relatório
+relatorio.split('\n').forEach(linha => {
+  if (linha.trim() === '') {
+    doc.moveDown();
+  } else {
+    doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
+  }
+});
 
 doc.end();
   } catch (err) {
