@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analisar Currículo | Office Express</title>
+
+  <!-- Ícones e fontes -->
+  <link rel="icon" href="icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Partículas de fundo -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+</head>
+
+<body>
+  <div id="particles-js"></div>
+
+  <div class="container">
+    <h1>Envie Seu Currículo Para Análise Profissional</h1>
+    <p style="text-align: center; margin-bottom: 30px;">
+      Aceitamos arquivos nos formatos <strong>.pdf</strong>, <strong>.doc</strong> ou <strong>.docx</strong>.
+      O relatório será gerado automaticamente após o pagamento.
+    </p>
+
+    <form id="form-analisar" enctype="multipart/form-data">
+      <label for="nome">Seu nome:</label>
+      <input type="text" id="nome" name="nome" required />
+
+      <label for="telefone">Seu telefone:</label>
+      <input type="text" id="telefone" name="telefone" required />
+
+      <label for="curriculo">Selecione seu currículo:</label>
+      <input type="file" id="curriculo" name="curriculo" accept=".pdf,.doc,.docx" required />
+
+      <button type="submit" class="botao-navegacao finalizar" style="margin-top: 30px;">Iniciar Análise</button>
+    </form>
+
+    <div id="notificacoes"></div>
+  </div>
+
+  <script>
+    document.getElementById('form-analisar').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const nome = document.getElementById('nome').value.trim();
+      const telefone = document.getElementById('telefone').value.trim();
+      const arquivo = document.getElementById('curriculo').files[0];
+
+      if (!nome || !telefone || !arquivo) {
+        alert('Preencha todos os campos e selecione um arquivo.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('nome', nome);
+      formData.append('telefone', telefone);
+      formData.append('curriculo', arquivo);
+
+      try {
+        const res = await fetch('/api/analisar-e-salvar', {
+          method: 'POST',
+          body: formData
+        });
+
+        const resultado = await res.json();
+        if (resultado.sucesso) {
+          window.location.href = '/pagamentoanalise.html';
+        } else {
+          alert('Erro: ' + resultado.erro);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Falha ao enviar arquivo.');
+      }
+    });
+
+    tsParticles.load("particles-js", {
+      fullScreen: { enable: false },
+      particles: {
+        number: { value: 60 },
+        color: { value: "#e09d00" },
+        shape: { type: "circle" },
+        opacity: { value: 0.3 },
+        size: { value: 4 },
+        move: {
+          enable: true,
+          speed: 1.5,
+          direction: "none",
+          outModes: { default: "bounce" }
+        }
+      },
+      background: {
+        color: { value: "#f4f7fa" }
+      }
+    });
+  </script>
+</body>
+</html>

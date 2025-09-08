@@ -4,6 +4,7 @@ const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
+const pdfParse = require('pdf-parse'); // 📥 Novo
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -45,6 +46,52 @@ function getPublicIP(req) {
   }
   return req.connection.remoteAddress;
 }
+
+// 🧠 Função de análise de currículo
+function analisarCurriculo(texto) {
+  const alertas = [];
+  const textoLower = texto.toLowerCase();
+
+  if (!textoLower.includes('experiência')) {
+    alertas.push("⚠️ Seção 'Experiência' não encontrada.");
+  }
+  if (!textoLower.includes('formação') && !textoLower.includes('educação')) {
+    alertas.push("⚠️ Seção 'Formação Acadêmica' não encontrada.");
+  }
+  if (!textoLower.includes('habilidades') && !textoLower.includes('competências')) {
+    alertas.push("⚠️ Seção 'Habilidades' ou 'Competências' não encontrada.");
+  }
+  if (texto.length < 500) {
+    alertas.push("📄 Currículo parece muito curto. Considere detalhar mais suas experiências.");
+  }
+
+  const verbosFracos = ['fiz', 'ajudei', 'trabalhei', 'mexi', 'liderei'];
+  verbosFracos.forEach(verbo => {
+    if (textoLower.includes(verbo)) {
+      alertas.push(`🔍 Considere substituir o verbo '${verbo}' por algo mais específico e impactante.`);
+    }
+  });
+
+  return alertas.length > 0 ? alertas.join('\n') : '✅ Currículo parece estar bem estruturado!';
+}
+
+//////////////////////////
+// 📤 Upload + Análise
+//////////////////////////
+app.post('/analisar', upload.single('curriculo'), async (req, res) => {
+  if (!req.file) return res.status(400).send('Nenhum arquivo enviado');
+
+  try {
+    const data = await pdfParse(req.file.buffer);
+    const texto = data.text;
+    const relatorio = analisarCurriculo(texto);
+
+    res.send(`<pre>${relatorio}</pre>`);
+  } catch (err) {
+    console.error('Erro ao analisar currículo:', err.message);
+    res.status(500).send('Erro ao processar o arquivo');
+  }
+});
 
 //////////////////////////
 // 📄 Gerar e salvar PDF
@@ -131,17 +178,15 @@ app.get('/api/pdfs', async (req, res) => {
 });
 
 //////////////////////////
-// 📝 Salvar log de acesso com localização (usando ipinfo.io)
+// 📝 Salvar log de acesso com localização
 //////////////////////////
-const IPINFO_TOKEN = '83e6d56256238e'; // 🔐 Substitua pelo seu token real
+const IPINFO_TOKEN = '83e6d56256238e';
 
 app.post('/api/logs', async (req, res) => {
   const { acao, nome, timestamp } = req.body;
 
   const ipRaw = getPublicIP(req);
   const ipPublico = ipRaw.replace('::ffff:', '');
-
-  console.log("🌐 IP público usado:", ipPublico);
 
   let cidade = 'Desconhecida';
   let estado = 'XX';
@@ -150,12 +195,8 @@ app.post('/api/logs', async (req, res) => {
     const response = await axios.get(`https://ipinfo.io/${ipPublico}/json?token=${IPINFO_TOKEN}`);
     const data = response.data;
 
-    console.log("📦 Resposta da ipinfo:", data);
-
     cidade = (data.city && data.city.trim() !== '') ? data.city : 'Desconhecida';
     estado = (data.region && data.region.trim() !== '') ? data.region : 'XX';
-
-    console.log(`📍 IP detectado: ${ipPublico} → ${cidade} - ${estado}`);
   } catch (err) {
     console.warn("❌ Falha ao consultar localização:", err.message);
   }
@@ -185,7 +226,6 @@ app.get('/api/logs', async (req, res) => {
     const [results] = await pool.query(query);
 
     if (!Array.isArray(results)) {
-      console.warn('⚠️ Resposta inesperada do banco:', results);
       return res.status(500).json({ error: 'Formato inválido de resposta' });
     }
 
@@ -197,6 +237,48 @@ app.get('/api/logs', async (req, res) => {
       sql: err.sql
     });
     res.status(500).json({ error: 'Erro ao buscar logs' });
+  }
+});
+
+//////////////////////////
+// 📥 Analisar e salvar relatório em PDF
+//////////////////////////
+app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) => {
+  const { nome, telefone } = req.body;
+  if (!req.file || !nome || !telefone) {
+    return res.status(400).json({ erro: 'Dados incompletos. Envie nome, telefone e o arquivo.' });
+  }
+
+  try {
+    const data = await pdfParse(req.file.buffer);
+    const texto = data.text;
+    const relatorio = analisarCurriculo(texto);
+
+    // Gerar PDF com o relatório
+    const doc = new PDFDocument();
+    const buffers = [];
+
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', async () => {
+      const pdfBuffer = Buffer.concat(buffers);
+      const filename = `relatorio-${Date.now()}.pdf`;
+
+      // Salvar na tabela analises
+      const query = `
+        INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
+
+      res.json({ sucesso: true });
+    });
+
+    doc.fontSize(14).text('📋 Relatório de Análise do Currículo\n\n');
+    doc.fontSize(12).text(relatorio);
+    doc.end();
+  } catch (err) {
+    console.error('Erro na análise e salvamento:', err.message);
+    res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
 
