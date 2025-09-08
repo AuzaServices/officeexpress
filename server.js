@@ -48,15 +48,34 @@ function getPublicIP(req) {
 }
 
 // 🧠 Função de análise de currículo
+const secoesEsperadas = {
+  experiencia: ['experiência', 'trajetória', 'histórico profissional'],
+  formacao: ['formação', 'educação', 'escolaridade', 'ensino'],
+  habilidades: ['habilidades', 'competências', 'skills'],
+  idiomas: ['idiomas', 'línguas', 'língua estrangeira'],
+  cursos: ['cursos', 'capacitações', 'certificações']
+};
+
+function detectarSecoes(textoLower) {
+  const faltando = [];
+
+  for (const [secao, termos] of Object.entries(secoesEsperadas)) {
+    const presente = termos.some(t => textoLower.includes(t));
+    if (!presente) {
+      faltando.push(secao);
+    }
+  }
+
+  return faltando;
+}
+
 function analisarCurriculo(texto) {
   const alertas = [];
   const elogios = [];
   const textoLower = texto.toLowerCase();
 
-  // Seções obrigatórias
-  const secoes = ['experiência', 'formação', 'educação', 'habilidades', 'competências', 'idiomas'];
-  const presentes = secoes.filter(secao => textoLower.includes(secao));
-  const faltando = secoes.filter(secao => !textoLower.includes(secao));
+  // Verificação semântica de seções
+  const faltando = detectarSecoes(textoLower);
   if (faltando.length > 0) {
     alertas.push(`⚠️ Seções ausentes ou não detectadas: ${faltando.join(', ')}`);
   } else {
@@ -131,7 +150,7 @@ function analisarCurriculo(texto) {
   }
 
   // Score final
-  const score = 100 - alertas.length * 10;
+  const score = Math.max(0, 100 - alertas.length * 10);
   const nota = score >= 80 ? '🟢 Excelente estrutura' :
                score >= 60 ? '🟡 Estrutura boa, com ajustes' :
                '🔴 Estrutura fraca, precisa revisão';
