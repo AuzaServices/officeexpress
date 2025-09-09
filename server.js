@@ -386,6 +386,41 @@ doc.end();
   }
 });
 
+app.get('/api/analises', async (req, res) => {
+  try {
+    const query = `
+      SELECT id, name AS nome, filename, mimetype, upd_date, created_on
+      FROM analises
+      ORDER BY id DESC
+    `;
+    const [results] = await pool.query(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Erro ao buscar análises:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar análises' });
+  }
+});
+
+app.get('/api/analises/:id/download', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = 'SELECT filename, mimetype, pdf_data FROM analises WHERE id = ?';
+    const [results] = await pool.query(query, [id]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Relatório não encontrado' });
+    }
+
+    const { filename, mimetype, pdf_data } = results[0];
+    res.setHeader('Content-Type', mimetype);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(pdf_data);
+  } catch (err) {
+    console.error('Erro ao baixar relatório:', err.message);
+    res.status(500).json({ error: 'Erro ao baixar relatório' });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////

@@ -60,7 +60,26 @@
             <th>Ação</th>
             <th>Nome</th>
             <th>Horário</th>
-            <th>Localização</th> <!-- ✅ Nova coluna -->
+            <th>Localização</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Os dados serão inseridos aqui via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <h1 class="mt-5">Relatórios de Currículos</h1>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle" id="tabela-relatorios">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Contato</th>
+            <th>Arquivo</th>
+            <th>Data</th>
+            <th>Ação</th>
           </tr>
         </thead>
         <tbody>
@@ -132,15 +151,45 @@
         });
     }
 
+function carregarRelatorios() {
+  fetch('/api/analises')
+    .then(res => res.json())
+    .then(data => {
+      const tabela = document.querySelector('#tabela-relatorios tbody');
+      tabela.innerHTML = '';
+
+      data.forEach(rel => {
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+          <td>${rel.id}</td>
+          <td>${rel.nome}</td>
+          <td>${rel.filename}</td>
+          <td>${rel.mimetype}</td>
+          <td>${new Date(rel.upd_date).toLocaleString('pt-BR')}</td>
+          <td>${new Date(rel.created_on).toLocaleString('pt-BR')}</td>
+          <td>
+            <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+          </td>
+        `;
+        tabela.appendChild(linha);
+      });
+    })
+    .catch(err => {
+      console.error('Erro ao buscar análises:', err);
+    });
+}
+
     // Atualiza a cada 2 segundos
     setInterval(() => {
       carregarPDFs();
       carregarLogs();
+      carregarRelatorios();
     }, 2000);
 
     // Carrega imediatamente ao abrir
     carregarPDFs();
     carregarLogs();
+    carregarRelatorios();
   </script>
 </body>
 </html>
