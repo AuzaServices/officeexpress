@@ -155,18 +155,31 @@ function carregarRelatorios() {
   fetch('/api/analises')
     .then(res => res.json())
     .then(data => {
+      if (!Array.isArray(data)) {
+        console.error("Resposta inesperada da API:", data);
+        return;
+      }
+
       const tabela = document.querySelector('#tabela-relatorios tbody');
       tabela.innerHTML = '';
 
       data.forEach(rel => {
+        const telefone = rel.telefone?.replace(/\D/g, '');
+        const mensagem = encodeURIComponent("Seu relatório de currículo está pronto. Realize o pagamento para recebe-lo via PDF!");
+        const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+
         const linha = document.createElement('tr');
         linha.innerHTML = `
           <td>${rel.id}</td>
           <td>${rel.nome}</td>
+          <td>
+            ${telefone ? `
+              <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
+                WhatsApp
+              </a>` : '—'}
+          </td>
           <td>${rel.filename}</td>
-          <td>${rel.mimetype}</td>
-          <td>${new Date(rel.upd_date).toLocaleString('pt-BR')}</td>
-          <td>${new Date(rel.created_on).toLocaleString('pt-BR')}</td>
+          <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
           <td>
             <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
           </td>
