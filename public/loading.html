@@ -46,7 +46,6 @@
       const addTitulo = (texto) => {
         pdf.setFontSize(16);
         pdf.setFont("helvetica", "bold");
-        pdf.setTextColor(0, 50, 74);
         pdf.text(texto, 20, y);
         y += 8;
       };
@@ -54,16 +53,16 @@
       const addTexto = (texto) => {
         pdf.setFontSize(12);
         pdf.setFont("helvetica", "normal");
-        pdf.setTextColor(33, 33, 33);
         const linhas = pdf.splitTextToSize(texto, 170);
         pdf.text(linhas, 20, y);
         y += linhas.length * 6;
       };
 
-      // Cabeçalho
+      // Nome
       addTitulo(`Currículo de ${dados.nome || "Nome não informado"}`);
       y += 6;
 
+      // Contato
       if (dados.email) addTexto(`Email: ${dados.email}`);
       if (dados.telefone) addTexto(`Telefone: ${dados.telefone}`);
 
@@ -72,23 +71,14 @@
       if (dados.numero) enderecoCompleto += ", " + dados.numero;
       if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
       if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-      if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
+      if (dados.cidade) {
+        const cidadeFormatada = dados.cidade.charAt(0).toUpperCase() + dados.cidade.slice(1).toLowerCase();
+        enderecoCompleto += ", " + cidadeFormatada;
+      }
       if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
       if (enderecoCompleto) addTexto(`Endereço: ${enderecoCompleto}`);
 
-      // Foto
-      if (dados.foto) {
-        try {
-          const img = new Image();
-          img.src = dados.foto;
-          await img.decode();
-          pdf.addImage(img, "JPEG", 150, 20, 40, 55);
-        } catch (err) {
-          console.warn("Erro ao carregar foto:", err.message);
-        }
-      }
-
-      y += 70;
+      y += 6;
 
       // Objetivo
       if (dados.objetivo) {
@@ -146,7 +136,7 @@
         addTexto(dados.hobbies);
       }
 
-      // Enviar PDF
+      // Gerar blob e enviar
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
       formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
