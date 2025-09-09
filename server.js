@@ -54,7 +54,6 @@ function analisarCurriculo(texto) {
   const sugestoes = [];
   const textoLower = texto.toLowerCase();
 
-  // Seções esperadas com sinônimos
   const secoesEsperadas = {
     experiencia: ['experiência', 'trajetória', 'histórico profissional'],
     formacao: ['formação', 'educação', 'escolaridade', 'ensino'],
@@ -63,7 +62,6 @@ function analisarCurriculo(texto) {
     cursos: ['cursos', 'capacitações', 'certificações']
   };
 
-  // Detectar seções ausentes
   const faltando = [];
   for (const [secao, termos] of Object.entries(secoesEsperadas)) {
     const presente = termos.some(t => textoLower.includes(t));
@@ -76,7 +74,6 @@ function analisarCurriculo(texto) {
     elogios.push('Todas as seções principais foram encontradas.');
   }
 
-  // Tamanho do texto
   if (texto.length < 500) {
     alertas.push('Currículo muito curto. Pode estar incompleto ou pouco detalhado.');
   } else if (texto.length > 3000) {
@@ -85,7 +82,6 @@ function analisarCurriculo(texto) {
     elogios.push('Tamanho do currículo está adequado.');
   }
 
-  // Verificação de datas
   const temDatas = /\b(19|20)\d{2}\b/.test(textoLower);
   if (!temDatas) {
     alertas.push('Nenhuma data encontrada. Experiências podem estar mal contextualizadas.');
@@ -93,7 +89,6 @@ function analisarCurriculo(texto) {
     elogios.push('Datas detectadas. Experiências parecem contextualizadas.');
   }
 
-  // Bullet points
   const temBullets = texto.includes('•') || texto.includes('- ');
   if (!temBullets) {
     sugestoes.push('Use tópicos (bullet points) para facilitar leitura e escaneabilidade.');
@@ -101,7 +96,6 @@ function analisarCurriculo(texto) {
     elogios.push('Uso de bullet points detectado. Boa escaneabilidade.');
   }
 
-  // Verbos fracos
   const verbosFracos = ['fiz', 'ajudei', 'trabalhei', 'mexi', 'liderei'];
   const sugestoesVerbo = {
     fiz: 'implementei',
@@ -116,14 +110,12 @@ function analisarCurriculo(texto) {
     }
   });
 
-  // Primeira pessoa
   const primeiraPessoa = ['eu ', 'meu ', 'minha ', 'me ', 'mim '];
   const usoPessoal = primeiraPessoa.filter(p => textoLower.includes(p));
   if (usoPessoal.length > 2) {
     alertas.push('Uso excessivo de primeira pessoa. Prefira frases objetivas e impessoais.');
   }
 
-  // Repetição de termos
   const palavras = textoLower.split(/\s+/);
   const contagem = {};
   palavras.forEach(p => {
@@ -135,7 +127,6 @@ function analisarCurriculo(texto) {
     alertas.push(`Repetição excessiva de termos: ${termos}`);
   }
 
-  // Verificação de dados de contato
   const temTelefone = /\b\d{4,5}[-.\s]?\d{4}\b/.test(textoLower);
   const temEmail = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(texto);
   if (!temTelefone) {
@@ -145,14 +136,12 @@ function analisarCurriculo(texto) {
     alertas.push('E-mail não encontrado no currículo.');
   }
 
-  // Score final
   const score = Math.max(0, 100 - alertas.length * 10);
   const nota = score >= 80 ? 'Excelente estrutura' :
                score >= 60 ? 'Estrutura boa, com ajustes' :
                'Estrutura fraca, precisa revisão';
 
-  // Resultado final formatado
-  return `
+  const relatorioFinal = `
 Relatório de Análise do Currículo
 
 Estrutura geral: ${nota} (Score: ${score}/100)
@@ -161,6 +150,19 @@ ${elogios.length > 0 ? 'Pontos positivos:\n- ' + elogios.join('\n- ') : ''}
 ${alertas.length > 0 ? '\n\nPontos de atenção:\n- ' + alertas.join('\n- ') : ''}
 ${sugestoes.length > 0 ? '\n\nSugestões de melhoria:\n- ' + sugestoes.join('\n- ') : ''}
   `.trim();
+
+  const indicadores = {
+    experiencia: faltando.includes('experiencia') ? 1 : 5,
+    formacao: faltando.includes('formacao') ? 1 : 5,
+    habilidades: faltando.includes('habilidades') ? 1 : 5,
+    idiomas: faltando.includes('idiomas') ? 1 : 5,
+    cursos: faltando.includes('cursos') ? 1 : 5,
+    tamanho: texto.length < 500 ? 1 : texto.length > 3000 ? 2 : 5,
+    datas: temDatas ? 5 : 1,
+    escaneabilidade: temBullets ? 4 : 1
+  };
+
+  return { texto: relatorioFinal, indicadores };
 }
 //////////////////////////
 // 📤 Upload + Análise
@@ -338,48 +340,55 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
   try {
     const data = await pdfParse(req.file.buffer);
-    const texto = data.text;
-    const relatorio = analisarCurriculo(texto);
+    const texto = data.text.trim();
 
-    // Gerar PDF com o relatório
-// Gerar PDF com o relatório
-const PDFDocument = require('pdfkit');
-const doc = new PDFDocument({ margin: 50 });
-const buffers = [];
+    if (texto.length < 50) {
+      return res.status(400).json({ erro: 'O PDF parece não conter texto digital. Envie um currículo gerado por editor de texto, não escaneado.' });
+    }
 
-doc.on('data', buffers.push.bind(buffers));
-doc.on('end', async () => {
-  const pdfBuffer = Buffer.concat(buffers);
-  const filename = `relatorio-${Date.now()}.pdf`;
+    const { texto: relatorioTexto, indicadores } = analisarCurriculo(texto);
 
-  const query = `
-    INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-  await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 50 });
+    const buffers = [];
 
-  res.json({ sucesso: true });
-});
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', async () => {
+      const pdfBuffer = Buffer.concat(buffers);
+      const filename = `relatorio-${Date.now()}.pdf`;
 
-// Cabeçalho
-doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
-   .text('Relatório de Análise do Currículo', { align: 'center' });
-doc.moveDown();
+      const query = `
+        INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
 
-doc.font('Helvetica').fontSize(12).fillColor('#333333')
-   .text(`Nome: ${nome}`);
-doc.moveDown();
+      res.json({ sucesso: true });
+    });
 
-// Corpo do relatório
-relatorio.split('\n').forEach(linha => {
-  if (linha.trim() === '') {
+    doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
+       .text('Relatório de Análise do Currículo', { align: 'center' });
     doc.moveDown();
-  } else {
-    doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
-  }
-});
+    doc.font('Helvetica').fontSize(12).fillColor('#333333')
+       .text(`Nome: ${nome}`);
+    doc.moveDown();
 
-doc.end();
+    relatorioTexto.split('\n').forEach(linha => {
+      if (linha.trim() === '') {
+        doc.moveDown();
+      } else {
+        doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
+      }
+    });
+
+    doc.moveDown();
+    doc.font('Helvetica-Bold').text('Indicadores Visuais:');
+    Object.entries(indicadores).forEach(([secao, valor]) => {
+      const barra = '🟩'.repeat(valor) + '⬜'.repeat(5 - valor);
+      doc.font('Helvetica').text(`${secao}: ${barra}`);
+    });
+
+    doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err.message);
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
