@@ -395,6 +395,9 @@ doc.moveDown();
 doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
    .text('Indicadores Visuais');
 doc.moveDown();
+doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+   .text('Indicadores Visuais');
+doc.moveDown();
 
 Object.entries(indicadores).forEach(([secao, valor]) => {
   const porcentagem = Math.round((valor / 5) * 100);
@@ -402,15 +405,18 @@ Object.entries(indicadores).forEach(([secao, valor]) => {
 
   let cor;
   if (porcentagem < 15) {
-    cor = '#B22222'; // vermelho escuro
+    cor = '#B22222'; // vermelho
   } else if (porcentagem < 50) {
-    cor = '#DAA520'; // amarelo dourado
+    cor = '#DAA520'; // amarelo
   } else {
-    cor = '#228B22'; // verde escuro
+    cor = '#228B22'; // verde
   }
 
-  doc.font('Helvetica').fontSize(12).fillColor(cor)
-     .text(`${label}: ${porcentagem}%`);
+  // imprime o texto em preto
+  doc.font('Helvetica').fontSize(12).fillColor('#000000').text(`${label}: `, { continued: true });
+
+  // imprime o número colorido
+  doc.fillColor(cor).text(`${porcentagem}%`);
 });
     doc.end();
   } catch (err) {
