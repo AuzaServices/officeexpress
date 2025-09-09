@@ -366,7 +366,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       res.json({ sucesso: true });
     });
 
-    doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
+   doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
    .text('Relatório de Análise do Currículo', { align: 'center' });
 doc.moveDown();
 
@@ -385,15 +385,15 @@ relatorioTexto.split('\n').forEach(linha => {
 
 doc.moveDown().moveDown();
 
-// Indicadores Visuais (sem emojis)
+// Indicadores Visuais com barras simuladas
 doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
    .text('Indicadores Visuais');
 doc.moveDown();
 
 Object.entries(indicadores).forEach(([secao, valor]) => {
-  const barra = '█'.repeat(valor) + '░'.repeat(5 - valor); // visual estilo barra
+  const barra = '▮'.repeat(valor) + '▯'.repeat(5 - valor); // barra cheia e vazia
   const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
-  doc.font('Helvetica').fontSize(12).fillColor('#000000')
+  doc.font('Helvetica').fontSize(12).fillColor('#006400') // verde escuro
      .text(`${label}: [${barra}] (${valor}/5)`);
 });
     doc.end();
