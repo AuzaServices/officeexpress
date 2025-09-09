@@ -339,14 +339,40 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
   }
 
   try {
-    const data = await pdfParse(req.file.buffer);
-    const texto = data.text.trim();
+    const mime = req.file.mimetype;
+    let textoExtraido;
 
-    if (texto.length < 50) {
-      return res.status(400).json({ erro: 'O PDF parece não conter texto digital. Envie um currículo gerado por editor de texto, não escaneado.' });
+    if (mime === 'application/pdf') {
+      const data = await pdfParse(req.file.buffer);
+      textoExtraido = data.text.trim();
+
+      if (textoExtraido.length < 50) {
+        return res.status(400).json({
+          erro: 'O PDF parece não conter texto digital. Envie um currículo gerado por editor de texto, não escaneado.'
+        });
+      }
+    } else if (
+      mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      mime === 'application/msword'
+    ) {
+      const textract = require('textract');
+      textoExtraido = await new Promise((resolve, reject) => {
+        textract.fromBufferWithMime(mime, req.file.buffer, (err, text) => {
+          if (err) reject(err);
+          else resolve(text.trim());
+        });
+      });
+
+      if (textoExtraido.length < 50) {
+        return res.status(400).json({
+          erro: 'O documento parece vazio ou ilegível. Envie um currículo válido gerado por editor de texto.'
+        });
+      }
+    } else {
+      return res.status(400).json({ erro: 'Formato de arquivo não suportado. Envie PDF ou DOCX.' });
     }
 
-    const { texto: relatorioTexto, indicadores } = analisarCurriculo(texto);
+    const { texto: relatorioTexto, indicadores } = analisarCurriculo(textoExtraido);
 
     const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
@@ -366,56 +392,55 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       res.json({ sucesso: true });
     });
 
-   doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
-   .text('Relatório de Análise do Currículo', { align: 'center' });
-doc.moveDown();
-
-doc.font('Helvetica').fontSize(12).fillColor('#333333')
-   .text(`Nome: ${nome}`);
-doc.moveDown();
-
-// Corpo do relatório textual
-relatorioTexto.split('\n').forEach(linha => {
-  if (linha.trim() === '') {
+    // Cabeçalho
+    doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
+       .text('Relatório de Análise do Currículo', { align: 'center' });
     doc.moveDown();
-  } else {
-    doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
-  }
-});
 
-doc.moveDown().moveDown();
+    // Dados do usuário
+    doc.font('Helvetica').fontSize(12).fillColor('#333333')
+       .text(`Nome: ${nome}`);
+    doc.moveDown();
 
-// Indicadores Visuais com barras simuladas
-doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-   .text('Indicadores Visuais');
-doc.moveDown();
+    // Corpo do relatório textual
+    relatorioTexto.split('\n').forEach(linha => {
+      if (linha.trim() === '') {
+        doc.moveDown();
+      } else {
+        doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
+      }
+    });
 
-Object.entries(indicadores).forEach(([secao, valor]) => {
-  const porcentagem = Math.round((valor / 5) * 100);
-  const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
+    doc.moveDown().moveDown();
 
-  let cor;
-  if (porcentagem < 15) {
-    cor = '#B22222'; // vermelho
-  } else if (porcentagem < 50) {
-    cor = '#DAA520'; // amarelo
-  } else {
-    cor = '#228B22'; // verde
-  }
+    // Indicadores Visuais com porcentagem e cor nos números
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+       .text('Indicadores Visuais');
+    doc.moveDown();
 
-  // imprime o texto em preto
-  doc.font('Helvetica').fontSize(12).fillColor('#000000').text(`${label}: `, { continued: true });
+    Object.entries(indicadores).forEach(([secao, valor]) => {
+      const porcentagem = Math.round((valor / 5) * 100);
+      const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
 
-  // imprime o número colorido
-  doc.fillColor(cor).text(`${porcentagem}%`);
-});
+      let cor;
+      if (porcentagem < 15) {
+        cor = '#B22222'; // vermelho
+      } else if (porcentagem < 50) {
+        cor = '#DAA520'; // amarelo
+      } else {
+        cor = '#228B22'; // verde
+      }
+
+      doc.font('Helvetica').fontSize(12).fillColor('#000000').text(`${label}: `, { continued: true });
+      doc.fillColor(cor).text(`${porcentagem}%`);
+    });
+
     doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err.message);
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
-
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `
