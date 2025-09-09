@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
 const pdfParse = require('pdf-parse'); // 📥 Novo
+const fetch = require('node-fetch');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -427,6 +428,79 @@ app.get('/api/analises/:id/download', async (req, res) => {
   } catch (err) {
     console.error('Erro ao baixar relatório:', err.message);
     res.status(500).json({ error: 'Erro ao baixar relatório' });
+  }
+});
+
+app.post('/api/ocr-analise', upload.single('curriculo'), async (req, res) => {
+  const { nome, telefone } = req.body;
+  if (!req.file || !nome || !telefone) {
+    return res.status(400).json({ erro: 'Dados incompletos. Envie nome, telefone e o arquivo.' });
+  }
+
+  try {
+    // Converte PDF para imagem base64 (usando primeira página)
+    const { PDFDocument } = require('pdf-lib');
+    const pdfDoc = await PDFDocument.load(req.file.buffer);
+    const page = pdfDoc.getPages()[0];
+    const pngImage = await page.renderToImage({ format: 'png', quality: 1 }); // se renderToImage não existir, substituímos depois
+
+    const base64Image = pngImage.toString('base64');
+
+    // Envia para Google Cloud Vision
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=AIzaSyBU3ZrBhrOlXP_2uh-9QPhMPqwUWEhLWYk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { content: base64Image },
+            features: [{ type: 'DOCUMENT_TEXT_DETECTION' }]
+          }
+        ]
+      })
+    });
+
+    const result = await response.json();
+    const textoExtraido = result.responses?.[0]?.fullTextAnnotation?.text || 'Nenhum texto encontrado';
+    const relatorio = analisarCurriculo(textoExtraido);
+
+    // Gera PDF do relatório
+    const doc = new PDFDocument({ margin: 50 });
+    const buffers = [];
+
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', async () => {
+      const pdfBuffer = Buffer.concat(buffers);
+      const filename = `relatorio-ocr-${Date.now()}.pdf`;
+
+      const query = `
+        INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
+
+      res.json({ sucesso: true });
+    });
+
+    doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
+       .text('Relatório de Análise do Currículo (OCR)', { align: 'center' });
+    doc.moveDown();
+    doc.font('Helvetica').fontSize(12).fillColor('#333333')
+       .text(`Nome: ${nome}`);
+    doc.moveDown();
+
+    relatorio.split('\n').forEach(linha => {
+      if (linha.trim() === '') {
+        doc.moveDown();
+      } else {
+        doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
+      }
+    });
+
+    doc.end();
+  } catch (err) {
+    console.error('Erro na análise OCR:', err.message);
+    res.status(500).json({ erro: 'Erro ao processar OCR' });
   }
 });
 
