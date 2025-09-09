@@ -389,6 +389,9 @@ doc.moveDown().moveDown();
 doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
    .text('Indicadores Visuais');
 doc.moveDown();
+doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+   .text('Indicadores Visuais');
+doc.moveDown();
 
 Object.entries(indicadores).forEach(([secao, valor]) => {
   const barra = '▮'.repeat(valor) + '▯'.repeat(5 - valor); // barra cheia e vazia
