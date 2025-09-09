@@ -392,9 +392,12 @@ doc.moveDown();
 doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
    .text('Indicadores Visuais');
 doc.moveDown();
+doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+   .text('Indicadores Visuais');
+doc.moveDown();
 
 Object.entries(indicadores).forEach(([secao, valor]) => {
-  const barra = '▮'.repeat(valor) + '▯'.repeat(5 - valor); // barra cheia e vazia
+  const barra = '▮'.repeat(valor) + '▯'.repeat(5 - valor);
   const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
   doc.font('Helvetica').fontSize(12).fillColor('#006400') // verde escuro
      .text(`${label}: [${barra}] (${valor}/5)`);
