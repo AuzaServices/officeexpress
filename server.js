@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
 const pdfParse = require('pdf-parse'); // 📥 Novo
+const Tesseract = require('tesseract.js');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -337,9 +338,13 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
   }
 
   try {
-    const data = await pdfParse(req.file.buffer);
-    const texto = data.text;
-    const relatorio = analisarCurriculo(texto);
+const imageBuffer = req.file.buffer;
+
+const { data: { text } } = await Tesseract.recognize(imageBuffer, 'por', {
+  logger: m => console.log(m)
+});
+
+const relatorio = analisarCurriculo(text);
 
     // Gerar PDF com o relatório
 // Gerar PDF com o relatório
