@@ -367,27 +367,35 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     });
 
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
-       .text('Relatório de Análise do Currículo', { align: 'center' });
-    doc.moveDown();
-    doc.font('Helvetica').fontSize(12).fillColor('#333333')
-       .text(`Nome: ${nome}`);
-    doc.moveDown();
+   .text('Relatório de Análise do Currículo', { align: 'center' });
+doc.moveDown();
 
-    relatorioTexto.split('\n').forEach(linha => {
-      if (linha.trim() === '') {
-        doc.moveDown();
-      } else {
-        doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
-      }
-    });
+doc.font('Helvetica').fontSize(12).fillColor('#333333')
+   .text(`Nome: ${nome}`);
+doc.moveDown();
 
+// Corpo do relatório textual
+relatorioTexto.split('\n').forEach(linha => {
+  if (linha.trim() === '') {
     doc.moveDown();
-    doc.font('Helvetica-Bold').text('Indicadores Visuais:');
-    Object.entries(indicadores).forEach(([secao, valor]) => {
-      const barra = '|'.repeat(valor) + ' '.repeat(5 - valor);
-      doc.font('Helvetica').text(`${secao}: [${barra}] (${valor}/5)`);
-    });
+  } else {
+    doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
+  }
+});
 
+doc.moveDown().moveDown();
+
+// Indicadores Visuais (sem emojis)
+doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+   .text('Indicadores Visuais');
+doc.moveDown();
+
+Object.entries(indicadores).forEach(([secao, valor]) => {
+  const barra = '█'.repeat(valor) + '░'.repeat(5 - valor); // visual estilo barra
+  const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
+  doc.font('Helvetica').fontSize(12).fillColor('#000000')
+     .text(`${label}: [${barra}] (${valor}/5)`);
+});
     doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err.message);
