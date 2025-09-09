@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <link rel="icon" href="icon.png" type="image/png" />
   <meta charset="UTF-8" />
   <title>Gerando seu Currículo...</title>
-  <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     body {
@@ -15,14 +15,71 @@
       height: 100vh;
       font-family: 'Arial', sans-serif;
     }
+
     .spinner-border {
       width: 4rem;
       height: 4rem;
     }
+
     h2 {
       margin-top: 20px;
       color: #343a40;
     }
+
+    #curriculo {
+      position: absolute;
+      top: 0;
+      left: -9999px;
+      width: 794px;
+      padding: 60px;
+      background: white;
+      font-family: 'Arial', sans-serif;
+      box-sizing: border-box;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #00324a;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-top: 30px;
+      color: #00324a;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+p, li {
+  font-size: 16px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+    ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    .info-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+    }
+
+    .foto {
+      width: 120px;
+      height: 160px;
+      border-radius: 5px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      margin-left: 30px;
+    }
+    
   </style>
 </head>
 <body>
@@ -32,115 +89,112 @@
     <p class="text-muted">Aguarde alguns instantes</p>
   </div>
 
+  <div id="curriculo"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     async function enviarCurriculo() {
       const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
       if (!precisaEnviar) return;
 
-      const { jsPDF } = window.jspdf;
       const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-      const pdf = new jsPDF();
-      let y = 20;
-
-      const addTitulo = (texto) => {
-        pdf.setFontSize(16);
-        pdf.setFont("helvetica", "bold");
-        pdf.text(texto, 20, y);
-        y += 8;
-      };
-
-      const addTexto = (texto) => {
-        pdf.setFontSize(12);
-        pdf.setFont("helvetica", "normal");
-        const linhas = pdf.splitTextToSize(texto, 170);
-        pdf.text(linhas, 20, y);
-        y += linhas.length * 6;
-      };
-
-      // Nome
-      addTitulo(`Currículo de ${dados.nome || "Nome não informado"}`);
-      y += 6;
-
-      // Contato
-      if (dados.email) addTexto(`Email: ${dados.email}`);
-      if (dados.telefone) addTexto(`Telefone: ${dados.telefone}`);
+      const container = document.getElementById("curriculo");
 
       let enderecoCompleto = "";
       if (dados.endereco) enderecoCompleto += dados.endereco;
       if (dados.numero) enderecoCompleto += ", " + dados.numero;
       if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
       if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-      if (dados.cidade) {
-        const cidadeFormatada = dados.cidade.charAt(0).toUpperCase() + dados.cidade.slice(1).toLowerCase();
-        enderecoCompleto += ", " + cidadeFormatada;
-      }
+      if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
       if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
-      if (enderecoCompleto) addTexto(`Endereço: ${enderecoCompleto}`);
 
-      y += 6;
+container.innerHTML = `
+  <div class="info-topo">
+    <div>
+      <h1><strong>${dados.nome || ""}</strong></h1>
+      <p><strong>Email:</strong> ${dados.email || ""}</p>
+      <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+      <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
+    </div>
+    ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
+  </div>
+  ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
+  ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p>${dados.formacao}</p>` : ""}
+`;
 
-      // Objetivo
-      if (dados.objetivo) {
-        addTitulo("Objetivo");
-        addTexto(dados.objetivo);
+if (Array.isArray(dados.curso)) {
+  let cursos = "";
+  for (let i = 0; i < dados.curso.length; i++) {
+    const nome = dados.curso[i]?.trim();
+    const inst = dados.instituicao[i]?.trim();
+    let carga = dados.carga[i]?.trim();
+if (carga && /^\d+$/.test(carga)) {
+  carga = `${carga}hs`;
+}
+    if (nome || inst || carga) {
+      cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
+    }
+  }
+  if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
+}
+
+if (Array.isArray(dados.empresa)) {
+  let exp = "";
+  for (let i = 0; i < dados.empresa.length; i++) {
+    const empresa = dados.empresa[i]?.trim();
+    const cargo = dados.cargo?.[i]?.trim();
+    const inicio = dados.periodo_inicio?.[i]?.trim();
+    const fim = dados.periodo_fim?.[i]?.trim();
+    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
+    const atividades = dados.atividades?.[i]?.trim();
+
+    if (empresa || cargo || periodo || atividades) {
+      exp += "<li>";
+
+      // Empresa + período na mesma linha (sem parênteses)
+      if (empresa) {
+        exp += `<strong>${empresa}</strong>`;
+        if (periodo) exp += ` — <em>${periodo}</em>`;
+      } else if (periodo) {
+        exp += `<em>${periodo}</em>`;
       }
 
-      // Formação
-      if (dados.formacao) {
-        addTitulo("Formação Acadêmica");
-        addTexto(dados.formacao);
-      }
+      // Cargo embaixo
+      if (cargo) exp += `<br>${cargo}`;
 
-      // Cursos
-      if (Array.isArray(dados.curso)) {
-        addTitulo("Cursos");
-        dados.curso.forEach((nome, i) => {
-          const inst = dados.instituicao?.[i] || "";
-          let carga = dados.carga?.[i] || "";
-          if (carga && /^\d+$/.test(carga)) carga += "hs";
-          const linha = `${nome} — ${inst} ${carga ? `(${carga})` : ""}`;
-          addTexto(linha);
-        });
-      }
+      // Atividades embaixo
+      if (atividades) exp += `<br><span>${atividades}</span>`;
 
-      // Experiência
-      if (Array.isArray(dados.empresa)) {
-        addTitulo("Experiência Profissional");
-        dados.empresa.forEach((empresa, i) => {
-          const cargo = dados.cargo?.[i] || "";
-          const inicio = dados.periodo_inicio?.[i] || "";
-          const fim = dados.periodo_fim?.[i] || "";
-          const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-          const atividades = dados.atividades?.[i] || "";
+      exp += "</li>";
+    }
+  }
 
-          let bloco = "";
-          if (empresa) bloco += `${empresa}`;
-          if (periodo) bloco += ` — ${periodo}`;
-          if (cargo) bloco += `\nCargo: ${cargo}`;
-          if (atividades) bloco += `\nAtividades: ${atividades}`;
+  if (exp) {
+    container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
+  }
+}
 
-          addTexto(bloco);
-        });
-      }
+if (dados.habilidades) {
+  container.innerHTML += `<h2><strong>Habilidades</strong></h2><p>${dados.habilidades}</p>`;
+}
 
-      // Habilidades
-      if (dados.habilidades) {
-        addTitulo("Habilidades");
-        addTexto(dados.habilidades);
-      }
+if (dados.hobbies) {
+  container.innerHTML += `<h2><strong>Hobbies</strong></h2><p>${dados.hobbies}</p>`;
+}
 
-      // Hobbies
-      if (dados.hobbies) {
-        addTitulo("Hobbies");
-        addTexto(dados.hobbies);
-      }
+      const { jsPDF } = window.jspdf;
+      const canvas = await html2canvas(container, { scale: 2 });
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const width = pdf.internal.pageSize.getWidth();
+      const height = canvas.height * (width / canvas.width);
+      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
 
-      // Gerar blob e enviar
       const pdfBlob = pdf.output("blob");
-      const formData = new FormData();
-      formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
-      formData.append("telefone", dados.telefone || "");
+const formData = new FormData();
+formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
+formData.append("telefone", dados.telefone || "");
 
       try {
         await fetch("https://officeexpress.onrender.com/api/upload", {

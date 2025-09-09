@@ -240,105 +240,26 @@ if (Array.isArray(dados.empresa)) {
   }
 }
 
-  async function gerarPDF() {
-    const { jsPDF } = window.jspdf;
-    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-    const pdf = new jsPDF();
-    let y = 20;
+    async function gerarPDF() {
+      const { jsPDF } = window.jspdf;
+      const element = document.getElementById("curriculo");
 
-    const addTitulo = (texto) => {
-      pdf.setFontSize(16);
-      pdf.setFont("helvetica", "bold");
-      pdf.text(texto, 20, y);
-      y += 8;
-    };
+      const clone = element.cloneNode(true);
+      clone.style.transform = "none";
+      clone.style.position = "absolute";
+      clone.style.left = "-10000px";
+      document.body.appendChild(clone);
 
-    const addTexto = (texto) => {
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "normal");
-      const linhas = pdf.splitTextToSize(texto, 170);
-      pdf.text(linhas, 20, y);
-      y += linhas.length * 6;
-    };
+      const canvas = await html2canvas(clone, { scale: 2 });
+      document.body.removeChild(clone);
 
-    // Nome
-    addTitulo(`Currículo de ${dados.nome || "Nome não informado"}`);
-    y += 6;
-
-    // Contato
-    if (dados.email) addTexto(`Email: ${dados.email}`);
-    if (dados.telefone) addTexto(`Telefone: ${dados.telefone}`);
-
-    let enderecoCompleto = "";
-    if (dados.endereco) enderecoCompleto += dados.endereco;
-    if (dados.numero) enderecoCompleto += ", " + dados.numero;
-    if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
-    if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-    if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
-    if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
-    if (enderecoCompleto) addTexto(`Endereço: ${enderecoCompleto}`);
-
-    y += 6;
-
-    // Objetivo
-    if (dados.objetivo) {
-      addTitulo("Objetivo");
-      addTexto(dados.objetivo);
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const width = pdf.internal.pageSize.getWidth();
+      const height = canvas.height * (width / canvas.width);
+      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+      pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
     }
-
-    // Formação
-    if (dados.formacao) {
-      addTitulo("Formação Acadêmica");
-      addTexto(dados.formacao);
-    }
-
-    // Cursos
-    if (Array.isArray(dados.curso)) {
-      addTitulo("Cursos");
-      dados.curso.forEach((nome, i) => {
-        const inst = dados.instituicao?.[i] || "";
-        let carga = dados.carga?.[i] || "";
-        if (carga && /^\d+$/.test(carga)) carga += "hs";
-        const linha = `${nome} — ${inst} ${carga ? `(${carga})` : ""}`;
-        addTexto(linha);
-      });
-    }
-
-    // Experiência
-    if (Array.isArray(dados.empresa)) {
-      addTitulo("Experiência Profissional");
-      dados.empresa.forEach((empresa, i) => {
-        const cargo = dados.cargo?.[i] || "";
-        const inicio = dados.periodo_inicio?.[i] || "";
-        const fim = dados.periodo_fim?.[i] || "";
-        const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-        const atividades = dados.atividades?.[i] || "";
-
-        let bloco = "";
-        if (empresa) bloco += `${empresa}`;
-        if (periodo) bloco += ` — ${periodo}`;
-        if (cargo) bloco += `\nCargo: ${cargo}`;
-        if (atividades) bloco += `\nAtividades: ${atividades}`;
-
-        addTexto(bloco);
-      });
-    }
-
-    // Habilidades
-    if (dados.habilidades) {
-      addTitulo("Habilidades");
-      addTexto(dados.habilidades);
-    }
-
-    // Hobbies
-    if (dados.hobbies) {
-      addTitulo("Hobbies");
-      addTexto(dados.hobbies);
-    }
-
-    // Salvar PDF
-    pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
-  }
 
 if (Array.isArray(dados.curso)) {
   let html = "";
