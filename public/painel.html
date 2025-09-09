@@ -165,7 +165,7 @@ function carregarRelatorios() {
 
       data.forEach(rel => {
         const telefone = rel.telefone?.replace(/\D/g, '');
-        const mensagem = encodeURIComponent("Seu relatório de currículo está pronto. Realize o pagamento para recebe-lo via PDF!");
+        const mensagem = encodeURIComponent("Seu relatório de currículo está pronto. Finalize o pagamento para recebe-lo via PDF!");
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
         const linha = document.createElement('tr');
