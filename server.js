@@ -333,6 +333,7 @@ app.get('/api/logs', async (req, res) => {
 //////////////////////////
 // 📥 Analisar e salvar relatório em PDF
 //////////////////////////
+
 app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) => {
   const { nome, telefone } = req.body;
   if (!req.file || !nome || !telefone) {
@@ -340,30 +341,50 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
   }
 
   try {
-    // Converter primeira página do PDF em imagem
-    const convert = fromBuffer(req.file.buffer, {
-      density: 300,
-      format: "png",
-      width: 800,
-      height: 1000,
-      savePath: "./temp"
-    });
+    // Tenta extrair texto com pdf-parse
+    const data = await pdfParse(req.file.buffer);
+    const textoExtraido = data.text.trim();
 
-    const page = await convert(1); // converte a primeira página
-    const imageBuffer = fs.readFileSync(page.path);
+    const precisaOCR = textoExtraido.length < 50;
+    let textoFinal;
 
-    // Aplicar OCR na imagem
-    const { data: { text } } = await Tesseract.recognize(imageBuffer, 'por', {
-      logger: m => console.log(m)
-    });
+    if (precisaOCR) {
+      // Garante que a pasta ./temp existe
+      if (!fs.existsSync('./temp')) {
+        fs.mkdirSync('./temp');
+      }
 
-    // Limpar imagem temporária
-    fs.unlinkSync(page.path);
+      // Converte PDF em imagem
+      const convert = fromBuffer(req.file.buffer, {
+        density: 300,
+        format: "png",
+        width: 800,
+        height: 1000,
+        savePath: "./temp"
+      });
 
-    // Analisar texto extraído
-    const relatorio = analisarCurriculo(text);
+      const page = await convert(1);
+      if (!fs.existsSync(page.path)) {
+        console.error('Imagem não foi gerada pelo pdf2pic.');
+        return res.status(500).json({ erro: 'Falha ao converter PDF em imagem' });
+      }
 
-    // Gerar PDF com o relatório
+      const imageBuffer = fs.readFileSync(page.path);
+
+      // Aplica OCR
+      const { data: { text } } = await Tesseract.recognize(imageBuffer, 'por', {
+        logger: m => console.log(m)
+      });
+
+      fs.unlinkSync(page.path); // limpa imagem temporária
+      textoFinal = text;
+    } else {
+      textoFinal = textoExtraido;
+    }
+
+    const relatorio = analisarCurriculo(textoFinal);
+
+    // Gera PDF com o relatório
     const doc = new PDFDocument({ margin: 50 });
     const buffers = [];
 
@@ -401,7 +422,10 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
     doc.end();
   } catch (err) {
-    console.error('Erro na análise e salvamento:', err.message);
+    console.error('Erro na análise e salvamento:', {
+      mensagem: err.message,
+      stack: err.stack
+    });
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
