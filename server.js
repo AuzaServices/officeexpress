@@ -391,10 +391,10 @@ app.get('/api/analises', async (req, res) => {
     const query = `
       SELECT 
         id, 
-        name AS nome, 
+        nome, 
+        telefone, 
         filename, 
         mimetype, 
-        upd_date, 
         criado_em
       FROM analises
       ORDER BY id DESC
