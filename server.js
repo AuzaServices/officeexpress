@@ -5,9 +5,6 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
 const pdfParse = require('pdf-parse'); // 📥 Novo
-const Tesseract = require('tesseract.js');
-const { fromBuffer } = require("pdf2pic");
-const fs = require("fs");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -341,50 +338,15 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
   }
 
   try {
-    // Tenta extrair texto com pdf-parse
     const data = await pdfParse(req.file.buffer);
-    const textoExtraido = data.text.trim();
+    const textoFinal = data.text.trim();
 
-    const precisaOCR = textoExtraido.length < 50;
-    let textoFinal;
-
-    if (precisaOCR) {
-      // Garante que a pasta ./temp existe
-      if (!fs.existsSync('./temp')) {
-        fs.mkdirSync('./temp');
-      }
-
-      // Converte PDF em imagem
-      const convert = fromBuffer(req.file.buffer, {
-        density: 300,
-        format: "png",
-        width: 800,
-        height: 1000,
-        savePath: "./temp"
-      });
-
-      const page = await convert(1);
-      if (!fs.existsSync(page.path)) {
-        console.error('Imagem não foi gerada pelo pdf2pic.');
-        return res.status(500).json({ erro: 'Falha ao converter PDF em imagem' });
-      }
-
-      const imageBuffer = fs.readFileSync(page.path);
-
-      // Aplica OCR
-      const { data: { text } } = await Tesseract.recognize(imageBuffer, 'por', {
-        logger: m => console.log(m)
-      });
-
-      fs.unlinkSync(page.path); // limpa imagem temporária
-      textoFinal = text;
-    } else {
-      textoFinal = textoExtraido;
+    if (textoFinal.length < 50) {
+      return res.status(400).json({ erro: 'O PDF parece não conter texto digital. Envie um currículo gerado por editor de texto, não escaneado.' });
     }
 
     const relatorio = analisarCurriculo(textoFinal);
 
-    // Gera PDF com o relatório
     const doc = new PDFDocument({ margin: 50 });
     const buffers = [];
 
@@ -429,7 +391,6 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
-
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `
