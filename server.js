@@ -397,10 +397,20 @@ doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
 doc.moveDown();
 
 Object.entries(indicadores).forEach(([secao, valor]) => {
-  const barra = '▮'.repeat(valor) + '▯'.repeat(5 - valor); // blocos visuais seguros
+  const porcentagem = Math.round((valor / 5) * 100);
   const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
-  doc.font('Helvetica').fontSize(12).fillColor('#006400') // verde escuro
-     .text(`${label}: [${barra}] (${valor}/5)`);
+
+  let cor;
+  if (porcentagem < 15) {
+    cor = '#B22222'; // vermelho escuro
+  } else if (porcentagem < 50) {
+    cor = '#DAA520'; // amarelo dourado
+  } else {
+    cor = '#228B22'; // verde escuro
+  }
+
+  doc.font('Helvetica').fontSize(12).fillColor(cor)
+     .text(`${label}: ${porcentagem}%`);
 });
     doc.end();
   } catch (err) {
