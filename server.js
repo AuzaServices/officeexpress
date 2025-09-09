@@ -389,15 +389,6 @@ doc.moveDown().moveDown();
 doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
    .text('Indicadores Visuais');
 doc.moveDown();
-doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-   .text('Indicadores Visuais');
-doc.moveDown();
-doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-   .text('Indicadores Visuais');
-doc.moveDown();
-doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-   .text('Indicadores Visuais');
-doc.moveDown();
 
 Object.entries(indicadores).forEach(([secao, valor]) => {
   const porcentagem = Math.round((valor / 5) * 100);
