@@ -6,6 +6,8 @@ const multer = require('multer');
 const axios = require('axios');
 const pdfParse = require('pdf-parse'); // 📥 Novo
 const Tesseract = require('tesseract.js');
+const { fromBuffer } = require("pdf2pic");
+const fs = require("fs");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -338,53 +340,66 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
   }
 
   try {
-const imageBuffer = req.file.buffer;
+    // Converter primeira página do PDF em imagem
+    const convert = fromBuffer(req.file.buffer, {
+      density: 300,
+      format: "png",
+      width: 800,
+      height: 1000,
+      savePath: "./temp"
+    });
 
-const { data: { text } } = await Tesseract.recognize(imageBuffer, 'por', {
-  logger: m => console.log(m)
-});
+    const page = await convert(1); // converte a primeira página
+    const imageBuffer = fs.readFileSync(page.path);
 
-const relatorio = analisarCurriculo(text);
+    // Aplicar OCR na imagem
+    const { data: { text } } = await Tesseract.recognize(imageBuffer, 'por', {
+      logger: m => console.log(m)
+    });
+
+    // Limpar imagem temporária
+    fs.unlinkSync(page.path);
+
+    // Analisar texto extraído
+    const relatorio = analisarCurriculo(text);
 
     // Gerar PDF com o relatório
-// Gerar PDF com o relatório
-const PDFDocument = require('pdfkit');
-const doc = new PDFDocument({ margin: 50 });
-const buffers = [];
+    const doc = new PDFDocument({ margin: 50 });
+    const buffers = [];
 
-doc.on('data', buffers.push.bind(buffers));
-doc.on('end', async () => {
-  const pdfBuffer = Buffer.concat(buffers);
-  const filename = `relatorio-${Date.now()}.pdf`;
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', async () => {
+      const pdfBuffer = Buffer.concat(buffers);
+      const filename = `relatorio-${Date.now()}.pdf`;
 
-  const query = `
-    INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-  await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
+      const query = `
+        INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+      await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
 
-  res.json({ sucesso: true });
-});
+      res.json({ sucesso: true });
+    });
 
-// Cabeçalho
-doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
-   .text('Relatório de Análise do Currículo', { align: 'center' });
-doc.moveDown();
-
-doc.font('Helvetica').fontSize(12).fillColor('#333333')
-   .text(`Nome: ${nome}`);
-doc.moveDown();
-
-// Corpo do relatório
-relatorio.split('\n').forEach(linha => {
-  if (linha.trim() === '') {
+    // Cabeçalho do PDF
+    doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
+       .text('Relatório de Análise do Currículo', { align: 'center' });
     doc.moveDown();
-  } else {
-    doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
-  }
-});
 
-doc.end();
+    doc.font('Helvetica').fontSize(12).fillColor('#333333')
+       .text(`Nome: ${nome}`);
+    doc.moveDown();
+
+    // Corpo do relatório
+    relatorio.split('\n').forEach(linha => {
+      if (linha.trim() === '') {
+        doc.moveDown();
+      } else {
+        doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
+      }
+    });
+
+    doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err.message);
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
