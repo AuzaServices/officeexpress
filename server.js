@@ -5,9 +5,6 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
 const pdfParse = require('pdf-parse'); // 📥 Novo
-const Tesseract = require('tesseract.js');
-const { fromBuffer } = require("pdf2pic");
-const fs = require("fs");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -340,18 +337,9 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
   }
 
   try {
-const convert = fromBuffer(req.file.buffer, {
-  density: 300,
-  format: "png",
-  width: 800,
-  height: 1000,
-  savePath: "./temp"
-});
-
-const page = await convert(1); // converte a primeira página
-const imageBuffer = fs.readFileSync(page.path);
-
-const relatorio = analisarCurriculo(text);
+    const data = await pdfParse(req.file.buffer);
+    const texto = data.text;
+    const relatorio = analisarCurriculo(texto);
 
     // Gerar PDF com o relatório
 // Gerar PDF com o relatório
@@ -401,14 +389,26 @@ doc.end();
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `
-      SELECT id, nome, telefone, filename, mimetype, criado_em
+      SELECT 
+        id, 
+        name AS nome, 
+        filename, 
+        mimetype, 
+        upd_date, 
+        criado_em
       FROM analises
       ORDER BY id DESC
     `;
+    
     const [results] = await pool.query(query);
+
+    if (!Array.isArray(results)) {
+      return res.status(500).json({ error: 'Formato inválido de resposta' });
+    }
+
     res.json(results);
   } catch (err) {
-    console.error('Erro ao buscar análises:', {
+    console.error('❌ Erro ao buscar análises:', {
       mensagem: err.message,
       codigo: err.code,
       sql: err.sql
