@@ -188,8 +188,7 @@ p, li {
 }
 
 if (dados.infoAdicional) {
-  document.getElementById("c-infoAdicional").innerHTML =
-    "<strong>Informações adicionais:</strong> " + dados.infoAdicional;
+  document.getElementById("c-infoAdicional").textContent = dados.infoAdicional;
 }
 
     if (dados.foto) {

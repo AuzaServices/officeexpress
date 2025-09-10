@@ -116,7 +116,7 @@ container.innerHTML = `
       <p><strong>Email:</strong> ${dados.email || ""}</p>
       <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
       <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
-      ${dados.infoAdicional ? `<p><strong>Informações adicionais:</strong> ${dados.infoAdicional}</p>` : ""}
+      ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
     </div>
     ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
   </div>
