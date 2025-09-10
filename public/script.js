@@ -43,7 +43,6 @@ nova.innerHTML = `
     const valores = nome => Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map(el => el.value.trim());
 
 const dados = {
-  
   nome: form.nome?.value.trim() || "",
   email: form.email?.value.trim() || "",
   telefone: valores("telefone").filter(t => t).join(" "),
@@ -53,6 +52,7 @@ const dados = {
   bairro: form.bairro?.value.trim() || "",
   cidade: form.cidade?.value.trim() || "",
   cep: form.cep?.value.trim() || "",
+  infoAdicional: form.infoAdicional?.value.trim() || "", // ← ESSENCIAL
   objetivo: form.objetivo?.value.trim() || "",
   formacao: form.formacao?.value.trim() || "",
   habilidades: form.habilidades?.value.trim() || "",
@@ -63,8 +63,8 @@ const dados = {
   periodo_fim: valores("periodo_fim"),
   atividades: valores("atividades"),
   curso: valores("curso"),
-instituicao: valores("instituicao"),
-carga: valores("carga"),
+  instituicao: valores("instituicao"),
+  carga: valores("carga"),
   foto: null
 };
 
