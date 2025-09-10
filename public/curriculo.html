@@ -137,31 +137,38 @@
 
       <!-- Etapa 3 -->
       <div class="etapa">
-        <label>Objetivo – o que você quer conquistar?</label>
-<p style="margin-top: 10px; font-weight: 500; color: #555;">Escreva com clareza o que você busca. Se estiver sem ideia, eu te ajudo a encontrar as palavras certas.</p>
-        <textarea name="objetivo" required></textarea>
+  <label for="infoAdicional">Informações adicionais – algo que você gostaria de destacar?</label>
+  <p style="margin-top: 10px; font-weight: 500; color: #555;">
+    Compartilhe detalhes extras que possam fortalecer seu currículo, como disponibilidade, áreas de interesse ou conquistas relevantes.
+  </p>
+  <textarea name="infoAdicional" id="infoAdicional" rows="4" placeholder="Habilitação, disponibilidade, áreas de interesse, conquistas..."></textarea>
 
-<div id="ajuda-objetivo" style="margin-top: 30px;">
-  <p style="font-weight: bold; font-size: 16px;">Está sem ideia de objetivo? <span style="color: #e09d00;">Eu te ajudo!</span></p>
+  <label style="margin-top: 30px;">Objetivo – o que você quer conquistar?</label>
+  <p style="margin-top: 10px; font-weight: 500; color: #555;">
+    Escreva com clareza o que você busca. Se estiver sem ideia, eu te ajudo a encontrar as palavras certas.
+  </p>
+  <textarea name="objetivo" required></textarea>
 
-  <label for="intuito">Qual é o seu foco?</label>
-  <select id="intuito">
-    <option value="">-- Escolha seu destino profissional --</option>
-    <option value="emprego">Conseguir um emprego</option>
-    <option value="estagio">Obter um estágio</option>
-    <option value="promocao">Buscar promoção interna</option>
-    <option value="freelance">Trabalhos freelance</option>
-    <option value="transicao">Mudar de área</option>
-  </select>
+  <div id="ajuda-objetivo" style="margin-top: 30px;">
+    <p style="font-weight: bold; font-size: 16px;">Está sem ideia de objetivo? <span style="color: #e09d00;">Eu te ajudo!</span></p>
 
-  <button id="gerarFrase" class="botao-personalizado">Gerar Objetivo</button>
+    <label for="intuito">Qual é o seu foco?</label>
+    <select id="intuito">
+      <option value="">-- Escolha seu destino profissional --</option>
+      <option value="emprego">Conseguir um emprego</option>
+      <option value="estagio">Obter um estágio</option>
+      <option value="promocao">Buscar promoção interna</option>
+      <option value="freelance">Trabalhos freelance</option>
+      <option value="transicao">Mudar de área</option>
+    </select>
 
-  <div id="fraseGerada" style="margin-top: 10px; font-style: italic; color: #333;"></div>
+    <button id="gerarFrase" class="botao-personalizado">Gerar Objetivo</button>
 
-  <button id="adicionarObjetivo" class="botao-personalizado">Adicionar</button>
+    <div id="fraseGerada" style="margin-top: 10px; font-style: italic; color: #333;"></div>
+
+    <button id="adicionarObjetivo" class="botao-personalizado">Adicionar</button>
+  </div>
 </div>
-        
-      </div>
 
       <!-- Etapa 4 -->
       <div class="etapa">

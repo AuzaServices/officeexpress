@@ -142,6 +142,7 @@ p, li {
               <p id="c-email"></p>
               <p id="c-telefone"></p>
               <p id="c-endereco"></p>
+              <p id="c-infoAdicional"></p>
             </div>
             <img id="foto-preview" class="foto" src="" alt="Foto" style="display:none;" />
           </div>
@@ -182,9 +183,14 @@ p, li {
     }
     if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
 
-    if (enderecoCompleto) {
-      document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + enderecoCompleto;
-    }
+ if (enderecoCompleto) {
+  document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + enderecoCompleto;
+}
+
+if (dados.infoAdicional) {
+  document.getElementById("c-infoAdicional").innerHTML =
+    "<strong>Informações adicionais:</strong> " + dados.infoAdicional;
+}
 
     if (dados.foto) {
       const img = document.getElementById("foto-preview");
