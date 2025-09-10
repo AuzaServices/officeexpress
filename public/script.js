@@ -38,7 +38,7 @@ nova.innerHTML = `
 
   document.getElementById("formulario").addEventListener("submit", function(e) {
     e.preventDefault();
-    const form = e.target;
+    const form = document.getElementById("formulario");
 
     const valores = nome => Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map(el => el.value.trim());
 
