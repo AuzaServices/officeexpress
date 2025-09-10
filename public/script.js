@@ -52,7 +52,7 @@ const dados = {
   bairro: form.bairro?.value.trim() || "",
   cidade: form.cidade?.value.trim() || "",
   cep: form.cep?.value.trim() || "",
-  infoAdicional: form.infoAdicional?.value.trim() || "", // ← ESSENCIAL
+infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "", // ← ESSENCIAL
   objetivo: form.objetivo?.value.trim() || "",
   formacao: form.formacao?.value.trim() || "",
   habilidades: form.habilidades?.value.trim() || "",
