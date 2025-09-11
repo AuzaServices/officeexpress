@@ -225,9 +225,10 @@ window.location.href = "curriculo.html";
     animateValue("usuarios", 0, 10258, 3500);
     animateValue("taxa", 0, 97, 3500, '%');
 
-    setTimeout(() => {
-      window.location.href = "curriculo.html";
-    }, 20000);
+setTimeout(() => {
+  localStorage.setItem("entradaViaSplash", "true");
+  window.location.href = "curriculo.html";
+}, 20000);
 
     function analisar() {
   window.location.href = "analise.html";
