@@ -382,27 +382,39 @@ fetch("https://officeexpress.onrender.com/api/logs", {
       const tempo = Math.round((Date.now() - inicio) / 1000);
       console.log("🚨 Disparando log de abandono após", tempo, "segundos");
 
-      fetch("https://officeexpress.onrender.com/api/logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          acao: "etapa",
-          nome,
-          etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-          timestamp: new Date().toISOString()
-        }),
-        keepalive: true
+      const payload = JSON.stringify({
+        acao: "etapa",
+        nome,
+        etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+        timestamp: new Date().toISOString()
       });
+
+      try {
+        const blob = new Blob([payload], { type: "application/json" });
+        const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
+        if (!ok) throw new Error("sendBeacon falhou");
+      } catch (err) {
+        fetch("https://officeexpress.onrender.com/api/logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true
+        });
+      }
     };
 
     window.handleVisibilityChange = function () {
+      console.log("👀 visibilitychange =", document.visibilityState);
       if (document.visibilityState === "hidden" && rastreioLiberado) {
         enviarLogAbandono();
       }
     };
 
-    // Eventos de abandono
-    window.addEventListener("unload", enviarLogAbandono);
+    window.addEventListener("unload", () => {
+      console.log("💥 unload disparado");
+      enviarLogAbandono();
+    });
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
   })();
 </script>
