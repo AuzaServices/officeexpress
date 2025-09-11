@@ -327,7 +327,6 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 <script>
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const etapaAtual = "Pagamento"; // ← personalize conforme a página
   let logEnviado = false;
   let navegandoInternamente = false;
 
@@ -347,7 +346,7 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     navigator.sendBeacon("/api/logs", JSON.stringify({
       acao: "etapa",
       nome,
-      etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+      etapa: `Abandonou após ${tempo}s`,
       timestamp: new Date().toISOString()
     }));
   }

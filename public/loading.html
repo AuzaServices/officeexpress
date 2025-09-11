@@ -212,10 +212,9 @@ formData.append("telefone", dados.telefone || "");
 
     setTimeout(enviarCurriculo, 2000);
   </script>
-  <script>
+<script>
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const etapaAtual = "Pagamento"; // ← personalize conforme a página
   let logEnviado = false;
   let navegandoInternamente = false;
 
@@ -235,7 +234,7 @@ formData.append("telefone", dados.telefone || "");
     navigator.sendBeacon("/api/logs", JSON.stringify({
       acao: "etapa",
       nome,
-      etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+      etapa: `Abandonou após ${tempo}s`,
       timestamp: new Date().toISOString()
     }));
   }
