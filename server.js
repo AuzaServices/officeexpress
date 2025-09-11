@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(bodyParser.text({ type: 'text/plain' }));
 
 // 🔁 Conexão com MySQL
 const pool = mysql.createPool({
@@ -271,8 +272,26 @@ app.get('/api/pdfs', async (req, res) => {
 //////////////////////////
 const IPINFO_TOKEN = '83e6d56256238e';
 
+
 app.post('/api/logs', async (req, res) => {
-  const { acao, nome, timestamp, etapa } = req.body;
+  let body = req.body;
+
+  // Se o corpo vier como string (via sendBeacon), converte para JSON
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (err) {
+      return res.status(400).json({ error: 'Formato inválido de log' });
+    }
+  }
+
+  const { acao, nome, timestamp, etapa } = body;
+
+  // Ignora logs que não sejam da ação "etapa"
+  if (acao !== 'etapa') {
+    console.log(`🔍 Log ignorado: ação recebida foi '${acao}'`);
+    return res.status(200).json({ mensagem: 'Log ignorado: ação não é etapa' });
+  }
 
   const ipRaw = getPublicIP(req);
   const ipPublico = ipRaw.replace('::ffff:', '');
@@ -293,11 +312,11 @@ app.post('/api/logs', async (req, res) => {
   const localizacao = `${cidade} - ${estado}`;
 
   try {
-const query = `
-  INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico, etapa)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`;
-await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico, etapa]);
+    const query = `
+      INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico, etapa)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico, etapa]);
 
     res.status(200).json({ mensagem: 'Log salvo com sucesso', localizacao });
   } catch (err) {

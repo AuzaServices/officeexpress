@@ -660,7 +660,17 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 });
 
 </script>
-
+<script>
+  window.addEventListener("beforeunload", () => {
+    const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+    navigator.sendBeacon("/api/logs", JSON.stringify({
+      acao: "etapa",
+      nome,
+      etapa: "Abandonou",
+      timestamp: new Date().toISOString()
+    }));
+  });
+</script>
 
 
 </body>
