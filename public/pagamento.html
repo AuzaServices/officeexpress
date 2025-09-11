@@ -229,12 +229,17 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
 </script>
 <script>
+(function () {
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const etapaAtual = "Pagamento";
+  let etapaAtual = "Pagamento"; // ← personalize conforme a etapa
   let logEnviado = false;
 
-  // Lê a flag corretamente
+  // Verifica se o usuário veio da splash.html
+  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+  localStorage.removeItem("entradaViaSplash");
+
+  // Lê a flag de navegação interna
   let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
   localStorage.removeItem("navegandoInternamente");
 
@@ -243,28 +248,47 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
       navegandoInternamente = true;
+      console.log("➡️ Navegação interna detectada via clique");
     }
   });
 
-  function enviarLogAbandono() {
-    if (logEnviado || navegandoInternamente) return;
-    logEnviado = true;
+  // Buffer de segurança para evitar disparo precoce
+  let rastreioLiberado = false;
+  setTimeout(() => { rastreioLiberado = true }, 300);
 
+  function enviarLogAbandono() {
+    if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+      console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
+      return;
+    }
+
+    logEnviado = true;
     const tempo = Math.round((Date.now() - inicio) / 1000);
-    navigator.sendBeacon("/api/logs", JSON.stringify({
-      acao: "etapa",
-      nome,
-      etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-      timestamp: new Date().toISOString()
-    }));
+    console.log("🔥 Enviando log de abandono após", tempo, "segundos");
+
+    fetch("https://officeexpress.onrender.com/api/logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        acao: "etapa",
+        nome,
+        etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+        timestamp: new Date().toISOString()
+      }),
+      keepalive: true
+    });
   }
 
-  window.addEventListener("beforeunload", enviarLogAbandono);
+  // Dispara ao fechar aba ou recarregar
+  window.addEventListener("unload", enviarLogAbandono);
+
+  // Dispara ao trocar de aba ou minimizar (com buffer)
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
+    if (document.visibilityState === "hidden" && rastreioLiberado) {
       enviarLogAbandono();
     }
   });
+})();
 </script>
 </body>
 </html>
