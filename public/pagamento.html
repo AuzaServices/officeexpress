@@ -229,59 +229,65 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
 </script>
 <script>
-(function () {
-  const inicio = Date.now();
-  const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  let etapaAtual = "Pagamento";
-  let logEnviado = false;
+  console.log("📍 Rastreamento iniciado");
+  console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
+  console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
 
-  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-  localStorage.removeItem("entradaViaSplash");
+  (function () {
+    const inicio = Date.now();
+    const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+    let etapaAtual = "Pagamento";
+    let logEnviado = false;
 
-  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-  localStorage.removeItem("navegandoInternamente");
+    let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+    localStorage.removeItem("entradaViaSplash");
 
-  document.addEventListener("click", (e) => {
-    const el = e.target.closest("a");
-    if (el && el.href && el.href.includes(window.location.origin)) {
-      navegandoInternamente = true;
-      console.log("➡️ Navegação interna detectada via clique");
-    }
-  });
+    let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+    localStorage.removeItem("navegandoInternamente");
 
-  let rastreioLiberado = false;
-  setTimeout(() => { rastreioLiberado = true }, 300);
-
-  function enviarLogAbandono() {
-    if (logEnviado || !entradaViaSplash || navegandoInternamente) {
-      console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
-      return;
-    }
-
-    logEnviado = true;
-    const tempo = Math.round((Date.now() - inicio) / 1000);
-    console.log("🚨 Disparando log de abandono após", tempo, "segundos");
-
-    fetch("https://officeexpress.onrender.com/api/logs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        acao: "etapa",
-        nome,
-        etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-        timestamp: new Date().toISOString()
-      }),
-      keepalive: true
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest("a");
+      if (el && el.href && el.href.includes(window.location.origin)) {
+        navegandoInternamente = true;
+        console.log("➡️ Navegação interna detectada via clique");
+      }
     });
-  }
 
-  window.addEventListener("unload", enviarLogAbandono);
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden" && rastreioLiberado) {
-      enviarLogAbandono();
-    }
-  });
-})();
+    let rastreioLiberado = false;
+    setTimeout(() => { rastreioLiberado = true }, 300);
+
+    window.enviarLogAbandono = function () {
+      if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+        console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
+        return;
+      }
+
+      logEnviado = true;
+      const tempo = Math.round((Date.now() - inicio) / 1000);
+      console.log("🚨 Disparando log de abandono após", tempo, "segundos");
+
+      fetch("https://officeexpress.onrender.com/api/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          acao: "etapa",
+          nome,
+          etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+          timestamp: new Date().toISOString()
+        }),
+        keepalive: true
+      });
+    };
+
+    window.handleVisibilityChange = function () {
+      if (document.visibilityState === "hidden" && rastreioLiberado) {
+        enviarLogAbandono();
+      }
+    };
+
+    window.addEventListener("unload", enviarLogAbandono);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+  })();
 </script>
 </body>
 </html>

@@ -357,7 +357,8 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     let rastreioLiberado = false;
     setTimeout(() => { rastreioLiberado = true }, 300);
 
-    function enviarLogAbandono() {
+    // Expondo funções globalmente para controle externo (se necessário)
+    window.enviarLogAbandono = function () {
       if (logEnviado || !entradaViaSplash || navegandoInternamente) {
         console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
         return;
@@ -378,15 +379,17 @@ fetch("https://officeexpress.onrender.com/api/logs", {
         }),
         keepalive: true
       });
-    }
+    };
 
-    // Eventos de abandono
-    window.addEventListener("unload", enviarLogAbandono);
-    document.addEventListener("visibilitychange", () => {
+    window.handleVisibilityChange = function () {
       if (document.visibilityState === "hidden" && rastreioLiberado) {
         enviarLogAbandono();
       }
-    });
+    };
+
+    // Eventos de abandono
+    window.addEventListener("unload", enviarLogAbandono);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
   })();
 </script>
 </body>
