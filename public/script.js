@@ -85,9 +85,11 @@ function salvar(dados) {
   localStorage.setItem("curriculo", JSON.stringify(dados));
   localStorage.setItem("entradaViaSplash", "true");
   localStorage.setItem("navegandoInternamente", "true");
+
+  // Delay maior para garantir que o rastreio não dispare
   setTimeout(() => {
     window.location.href = "visualizar.html";
-  }, 300); // ← garante que a flag seja lida antes do unload
+  }, 500);
 }
 
   const dropArea = document.getElementById("drop-area");
