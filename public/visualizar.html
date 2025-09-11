@@ -330,6 +330,11 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
   function enviarLogAbandono() {
     const tempo = Math.round((Date.now() - inicio) / 1000);
+    const destino = document.activeElement?.href || "";
+
+    // Se o destino for uma página interna, não dispara
+    if (destino.includes(window.location.origin)) return;
+
     navigator.sendBeacon("/api/logs", JSON.stringify({
       acao: "etapa",
       nome,
@@ -338,10 +343,8 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     }));
   }
 
-  // Desktop: fecha ou recarrega
   window.addEventListener("beforeunload", enviarLogAbandono);
 
-  // Mobile: muda de aba ou minimiza
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       enviarLogAbandono();
