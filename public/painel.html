@@ -39,7 +39,6 @@
         <thead class="table-light">
           <tr>
             <th>ID</th>
-            <th>Nome</th>
             <th>Data</th>
             <th>Ação</th>
             <th>Contato</th>
@@ -58,7 +57,6 @@
           <tr>
             <th>ID</th>
             <th>Ação</th>
-            <th>Nome</th>
             <th>Horário</th>
             <th>Etapa</th>
             <th>Localização</th>
@@ -76,7 +74,6 @@
         <thead class="table-light">
           <tr>
             <th>ID</th>
-            <th>Nome</th>
             <th>Arquivo</th>
             <th>Data</th>
             <th>Ação</th>
@@ -140,7 +137,6 @@
 tr.innerHTML = `
   <td>${log.id}</td>
   <td>${log.acao}</td>
-  <td>${log.nome}</td>
   <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
   <td>${log.etapa || '—'}</td>
   <td>${log.localizacao || '—'}</td>
@@ -173,7 +169,6 @@ function carregarRelatorios() {
         const linha = document.createElement('tr');
         linha.innerHTML = `
           <td>${rel.id}</td>
-          <td>${rel.nome}</td>
           <td>
             ${telefone ? `
               <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
