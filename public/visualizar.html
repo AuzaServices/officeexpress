@@ -158,6 +158,10 @@ p, li {
         <div class="botoes">
           <button onclick="history.back()">Voltar</button>
           <button onclick="redirecionarParaLoading()">Gerar PDF</button>
+          <script>
+            localStorage.setItem("navegandoInternamente", "true");
+window.location.href = "pagamento.html";
+          </script>
         </div>
       </div>
     </div>
@@ -325,13 +329,15 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
   </script>
 <script>
+(function () {
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const etapaAtual = "Visualizou"; // ← personalize conforme a página
+  const etapaAtual = "Visualizou";
   let logEnviado = false;
-  let navegandoInternamente = false;
 
-  // Detecta cliques em links internos
+  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+  localStorage.removeItem("navegandoInternamente");
+
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
@@ -340,10 +346,15 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   });
 
   function enviarLogAbandono() {
-    if (logEnviado || navegandoInternamente) return;
-    logEnviado = true;
+    if (logEnviado || navegandoInternamente) {
+      console.log("⛔ Log bloqueado — navegandoInternamente =", navegandoInternamente);
+      return;
+    }
 
+    logEnviado = true;
     const tempo = Math.round((Date.now() - inicio) / 1000);
+    console.log("🔥 Enviando log de abandono após", tempo, "segundos");
+
     navigator.sendBeacon("/api/logs", JSON.stringify({
       acao: "etapa",
       nome,
@@ -353,12 +364,12 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   }
 
   window.addEventListener("beforeunload", enviarLogAbandono);
-
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       enviarLogAbandono();
     }
   });
+})();
 </script>
 </body>
 </html>
