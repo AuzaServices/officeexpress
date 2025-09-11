@@ -676,7 +676,7 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   let rastreioLiberado = false;
   setTimeout(() => { rastreioLiberado = true }, 300);
 
-  function enviarLogAbandono() {
+  window.enviarLogAbandono = function () {
     if (logEnviado || !entradaViaSplash || navegandoInternamente) return;
     logEnviado = true;
     const tempo = Math.round((Date.now() - inicio) / 1000);
@@ -691,14 +691,16 @@ fetch("https://officeexpress.onrender.com/api/logs", {
       }),
       keepalive: true
     });
-  }
+  };
 
-  window.addEventListener("unload", enviarLogAbandono);
-  document.addEventListener("visibilitychange", () => {
+  window.handleVisibilityChange = function () {
     if (document.visibilityState === "hidden" && rastreioLiberado) {
       enviarLogAbandono();
     }
-  });
+  };
+
+  window.addEventListener("unload", enviarLogAbandono);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 })();
 </script>
 

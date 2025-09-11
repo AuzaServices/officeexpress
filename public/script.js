@@ -86,10 +86,13 @@ function salvar(dados) {
   localStorage.setItem("entradaViaSplash", "true");
   localStorage.setItem("navegandoInternamente", "true");
 
-  // Delay maior para garantir que o rastreio não dispare
+  // Desativa rastreio antes de sair
+  window.removeEventListener("unload", enviarLogAbandono);
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+
   setTimeout(() => {
     window.location.href = "visualizar.html";
-  }, 500);
+  }, 300);
 }
 
   const dropArea = document.getElementById("drop-area");
