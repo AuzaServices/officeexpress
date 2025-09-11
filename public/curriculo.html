@@ -665,13 +665,23 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
   const etapaAtual = "Digitando"; // ← personalize conforme a página
   let logEnviado = false;
-  let navegandoInternamente = false;
 
-  // Detecta cliques em links internos
+  // Detecta navegação interna via clique em links
+  let navegandoInternamente = false;
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
       navegandoInternamente = true;
+    }
+  });
+
+  // Detecta navegação interna via JavaScript (window.location.href)
+  window.addEventListener("beforeunload", () => {
+    if (!logEnviado) {
+      const destino = document.activeElement?.href || "";
+      if (destino.includes(window.location.origin)) {
+        navegandoInternamente = true;
+      }
     }
   });
 
@@ -688,15 +698,16 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     }));
   }
 
+  // Dispara ao fechar aba ou recarregar
   window.addEventListener("beforeunload", enviarLogAbandono);
 
+  // Dispara ao trocar de aba ou minimizar (mobile-friendly)
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       enviarLogAbandono();
     }
   });
 </script>
-
 
 </body>
 </html>
