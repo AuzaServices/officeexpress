@@ -663,10 +663,11 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 <script>
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const etapaAtual = "Currículo"; // ← personalize aqui conforme a página
+  const etapaAtual = "Currículo"; // ← personalize conforme a página
   let logEnviado = false;
   let navegandoInternamente = false;
 
+  // Detecta cliques em links internos
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
