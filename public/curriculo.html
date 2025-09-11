@@ -667,7 +667,8 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   let logEnviado = false;
 
   // Detecta navegação interna via clique em links
-  let navegandoInternamente = false;
+  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+localStorage.removeItem("navegandoInternamente"); // limpa após uso
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
