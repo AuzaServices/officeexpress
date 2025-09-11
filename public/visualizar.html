@@ -308,6 +308,7 @@ async function redirecionarParaLoading() {
     });
 
     localStorage.setItem("curriculoParaEnviar", "true");
+    localStorage.setItem("navegandoInternamente", "true"); // ← ESSENCIAL
     window.location.href = "loading.html";
 
   } catch (error) {
