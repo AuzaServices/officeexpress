@@ -83,7 +83,8 @@ infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
 
 function salvar(dados) {
   localStorage.setItem("curriculo", JSON.stringify(dados));
-  localStorage.setItem("navegandoInternamente", "true"); // ← ESSENCIAL
+  localStorage.setItem("entradaViaSplash", "true"); // ← ESSENCIAL para rastreio correto
+  localStorage.setItem("navegandoInternamente", "true"); // ← bloqueia log de abandono
   window.location.href = "visualizar.html";
 }
 
