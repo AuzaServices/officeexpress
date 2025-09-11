@@ -232,18 +232,15 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 (function () {
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  let etapaAtual = "Pagamento"; // ← personalize conforme a etapa
+  let etapaAtual = "Pagamento";
   let logEnviado = false;
 
-  // Verifica se o usuário veio da splash.html
   let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
   localStorage.removeItem("entradaViaSplash");
 
-  // Lê a flag de navegação interna
   let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
   localStorage.removeItem("navegandoInternamente");
 
-  // Detecta cliques em links internos (fallback)
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
@@ -252,7 +249,6 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     }
   });
 
-  // Buffer de segurança para evitar disparo precoce
   let rastreioLiberado = false;
   setTimeout(() => { rastreioLiberado = true }, 300);
 
@@ -264,7 +260,7 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
     logEnviado = true;
     const tempo = Math.round((Date.now() - inicio) / 1000);
-    console.log("🔥 Enviando log de abandono após", tempo, "segundos");
+    console.log("🚨 Disparando log de abandono após", tempo, "segundos");
 
     fetch("https://officeexpress.onrender.com/api/logs", {
       method: "POST",
@@ -279,10 +275,7 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     });
   }
 
-  // Dispara ao fechar aba ou recarregar
   window.addEventListener("unload", enviarLogAbandono);
-
-  // Dispara ao trocar de aba ou minimizar (com buffer)
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden" && rastreioLiberado) {
       enviarLogAbandono();

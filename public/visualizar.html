@@ -331,18 +331,6 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
   console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
 
-  // Log de acesso à etapa
-  fetch("https://officeexpress.onrender.com/api/logs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      acao: "etapa",
-      nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
-      etapa: "Visualizou",
-      timestamp: new Date().toISOString()
-    })
-  });
-
   (function () {
     const inicio = Date.now();
     const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
