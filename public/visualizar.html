@@ -304,6 +304,7 @@ async function redirecionarParaLoading() {
     });
 
     localStorage.setItem("curriculoParaEnviar", "true");
+    localStorage.setItem("navegandoInternamente", "true"); // ← ESSENCIAL para bloquear rastreio
     window.location.href = "loading.html";
 
   } catch (error) {
