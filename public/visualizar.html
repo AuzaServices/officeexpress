@@ -324,20 +324,29 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 });
 
   </script>
-  <script>
-const inicio = Date.now();
-
-window.addEventListener("beforeunload", () => {
+<script>
+  const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const tempo = Math.round((Date.now() - inicio) / 1000); // segundos
 
-  navigator.sendBeacon("/api/logs", JSON.stringify({
-    acao: "etapa",
-    nome,
-    etapa: `Abandonou após ${tempo}s`,
-    timestamp: new Date().toISOString()
-  }));
-});
+  function enviarLogAbandono() {
+    const tempo = Math.round((Date.now() - inicio) / 1000);
+    navigator.sendBeacon("/api/logs", JSON.stringify({
+      acao: "etapa",
+      nome,
+      etapa: `Abandonou após ${tempo}s`,
+      timestamp: new Date().toISOString()
+    }));
+  }
+
+  // Desktop: fecha ou recarrega
+  window.addEventListener("beforeunload", enviarLogAbandono);
+
+  // Mobile: muda de aba ou minimiza
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      enviarLogAbandono();
+    }
+  });
 </script>
 </body>
 </html>
