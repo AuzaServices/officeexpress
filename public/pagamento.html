@@ -229,15 +229,19 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
 </script>
 <script>
-  window.addEventListener("beforeunload", () => {
-    const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-    navigator.sendBeacon("/api/logs", JSON.stringify({
-      acao: "etapa",
-      nome,
-      etapa: "Abandonou",
-      timestamp: new Date().toISOString()
-    }));
-  });
+const inicio = Date.now();
+
+window.addEventListener("beforeunload", () => {
+  const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+  const tempo = Math.round((Date.now() - inicio) / 1000); // segundos
+
+  navigator.sendBeacon("/api/logs", JSON.stringify({
+    acao: "etapa",
+    nome,
+    etapa: `Abandonou após ${tempo}s`,
+    timestamp: new Date().toISOString()
+  }));
+});
 </script>
 </body>
 </html>
