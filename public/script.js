@@ -81,10 +81,11 @@ infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
     }
   });
 
-  function salvar(dados) {
-    localStorage.setItem("curriculo", JSON.stringify(dados));
-    window.location.href = "visualizar.html";
-  }
+function salvar(dados) {
+  localStorage.setItem("curriculo", JSON.stringify(dados));
+  localStorage.setItem("navegandoInternamente", "true"); // ← ESSENCIAL
+  window.location.href = "visualizar.html";
+}
 
   const dropArea = document.getElementById("drop-area");
   const uploadBox = document.getElementById("upload-box");
