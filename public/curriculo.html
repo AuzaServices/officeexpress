@@ -676,31 +676,29 @@ localStorage.removeItem("navegandoInternamente"); // limpa após uso
     }
   });
 
-  // Detecta navegação via JavaScript (ex: window.location.href)
-  window.addEventListener("beforeunload", () => {
-    const destino = document.activeElement?.href || "";
-    if (destino.includes(window.location.origin)) {
-      navegandoInternamente = true;
-    }
+  // Detecta navegação via JavaScript (ex: window.location.href
+
+  
+
+function enviarLogAbandono() {
+  if (logEnviado || navegandoInternamente) return;
+  logEnviado = true;
+
+  const tempo = Math.round((Date.now() - inicio) / 1000);
+  console.log("Enviando log de abandono após", tempo, "segundos");
+
+  fetch("https://officeexpress.onrender.com/api/logs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      acao: "etapa",
+      nome,
+      etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+      timestamp: new Date().toISOString()
+    }),
+    keepalive: true
   });
-
-  function enviarLogAbandono() {
-    if (logEnviado || navegandoInternamente) return;
-    logEnviado = true;
-
-    const tempo = Math.round((Date.now() - inicio) / 1000);
-    fetch("https://officeexpress.onrender.com/api/logs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        acao: "etapa",
-        nome,
-        etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-        timestamp: new Date().toISOString()
-      }),
-      keepalive: true // ← garante envio mesmo ao fechar aba
-    });
-  }
+}
 
   // Dispara ao fechar aba ou recarregar
   window.addEventListener("unload", enviarLogAbandono);
