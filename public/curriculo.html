@@ -648,6 +648,17 @@ function adicionarExperiencia() {
   container.appendChild(div);
 }
 
+fetch("https://officeexpress.onrender.com/api/logs", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    acao: "etapa",
+    nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
+    etapa: "Digitando",
+    timestamp: new Date().toISOString()
+  })
+});
+
 </script>
 
 

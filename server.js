@@ -272,7 +272,7 @@ app.get('/api/pdfs', async (req, res) => {
 const IPINFO_TOKEN = '83e6d56256238e';
 
 app.post('/api/logs', async (req, res) => {
-  const { acao, nome, timestamp } = req.body;
+  const { acao, nome, timestamp, etapa } = req.body;
 
   const ipRaw = getPublicIP(req);
   const ipPublico = ipRaw.replace('::ffff:', '');
@@ -293,11 +293,11 @@ app.post('/api/logs', async (req, res) => {
   const localizacao = `${cidade} - ${estado}`;
 
   try {
-    const query = `
-      INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico]);
+const query = `
+  INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico, etapa)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`;
+await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico, etapa]);
 
     res.status(200).json({ mensagem: 'Log salvo com sucesso', localizacao });
   } catch (err) {
@@ -311,7 +311,7 @@ app.post('/api/logs', async (req, res) => {
 //////////////////////////
 app.get('/api/logs', async (req, res) => {
   try {
-    const query = 'SELECT id, acao, nome, timestamp, localizacao, ip_raw, ip_publico FROM logs ORDER BY id DESC';
+    const query = 'SELECT id, acao, nome, timestamp, localizacao, ip_raw, ip_publico, etapa FROM logs ORDER BY id DESC';
     const [results] = await pool.query(query);
 
     if (!Array.isArray(results)) {

@@ -215,6 +215,18 @@ h2 {
       color: { value: "#f4f7fa" }
     }
   });
+
+fetch("https://officeexpress.onrender.com/api/logs", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    acao: "etapa",
+    nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
+    etapa: "Pagamento",
+    timestamp: new Date().toISOString()
+  })
+});
+
 </script>
 </body>
 </html>
