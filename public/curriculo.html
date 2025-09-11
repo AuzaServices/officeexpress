@@ -664,14 +664,15 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 (function () {
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  let etapaAtual = "Digitando"; // ← pode mudar conforme a etapa
+  let etapaAtual = "Digitando"; // ← personalize conforme a etapa
   let logEnviado = false;
 
-  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-  localStorage.removeItem("navegandoInternamente");
+  // Verifica se o usuário veio da splash.html
+  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+  localStorage.removeItem("entradaViaSplash");
 
-  console.log("📌 Etapa atual:", etapaAtual);
-  console.log("📌 Navegando internamente?", navegandoInternamente);
+  // Detecta se o usuário está navegando internamente (clicando em links)
+  let navegandoInternamente = false;
 
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
@@ -682,8 +683,8 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   });
 
   function enviarLogAbandono() {
-    if (logEnviado || navegandoInternamente) {
-      console.log("⛔ Log bloqueado — navegandoInternamente =", navegandoInternamente);
+    if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+      console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
       return;
     }
 
@@ -704,7 +705,10 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     });
   }
 
+  // Dispara ao fechar aba ou recarregar
   window.addEventListener("unload", enviarLogAbandono);
+
+  // Dispara ao trocar de aba ou minimizar (mobile-friendly)
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       enviarLogAbandono();
