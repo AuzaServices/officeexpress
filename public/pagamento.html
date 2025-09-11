@@ -231,11 +231,14 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 <script>
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const etapaAtual = "Pagamento"; // ← personalize conforme a página
+  const etapaAtual = "Pagamento";
   let logEnviado = false;
-  let navegandoInternamente = false;
 
-  // Detecta cliques em links internos
+  // Lê a flag corretamente
+  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+  localStorage.removeItem("navegandoInternamente");
+
+  // Detecta cliques em links internos (fallback)
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
@@ -257,7 +260,6 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   }
 
   window.addEventListener("beforeunload", enviarLogAbandono);
-
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       enviarLogAbandono();
