@@ -144,15 +144,6 @@ function adicionarCurso() {
 }
 
   // Dispara o log assim que o site é acessado
-  fetch("https://officeexpress.onrender.com/api/logs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      acao: "acesso_site",
-      nome: "visitante",
-      timestamp: new Date().toISOString()
-    })
-  });
   tsParticles.load("particles-js", {
     fullScreen: { enable: false },
     particles: {
