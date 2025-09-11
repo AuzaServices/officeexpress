@@ -663,14 +663,20 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 <script>
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+  let navegandoInternamente = false;
+
+  // Detecta cliques em links internos
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("a");
+    if (el && el.href && el.href.includes(window.location.origin)) {
+      navegandoInternamente = true;
+    }
+  });
 
   function enviarLogAbandono() {
+    if (navegandoInternamente) return; // não dispara se for navegação interna
+
     const tempo = Math.round((Date.now() - inicio) / 1000);
-    const destino = document.activeElement?.href || "";
-
-    // Se o destino for uma página interna, não dispara
-    if (destino.includes(window.location.origin)) return;
-
     navigator.sendBeacon("/api/logs", JSON.stringify({
       acao: "etapa",
       nome,
