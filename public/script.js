@@ -83,11 +83,11 @@ infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
 
 function salvar(dados) {
   localStorage.setItem("curriculo", JSON.stringify(dados));
-  localStorage.setItem("entradaViaSplash", "true"); // ← ESSENCIAL para rastreio da próxima página
-  localStorage.setItem("navegandoInternamente", "true"); // ← bloqueia log de abandono
+  localStorage.setItem("entradaViaSplash", "true");
+  localStorage.setItem("navegandoInternamente", "true");
   setTimeout(() => {
     window.location.href = "visualizar.html";
-  }, 100); // ← pequeno delay para garantir que as flags sejam lidas
+  }, 300); // ← garante que a flag seja lida antes do unload
 }
 
   const dropArea = document.getElementById("drop-area");
