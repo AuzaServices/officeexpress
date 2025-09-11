@@ -84,7 +84,6 @@
           </tr>
         </thead>
         <tbody>
-          <td>${log.etapa || '—'}</td>
           <!-- Os dados serão inseridos aqui via JavaScript -->
         </tbody>
       </table>
@@ -138,13 +137,14 @@
 
           data.forEach(log => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${log.id}</td>
-              <td>${log.acao}</td>
-              <td>${log.nome}</td>
-              <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
-              <td>${log.localizacao || '—'}</td>
-            `;
+tr.innerHTML = `
+  <td>${log.id}</td>
+  <td>${log.acao}</td>
+  <td>${log.nome}</td>
+  <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+  <td>${log.etapa || '—'}</td>
+  <td>${log.localizacao || '—'}</td>
+`;
             tbody.appendChild(tr);
           });
         })
