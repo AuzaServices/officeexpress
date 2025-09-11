@@ -84,11 +84,15 @@ infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
 function salvar(dados) {
   localStorage.setItem("curriculo", JSON.stringify(dados));
   localStorage.setItem("entradaViaSplash", "true");
-  localStorage.setItem("navegandoInternamente", "true");
+  localStorage.setItem("navegandoInternamente", "false"); // ← Corrigido
 
-  // Desativa rastreio antes de sair
-  window.removeEventListener("unload", enviarLogAbandono);
-  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  // Se quiser desativar rastreio da página atual, só faça se ele já estiver definido
+  if (typeof enviarLogAbandono === "function") {
+    window.removeEventListener("unload", enviarLogAbandono);
+  }
+  if (typeof handleVisibilityChange === "function") {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }
 
   setTimeout(() => {
     window.location.href = "visualizar.html";
