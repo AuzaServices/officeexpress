@@ -680,7 +680,6 @@ localStorage.removeItem("navegandoInternamente"); // limpa após uso
 
   
 
-<script>
   function enviarLogAbandono() {
     if (logEnviado || navegandoInternamente) {
       console.log("⛔ Log de abandono bloqueado — navegandoInternamente =", navegandoInternamente);
@@ -704,7 +703,6 @@ localStorage.removeItem("navegandoInternamente"); // limpa após uso
       keepalive: true
     });
   }
-</script>
 
   // Dispara ao fechar aba ou recarregar
   window.addEventListener("unload", enviarLogAbandono);
