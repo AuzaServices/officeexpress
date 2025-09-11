@@ -661,18 +661,23 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
 </script>
 <script>
+(function () {
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  const etapaAtual = "Digitando";
+  let etapaAtual = "Digitando"; // ← pode mudar conforme a etapa
   let logEnviado = false;
 
   let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
   localStorage.removeItem("navegandoInternamente");
 
+  console.log("📌 Etapa atual:", etapaAtual);
+  console.log("📌 Navegando internamente?", navegandoInternamente);
+
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
     if (el && el.href && el.href.includes(window.location.origin)) {
       navegandoInternamente = true;
+      console.log("➡️ Navegação interna detectada via clique");
     }
   });
 
@@ -705,6 +710,7 @@ fetch("https://officeexpress.onrender.com/api/logs", {
       enviarLogAbandono();
     }
   });
+})();
 </script>
 
 </body>
