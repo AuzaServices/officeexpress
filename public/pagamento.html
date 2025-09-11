@@ -233,61 +233,73 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
   console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
 
-  (function () {
-    const inicio = Date.now();
-    const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-    let etapaAtual = "Pagamento";
-    let logEnviado = false;
+  const inicio = Date.now();
+  const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+  let etapaAtual = "Pagamento";
+  let logEnviado = false;
 
-    let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-    localStorage.removeItem("entradaViaSplash");
+  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+  localStorage.removeItem("entradaViaSplash");
 
-    let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-    localStorage.removeItem("navegandoInternamente");
+  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+  localStorage.removeItem("navegandoInternamente");
 
-    document.addEventListener("click", (e) => {
-      const el = e.target.closest("a");
-      if (el && el.href && el.href.includes(window.location.origin)) {
-        navegandoInternamente = true;
-        console.log("➡️ Navegação interna detectada via clique");
-      }
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("a");
+    if (el && el.href && el.href.includes(window.location.origin)) {
+      navegandoInternamente = true;
+      console.log("➡️ Navegação interna detectada via clique");
+    }
+  });
+
+  let rastreioLiberado = false;
+  setTimeout(() => { rastreioLiberado = true }, 300);
+
+  window.enviarLogAbandono = function () {
+    if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+      console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
+      return;
+    }
+
+    logEnviado = true;
+    const tempo = Math.round((Date.now() - inicio) / 1000);
+    console.log("🚨 Disparando log de abandono após", tempo, "segundos");
+
+    const payload = JSON.stringify({
+      acao: "etapa",
+      nome,
+      etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+      timestamp: new Date().toISOString()
     });
 
-    let rastreioLiberado = false;
-    setTimeout(() => { rastreioLiberado = true }, 300);
-
-    window.enviarLogAbandono = function () {
-      if (logEnviado || !entradaViaSplash || navegandoInternamente) {
-        console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
-        return;
-      }
-
-      logEnviado = true;
-      const tempo = Math.round((Date.now() - inicio) / 1000);
-      console.log("🚨 Disparando log de abandono após", tempo, "segundos");
-
+    try {
+      const blob = new Blob([payload], { type: "application/json" });
+      const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
+      if (!ok) throw new Error("sendBeacon falhou");
+    } catch (err) {
+      console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
       fetch("https://officeexpress.onrender.com/api/logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          acao: "etapa",
-          nome,
-          etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-          timestamp: new Date().toISOString()
-        }),
+        body: payload,
         keepalive: true
       });
-    };
+    }
+  };
 
-    window.handleVisibilityChange = function () {
-      if (document.visibilityState === "hidden" && rastreioLiberado) {
-        enviarLogAbandono();
-      }
-    };
+  window.handleVisibilityChange = function () {
+    console.log("👀 visibilitychange =", document.visibilityState);
+    if (document.visibilityState === "hidden" && rastreioLiberado) {
+      enviarLogAbandono();
+    }
+  };
 
-    window.addEventListener("unload", enviarLogAbandono);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-  })();
+  window.addEventListener("unload", () => {
+    console.log("💥 unload disparado");
+    enviarLogAbandono();
+  });
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 </script>
 </body>
 </html>

@@ -197,17 +197,23 @@ const formData = new FormData();
 formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
 formData.append("telefone", dados.telefone || "");
 
-      try {
-        await fetch("https://officeexpress.onrender.com/api/upload", {
-          method: "POST",
-          body: formData
-        });
-        localStorage.removeItem("curriculoParaEnviar");
-        window.location.href = "pagamento.html";
-      } catch (err) {
-        alert("Erro ao enviar PDF. Tente novamente.");
-        console.error(err);
-      }
+try {
+  await fetch("https://officeexpress.onrender.com/api/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  localStorage.removeItem("curriculoParaEnviar");
+
+  // ✅ Marca as flags para rastreio da próxima página
+  localStorage.setItem("entradaViaSplash", "true");
+  localStorage.setItem("navegandoInternamente", "false");
+
+  window.location.href = "pagamento.html";
+} catch (err) {
+  alert("Erro ao enviar PDF. Tente novamente.");
+  console.error(err);
+} 
     }
 
     setTimeout(enviarCurriculo, 2000);
