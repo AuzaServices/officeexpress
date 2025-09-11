@@ -326,66 +326,80 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
   </script>
 <script>
-(function () {
-  const inicio = Date.now();
-  const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  let etapaAtual = "Visualizou"; // ← personalize conforme a etapa
-  let logEnviado = false;
+  // Log inicial para diagnóstico
+  console.log("📍 Rastreamento iniciado");
+  console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
+  console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
 
-  // Verifica se o usuário veio da splash.html
-  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-  localStorage.removeItem("entradaViaSplash");
-
-  // Lê a flag de navegação interna
-  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-  localStorage.removeItem("navegandoInternamente");
-
-  // Detecta cliques em links internos (fallback)
-  document.addEventListener("click", (e) => {
-    const el = e.target.closest("a");
-    if (el && el.href && el.href.includes(window.location.origin)) {
-      navegandoInternamente = true;
-      console.log("➡️ Navegação interna detectada via clique");
-    }
+  // Log de acesso à etapa
+  fetch("https://officeexpress.onrender.com/api/logs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      acao: "etapa",
+      nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
+      etapa: "Visualizou",
+      timestamp: new Date().toISOString()
+    })
   });
 
-  // Buffer de segurança para evitar disparo precoce
-  let rastreioLiberado = false;
-  setTimeout(() => { rastreioLiberado = true }, 300);
+  (function () {
+    const inicio = Date.now();
+    const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+    let etapaAtual = "Visualizou";
+    let logEnviado = false;
 
-  function enviarLogAbandono() {
-    if (logEnviado || !entradaViaSplash || navegandoInternamente) {
-      console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
-      return;
-    }
+    // Lê e remove as flags
+    let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+    localStorage.removeItem("entradaViaSplash");
 
-    logEnviado = true;
-    const tempo = Math.round((Date.now() - inicio) / 1000);
-    console.log("🔥 Enviando log de abandono após", tempo, "segundos");
+    let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+    localStorage.removeItem("navegandoInternamente");
 
-    fetch("https://officeexpress.onrender.com/api/logs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        acao: "etapa",
-        nome,
-        etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-        timestamp: new Date().toISOString()
-      }),
-      keepalive: true
+    // Detecta cliques em links internos
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest("a");
+      if (el && el.href && el.href.includes(window.location.origin)) {
+        navegandoInternamente = true;
+        console.log("➡️ Navegação interna detectada via clique");
+      }
     });
-  }
 
-  // Dispara ao fechar aba ou recarregar
-  window.addEventListener("unload", enviarLogAbandono);
+    // Buffer de segurança
+    let rastreioLiberado = false;
+    setTimeout(() => { rastreioLiberado = true }, 300);
 
-  // Dispara ao trocar de aba ou minimizar (com buffer)
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden" && rastreioLiberado) {
-      enviarLogAbandono();
+    function enviarLogAbandono() {
+      if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+        console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
+        return;
+      }
+
+      logEnviado = true;
+      const tempo = Math.round((Date.now() - inicio) / 1000);
+      console.log("🚨 Disparando log de abandono após", tempo, "segundos");
+
+      fetch("https://officeexpress.onrender.com/api/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          acao: "etapa",
+          nome,
+          etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+          timestamp: new Date().toISOString()
+        }),
+        keepalive: true
+      });
     }
-  });
-})();
+
+    // Eventos de abandono
+    window.addEventListener("unload", enviarLogAbandono);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden" && rastreioLiberado) {
+        enviarLogAbandono();
+      }
+    });
+  })();
 </script>
 </body>
 </html>
