@@ -66,74 +66,75 @@
 
       </div>
 
-      <!-- Etapa 2 -->
-      <div class="etapa">
-<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-  <label for="email">Email</label>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="email" name="email" id="email" required />
+      <!-- Etapa 2A — Contato -->
+<div class="etapa">
+  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+    <label for="email">Email</label>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <input type="email" name="email" id="email" required />
+    </div>
   </div>
-</div>
-        <label>Telefones</label>
-        <div id="telefones">
-          <input type="text" name="telefone[]" />
-        </div>
-        <button type="button" class="sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
 
-<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-  <label for="endereco">Endereço (Rua)</label>
-<div style="display: flex; align-items: center; gap: 10px;">
-  <input type="text" id="endereco" name="endereco" placeholder="Endereço completo" />
-  <button type="button" onclick="reconhecerCampo('endereco')" style="background: none; border: none; cursor: pointer;">
-    <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
-  </button>
-</div>
-</div>
-
-        <label>Número</label>
-        <input type="text" name="numero" />
-
-<!-- Complemento (opcional) -->
-<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-  <label for="complemento">Complemento <span style="font-weight: normal; color: #666;">(opcional)</span></label>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="text" name="complemento" id="complemento" />
-    <button type="button" onclick="reconhecerCampo('complemento')" style="background: none; border: none; cursor: pointer;">
-      <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-    </button>
+  <label>Telefones</label>
+  <div id="telefones">
+    <input type="text" name="telefone[]" />
   </div>
+  <button type="button" class="sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
 </div>
 
-<!-- Bairro -->
-<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-  <label for="bairro">Bairro</label>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="text" name="bairro" id="bairro" />
-    <button type="button" onclick="reconhecerCampo('bairro')" style="background: none; border: none; cursor: pointer;">
-      <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-    </button>
+<!-- Etapa 2B — Endereço -->
+<div class="etapa">
+  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+    <label for="endereco">Endereço (Rua)</label>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <input type="text" id="endereco" name="endereco" placeholder="Endereço completo" />
+      <button type="button" onclick="reconhecerCampo('endereco')" style="background: none; border: none; cursor: pointer;">
+        <img src="https://i.imgur.com/K0t5Kh1.png" alt="Microfone" style="width: 24px;" />
+      </button>
+    </div>
   </div>
-</div>
 
-<!-- Cidade -->
-<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-  <label for="cidade">Cidade</label>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="text" name="cidade" id="cidade" />
-    <button type="button" onclick="reconhecerCampo('cidade')" style="background: none; border: none; cursor: pointer;">
-      <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-    </button>
+  <label>Número</label>
+  <input type="text" name="numero" />
+
+  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+    <label for="complemento">Complemento <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <input type="text" name="complemento" id="complemento" />
+      <button type="button" onclick="reconhecerCampo('complemento')" style="background: none; border: none; cursor: pointer;">
+        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+      </button>
+    </div>
   </div>
-</div>
 
-        <label>CEP</label>
-        <input type="text" name="cep" />
-        <small style="display:block; margin-top:6px;">
-          <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" style="color:#00324a; text-decoration:underline;">
-            Não sabe seu CEP? Clique aqui para buscar no site dos Correios
-          </a>
-        </small>
-      </div>
+  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+    <label for="bairro">Bairro</label>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <input type="text" name="bairro" id="bairro" />
+      <button type="button" onclick="reconhecerCampo('bairro')" style="background: none; border: none; cursor: pointer;">
+        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+      </button>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+    <label for="cidade">Cidade</label>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <input type="text" name="cidade" id="cidade" />
+      <button type="button" onclick="reconhecerCampo('cidade')" style="background: none; border: none; cursor: pointer;">
+        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+      </button>
+    </div>
+  </div>
+
+  <label>CEP</label>
+  <input type="text" name="cep" />
+  <small style="display:block; margin-top:6px;">
+    <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" style="color:#00324a; text-decoration:underline;">
+      Não sabe seu CEP? Clique aqui para buscar no site dos Correios
+    </a>
+  </small>
+</div>
 
       <!-- Etapa 3 -->
       <div class="etapa">
@@ -304,8 +305,7 @@ Você está a um clique de transformar sua história profissional. <strong>Final
     "Rute", "Sabrina", "Salete", "Samuel", "Sandra", "Sandro", "Sebastião", "Selma", "Sérgio", "Silvana", "Silvia",
     "Simão", "Solange", "Sueli", "Tadeu", "Talita", "Tamara", "Tatiana", "Telma", "Teresa", "Tiago", "Túlio", "Valdemar",
     "Valdir", "Valmir", "Vanda", "Vânia", "Vicente", "Vilma", "Vinicius", "Virgínia", "Vitor", "Vivian", "Wagner", "Walter",
-    "Wellington", "Willian", "Yara", "Yuri", "Zélia", "Zenaide", "Zilda", "Zuleide",
-    // Adicionando mais nomes fictícios para completar 500
+    "Wellington", "Willian", "Yara", "Yuri", "Zélia", "Zenaide", "Zilda", "Zuleide"
   ];
 
   const acoes = ["Começou agora", "Está fazendo", "Terminou"];
@@ -341,7 +341,24 @@ Você está a um clique de transformar sua história profissional. <strong>Final
     }, tempoAtual);
   }
 
-  gerarNotificacao();
+  // Exibe primeiro a notificação com o nome do usuário
+  const nomeUsuario = localStorage.getItem("nomeUsuario");
+  if (nomeUsuario) {
+    const div = document.createElement("div");
+    div.classList.add("notificacao");
+    div.textContent = `${nomeUsuario} começou agora o currículo.`;
+    container.appendChild(div);
+    nomesUsados.add(nomeUsuario);
+
+    // Aguarda o tempo da primeira notificação antes de iniciar o ciclo
+    setTimeout(() => {
+      div.remove();
+      gerarNotificacao();
+    }, tempos[0]); // espera 7000ms antes de iniciar o ciclo
+  } else {
+    // Se não tiver nome, inicia direto
+    gerarNotificacao();
+  }
 </script>
 <script>
 function limparPontuacaoFinal(texto) {
