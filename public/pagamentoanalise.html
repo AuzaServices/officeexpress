@@ -1,121 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Pagamento da Análise | Office Express</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="icon.png" type="image/png" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Última Chance | Office Express</title>
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* mesmo estilo do analise.html */
     body {
-      background: linear-gradient(to right, #f4f7fa, #e9eff5);
+      background: linear-gradient(to right, #001f33, #00324a);
       font-family: 'Segoe UI', sans-serif;
-      padding: 40px 20px;
-      overflow-x: hidden;
     }
-
-    .card {
-      max-width: 500px;
-      margin: auto;
-      background-color: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
-      padding: 30px;
-      text-align: center;
-      animation: slideUp 0.8s ease-out;
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-      font-size: 2.2rem;
-      color: #00324a;
-      margin-bottom: 10px;
-    }
-
-    .subtitle {
-      font-size: 1rem;
-      color: #555;
-      margin-bottom: 20px;
-    }
-
-    .pix-info {
-      font-size: 1.1rem;
-      margin-bottom: 20px;
-    }
-
-    .pix-label {
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .pix-input {
-      font-weight: bold;
-      color: #0056b3;
-      background-color: #eef6ff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 10px;
-      text-align: center;
-      width: 100%;
-      font-size: 1rem;
-      transition: box-shadow 0.3s ease;
-    }
-
-    .pix-input:focus {
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-      outline: none;
-    }
-
-    .btn {
-      font-size: 1.1rem;
-      padding: 12px 20px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .btn-outline-primary:hover {
-      background-color: #0056b3;
-      color: #fff;
-    }
-
-    .btn-success:hover {
-      background-color: #218838;
-    }
-
-    #pdf {
-      margin-top: 30px;
-      display: none;
-      animation: fadeIn 0.5s ease-in-out forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    #particles-js {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      background-color: var(--background);
-    }
-
     .toast {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: #0056b3;
-      color: #fff;
+      background-color: #ff8800;
+      color: #00324a;
       padding: 12px 20px;
       border-radius: 8px;
       font-size: 0.95rem;
@@ -126,47 +28,60 @@
     }
   </style>
 </head>
-<body>
-  <div id="particles-js"></div>
-  <div class="card">
-    <h2>Confirme Seu Pagamento</h2>
-    <p class="subtitle">Seu currículo já foi analisado e está pronto. Agora é só confirmar o pagamento para receber o Relatório completo.</p>
+<body class="relative py-20 px-4 text-white">
+  <div id="particles-js" class="absolute inset-0 -z-10"></div>
 
-    <div class="pix-info">
-      <p><strong>Valor:</strong> R$2,00</p>
-      <p class="pix-label">Chave Pix:</p>
-      <input 
-        type="text" 
-        id="pix" 
-        class="pix-input" 
-        value="00020126430014BR.GOV.BCB.PIX0121andrielysom@gmail.com52040000530398654042.005802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63042FFD" 
-        readonly
-      >
+  <section class="max-w-4xl mx-auto text-center">
+    <h2 class="text-5xl font-black mb-6 font-['Anton']">
+      ÚLTIMA <span class="text-red-500">CHANCE</span>
+    </h2>
+    <p class="text-xl text-white/80 mb-4">Ou você continua mandando currículos sem resposta...</p>
+    <p class="text-2xl text-[#ff8800] font-bold mb-8">Ou decide AGORA melhorar seu currículo com uma análise profissional</p>
+
+    <div class="bg-black/80 border border-[#E7C75F]/50 rounded-xl p-6 mb-8">
+      <div class="flex justify-center items-center space-x-4 mb-4">
+        <span class="text-3xl text-white/50 line-through">R$8,00</span>
+        <span class="text-6xl font-black text-[#ff8800] font-['Anton'] animate-pulse">R$2,00</span>
+      </div>
+      <p class="text-green-400 font-semibold mb-2">HOJE APENAS</p>
+      <p class="text-white/60 text-sm">Valor promocional para os primeiros 100 currículos analisados nesta semana</p>
     </div>
 
-    <div class="d-grid gap-3 mb-4">
-      <button onclick="copiarPix()" class="btn btn-outline-primary">📋 Copiar chave Pix</button>
-    </div>
+    <input type="text" id="pix" readonly
+      class="w-full text-center font-bold text-[#0056b3] bg-[#eef6ff] border border-gray-300 rounded-lg py-3 mb-4"
+      value="00020126430014BR.GOV.BCB.PIX0121andrielysom@gmail.com52040000530398654042.005802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63042FFD" />
 
-    <p class="mb-3">Depois de pagar, clique abaixo para liberar o acesso ao seu Relatório:</p>
-    <div class="d-grid gap-3">
-      <button onclick="liberarPDF()" class="btn btn-success">✅ Já paguei — quero meu Relatório</button>
-    </div>
+    <button onclick="copiarPix()" class="w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
+      Copiar chave Pix
+    </button>
 
-    <div id="pdf">
-      <hr>
-      <p class="mt-4" style="font-size: 1rem; color: #00324a;">
-        Parabéns! Sua Análise está pronta. Clique abaixo para receber o Relatório via WhatsApp:
-      </p>
-      <a
-        href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20de%20R$2,00%20e%20quero%20receber%20meu%20relatório%20em%20PDF."
-        target="_blank"
-        class="btn btn-outline-success"
-      >
-        Pedir Relatório via WhatsApp
+    <button onclick="liberarPDF()" class="w-full bg-gradient-to-r from-[#E7C75F] to-[#d4b84a] text-black font-black text-xl py-4 rounded-lg hover:from-green-600 hover:to-green-700 hover:text-white transition transform hover:scale-105 shadow-2xl">
+      ✅ Já paguei — quero minha Análise
+    </button>
+
+    <div id="pdf" class="mt-8 hidden">
+      <p class="text-lg mt-4">Parabéns! Sua análise profissional está pronta.</p>
+      <a href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20de%20R$2,00%20e%20quero%20receber%20minha%20análise%20profissional%20em%20PDF."
+         target="_blank"
+         class="block mt-4 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
+        Receber Análise pelo WhatsApp
       </a>
     </div>
-  </div>
+
+    <div class="mt-6 text-sm text-white/60 space-y-2">
+      <div class="flex justify-center gap-4">
+        <span>🔒 Pagamento 100% seguro</span>
+        <span>⚡ Entrega imediata</span>
+        <span>🛡️ Garantia de 7 dias</span>
+      </div>
+      <p class="mt-4">Mais de <span class="text-[#ff8800] font-bold">10.000 pessoas</span> já melhoraram seus currículos com a Office Express</p>
+      <p class="text-red-400 font-bold">Não seja mais um que fica esperando a sorte bater na porta...</p>
+    </div>
+  </section>
+
+  <footer class="mt-20 pt-8 text-center text-sm text-white/60">
+    <p class="mt-4 text-[#E7C75F] font-bold">Office Express © 2025 - Todos os direitos reservados</p>
+  </footer>
 
   <script>
     function copiarPix() {
@@ -212,9 +127,34 @@
         }
       },
       background: {
-        color: { value: "#f4f7fa" }
+        color: { value: "transparent" }
       }
     });
+
+    // Facebook Pixel
+    !function(f,b,e,v,n,t,s){
+      if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)
+    }(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+
+    fbq('init', 'YOUR_PIXEL_ID'); // substitua pelo seu ID real
+    fbq('track', 'ViewContent', {
+      value: 2.00,
+      currency: 'BRL'
+    });
+    fbq('track', 'InitiateCheckout', {
+      value: 2.00,
+      currency: 'BRL'
+    });
   </script>
+
+  <noscript>
+    <img height="1" width="1" style="display:none"
+         src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/>
+  </noscript>
 </body>
 </html>
