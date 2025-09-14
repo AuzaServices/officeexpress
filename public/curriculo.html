@@ -678,6 +678,7 @@ fetch("https://officeexpress.onrender.com/api/logs", {
 
 </script>
 <script>
+let uploadEmAndamento = false;
 (function () {
   const inicio = Date.now();
   const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
@@ -710,11 +711,11 @@ fetch("https://officeexpress.onrender.com/api/logs", {
     });
   };
 
-  window.handleVisibilityChange = function () {
-    if (document.visibilityState === "hidden" && rastreioLiberado) {
-      enviarLogAbandono();
-    }
-  };
+window.handleVisibilityChange = function () {
+  if (document.visibilityState === "hidden" && rastreioLiberado && !uploadEmAndamento) {
+    enviarLogAbandono();
+  }
+};
 
   window.addEventListener("unload", enviarLogAbandono);
   document.addEventListener("visibilitychange", handleVisibilityChange);

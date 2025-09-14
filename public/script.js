@@ -104,7 +104,10 @@ function salvar(dados) {
   const inputFoto = document.getElementById("foto");
   const preview = document.getElementById("preview-miniatura");
 
-  uploadBox.addEventListener("click", () => inputFoto.click());
+  uploadBox.addEventListener("click", () => {
+  uploadEmAndamento = true;
+  inputFoto.click();
+});
 
   ["dragenter", "dragover"].forEach(eventName => {
     dropArea.addEventListener(eventName, e => {
@@ -130,10 +133,11 @@ function salvar(dados) {
     }
   });
 
-  inputFoto.addEventListener("change", () => {
-    const file = inputFoto.files[0];
-    if (file) mostrarPreview(file);
-  });
+inputFoto.addEventListener("change", () => {
+  uploadEmAndamento = false;
+  const file = inputFoto.files[0];
+  if (file) mostrarPreview(file);
+});
 
   function mostrarPreview(file) {
     const reader = new FileReader();
