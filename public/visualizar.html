@@ -349,11 +349,9 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   let etapaAtual = "Visualizou";
   let logEnviado = false;
 
+  // ✅ Mantém as flags sem remover ainda
   let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-  localStorage.removeItem("entradaViaSplash");
-
   let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-  localStorage.removeItem("navegandoInternamente");
 
   document.addEventListener("click", (e) => {
     const el = e.target.closest("a");
@@ -367,36 +365,36 @@ fetch("https://officeexpress.onrender.com/api/logs", {
   setTimeout(() => { rastreioLiberado = true }, 300);
 
   window.enviarLogAbandono = function () {
-  if (logEnviado || !entradaViaSplash || navegandoInternamente) {
-    console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
-    return;
-  }
+    if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+      console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
+      return;
+    }
 
-  logEnviado = true;
-  const tempo = Math.round((Date.now() - inicio) / 1000);
-  console.log("🚨 Disparando log de abandono após", tempo, "segundos");
+    logEnviado = true;
+    const tempo = Math.round((Date.now() - inicio) / 1000);
+    console.log("🚨 Disparando log de abandono após", tempo, "segundos");
 
-  const payload = JSON.stringify({
-    acao: "etapa",
-    nome,
-    etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-    timestamp: new Date().toISOString()
-  });
-
-  try {
-    const blob = new Blob([payload], { type: "application/json" });
-    const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
-    if (!ok) throw new Error("sendBeacon falhou");
-  } catch (err) {
-    console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
-    fetch("https://officeexpress.onrender.com/api/logs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload,
-      keepalive: true
+    const payload = JSON.stringify({
+      acao: "etapa",
+      nome,
+      etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+      timestamp: new Date().toISOString()
     });
-  }
-};
+
+    try {
+      const blob = new Blob([payload], { type: "application/json" });
+      const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
+      if (!ok) throw new Error("sendBeacon falhou");
+    } catch (err) {
+      console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
+      fetch("https://officeexpress.onrender.com/api/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true
+      });
+    }
+  };
 
   window.handleVisibilityChange = function () {
     console.log("👀 visibilitychange =", document.visibilityState);

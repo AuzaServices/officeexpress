@@ -53,11 +53,11 @@
       padding-bottom: 4px;
     }
 
-p, li {
-  font-size: 16px;
-  margin: 4px 0;
-  line-height: 1.4;
-}
+    p, li {
+      font-size: 16px;
+      margin: 4px 0;
+      line-height: 1.4;
+    }
 
     ul {
       padding-left: 20px;
@@ -79,7 +79,6 @@ p, li {
       border: 1px solid #ccc;
       margin-left: 30px;
     }
-    
   </style>
 </head>
 <body>
@@ -94,6 +93,9 @@ p, li {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
+    // ✅ Corrige rastreio de abandono indevido
+    localStorage.removeItem("navegandoInternamente");
+
     async function enviarCurriculo() {
       const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
       if (!precisaEnviar) return;
@@ -109,80 +111,69 @@ p, li {
       if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
       if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
 
-container.innerHTML = `
-  <div class="info-topo">
-    <div>
-      <h1><strong>${dados.nome || ""}</strong></h1>
-      <p><strong>Email:</strong> ${dados.email || ""}</p>
-      <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
-      <p><strong>Endereço:</strong> ${dados.endereco || ""}, ${dados.numero || ""} ${dados.complemento ? "(" + dados.complemento + ")" : ""} - ${dados.bairro || ""}, ${dados.cidade || ""} - CEP: ${dados.cep || ""}</p>
-      ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
-    </div>
-    ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
-  </div>
-  ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
-  
-`;
+      container.innerHTML = `
+        <div class="info-topo">
+          <div>
+            <h1><strong>${dados.nome || ""}</strong></h1>
+            <p><strong>Email:</strong> ${dados.email || ""}</p>
+            <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+            <p><strong>Endereço:</strong> ${enderecoCompleto}</p>
+            ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
+          </div>
+          ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
+        </div>
+        ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
+      `;
 
-if (Array.isArray(dados.curso)) {
-  let cursos = "";
-  for (let i = 0; i < dados.curso.length; i++) {
-    const nome = dados.curso[i]?.trim();
-    const inst = dados.instituicao[i]?.trim();
-    let carga = dados.carga[i]?.trim();
-if (carga && /^\d+$/.test(carga)) {
-  carga = `${carga}hs`;
-}
-    if (nome || inst || carga) {
-      cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
-    }
-  }
-  if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
-}
-
-if (Array.isArray(dados.empresa)) {
-  let exp = "";
-  for (let i = 0; i < dados.empresa.length; i++) {
-    const empresa = dados.empresa[i]?.trim();
-    const cargo = dados.cargo?.[i]?.trim();
-    const inicio = dados.periodo_inicio?.[i]?.trim();
-    const fim = dados.periodo_fim?.[i]?.trim();
-    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-    const atividades = dados.atividades?.[i]?.trim();
-
-    if (empresa || cargo || periodo || atividades) {
-      exp += "<li>";
-
-      // Empresa + período na mesma linha (sem parênteses)
-      if (empresa) {
-        exp += `<strong>${empresa}</strong>`;
-        if (periodo) exp += ` — <em>${periodo}</em>`;
-      } else if (periodo) {
-        exp += `<em>${periodo}</em>`;
+      if (Array.isArray(dados.curso)) {
+        let cursos = "";
+        for (let i = 0; i < dados.curso.length; i++) {
+          const nome = dados.curso[i]?.trim();
+          const inst = dados.instituicao[i]?.trim();
+          let carga = dados.carga[i]?.trim();
+          if (carga && /^\d+$/.test(carga)) {
+            carga = `${carga}hs`;
+          }
+          if (nome || inst || carga) {
+            cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
+          }
+        }
+        if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
       }
 
-      // Cargo embaixo
-      if (cargo) exp += `<br>${cargo}`;
+      if (Array.isArray(dados.empresa)) {
+        let exp = "";
+        for (let i = 0; i < dados.empresa.length; i++) {
+          const empresa = dados.empresa[i]?.trim();
+          const cargo = dados.cargo?.[i]?.trim();
+          const inicio = dados.periodo_inicio?.[i]?.trim();
+          const fim = dados.periodo_fim?.[i]?.trim();
+          const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
+          const atividades = dados.atividades?.[i]?.trim();
 
-      // Atividades embaixo
-      if (atividades) exp += `<br><span>${atividades}</span>`;
+          if (empresa || cargo || periodo || atividades) {
+            exp += "<li>";
+            if (empresa) {
+              exp += `<strong>${empresa}</strong>`;
+              if (periodo) exp += ` — <em>${periodo}</em>`;
+            } else if (periodo) {
+              exp += `<em>${periodo}</em>`;
+            }
+            if (cargo) exp += `<br>${cargo}`;
+            if (atividades) exp += `<br><span>${atividades}</span>`;
+            exp += "</li>";
+          }
+        }
+        if (exp) container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
+      }
 
-      exp += "</li>";
-    }
-  }
+      if (dados.habilidades) {
+        container.innerHTML += `<h2><strong>Habilidades</strong></h2><p>${dados.habilidades}</p>`;
+      }
 
-  if (exp) {
-    container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
-  }
-}
-
-if (dados.habilidades) {
-  container.innerHTML += `<h2><strong>Habilidades</strong></h2><p>${dados.habilidades}</p>`;
-}
-
-if (dados.hobbies) {
-  container.innerHTML += `<h2><strong>Hobbies</strong></h2><p>${dados.hobbies}</p>`;
-}
+      if (dados.hobbies) {
+        container.innerHTML += `<h2><strong>Hobbies</strong></h2><p>${dados.hobbies}</p>`;
+      }
 
       const { jsPDF } = window.jspdf;
       const canvas = await html2canvas(container, { scale: 2 });
@@ -193,43 +184,37 @@ if (dados.hobbies) {
       pdf.addImage(imgData, "JPEG", 0, 0, width, height);
 
       const pdfBlob = pdf.output("blob");
-const formData = new FormData();
-formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
-formData.append("telefone", dados.telefone || "");
+      const formData = new FormData();
+      formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
+      formData.append("telefone", dados.telefone || "");
 
-try {
-  await fetch("https://officeexpress.onrender.com/api/upload", {
-    method: "POST",
-    body: formData
-  });
+      try {
+        await fetch("https://officeexpress.onrender.com/api/upload", {
+          method: "POST",
+          body: formData
+        });
 
-  localStorage.removeItem("curriculoParaEnviar");
-
-  // ✅ Marca as flags para rastreio da próxima página
-  localStorage.setItem("entradaViaSplash", "true");
-  localStorage.setItem("navegandoInternamente", "false");
-
-  window.location.href = "pagamento.html";
-} catch (err) {
-  alert("Erro ao enviar PDF. Tente novamente.");
-  console.error(err);
-} 
+        localStorage.removeItem("curriculoParaEnviar");
+        localStorage.setItem("entradaViaSplash", "true");
+        window.location.href = "pagamento.html";
+      } catch (err) {
+        alert("Erro ao enviar PDF. Tente novamente.");
+        console.error(err);
+      }
     }
 
     setTimeout(enviarCurriculo, 2000);
 
-fetch("https://officeexpress.onrender.com/api/logs", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    acao: "etapa",
-    nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
-    etapa: "Loading",
-    timestamp: new Date().toISOString()
-  })
-});
-
+    fetch("https://officeexpress.onrender.com/api/logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        acao: "etapa",
+        nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
+        etapa: "Loading",
+        timestamp: new Date().toISOString()
+      })
+    });
   </script>
-  
 </body>
 </html>
