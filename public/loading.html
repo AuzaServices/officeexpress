@@ -181,7 +181,20 @@
       const pdf = new jsPDF("p", "mm", "a4");
       const width = pdf.internal.pageSize.getWidth();
       const height = canvas.height * (width / canvas.width);
-      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+      const pageHeight = pdf.internal.pageSize.getHeight();
+let position = 0;
+
+if (height <= pageHeight) {
+  // Conteúdo cabe em uma página
+  pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+} else {
+  // Conteúdo excede uma página — divide em várias
+  while (position < height) {
+    pdf.addImage(imgData, "JPEG", 0, -position, width, height);
+    position += pageHeight;
+    if (position < height) pdf.addPage();
+  }
+}
 
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();

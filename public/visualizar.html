@@ -255,24 +255,34 @@ if (Array.isArray(dados.empresa)) {
 }
 
     async function gerarPDF() {
-      const { jsPDF } = window.jspdf;
-      const element = document.getElementById("curriculo");
+const { jsPDF } = window.jspdf;
+const element = document.getElementById("curriculo");
+const canvas = await html2canvas(element, { scale: 2 });
+const imgData = canvas.toDataURL("image/jpeg", 1.0);
 
-      const clone = element.cloneNode(true);
-      clone.style.transform = "none";
-      clone.style.position = "absolute";
-      clone.style.left = "-10000px";
-      document.body.appendChild(clone);
+const pdf = new jsPDF("p", "mm", "a4");
+const pageWidth = pdf.internal.pageSize.getWidth();
+const pageHeight = pdf.internal.pageSize.getHeight();
 
-      const canvas = await html2canvas(clone, { scale: 2 });
-      document.body.removeChild(clone);
+// Calcula proporção da imagem
+const imgWidth = pageWidth;
+const imgHeight = canvas.height * (imgWidth / canvas.width);
 
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      const pdf = new jsPDF("p", "mm", "a4");
-      const width = pdf.internal.pageSize.getWidth();
-      const height = canvas.height * (width / canvas.width);
-      pdf.addImage(imgData, "JPEG", 0, 0, width, height);
-      pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
+let position = 0;
+
+// Se a imagem couber em uma página, insere direto
+if (imgHeight <= pageHeight) {
+  pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+} else {
+  // Divide em múltiplas páginas
+  while (position < imgHeight) {
+    pdf.addImage(imgData, "JPEG", 0, -position, imgWidth, imgHeight);
+    position += pageHeight;
+    if (position < imgHeight) pdf.addPage();
+  }
+}
+
+pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
     }
 
 if (Array.isArray(dados.curso)) {
