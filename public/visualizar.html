@@ -96,28 +96,28 @@ p, li {
       margin-top: 10px;
     }
 
-    .botoes {
-      margin-top: -650px;
-      margin-left: -470px;
-      text-align: center;
-      width: 100%;
-    }
+.botoes {
+  margin-top: 20px;
+  text-align: center;
+  z-index: 10;
+  position: relative;
+}
 
-    .botoes button {
-      background-color: #00324a;
-      color: white;
-      padding: 5px 10px;
-      font-size: 12px;
-      border: none;
-      border-radius: 10px;
-      margin: 10px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+.botoes button {
+  background-color: #00324a;
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 10px;
+  margin: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
 
-    .botoes button:hover {
-      background-color: #005066;
-    }
+.botoes button:hover {
+  background-color: #005066;
+}
 
     #preview-miniatura {
       width: 80px;
@@ -155,22 +155,21 @@ p, li {
 <div id="secao-hobbies"></div>
         </div>
 
-        <div class="botoes">
-          <button onclick="voltarParaCurriculo()">Voltar</button>
-          <script>function voltarParaCurriculo() {
-  localStorage.setItem("entradaViaSplash", "true");
-  localStorage.setItem("navegandoInternamente", "true");
-
-  window.removeEventListener("unload", enviarLogAbandono);
-  document.removeEventListener("visibilitychange", handleVisibilityChange);
-
-  history.back();
-}</script>
-          <button onclick="redirecionarParaLoading()">Gerar PDF</button>
-        </div>
+<div class="wrapper">
+  <div class="preview-container">
+    <div class="preview-block">
+      <div class="a4" id="curriculo">
+        <!-- conteúdo do currículo -->
       </div>
     </div>
   </div>
+</div>
+
+<!-- ✅ Botões fora da área escalada -->
+<div class="botoes">
+  <button onclick="voltarParaCurriculo()">Voltar</button>
+  <button onclick="redirecionarParaLoading()">Gerar PDF</button>
+</div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
