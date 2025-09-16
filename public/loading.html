@@ -93,7 +93,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    // ✅ Corrige rastreio de abandono indevido
     localStorage.removeItem("navegandoInternamente");
 
     async function enviarCurriculo() {
@@ -179,39 +178,28 @@
       const canvas = await html2canvas(container, { scale: 2 });
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
-      const width = pdf.internal.pageSize.getWidth();
-      const height = canvas.height * (width / canvas.width);
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-let position = 0;
+      const marginX = 10;
+      const marginY = 10;
+      const usableWidth = pageWidth - marginX * 2;
+      const usableHeight = canvas.height * (usableWidth / canvas.width);
 
-if (height <= pageHeight) {
-  // Conteúdo cabe em uma página
-  const pageHeight = pdf.internal.pageSize.getHeight();
-const pageWidth = pdf.internal.pageSize.getWidth();
-const marginX = 10; // margem lateral
-const marginY = 10; // margem superior/inferior
-const usableWidth = pageWidth - marginX * 2;
-const usableHeight = canvas.height * (usableWidth / canvas.width);
+      let position = 0;
 
-let position = 0;
-
-if (usableHeight <= pageHeight - marginY * 2) {
-  pdf.addImage(imgData, "JPEG", marginX, marginY, usableWidth, usableHeight);
-} else {
-  while (position < usableHeight) {
-    pdf.addImage(imgData, "JPEG", marginX, marginY - position, usableWidth, usableHeight);
-    position += pageHeight - marginY * 2;
-    if (position < usableHeight) pdf.addPage();
-  }
-}
-} else {
-  // Conteúdo excede uma página — divide em várias
-  while (position < height) {
-    pdf.addImage(imgData, "JPEG", 0, -position, width, height);
-    position += pageHeight;
-    if (position < height) pdf.addPage();
-  }
-}
+      while (position < usableHeight) {
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          marginX,
+          marginY - position,
+          usableWidth,
+          usableHeight
+        );
+        position += pageHeight - marginY * 2;
+        if (position < usableHeight) pdf.addPage();
+      }
 
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
