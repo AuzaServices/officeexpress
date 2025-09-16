@@ -176,7 +176,6 @@
 
 const { jsPDF } = window.jspdf;
 const canvas = await html2canvas(container, { scale: 2 });
-const imgData = canvas.toDataURL("image/jpeg", 1.0);
 const pdf = new jsPDF("p", "mm", "a4");
 
 const pageWidth = pdf.internal.pageSize.getWidth();
@@ -186,31 +185,38 @@ const marginY = 10;
 const usableWidth = pageWidth - marginX * 2;
 const usableHeight = pageHeight - marginY * 2;
 
+// Calcula proporção da imagem
 const imgWidth = usableWidth;
 const imgHeight = canvas.height * (imgWidth / canvas.width);
+
+// Cria canvas por página
 const totalPages = Math.ceil(imgHeight / usableHeight);
 
 for (let i = 0; i < totalPages; i++) {
   const pageCanvas = document.createElement("canvas");
   pageCanvas.width = canvas.width;
-  pageCanvas.height = canvas.height / totalPages;
+  const sliceHeight = Math.min(canvas.height - i * (usableHeight * canvas.height / imgHeight), (usableHeight * canvas.height / imgHeight));
+  pageCanvas.height = sliceHeight;
 
   const ctx = pageCanvas.getContext("2d");
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
   ctx.drawImage(
     canvas,
     0,
-    i * pageCanvas.height,
+    i * (usableHeight * canvas.height / imgHeight),
     canvas.width,
-    pageCanvas.height,
+    sliceHeight,
     0,
     0,
     canvas.width,
-    pageCanvas.height
+    sliceHeight
   );
 
-  const pageImgData = pageCanvas.toDataURL("image/jpeg", 1.0);
+  const imgData = pageCanvas.toDataURL("image/jpeg", 1.0);
   if (i > 0) pdf.addPage();
-  pdf.addImage(pageImgData, "JPEG", marginX, marginY, imgWidth, usableHeight);
+  pdf.addImage(imgData, "JPEG", marginX, marginY, imgWidth, sliceHeight * (imgWidth / canvas.width));
 }
 
       const pdfBlob = pdf.output("blob");
