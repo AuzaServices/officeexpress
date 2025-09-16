@@ -175,11 +175,20 @@
       }
 
 const { jsPDF } = window.jspdf;
-const canvas = await html2canvas(container, { scale: 2 });
+const hiddenWrapper = document.createElement("div");
+hiddenWrapper.style.position = "absolute";
+hiddenWrapper.style.top = "-9999px";
+hiddenWrapper.style.left = "-9999px";
+hiddenWrapper.style.width = "794px";
+hiddenWrapper.style.padding = "60px";
+hiddenWrapper.style.background = "white";
+hiddenWrapper.style.fontFamily = "Arial, sans-serif";
+hiddenWrapper.style.boxSizing = "border-box";
+hiddenWrapper.innerHTML = container.innerHTML;
+document.body.appendChild(hiddenWrapper);
 
-// ✅ Oculta o canvas para evitar tela preta
-canvas.style.display = "none";
-document.body.appendChild(canvas);
+const canvas = await html2canvas(hiddenWrapper, { scale: 2 });
+document.body.removeChild(hiddenWrapper); // ✅ remove antes de mostrar qualquer coisa
 
 const imgData = canvas.toDataURL("image/jpeg", 1.0);
 const pdf = new jsPDF("p", "mm", "a4");
@@ -193,7 +202,6 @@ const usableHeight = pageHeight - marginY * 2;
 
 const imgWidth = usableWidth;
 const imgHeight = canvas.height * (imgWidth / canvas.width);
-
 const totalPages = Math.ceil(imgHeight / usableHeight);
 
 for (let i = 0; i < totalPages; i++) {
@@ -218,9 +226,6 @@ for (let i = 0; i < totalPages; i++) {
   if (i > 0) pdf.addPage();
   pdf.addImage(pageImgData, "JPEG", marginX, marginY, imgWidth, usableHeight);
 }
-
-// ✅ Remove o canvas da tela
-document.body.removeChild(canvas);
 
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
