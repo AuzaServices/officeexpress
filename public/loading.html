@@ -191,29 +191,21 @@ const imgHeight = canvas.height * (imgWidth / canvas.width);
 const totalPages = Math.ceil(imgHeight / usableHeight);
 
 for (let i = 0; i < totalPages; i++) {
-  const sourceY = (i * usableHeight * canvas.height) / imgHeight;
-  const sourceHeight = (usableHeight * canvas.height) / imgHeight;
-
-  // Evita canvas com altura zero ou fora dos limites
-  if (sourceY + sourceHeight > canvas.height) {
-    sourceHeight = canvas.height - sourceY;
-  }
-
   const pageCanvas = document.createElement("canvas");
   pageCanvas.width = canvas.width;
-  pageCanvas.height = sourceHeight;
+  pageCanvas.height = canvas.height / totalPages;
 
   const ctx = pageCanvas.getContext("2d");
   ctx.drawImage(
     canvas,
     0,
-    sourceY,
+    i * pageCanvas.height,
     canvas.width,
-    sourceHeight,
+    pageCanvas.height,
     0,
     0,
     canvas.width,
-    sourceHeight
+    pageCanvas.height
   );
 
   const pageImgData = pageCanvas.toDataURL("image/jpeg", 1.0);
