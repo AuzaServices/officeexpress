@@ -175,21 +175,7 @@
       }
 
 const { jsPDF } = window.jspdf;
-const hiddenWrapper = document.createElement("div");
-hiddenWrapper.style.position = "absolute";
-hiddenWrapper.style.top = "-9999px";
-hiddenWrapper.style.left = "-9999px";
-hiddenWrapper.style.width = "794px";
-hiddenWrapper.style.padding = "60px";
-hiddenWrapper.style.background = "white";
-hiddenWrapper.style.fontFamily = "Arial, sans-serif";
-hiddenWrapper.style.boxSizing = "border-box";
-hiddenWrapper.innerHTML = container.innerHTML;
-document.body.appendChild(hiddenWrapper);
-
-const canvas = await html2canvas(hiddenWrapper, { scale: 2 });
-document.body.removeChild(hiddenWrapper); // ✅ remove antes de mostrar qualquer coisa
-
+const canvas = await html2canvas(container, { scale: 2 });
 const imgData = canvas.toDataURL("image/jpeg", 1.0);
 const pdf = new jsPDF("p", "mm", "a4");
 
@@ -205,21 +191,29 @@ const imgHeight = canvas.height * (imgWidth / canvas.width);
 const totalPages = Math.ceil(imgHeight / usableHeight);
 
 for (let i = 0; i < totalPages; i++) {
+  const sourceY = (i * usableHeight * canvas.height) / imgHeight;
+  const sourceHeight = (usableHeight * canvas.height) / imgHeight;
+
+  // Evita canvas com altura zero ou fora dos limites
+  if (sourceY + sourceHeight > canvas.height) {
+    sourceHeight = canvas.height - sourceY;
+  }
+
   const pageCanvas = document.createElement("canvas");
   pageCanvas.width = canvas.width;
-  pageCanvas.height = (usableHeight * canvas.width) / imgWidth;
+  pageCanvas.height = sourceHeight;
 
   const ctx = pageCanvas.getContext("2d");
   ctx.drawImage(
     canvas,
     0,
-    (i * usableHeight * canvas.height) / imgHeight,
+    sourceY,
     canvas.width,
-    (usableHeight * canvas.height) / imgHeight,
+    sourceHeight,
     0,
     0,
     canvas.width,
-    (usableHeight * canvas.height) / imgHeight
+    sourceHeight
   );
 
   const pageImgData = pageCanvas.toDataURL("image/jpeg", 1.0);
