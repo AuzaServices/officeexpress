@@ -174,32 +174,35 @@
         container.innerHTML += `<h2><strong>Hobbies</strong></h2><p>${dados.hobbies}</p>`;
       }
 
-      const { jsPDF } = window.jspdf;
-      const canvas = await html2canvas(container, { scale: 2 });
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      const pdf = new jsPDF("p", "mm", "a4");
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF("p", "mm", "a4");
+const pageWidth = pdf.internal.pageSize.getWidth();
+const pageHeight = pdf.internal.pageSize.getHeight();
+const marginX = 10;
+const marginY = 10;
+const usableWidth = pageWidth - marginX * 2;
 
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const marginX = 10;
-      const marginY = 10;
-      const usableWidth = pageWidth - marginX * 2;
-      const usableHeight = canvas.height * (usableWidth / canvas.width);
+const sections = Array.from(document.querySelectorAll("#curriculo > *"));
 
-      let position = 0;
+for (let i = 0; i < sections.length; i++) {
+  const clone = document.createElement("div");
+  clone.style.width = "794px";
+  clone.style.padding = "60px";
+  clone.style.background = "white";
+  clone.style.fontFamily = "Arial, sans-serif";
+  clone.style.boxSizing = "border-box";
+  clone.appendChild(sections[i].cloneNode(true));
+  document.body.appendChild(clone);
 
-      while (position < usableHeight) {
-        pdf.addImage(
-          imgData,
-          "JPEG",
-          marginX,
-          marginY - position,
-          usableWidth,
-          usableHeight
-        );
-        position += pageHeight - marginY * 2;
-        if (position < usableHeight) pdf.addPage();
-      }
+  const canvas = await html2canvas(clone, { scale: 2 });
+  const imgData = canvas.toDataURL("image/jpeg", 1.0);
+  const imgHeight = canvas.height * (usableWidth / canvas.width);
+
+  if (i > 0) pdf.addPage();
+  pdf.addImage(imgData, "JPEG", marginX, marginY, usableWidth, imgHeight);
+
+  document.body.removeChild(clone);
+}
 
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
