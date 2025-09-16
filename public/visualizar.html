@@ -180,7 +180,19 @@ if (Array.isArray(dados.empresa)) {
 document.body.appendChild(curriculo);
 
 (async () => {
-  const canvas = await html2canvas(curriculo, { scale: 2 });
+  const clone = curriculo.cloneNode(true);
+clone.style.transform = "none";
+clone.style.position = "absolute";
+clone.style.top = "-9999px";
+clone.style.left = "-9999px";
+clone.style.width = "794px";
+clone.style.padding = "60px";
+clone.style.background = "white";
+clone.style.boxSizing = "border-box";
+document.body.appendChild(clone);
+
+const canvas = await html2canvas(clone, { scale: 2 });
+document.body.removeChild(clone);
   const pageHeightPx = 1123;
   const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
