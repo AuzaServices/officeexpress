@@ -3,218 +3,158 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <link rel="icon" href="icon.png" type="image/png" />
+  <link rel="icon" href="icon.png" type="image/png" />
   <title>Visualização do Currículo</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      position: fixed;
       height: 100%;
       background-color: #eaeaea;
       font-family: "Segoe UI", sans-serif;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .wrapper {
-      width: 100%;
-      overflow-x: auto;
-      padding: 40px 20px;
-    }
-
-    .preview-container {
-      width: 100%;
-      display: flex;
-      justify-content: flex-end;
-      padding-left: 10px;
-      margin-left: -26px;
-    }
-
-    .preview-block {
-      display: flex;
-      flex-direction: column;
       align-items: center;
     }
 
-    .a4 {
+    #curriculo-viewer {
+      position: relative;
       width: 794px;
       height: 1123px;
+      overflow: hidden;
       background: white;
-      padding: 60px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       border-radius: 8px;
+      margin-top: 40px;
+    }
+
+    .pagina {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 794px;
+      height: 1123px;
+      padding: 60px;
       box-sizing: border-box;
-      transform: scale(0.4);
-      transform-origin: top left;
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 10px;
-      color: #00324a;
-    }
-
-    h2 {
-      font-size: 20px;
-      margin-top: 30px;
-      color: #00324a;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 4px;
-    }
-
-    .info-topo {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 30px;
-    }
-
-    .dados {
-      flex: 1;
-    }
-
-    .foto {
-      width: 120px;
-      height: 160px;
-      border-radius: 5px;
-      object-fit: cover;
-      border: 1px solid #ccc;
-      margin-left: 30px;
-    }
-
-p, li {
-  font-size: 16px;
-  margin: 4px 0;
-  line-height: 1.4;
-}
-
-    ul {
-      padding-left: 20px;
-      margin-top: 10px;
-    }
-
-.botoes {
-  margin-top: 20px;
-  text-align: center;
-  z-index: 10;
-  position: relative;
-}
-
-.botoes button {
-  background-color: #00324a;
-  color: white;
-  padding: 8px 16px;
-  font-size: 14px;
-  border: none;
-  border-radius: 10px;
-  margin: 10px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.botoes button:hover {
-  background-color: #005066;
-}
-
-    #preview-miniatura {
-      width: 80px;
-      height: 106px;
-      object-fit: contain;
-      border: 1px solid #ccc;
-      border-radius: 6px;
       display: none;
-      background-color: #fff;
     }
+
+    .pagina.active {
+      display: block;
+    }
+
+    #navegacao {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    #navegacao button {
+      background-color: #00324a;
+      color: white;
+      padding: 8px 16px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #navegacao button:hover {
+      background-color: #005066;
+    }
+
+    .botoes {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .botoes button {
+      background-color: #00324a;
+      color: white;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 10px;
+      margin: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .botoes button:hover {
+      background-color: #005066;
+    }
+
+    #curriculo {
+      width: 794px;
+      background: white;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    h1 { font-size: 32px; margin-bottom: 10px; color: #00324a; }
+    h2 { font-size: 20px; margin-top: 30px; color: #00324a; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    ul { padding-left: 20px; margin-top: 10px; }
+    li { margin-bottom: 8px; }
+    .info-topo { display: flex; justify-content: space-between; margin-bottom: 30px; }
+    .foto { width: 120px; height: 160px; border-radius: 5px; object-fit: cover; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
 
-  <div class="wrapper">
-    <div class="preview-container">
-      <div class="preview-block">
-        <div class="a4" id="curriculo">
-          <div class="info-topo">
-            <div class="dados">
-              <h1 id="c-nome"></h1>
-              <p id="c-email"></p>
-              <p id="c-telefone"></p>
-              <p id="c-endereco"></p>
-              <p id="c-infoAdicional"></p>
-            </div>
-            <img id="foto-preview" class="foto" src="" alt="Foto" style="display:none;" />
-          </div>
+<div id="curriculo-viewer"></div>
 
-<div id="secao-objetivo"></div>
-<div id="secao-formacao"></div>
-<div id="secao-cursos"></div>
-<div id="secao-experiencia"></div>
-<div id="secao-habilidades"></div>
-<div id="secao-hobbies"></div>
-        </div>
-
-<div class="wrapper">
-  <div class="preview-container">
-    <div class="preview-block">
-      <div class="a4" id="curriculo">
-        <!-- conteúdo do currículo -->
-      </div>
-    </div>
-  </div>
+<div id="navegacao">
+  <button id="voltar" style="display:none;">⬅</button>
+  <button id="avancar" style="display:none;">➡</button>
 </div>
 
-<!-- ✅ Botões fora da área escalada -->
 <div class="botoes">
   <button onclick="voltarParaCurriculo()">Voltar</button>
   <button onclick="redirecionarParaLoading()">Gerar PDF</button>
 </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+const curriculo = document.createElement("div");
+curriculo.id = "curriculo";
+curriculo.innerHTML = `
+  <div class="info-topo">
+    <div>
+      <h1>${dados.nome || ""}</h1>
+      ${dados.email ? `<p><strong>Email:</strong> ${dados.email}</p>` : ""}
+      ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
+      ${dados.endereco ? `<p><strong>Endereço:</strong> ${dados.endereco}</p>` : ""}
+      ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
+    </div>
+    ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
+  </div>
+  ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
+  ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
+  ${dados.habilidades ? `<h2>Habilidades</h2><p>${dados.habilidades}</p>` : ""}
+  ${dados.hobbies ? `<h2>Hobbies</h2><p>${dados.hobbies}</p>` : ""}
+`;
 
-    document.getElementById("c-nome").textContent = dados.nome || "";
-    if (dados.email) document.getElementById("c-email").innerHTML = "<strong>Email:</strong> " + dados.email;
-    if (dados.telefone) document.getElementById("c-telefone").innerHTML = "<strong>Telefone:</strong> " + dados.telefone;
-
-    let enderecoCompleto = "";
-    if (dados.endereco) enderecoCompleto += dados.endereco;
-    if (dados.numero) enderecoCompleto += ", " + dados.numero;
-    if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
-    if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-    if (dados.cidade) {
-      const cidadeFormatada = dados.cidade.charAt(0).toUpperCase() + dados.cidade.slice(1).toLowerCase();
-      enderecoCompleto += ", " + cidadeFormatada;
+if (Array.isArray(dados.curso)) {
+  let html = "";
+  for (let i = 0; i < dados.curso.length; i++) {
+    const nome = dados.curso[i]?.trim();
+    const inst = dados.instituicao[i]?.trim();
+    let carga = dados.carga[i]?.trim();
+    if (carga && /^\d+$/.test(carga)) carga += "hs";
+    if (nome || inst || carga) {
+      html += "<li>";
+      if (nome) html += `<strong>${nome}</strong>`;
+      if (inst) html += ` — ${inst}`;
+      if (carga) html += ` <em>(${carga})</em>`;
+      html += "</li>";
     }
-    if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
-
- if (enderecoCompleto) {
-  document.getElementById("c-endereco").innerHTML = "<strong>Endereço:</strong> " + enderecoCompleto;
+  }
+  if (html) curriculo.innerHTML += `<h2>Cursos</h2><ul>${html}</ul>`;
 }
-
-if (dados.infoAdicional) {
-  document.getElementById("c-infoAdicional").textContent = dados.infoAdicional;
-}
-
-    if (dados.foto) {
-      const img = document.getElementById("foto-preview");
-      img.src = dados.foto;
-      img.style.display = "block";
-    }
-
-    const addSecao = (id, titulo, texto) => {
-      if (texto && texto.trim()) {
-        document.getElementById(id).innerHTML = `<h2>${titulo}</h2><p>${texto}</p>`;
-      }
-    };
-
-    addSecao("secao-objetivo", "Objetivo", dados.objetivo);
-    addSecao("secao-formacao", "Formação Acadêmica", dados.formacao);
-    addSecao("secao-habilidades", "Habilidades", dados.habilidades);
-    addSecao("secao-hobbies", "Hobbies", dados.hobbies);
 
 if (Array.isArray(dados.empresa)) {
   let html = "";
@@ -225,91 +165,76 @@ if (Array.isArray(dados.empresa)) {
     const fim = dados.periodo_fim?.[i]?.trim();
     const atividades = dados.atividades?.[i]?.trim();
     const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-
     if (empresa || cargo || periodo || atividades) {
       html += "<li>";
-
-      // Empresa + período
-      if (empresa) {
-        html += `<strong>${empresa}</strong>`;
-        if (periodo) html += ` — <em>${periodo}</em>`;
-      } else if (periodo) {
-        html += `<em>${periodo}</em>`;
-      }
-
-      // Cargo
+      if (empresa) html += `<strong>${empresa}</strong>${periodo ? ` — <em>${periodo}</em>` : ""}`;
+      else if (periodo) html += `<em>${periodo}</em>`;
       if (cargo) html += `<br>${cargo}`;
-
-      // Atividades
       if (atividades) html += `<br><span>${atividades}</span>`;
-
       html += "</li>";
     }
   }
-
-  if (html) {
-    document.getElementById("secao-experiencia").innerHTML =
-      `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
-  }
+  if (html) curriculo.innerHTML += `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
 }
 
-    async function gerarPDF() {
-const { jsPDF } = window.jspdf;
-const element = document.getElementById("curriculo");
-const canvas = await html2canvas(element, { scale: 2 });
-const imgData = canvas.toDataURL("image/jpeg", 1.0);
+document.body.appendChild(curriculo);
 
-const pdf = new jsPDF("p", "mm", "a4");
-const pageWidth = pdf.internal.pageSize.getWidth();
-const pageHeight = pdf.internal.pageSize.getHeight();
+(async () => {
+  const canvas = await html2canvas(curriculo, { scale: 2 });
+  const pageHeightPx = 1123;
+  const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
-// Calcula proporção da imagem
-const imgWidth = pageWidth;
-const imgHeight = canvas.height * (imgWidth / canvas.width);
-
-let position = 0;
-
-// Se a imagem couber em uma página, insere direto
-if (imgHeight <= pageHeight) {
-  pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-} else {
-  // Divide em múltiplas páginas
-  while (position < imgHeight) {
-    pdf.addImage(imgData, "JPEG", 0, -position, imgWidth, imgHeight);
-    position += pageHeight;
-    if (position < imgHeight) pdf.addPage();
-  }
-}
-
-pdf.save(`curriculo-${dados.nome || "usuario"}.pdf`);
-    }
-
-if (Array.isArray(dados.curso)) {
-  let html = "";
-  for (let i = 0; i < dados.curso.length; i++) {
-    const nome = dados.curso[i]?.trim();
-    const inst = dados.instituicao[i]?.trim();
-    let carga = dados.carga[i]?.trim();
-if (carga && /^\d+$/.test(carga)) {
-  carga = `${carga}hs`;
-}
-
-    if (nome || inst || carga) {
-      html += "<li>";
-      if (nome) html += `<strong>${nome}</strong>`;
-      if (inst) html += ` — ${inst}`;
-      if (carga) html += ` <em>(${carga})</em>`;
-      html += "</li>";
-    }
+  for (let i = 0; i < totalPages; i++) {
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = pageHeightPx;
+    const ctx = pageCanvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+    ctx.drawImage(canvas, 0, -i * pageHeightPx);
+    const img = document.createElement("img");
+    img.src = pageCanvas.toDataURL("image/png");
+    const pagina = document.createElement("div");
+    pagina.className = "pagina";
+    pagina.appendChild(img);
+    document.getElementById("curriculo-viewer").appendChild(pagina);
   }
 
-  if (html) {
-    document.getElementById("secao-cursos").innerHTML =
-      `<h2>Cursos</h2><ul>${html}</ul>`;
-  }
+  curriculo.remove();
+  atualizarVisualizacao();
+})();
+
+let paginaAtual = 0;
+function atualizarVisualizacao() {
+  const paginas = document.querySelectorAll(".pagina");
+  paginas.forEach((pagina, index) => {
+    pagina.classList.toggle("active", index === paginaAtual);
+  });
+
+  document.getElementById("voltar").style.display = paginaAtual > 0 ? "inline-block" : "none";
+  document.getElementById("avancar").style.display = paginaAtual < paginas.length - 1 ? "inline-block" : "none";
 }
+
+document.getElementById("voltar").addEventListener("click", () => {
+  if (paginaAtual > 0) {
+    paginaAtual--;
+    atualizarVisualizacao();
+  }
+});
+
+document.getElementById("avancar").addEventListener("click", () => {
+  const paginas = document.querySelectorAll(".pagina");
+  if (paginaAtual < paginas.length - 1) {
+    paginaAtual++;
+    atualizarVisualizacao();
+  }
+});
+
+function voltarParaCurriculo() {
+  window.location.href = "curriculo.html";
+}
+
 async function redirecionarParaLoading() {
-  const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
   const telefone = dados.telefone || "";
 
   try {
@@ -319,105 +244,89 @@ async function redirecionarParaLoading() {
       body: JSON.stringify({ telefone })
     });
 
-    // ✅ Marca as flags corretamente
     localStorage.setItem("curriculoParaEnviar", "true");
     localStorage.setItem("entradaViaSplash", "true");
     localStorage.setItem("navegandoInternamente", "true");
 
-    // ✅ Desativa rastreio antes de sair
     window.removeEventListener("unload", enviarLogAbandono);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
 
     window.location.href = "loading.html";
-
   } catch (error) {
     console.error("Erro ao enviar telefone:", error);
     alert("Falha ao conectar com o servidor.");
   }
 }
 
-fetch("https://officeexpress.onrender.com/api/logs", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    acao: "etapa",
-    nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
-    etapa: "Visualizou",
-    timestamp: new Date().toISOString()
-  })
+// 🔍 Rastreio de abandono
+console.log("📍 Rastreamento iniciado");
+console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
+console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
+
+const inicio = Date.now();
+const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+let etapaAtual = "Visualizou";
+let logEnviado = false;
+
+let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("a");
+  if (el && el.href && el.href.includes(window.location.origin)) {
+    navegandoInternamente = true;
+    console.log("➡️ Navegação interna detectada via clique");
+  }
 });
 
-  </script>
-  <script>
-  console.log("📍 Rastreamento iniciado");
-  console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
-  console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
+let rastreioLiberado = false;
+setTimeout(() => { rastreioLiberado = true }, 300);
 
-  const inicio = Date.now();
-  const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-  let etapaAtual = "Visualizou";
-  let logEnviado = false;
+window.enviarLogAbandono = function () {
+  if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+    console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
+    return;
+  }
 
-  // ✅ Mantém as flags sem remover ainda
-  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-  let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+  logEnviado = true;
+  const tempo = Math.round((Date.now() - inicio) / 1000);
+  console.log("🚨 Disparando log de abandono após", tempo, "segundos");
 
-  document.addEventListener("click", (e) => {
-    const el = e.target.closest("a");
-    if (el && el.href && el.href.includes(window.location.origin)) {
-      navegandoInternamente = true;
-      console.log("➡️ Navegação interna detectada via clique");
-    }
+  const payload = JSON.stringify({
+    acao: "etapa",
+    nome,
+    etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+    timestamp: new Date().toISOString()
   });
 
-  let rastreioLiberado = false;
-  setTimeout(() => { rastreioLiberado = true }, 300);
-
-  window.enviarLogAbandono = function () {
-    if (logEnviado || !entradaViaSplash || navegandoInternamente) {
-      console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
-      return;
-    }
-
-    logEnviado = true;
-    const tempo = Math.round((Date.now() - inicio) / 1000);
-    console.log("🚨 Disparando log de abandono após", tempo, "segundos");
-
-    const payload = JSON.stringify({
-      acao: "etapa",
-      nome,
-      etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-      timestamp: new Date().toISOString()
+  try {
+    const blob = new Blob([payload], { type: "application/json" });
+    const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
+    if (!ok) throw new Error("sendBeacon falhou");
+  } catch (err) {
+    console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
+    fetch("https://officeexpress.onrender.com/api/logs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true
     });
+  }
+};
 
-    try {
-      const blob = new Blob([payload], { type: "application/json" });
-      const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
-      if (!ok) throw new Error("sendBeacon falhou");
-    } catch (err) {
-      console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
-      fetch("https://officeexpress.onrender.com/api/logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: payload,
-        keepalive: true
-      });
-    }
-  };
-
-  window.handleVisibilityChange = function () {
-    console.log("👀 visibilitychange =", document.visibilityState);
-    if (document.visibilityState === "hidden" && rastreioLiberado) {
-      enviarLogAbandono();
-    }
-  };
-
-  window.addEventListener("unload", () => {
-    console.log("💥 unload disparado");
+window.handleVisibilityChange = function () {
+  console.log("👀 visibilitychange =", document.visibilityState);
+  if (document.visibilityState === "hidden" && rastreioLiberado) {
     enviarLogAbandono();
-  });
+  }
+};
 
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+window.addEventListener("unload", () => {
+  console.log("💥 unload disparado");
+  enviarLogAbandono();
+});
+
+document.addEventListener("visibilitychange", handleVisibilityChange);
 </script>
 </body>
 </html>
