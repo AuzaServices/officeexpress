@@ -186,7 +186,24 @@ let position = 0;
 
 if (height <= pageHeight) {
   // Conteúdo cabe em uma página
-  pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+  const pageHeight = pdf.internal.pageSize.getHeight();
+const pageWidth = pdf.internal.pageSize.getWidth();
+const marginX = 10; // margem lateral
+const marginY = 10; // margem superior/inferior
+const usableWidth = pageWidth - marginX * 2;
+const usableHeight = canvas.height * (usableWidth / canvas.width);
+
+let position = 0;
+
+if (usableHeight <= pageHeight - marginY * 2) {
+  pdf.addImage(imgData, "JPEG", marginX, marginY, usableWidth, usableHeight);
+} else {
+  while (position < usableHeight) {
+    pdf.addImage(imgData, "JPEG", marginX, marginY - position, usableWidth, usableHeight);
+    position += pageHeight - marginY * 2;
+    if (position < usableHeight) pdf.addPage();
+  }
+}
 } else {
   // Conteúdo excede uma página — divide em várias
   while (position < height) {
