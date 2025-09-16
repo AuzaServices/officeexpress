@@ -176,7 +176,12 @@
 
 const { jsPDF } = window.jspdf;
 const canvas = await html2canvas(container, { scale: 2 });
-const fullImage = canvas;
+
+// ✅ Oculta o canvas para evitar tela preta
+canvas.style.display = "none";
+document.body.appendChild(canvas);
+
+const imgData = canvas.toDataURL("image/jpeg", 1.0);
 const pdf = new jsPDF("p", "mm", "a4");
 
 const pageWidth = pdf.internal.pageSize.getWidth();
@@ -187,31 +192,35 @@ const usableWidth = pageWidth - marginX * 2;
 const usableHeight = pageHeight - marginY * 2;
 
 const imgWidth = usableWidth;
-const imgHeight = fullImage.height * (imgWidth / fullImage.width);
+const imgHeight = canvas.height * (imgWidth / canvas.width);
+
 const totalPages = Math.ceil(imgHeight / usableHeight);
 
 for (let i = 0; i < totalPages; i++) {
   const pageCanvas = document.createElement("canvas");
-  pageCanvas.width = fullImage.width;
-  pageCanvas.height = fullImage.height * (usableHeight / imgHeight);
-  const ctx = pageCanvas.getContext("2d");
+  pageCanvas.width = canvas.width;
+  pageCanvas.height = (usableHeight * canvas.width) / imgWidth;
 
+  const ctx = pageCanvas.getContext("2d");
   ctx.drawImage(
-    fullImage,
+    canvas,
     0,
-    (i * usableHeight * fullImage.height) / imgHeight,
-    fullImage.width,
-    (usableHeight * fullImage.height) / imgHeight,
+    (i * usableHeight * canvas.height) / imgHeight,
+    canvas.width,
+    (usableHeight * canvas.height) / imgHeight,
     0,
     0,
-    fullImage.width,
-    (usableHeight * fullImage.height) / imgHeight
+    canvas.width,
+    (usableHeight * canvas.height) / imgHeight
   );
 
-  const imgData = pageCanvas.toDataURL("image/jpeg", 1.0);
+  const pageImgData = pageCanvas.toDataURL("image/jpeg", 1.0);
   if (i > 0) pdf.addPage();
-  pdf.addImage(imgData, "JPEG", marginX, marginY, imgWidth, usableHeight);
+  pdf.addImage(pageImgData, "JPEG", marginX, marginY, imgWidth, usableHeight);
 }
+
+// ✅ Remove o canvas da tela
+document.body.removeChild(canvas);
 
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
