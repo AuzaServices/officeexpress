@@ -21,9 +21,9 @@ app.use(bodyParser.text({ type: 'text/plain' }));
 // 🔁 Conexão com MySQL
 const pool = mysql.createPool({
   host: 'sql10.freesqldatabase.com',
-  user: 'sql10792206',
-  password: 'hKT4bm2WIP',
-  database: 'sql10792206',
+  user: 'sql10799195',
+  password: 'rT9BIiqNUY',
+  database: 'sql10799195',
   port: 3306,
   waitForConnections: true,
   connectionLimit: 10,
