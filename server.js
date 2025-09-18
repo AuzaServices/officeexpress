@@ -233,7 +233,25 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
 //////////////////////////
 // 📥 Baixar PDF por ID
 //////////////////////////
+app.get('/api/pdfs/:id/download', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = 'SELECT filename, mimetype, data FROM pdfs WHERE id = ?';
+    const [results] = await pool.query(query, [id]);
 
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'PDF não encontrado' });
+    }
+
+    const { filename, mimetype, data } = results[0];
+    res.setHeader('Content-Type', mimetype);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(data);
+  } catch (err) {
+    console.error('Erro ao baixar PDF:', err.message);
+    res.status(500).json({ error: 'Erro ao baixar PDF' });
+  }
+});
 
 //////////////////////////
 // 📋 Listar PDFs
