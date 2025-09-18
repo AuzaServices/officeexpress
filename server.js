@@ -213,29 +213,20 @@ app.post('/gerar-e-salvar-pdf', async (req, res) => {
 //////////////////////////
 // 📤 Upload de PDF + telefone
 //////////////////////////
-app.post('/api/upload', async (req, res) => {
+app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+
+  const { originalname, mimetype, buffer } = req.file;
+  const { telefone } = req.body;
+
   try {
-    // 1. Verifica quantos PDFs existem no banco
-    const [pdfs] = await pool.query('SELECT id FROM pdfs ORDER BY created_at ASC');
-
-    if (pdfs.length >= 5) {
-      // 2. Apaga os 5 mais antigos
-      const idsParaApagar = pdfs.slice(0, 5).map(pdf => pdf.id);
-      const placeholders = idsParaApagar.map(() => '?').join(',');
-      await pool.query(`DELETE FROM pdfs WHERE id IN (${placeholders})`, idsParaApagar);
-    }
-
-    // 3. Salva o novo PDF
-    const { telefone } = req.body;
-    const arquivo = req.files.arquivo;
-
     const query = 'INSERT INTO pdfs (filename, mimetype, data, telefone) VALUES (?, ?, ?, ?)';
-    await pool.query(query, [arquivo.name, arquivo.mimetype, arquivo.data, telefone]);
+    const [result] = await pool.query(query, [originalname, mimetype, buffer, telefone]);
 
-    res.status(200).json({ mensagem: 'PDF salvo com sucesso!' });
+    res.status(200).json({ message: 'PDF e telefone salvos com sucesso', id: result.insertId });
   } catch (err) {
-    console.error('Erro ao salvar PDF:', err.message);
-    res.status(500).json({ erro: 'Falha ao salvar PDF' });
+    console.error('Erro ao salvar PDF e telefone:', err.message);
+    res.status(500).json({ error: 'Erro ao salvar PDF' });
   }
 });
 
