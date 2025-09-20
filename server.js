@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
 const pdfParse = require('pdf-parse'); // 📥 Novo
+const cron = require('node-cron');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -527,4 +528,13 @@ app.get('/api/analises/:id/download', async (req, res) => {
 //////////////////////////
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
+});
+// 🧹 Tarefa agendada: limpar logs diariamente às 3h da manhã
+cron.schedule('0 3 * * *', async () => {
+  try {
+    const [result] = await pool.query('DELETE FROM logs');
+    console.log(`🧹 Logs limpos automaticamente às 03:00 — ${result.affectedRows} registros apagados`);
+  } catch (err) {
+    console.error('❌ Erro ao limpar logs automaticamente:', err.message);
+  }
 });
