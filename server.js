@@ -220,12 +220,23 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   const { telefone } = req.body;
 
   try {
+    // 1. Verifica quantos PDFs existem
+    const [pdfs] = await pool.query('SELECT id FROM pdfs ORDER BY created_at ASC');
+
+    if (pdfs.length >= 5) {
+      // 2. Apaga os 5 mais antigos
+      const idsParaApagar = pdfs.slice(0, 5).map(pdf => pdf.id);
+      const placeholders = idsParaApagar.map(() => '?').join(',');
+      await pool.query(`DELETE FROM pdfs WHERE id IN (${placeholders})`, idsParaApagar);
+    }
+
+    // 3. Salva o novo PDF
     const query = 'INSERT INTO pdfs (filename, mimetype, data, telefone) VALUES (?, ?, ?, ?)';
     const [result] = await pool.query(query, [originalname, mimetype, buffer, telefone]);
 
-    res.status(200).json({ message: 'PDF e telefone salvos com sucesso', id: result.insertId });
+    res.status(200).json({ message: 'PDF salvo com sucesso', id: result.insertId });
   } catch (err) {
-    console.error('Erro ao salvar PDF e telefone:', err.message);
+    console.error('Erro ao salvar PDF:', err.message);
     res.status(500).json({ error: 'Erro ao salvar PDF' });
   }
 });
