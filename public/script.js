@@ -13,11 +13,9 @@ function adicionarExperiencia() {
   `;
   container.appendChild(nova);
 
-  // Diagnóstico: aplica Flatpickr com log
+  // Aplica Flatpickr nos campos recém-criados
   setTimeout(() => {
-    const campos = nova.querySelectorAll(".mesAno");
-    console.log("Aplicando Flatpickr nos campos:", campos);
-    campos.forEach(input => {
+    nova.querySelectorAll(".mesAno").forEach(input => {
       flatpickr(input, {
         locale: flatpickr.l10ns.pt,
         plugins: [
