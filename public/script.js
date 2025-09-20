@@ -211,28 +211,32 @@ function adicionarExperiencia() {
   container.appendChild(nova);
 
   // Reaplica o Flatpickr nos novos campos
-  flatpickr(nova.querySelectorAll(".mesAno"), {
+nova.querySelectorAll(".mesAno").forEach(input => {
+  flatpickr(input, {
+    locale: flatpickr.l10ns.pt,
     plugins: [
       new monthSelectPlugin({
         shorthand: false,
         dateFormat: "m/Y",
         altFormat: "F Y"
       })
-    ],
-    locale: "pt"
+    ]
   });
+});
 }
   // Aplica Flatpickr nos campos já existentes ao carregar a página
-  flatpickr(document.querySelectorAll(".mesAno"), {
+document.querySelectorAll(".mesAno").forEach(input => {
+  flatpickr(input, {
+    locale: flatpickr.l10ns.pt,
     plugins: [
       new monthSelectPlugin({
         shorthand: false,
         dateFormat: "m/Y",
         altFormat: "F Y"
       })
-    ],
-    locale: "pt"
+    ]
   });
+});
 
   document.querySelectorAll('.carga-input').forEach(input => {
   input.addEventListener('input', () => {
