@@ -568,6 +568,7 @@ function adicionarExperiencia() {
   div.className = "experiencia";
   div.style.marginBottom = "20px";
 
+  // Empresa
   const empresaWrapper = document.createElement("div");
   empresaWrapper.style.display = "flex";
   empresaWrapper.style.alignItems = "center";
@@ -591,6 +592,7 @@ function adicionarExperiencia() {
   empresaWrapper.appendChild(empresaInput);
   empresaWrapper.appendChild(empresaMic);
 
+  // Cargo
   const cargoWrapper = document.createElement("div");
   cargoWrapper.style.display = "flex";
   cargoWrapper.style.alignItems = "center";
@@ -614,6 +616,7 @@ function adicionarExperiencia() {
   cargoWrapper.appendChild(cargoInput);
   cargoWrapper.appendChild(cargoMic);
 
+  // Atividades
   const atividadesWrapper = document.createElement("div");
   atividadesWrapper.style.display = "flex";
   atividadesWrapper.style.alignItems = "center";
@@ -636,6 +639,7 @@ function adicionarExperiencia() {
   atividadesWrapper.appendChild(atividadesTextarea);
   atividadesWrapper.appendChild(atividadesMic);
 
+  // Período
   const inicioLabel = document.createElement("label");
   inicioLabel.textContent = "Início:";
 
@@ -664,6 +668,22 @@ function adicionarExperiencia() {
   div.appendChild(fimInput);
 
   container.appendChild(div);
+
+  // Aplica Flatpickr nos campos recém-criados
+  setTimeout(() => {
+    [inicioInput, fimInput].forEach(input => {
+      flatpickr(input, {
+        locale: flatpickr.l10ns.pt,
+        plugins: [
+          new monthSelectPlugin({
+            shorthand: false,
+            dateFormat: "m/Y",
+            altFormat: "F Y"
+          })
+        ]
+      });
+    });
+  }, 0);
 }
 
 fetch("https://officeexpress.onrender.com/api/logs", {
