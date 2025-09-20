@@ -539,17 +539,15 @@ app.delete('/api/pdfs/:id', async (req, res) => {
 });
 
 //////////////////////////
-// 🗑️ Apagar log por ID
+// 🗑️ Apagar TODOS os logs
 //////////////////////////
-app.delete('/api/logs/:id', async (req, res) => {
-  const { id } = req.params;
+app.delete('/api/logs', async (req, res) => {
   try {
-    const query = 'DELETE FROM logs WHERE id = ?';
-    await pool.query(query, [id]);
-    res.status(204).send();
+    const [result] = await pool.query('DELETE FROM logs');
+    res.status(204).send(); // sucesso sem conteúdo
   } catch (err) {
-    console.error('Erro ao apagar log:', err.message);
-    res.status(500).json({ error: 'Erro ao apagar log' });
+    console.error('Erro ao apagar todos os logs:', err.message);
+    res.status(500).json({ error: 'Erro ao apagar logs' });
   }
 });
 

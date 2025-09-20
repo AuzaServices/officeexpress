@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <link rel="icon" href="icon.png" type="image/png" />
   <meta charset="UTF-8">
   <title>Painel de Registros</title>
+  <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -48,7 +48,10 @@
       </table>
     </div>
 
-    <h1 class="mt-5">Registros de Acessos</h1>
+    <h1 class="mt-5 d-flex justify-content-between align-items-center">
+      Registros de Acessos
+      <button onclick="apagarTodosLogs()" class="btn btn-danger btn-sm">Apagar Tudo</button>
+    </h1>
     <div class="table-responsive">
       <table class="table table-bordered table-hover align-middle" id="tabela-acessos">
         <thead class="table-light">
@@ -89,12 +92,25 @@
         .then(res => {
           if (!res.ok) throw new Error("Erro ao apagar");
           if (tipo === "pdfs") carregarPDFs();
-          else if (tipo === "logs") carregarLogs();
           else if (tipo === "analises") carregarRelatorios();
         })
         .catch(err => {
           console.error(`Erro ao apagar ${tipo} ${id}:`, err);
           alert("Erro ao apagar registro.");
+        });
+    }
+
+    function apagarTodosLogs() {
+      if (!confirm("Tem certeza que deseja apagar TODOS os registros de acesso?")) return;
+
+      fetch('/api/logs', { method: 'DELETE' })
+        .then(res => {
+          if (!res.ok) throw new Error("Erro ao apagar logs");
+          carregarLogs();
+        })
+        .catch(err => {
+          console.error('Erro ao apagar todos os logs:', err);
+          alert("Erro ao apagar registros.");
         });
     }
 
@@ -134,11 +150,6 @@
       fetch('/api/logs')
         .then(res => res.json())
         .then(data => {
-          if (!Array.isArray(data)) {
-            console.error("Resposta inesperada da API:", data);
-            return;
-          }
-
           const tbody = document.querySelector('#tabela-acessos tbody');
           tbody.innerHTML = '';
 
@@ -149,10 +160,7 @@
               <td>${log.acao}</td>
               <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
               <td>${log.etapa || '—'}</td>
-              <td>
-                ${log.localizacao || '—'}
-                <button onclick="apagarRegistro(${log.id}, 'logs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-              </td>
+              <td>${log.localizacao || '—'}</td>
             `;
             tbody.appendChild(tr);
           });
@@ -166,11 +174,6 @@
       fetch('/api/analises')
         .then(res => res.json())
         .then(data => {
-          if (!Array.isArray(data)) {
-            console.error("Resposta inesperada da API:", data);
-            return;
-          }
-
           const tabela = document.querySelector('#tabela-relatorios tbody');
           tabela.innerHTML = '';
 
