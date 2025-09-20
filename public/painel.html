@@ -44,9 +44,7 @@
             <th>Contato</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Os dados serão inseridos aqui via JavaScript -->
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
 
@@ -62,9 +60,7 @@
             <th>Localização</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Os dados serão inseridos aqui via JavaScript -->
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
 
@@ -80,14 +76,28 @@
             <th>Contato</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Os dados serão inseridos aqui via JavaScript -->
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
   </div>
 
   <script>
+    function apagarRegistro(id, tipo) {
+      if (!confirm("Tem certeza que deseja apagar este registro?")) return;
+
+      fetch(`/api/${tipo}/${id}`, { method: "DELETE" })
+        .then(res => {
+          if (!res.ok) throw new Error("Erro ao apagar");
+          if (tipo === "pdfs") carregarPDFs();
+          else if (tipo === "logs") carregarLogs();
+          else if (tipo === "analises") carregarRelatorios();
+        })
+        .catch(err => {
+          console.error(`Erro ao apagar ${tipo} ${id}:`, err);
+          alert("Erro ao apagar registro.");
+        });
+    }
+
     function carregarPDFs() {
       fetch('/api/pdfs')
         .then(res => res.json())
@@ -103,10 +113,10 @@
             const linha = document.createElement('tr');
             linha.innerHTML = `
               <td>${pdf.id}</td>
-              <td>${pdf.filename}</td>
               <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
               <td>
                 <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+                <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
               </td>
               <td>
                 ${telefone ? `
@@ -134,13 +144,16 @@
 
           data.forEach(log => {
             const tr = document.createElement('tr');
-tr.innerHTML = `
-  <td>${log.id}</td>
-  <td>${log.acao}</td>
-  <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
-  <td>${log.etapa || '—'}</td>
-  <td>${log.localizacao || '—'}</td>
-`;
+            tr.innerHTML = `
+              <td>${log.id}</td>
+              <td>${log.acao}</td>
+              <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+              <td>${log.etapa || '—'}</td>
+              <td>
+                ${log.localizacao || '—'}
+                <button onclick="apagarRegistro(${log.id}, 'logs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+              </td>
+            `;
             tbody.appendChild(tr);
           });
         })
@@ -149,45 +162,46 @@ tr.innerHTML = `
         });
     }
 
-function carregarRelatorios() {
-  fetch('/api/analises')
-    .then(res => res.json())
-    .then(data => {
-      if (!Array.isArray(data)) {
-        console.error("Resposta inesperada da API:", data);
-        return;
-      }
+    function carregarRelatorios() {
+      fetch('/api/analises')
+        .then(res => res.json())
+        .then(data => {
+          if (!Array.isArray(data)) {
+            console.error("Resposta inesperada da API:", data);
+            return;
+          }
 
-      const tabela = document.querySelector('#tabela-relatorios tbody');
-      tabela.innerHTML = '';
+          const tabela = document.querySelector('#tabela-relatorios tbody');
+          tabela.innerHTML = '';
 
-      data.forEach(rel => {
-        const telefone = rel.telefone?.replace(/\D/g, '');
-        const mensagem = encodeURIComponent("Seu relatório de currículo está pronto. Finalize o pagamento para recebe-lo via PDF!");
-        const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+          data.forEach(rel => {
+            const telefone = rel.telefone?.replace(/\D/g, '');
+            const mensagem = encodeURIComponent("Seu relatório de currículo está pronto. Finalize o pagamento para recebe-lo via PDF!");
+            const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${rel.id}</td>
-          <td>
-            ${telefone ? `
-              <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
-                WhatsApp
-              </a>` : '—'}
-          </td>
-          <td>${rel.filename}</td>
-          <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
-          <td>
-            <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-          </td>
-        `;
-        tabela.appendChild(linha);
-      });
-    })
-    .catch(err => {
-      console.error('Erro ao buscar análises:', err);
-    });
-}
+            const linha = document.createElement('tr');
+            linha.innerHTML = `
+              <td>${rel.id}</td>
+              <td>
+                ${telefone ? `
+                  <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
+                    WhatsApp
+                  </a>` : '—'}
+              </td>
+              <td>${rel.filename}</td>
+              <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+              <td>
+                <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+                <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+              </td>
+            `;
+            tabela.appendChild(linha);
+          });
+        })
+        .catch(err => {
+          console.error('Erro ao buscar análises:', err);
+        });
+    }
 
     // Atualiza a cada 2 segundos
     setInterval(() => {

@@ -524,6 +524,51 @@ app.get('/api/analises/:id/download', async (req, res) => {
 });
 
 //////////////////////////
+// 🗑️ Apagar PDF por ID
+//////////////////////////
+app.delete('/api/pdfs/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = 'DELETE FROM pdfs WHERE id = ?';
+    await pool.query(query, [id]);
+    res.status(204).send(); // sucesso sem conteúdo
+  } catch (err) {
+    console.error('Erro ao apagar PDF:', err.message);
+    res.status(500).json({ error: 'Erro ao apagar PDF' });
+  }
+});
+
+//////////////////////////
+// 🗑️ Apagar log por ID
+//////////////////////////
+app.delete('/api/logs/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = 'DELETE FROM logs WHERE id = ?';
+    await pool.query(query, [id]);
+    res.status(204).send();
+  } catch (err) {
+    console.error('Erro ao apagar log:', err.message);
+    res.status(500).json({ error: 'Erro ao apagar log' });
+  }
+});
+
+//////////////////////////
+// 🗑️ Apagar relatório por ID
+//////////////////////////
+app.delete('/api/analises/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = 'DELETE FROM analises WHERE id = ?';
+    await pool.query(query, [id]);
+    res.status(204).send();
+  } catch (err) {
+    console.error('Erro ao apagar análise:', err.message);
+    res.status(500).json({ error: 'Erro ao apagar análise' });
+  }
+});
+
+//////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
 app.listen(PORT, () => {
