@@ -1,19 +1,34 @@
+function adicionarExperiencia() {
+  const container = document.getElementById("experiencias");
+  const nova = document.createElement("div");
+  nova.className = "experiencia";
+  nova.innerHTML = `
+    <input type="text" name="empresa[]" placeholder="Empresa" />
+    <input type="text" name="cargo[]" placeholder="Cargo" />
+    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+    <label>Início:</label>
+    <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
+    <label>Fim:</label>
+    <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
+  `;
+  container.appendChild(nova);
 
-  function adicionarExperiencia() {
-    const container = document.getElementById("experiencias");
-    const nova = document.createElement("div");
-    nova.className = "experiencia";
-nova.innerHTML = `
-  <input type="text" name="empresa[]" placeholder="Empresa" />
-  <input type="text" name="cargo[]" placeholder="Cargo" />
-  <label>Início:</label>
-  <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
-  <label>Fim:</label>
-  <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
-  <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
-`;
-    container.appendChild(nova);
-  }
+  // Aguarda o DOM renderizar antes de aplicar o Flatpickr
+  setTimeout(() => {
+    nova.querySelectorAll(".mesAno").forEach(input => {
+      flatpickr(input, {
+        plugins: [
+          new monthSelectPlugin({
+            shorthand: false,
+            dateFormat: "m/Y",
+            altFormat: "F Y"
+          })
+        ],
+        locale: "pt"
+      });
+    });
+  }, 0);
+}
 
   function aplicarMascaraTelefone(input) {
     input.addEventListener("input", function () {
@@ -196,7 +211,8 @@ function adicionarExperiencia() {
   container.appendChild(nova);
 
   // Reaplica o Flatpickr nos novos campos
-  flatpickr(nova.querySelectorAll(".mesAno"), {
+nova.querySelectorAll(".mesAno").forEach(input => {
+  flatpickr(input, {
     plugins: [
       new monthSelectPlugin({
         shorthand: false,
@@ -206,6 +222,7 @@ function adicionarExperiencia() {
     ],
     locale: "pt"
   });
+});
 }
   // Aplica Flatpickr nos campos já existentes ao carregar a página
   flatpickr(document.querySelectorAll(".mesAno"), {
