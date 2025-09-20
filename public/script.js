@@ -1,28 +1,34 @@
+function adicionarExperiencia() {
+  const container = document.getElementById("experiencias");
+  const nova = document.createElement("div");
+  nova.className = "experiencia";
+  nova.innerHTML = `
+    <input type="text" name="empresa[]" placeholder="Empresa" />
+    <input type="text" name="cargo[]" placeholder="Cargo" />
+    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+    <label>Início:</label>
+    <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
+    <label>Fim:</label>
+    <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
+  `;
+  container.appendChild(nova);
 
-  function adicionarExperiencia() {
-    const container = document.getElementById("experiencias");
-    const nova = document.createElement("div");
-    nova.className = "experiencia";
-nova.innerHTML = `
-  <input type="text" name="empresa[]" placeholder="Empresa" />
-  <input type="text" name="cargo[]" placeholder="Cargo" />
-  <label>Início:</label>
-  <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
-  <label>Fim:</label>
-  <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
-  <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
-`;
-    container.appendChild(nova);
-  }
-
-  function aplicarMascaraTelefone(input) {
-    input.addEventListener("input", function () {
-      let valor = input.value.replace(/\D/g, "");
-      if (valor.length > 11) valor = valor.slice(0, 11);
-      const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1)$2-$3");
-      input.value = formatado;
+  // Aplica Flatpickr corretamente com idioma português
+  setTimeout(() => {
+    nova.querySelectorAll(".mesAno").forEach(input => {
+      flatpickr(input, {
+        locale: flatpickr.l10ns.pt,
+        plugins: [
+          new monthSelectPlugin({
+            shorthand: false,
+            dateFormat: "m/Y",
+            altFormat: "F Y"
+          })
+        ]
+      });
     });
-  }
+  }, 0);
+}
 
   function adicionarTelefone() {
     const container = document.getElementById("telefones");
@@ -332,3 +338,15 @@ document.getElementById("adicionarObjetivo").addEventListener("click", () => {
   }
 });
 
+document.querySelectorAll(".mesAno").forEach(input => {
+  flatpickr(input, {
+    locale: flatpickr.l10ns.pt,
+    plugins: [
+      new monthSelectPlugin({
+        shorthand: false,
+        dateFormat: "m/Y",
+        altFormat: "F Y"
+      })
+    ]
+  });
+});
