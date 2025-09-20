@@ -30,6 +30,15 @@ function adicionarExperiencia() {
   }, 0);
 }
 
+  function aplicarMascaraTelefone(input) {
+    input.addEventListener("input", function () {
+      let valor = input.value.replace(/\D/g, "");
+      if (valor.length > 11) valor = valor.slice(0, 11);
+      const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1)$2-$3");
+      input.value = formatado;
+    });
+  }
+
   function adicionarTelefone() {
     const container = document.getElementById("telefones");
     const input = document.createElement("input");
