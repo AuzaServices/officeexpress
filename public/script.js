@@ -13,9 +13,11 @@ function adicionarExperiencia() {
   `;
   container.appendChild(nova);
 
-  // Aplica Flatpickr corretamente com idioma português
+  // Diagnóstico: aplica Flatpickr com log
   setTimeout(() => {
-    nova.querySelectorAll(".mesAno").forEach(input => {
+    const campos = nova.querySelectorAll(".mesAno");
+    console.log("Aplicando Flatpickr nos campos:", campos);
+    campos.forEach(input => {
       flatpickr(input, {
         locale: flatpickr.l10ns.pt,
         plugins: [
