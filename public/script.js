@@ -13,18 +13,18 @@ function adicionarExperiencia() {
   `;
   container.appendChild(nova);
 
-  // Aguarda o DOM renderizar antes de aplicar o Flatpickr
+  // Aplica Flatpickr corretamente com idioma português
   setTimeout(() => {
     nova.querySelectorAll(".mesAno").forEach(input => {
       flatpickr(input, {
+        locale: flatpickr.l10ns.pt,
         plugins: [
           new monthSelectPlugin({
             shorthand: false,
             dateFormat: "m/Y",
             altFormat: "F Y"
           })
-        ],
-        locale: "pt"
+        ]
       });
     });
   }, 0);
@@ -349,3 +349,15 @@ document.getElementById("adicionarObjetivo").addEventListener("click", () => {
   }
 });
 
+document.querySelectorAll(".mesAno").forEach(input => {
+  flatpickr(input, {
+    locale: flatpickr.l10ns.pt,
+    plugins: [
+      new monthSelectPlugin({
+        shorthand: false,
+        dateFormat: "m/Y",
+        altFormat: "F Y"
+      })
+    ]
+  });
+});
