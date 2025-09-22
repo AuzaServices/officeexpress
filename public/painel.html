@@ -38,10 +38,11 @@
       <table class="table table-bordered table-hover align-middle" id="tabela-arquivos">
         <thead class="table-light">
           <tr>
-            <th>ID</th>
-            <th>Data</th>
-            <th>Ação</th>
-            <th>Contato</th>
+<th>ID</th>
+<th>Arquivo</th>
+<th>Data</th>
+<th>Ação</th>
+<th>Contato</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -127,20 +128,18 @@
             const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
             const linha = document.createElement('tr');
-            linha.innerHTML = `
-              <td>${pdf.id}</td>
-              <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
-              <td>
-                <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-                <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-              </td>
-              <td>
-                ${telefone ? `
-                  <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
-                    WhatsApp
-                  </a>` : '—'}
-              </td>
-            `;
+linha.innerHTML = `
+  <td>${pdf.id}</td>
+  <td>${pdf.filename || '—'}</td>
+  <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
+  <td>
+    <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+    <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+  <td>
+    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
+  </td>
+`;
             tabela.appendChild(linha);
           });
         });
