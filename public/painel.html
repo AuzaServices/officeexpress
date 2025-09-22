@@ -183,21 +183,18 @@
             const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
             const linha = document.createElement('tr');
-            linha.innerHTML = `
-              <td>${rel.id}</td>
-              <td>
-                ${telefone ? `
-                  <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">
-                    WhatsApp
-                  </a>` : '—'}
-              </td>
-              <td>${rel.filename}</td>
-              <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
-              <td>
-                <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-                <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-              </td>
-            `;
+linha.innerHTML = `
+  <td>${rel.id}</td>
+  <td>${rel.filename || '—'}</td>
+  <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+  <td>
+    <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+    <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+  <td>
+    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
+  </td>
+`;
             tabela.appendChild(linha);
           });
         })
