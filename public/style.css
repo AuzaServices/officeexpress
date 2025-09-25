@@ -376,3 +376,10 @@ textarea::placeholder {
   text-transform: capitalize;
 }
 
+input.mesAno::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+input.mesAno[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+}
