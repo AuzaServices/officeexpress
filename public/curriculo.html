@@ -237,43 +237,47 @@
       </div>
 
       <!-- Etapa 5 -->
-      <div class="etapa">
+      <!-- Etapa 5 -->
+<div class="etapa">
   <h2>Histórico de Conquistas</h2>
   <label>Conte onde você já brilhou</label>
   <div id="experiencias">
     <div class="experiencia">
+      <!-- Empresa -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <input type="text" name="empresa[]" id="empresa" placeholder="Empresa" />
-        <button type="button" onclick="reconhecerCampo('empresa')" style="background: none; border: none; cursor: pointer;">
+        <input type="text" name="empresa[]" id="empresa-0" placeholder="Empresa" />
+        <button type="button" onclick="reconhecerCampo('empresa-0')" style="background: none; border: none; cursor: pointer;">
           <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
         </button>
       </div>
 
+      <!-- Cargo -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <input type="text" name="cargo[]" id="cargo" placeholder="Cargo" />
-        <button type="button" onclick="reconhecerCampo('cargo')" style="background: none; border: none; cursor: pointer;">
+        <input type="text" name="cargo[]" id="cargo-0" placeholder="Cargo" />
+        <button type="button" onclick="reconhecerCampo('cargo-0')" style="background: none; border: none; cursor: pointer;">
           <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
         </button>
       </div>
 
+      <!-- Atividades -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <textarea name="atividades[]" id="atividades-texto" placeholder="Atividades desenvolvidas..."></textarea>
-        <button type="button" onclick="reconhecerAtividades('atividades-texto')" style="background: none; border: none; cursor: pointer;">
+        <textarea name="atividades[]" id="atividades-0" placeholder="Atividades desenvolvidas..."></textarea>
+        <button type="button" onclick="reconhecerAtividades('atividades-0')" style="background: none; border: none; cursor: pointer;">
           <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
         </button>
       </div>
 
-      <!-- ✅ Datas com labels dentro e layout limpo -->
-<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-  <div style="flex: 1; min-width: 140px;">
-    <label for="periodo_inicio_0">Início:</label>
-    <input type="text" class="mesAno" name="periodo_inicio[]" id="periodo_inicio_0" placeholder="Selecione mês e ano">
-  </div>
-  <div style="flex: 1; min-width: 140px;">
-    <label for="periodo_fim_0">Fim:</label>
-    <input type="text" class="mesAno" name="periodo_fim[]" id="periodo_fim_0" placeholder="Selecione mês e ano">
-  </div>
-</div>
+      <!-- Período -->
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+        <div style="flex: 1; min-width: 140px;">
+          <label for="periodo_inicio_0">Início:</label>
+          <input type="text" class="mesAno" name="periodo_inicio[]" id="periodo_inicio_0" placeholder="Selecione mês e ano">
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+          <label for="periodo_fim_0">Fim:</label>
+          <input type="text" class="mesAno" name="periodo_fim[]" id="periodo_fim_0" placeholder="Selecione mês e ano">
+        </div>
+      </div>
     </div>
   </div>
   <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
