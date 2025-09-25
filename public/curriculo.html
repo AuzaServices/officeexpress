@@ -264,16 +264,16 @@
       </div>
 
       <!-- ✅ Datas com labels dentro e layout limpo -->
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-        <div style="flex: 1; min-width: 140px;">
-          <label for="inicio">Início:</label>
-          <input type="text" class="mesAno" name="periodo_inicio[]" id="inicio" placeholder="Selecione mês e ano">
-        </div>
-        <div style="flex: 1; min-width: 140px;">
-          <label for="fim">Fim:</label>
-          <input type="text" class="mesAno" name="periodo_fim[]" id="fim" placeholder="Selecione mês e ano">
-        </div>
-      </div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+  <div style="flex: 1; min-width: 140px;">
+    <label for="periodo_inicio_0">Início:</label>
+    <input type="text" class="mesAno" name="periodo_inicio[]" id="periodo_inicio_0" placeholder="Selecione mês e ano">
+  </div>
+  <div style="flex: 1; min-width: 140px;">
+    <label for="periodo_fim_0">Fim:</label>
+    <input type="text" class="mesAno" name="periodo_fim[]" id="periodo_fim_0" placeholder="Selecione mês e ano">
+  </div>
+</div>
     </div>
   </div>
   <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
@@ -677,49 +677,75 @@ function adicionarExperiencia() {
   atividadesWrapper.appendChild(atividadesTextarea);
   atividadesWrapper.appendChild(atividadesMic);
 
-  // Período
+  // Período (Início e Fim)
+  const periodoWrapper = document.createElement("div");
+  periodoWrapper.style.display = "flex";
+  periodoWrapper.style.flexWrap = "wrap";
+  periodoWrapper.style.gap = "10px";
+  periodoWrapper.style.marginBottom = "10px";
+
+  const inicioDiv = document.createElement("div");
+  inicioDiv.style.flex = "1";
+  inicioDiv.style.minWidth = "140px";
+
   const inicioLabel = document.createElement("label");
+  inicioLabel.setAttribute("for", `periodo_inicio_${index}`);
   inicioLabel.textContent = "Início:";
 
   const inicioInput = document.createElement("input");
   inicioInput.type = "text";
   inicioInput.className = "mesAno";
   inicioInput.name = "periodo_inicio[]";
+  inicioInput.id = `periodo_inicio_${index}`;
   inicioInput.placeholder = "Selecione mês e ano";
 
+  inicioDiv.appendChild(inicioLabel);
+  inicioDiv.appendChild(inicioInput);
+
+  const fimDiv = document.createElement("div");
+  fimDiv.style.flex = "1";
+  fimDiv.style.minWidth = "140px";
+
   const fimLabel = document.createElement("label");
+  fimLabel.setAttribute("for", `periodo_fim_${index}`);
   fimLabel.textContent = "Fim:";
 
   const fimInput = document.createElement("input");
   fimInput.type = "text";
   fimInput.className = "mesAno";
   fimInput.name = "periodo_fim[]";
+  fimInput.id = `periodo_fim_${index}`;
   fimInput.placeholder = "Selecione mês e ano";
+
+  fimDiv.appendChild(fimLabel);
+  fimDiv.appendChild(fimInput);
+
+  periodoWrapper.appendChild(inicioDiv);
+  periodoWrapper.appendChild(fimDiv);
 
   // Monta tudo
   div.appendChild(empresaWrapper);
   div.appendChild(cargoWrapper);
   div.appendChild(atividadesWrapper);
-  div.appendChild(inicioLabel);
-  div.appendChild(inicioInput);
-  div.appendChild(fimLabel);
-  div.appendChild(fimInput);
+  div.appendChild(periodoWrapper);
 
   container.appendChild(div);
 
   // Aplica Flatpickr nos campos recém-criados
   setTimeout(() => {
     [inicioInput, fimInput].forEach(input => {
-      flatpickr(input, {
-        locale: flatpickr.l10ns.pt,
-        plugins: [
-          new monthSelectPlugin({
-            shorthand: false,
-            dateFormat: "m/Y",
-            altFormat: "F Y"
-          })
-        ]
-      });
+      if (!input._flatpickr) {
+        flatpickr(input, {
+          locale: flatpickr.l10ns.pt,
+          plugins: [
+            new monthSelectPlugin({
+              shorthand: false,
+              dateFormat: "m/Y",
+              altFormat: "F Y"
+            })
+          ]
+        });
+      }
     });
   }, 0);
 }
