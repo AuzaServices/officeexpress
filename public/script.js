@@ -169,19 +169,50 @@ function adicionarExperiencia() {
   const container = document.getElementById("experiencias");
   const nova = document.createElement("div");
   nova.className = "experiencia";
-  nova.innerHTML = `
-    <input type="text" name="empresa[]" placeholder="Empresa" />
-    <input type="text" name="cargo[]" placeholder="Cargo" />
-    <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
-    <label>Início:</label>
-    <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
-    <label>Fim:</label>
-    <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
-  `;
+
+  const empresa = document.createElement("input");
+  empresa.type = "text";
+  empresa.name = "empresa[]";
+  empresa.placeholder = "Empresa";
+
+  const cargo = document.createElement("input");
+  cargo.type = "text";
+  cargo.name = "cargo[]";
+  cargo.placeholder = "Cargo";
+
+  const atividades = document.createElement("textarea");
+  atividades.name = "atividades[]";
+  atividades.placeholder = "Atividades desenvolvidas...";
+
+  const inicioLabel = document.createElement("label");
+  inicioLabel.textContent = "Início:";
+
+  const inicio = document.createElement("input");
+  inicio.type = "text";
+  inicio.name = "periodo_inicio[]";
+  inicio.className = "mesAno";
+  inicio.placeholder = "Selecione mês e ano";
+
+  const fimLabel = document.createElement("label");
+  fimLabel.textContent = "Fim:";
+
+  const fim = document.createElement("input");
+  fim.type = "text";
+  fim.name = "periodo_fim[]";
+  fim.className = "mesAno";
+  fim.placeholder = "Selecione mês e ano";
+
+  nova.appendChild(empresa);
+  nova.appendChild(cargo);
+  nova.appendChild(atividades);
+  nova.appendChild(inicioLabel);
+  nova.appendChild(inicio);
+  nova.appendChild(fimLabel);
+  nova.appendChild(fim);
+
   container.appendChild(nova);
 
-  // Aplica Flatpickr apenas se ainda não estiver aplicado
-  nova.querySelectorAll(".mesAno").forEach(input => {
+  [inicio, fim].forEach(input => {
     if (!input._flatpickr) {
       flatpickr(input, {
         locale: flatpickr.l10ns.pt,
@@ -191,19 +222,6 @@ function adicionarExperiencia() {
     }
   });
 }
-  // Aplica Flatpickr nos campos já existentes ao carregar a página
-document.querySelectorAll(".mesAno").forEach(input => {
-  flatpickr(input, {
-    locale: flatpickr.l10ns.pt,
-    plugins: [
-      new monthSelectPlugin({
-        shorthand: false,
-        dateFormat: "m/Y",
-        altFormat: "F Y"
-      })
-    ]
-  });
-});
 
   document.querySelectorAll('.carga-input').forEach(input => {
   input.addEventListener('input', () => {
