@@ -125,247 +125,274 @@
 }
   </style>
 </head>
-<body>
+<body style="position: relative; overflow-x: hidden; background: white; font-family: 'Segoe UI', sans-serif;">
+  <!-- Contêiner das partículas -->
+  <div id="particles-js" style="position: fixed; inset: 0; z-index: -1;"></div>
 
-<div id="curriculo-viewer"></div>
+  <div id="curriculo-viewer"></div>
 
-<div id="navegacao">
-  <button id="voltar" style="display:none;">⬅</button>
-  <button id="avancar" style="display:none;">➡</button>
-</div>
-
-<div class="botoes">
-  <button onclick="voltarParaCurriculo()">Voltar</button>
-  <button onclick="redirecionarParaLoading()">Gerar PDF</button>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script>
-const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-const curriculo = document.createElement("div");
-curriculo.id = "curriculo";
-curriculo.innerHTML = `
-  <div class="info-topo">
-    <div>
-      <h1>${dados.nome || ""}</h1>
-      ${dados.email ? `<p><strong>Email:</strong> ${dados.email}</p>` : ""}
-      ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
-      ${dados.endereco ? `<p><strong>Endereço:</strong> ${dados.endereco}</p>` : ""}
-      ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
-    </div>
-    ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
+  <div id="navegacao">
+    <button id="voltar" style="display:none;">⬅</button>
+    <button id="avancar" style="display:none;">➡</button>
   </div>
 
-  ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
-  ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
-`;
+  <div class="botoes">
+    <button onclick="voltarParaCurriculo()">Voltar</button>
+    <button onclick="redirecionarParaLoading()">Gerar PDF</button>
+  </div>
 
-if (Array.isArray(dados.curso)) {
-  let html = "";
-  for (let i = 0; i < dados.curso.length; i++) {
-    const nome = dados.curso[i]?.trim();
-    const inst = dados.instituicao[i]?.trim();
-    let carga = dados.carga[i]?.trim();
-    if (carga && /^\d+$/.test(carga)) carga += "hs";
-    if (nome || inst || carga) {
-      html += "<li>";
-      if (nome) html += `<strong>${nome}</strong>`;
-      if (inst) html += ` — ${inst}`;
-      if (carga) html += ` <em>(${carga})</em>`;
-      html += "</li>";
+  <!-- Biblioteca de partículas -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+
+  <!-- Configuração das partículas -->
+  <script>
+    tsParticles.load("particles-js", {
+      fullScreen: { enable: false },
+      particles: {
+        number: { value: 60 },
+        color: { value: "#e09d00" },
+        shape: { type: "circle" },
+        opacity: { value: 0.3 },
+        size: { value: 4 },
+        move: {
+          enable: true,
+          speed: 1.5,
+          direction: "none",
+          outModes: { default: "bounce" }
+        }
+      },
+      background: {
+        color: { value: "transparent" }
+      }
+    });
+  </script>
+
+  <!-- Seu script original -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+    const curriculo = document.createElement("div");
+    curriculo.id = "curriculo";
+    curriculo.innerHTML = `
+      <div class="info-topo">
+        <div>
+          <h1>${dados.nome || ""}</h1>
+          ${dados.email ? `<p><strong>Email:</strong> ${dados.email}</p>` : ""}
+          ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
+          ${dados.endereco ? `<p><strong>Endereço:</strong> ${dados.endereco}</p>` : ""}
+          ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
+        </div>
+        ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
+      </div>
+      ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
+      ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
+    `;
+
+    if (Array.isArray(dados.curso)) {
+      let html = "";
+      for (let i = 0; i < dados.curso.length; i++) {
+        const nome = dados.curso[i]?.trim();
+        const inst = dados.instituicao[i]?.trim();
+        let carga = dados.carga[i]?.trim();
+        if (carga && /^\d+$/.test(carga)) carga += "hs";
+        if (nome || inst || carga) {
+          html += "<li>";
+          if (nome) html += `<strong>${nome}</strong>`;
+          if (inst) html += ` — ${inst}`;
+          if (carga) html += ` <em>(${carga})</em>`;
+          html += "</li>";
+        }
+      }
+      if (html) curriculo.innerHTML += `<h2>Cursos</h2><ul>${html}</ul>`;
     }
-  }
-  if (html) curriculo.innerHTML += `<h2>Cursos</h2><ul>${html}</ul>`;
-}
 
-if (Array.isArray(dados.empresa)) {
-  let html = "";
-  for (let i = 0; i < dados.empresa.length; i++) {
-    const empresa = dados.empresa[i]?.trim();
-    const cargo = dados.cargo?.[i]?.trim();
-    const inicio = dados.periodo_inicio?.[i]?.trim();
-    const fim = dados.periodo_fim?.[i]?.trim();
-    const atividades = dados.atividades?.[i]?.trim();
-    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-    if (empresa || cargo || periodo || atividades) {
-      html += "<li>";
-      if (empresa) html += `<strong>${empresa}</strong>${periodo ? ` — <em>${periodo}</em>` : ""}`;
-      else if (periodo) html += `<em>${periodo}</em>`;
-      if (cargo) html += `<br>${cargo}`;
-      if (atividades) html += `<br><span>${atividades}</span>`;
-      html += "</li>";
+    if (Array.isArray(dados.empresa)) {
+      let html = "";
+      for (let i = 0; i < dados.empresa.length; i++) {
+        const empresa = dados.empresa[i]?.trim();
+        const cargo = dados.cargo?.[i]?.trim();
+        const inicio = dados.periodo_inicio?.[i]?.trim();
+        const fim = dados.periodo_fim?.[i]?.trim();
+        const atividades = dados.atividades?.[i]?.trim();
+        const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
+        if (empresa || cargo || periodo || atividades) {
+          html += "<li>";
+          if (empresa) html += `<strong>${empresa}</strong>${periodo ? ` — <em>${periodo}</em>` : ""}`;
+          else if (periodo) html += `<em>${periodo}</em>`;
+          if (cargo) html += `<br>${cargo}`;
+          if (atividades) html += `<br><span>${atividades}</span>`;
+          html += "</li>";
+        }
+      }
+      if (html) curriculo.innerHTML += `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
     }
-  }
-  if (html) curriculo.innerHTML += `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
-}
 
-if (dados.habilidades) {
-  curriculo.innerHTML += `<h2>Habilidades</h2><p>${dados.habilidades}</p>`;
-}
-if (dados.hobbies) {
-  curriculo.innerHTML += `<h2>Hobbies</h2><p>${dados.hobbies}</p>`;
-}
+    if (dados.habilidades) {
+      curriculo.innerHTML += `<h2>Habilidades</h2><p>${dados.habilidades}</p>`;
+    }
+    if (dados.hobbies) {
+      curriculo.innerHTML += `<h2>Hobbies</h2><p>${dados.hobbies}</p>`;
+    }
 
-const clone = curriculo.cloneNode(true);
-clone.style.position = "absolute";
-clone.style.top = "-9999px";
-clone.style.left = "-9999px";
-clone.style.width = "794px";
-clone.style.padding = "60px";
-clone.style.background = "white";
-clone.style.boxSizing = "border-box";
-document.body.appendChild(clone);
+    const clone = curriculo.cloneNode(true);
+    clone.style.position = "absolute";
+    clone.style.top = "-9999px";
+    clone.style.left = "-9999px";
+    clone.style.width = "794px";
+    clone.style.padding = "60px";
+    clone.style.background = "white";
+    clone.style.boxSizing = "border-box";
+    document.body.appendChild(clone);
 
-(async () => {
-  const canvas = await html2canvas(clone, { scale: 1 });
-  document.body.removeChild(clone);
-  const pageHeightPx = 1123;
-  const totalPages = Math.ceil(canvas.height / pageHeightPx);
+    (async () => {
+      const canvas = await html2canvas(clone, { scale: 1 });
+      document.body.removeChild(clone);
+      const pageHeightPx = 1123;
+      const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
-  for (let i = 0; i < totalPages; i++) {
-    const pageCanvas = document.createElement("canvas");
-    pageCanvas.width = 794;
-    pageCanvas.height = 1123;
-    const ctx = pageCanvas.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-    ctx.drawImage(canvas, 0, -i * pageHeightPx);
-    const img = document.createElement("img");
-    img.src = pageCanvas.toDataURL("image/png");
-    img.style.width = "100%";
-    img.style.height = "100%";
-    const pagina = document.createElement("div");
-    pagina.className = "pagina";
-    pagina.appendChild(img);
-    document.getElementById("curriculo-viewer").appendChild(pagina);
-  }
+      for (let i = 0; i < totalPages; i++) {
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = 794;
+        pageCanvas.height = 1123;
+        const ctx = pageCanvas.getContext("2d");
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, -i * pageHeightPx);
+        const img = document.createElement("img");
+        img.src = pageCanvas.toDataURL("image/png");
+        img.style.width = "100%";
+        img.style.height = "100%";
+        const pagina = document.createElement("div");
+        pagina.className = "pagina";
+        pagina.appendChild(img);
+        document.getElementById("curriculo-viewer").appendChild(pagina);
+      }
 
-  atualizarVisualizacao();
-})();
+      atualizarVisualizacao();
+    })();
 
-let paginaAtual = 0;
-function atualizarVisualizacao() {
-  const paginas = document.querySelectorAll(".pagina");
-  paginas.forEach((pagina, index) => {
-    pagina.classList.toggle("active", index === paginaAtual);
-  });
+    let paginaAtual = 0;
+    function atualizarVisualizacao() {
+      const paginas = document.querySelectorAll(".pagina");
+      paginas.forEach((pagina, index) => {
+        pagina.classList.toggle("active", index === paginaAtual);
+      });
 
-  document.getElementById("voltar").style.display = paginaAtual > 0 ? "inline-block" : "none";
-  document.getElementById("avancar").style.display = paginaAtual < paginas.length - 1 ? "inline-block" : "none";
-}
+      document.getElementById("voltar").style.display = paginaAtual > 0 ? "inline-block" : "none";
+      document.getElementById("avancar").style.display = paginaAtual < paginas.length - 1 ? "inline-block" : "none";
+    }
 
-document.getElementById("voltar").addEventListener("click", () => {
-  if (paginaAtual > 0) {
-    paginaAtual--;
-    atualizarVisualizacao();
-  }
-});
-
-document.getElementById("avancar").addEventListener("click", () => {
-  const paginas = document.querySelectorAll(".pagina");
-  if (paginaAtual < paginas.length - 1) {
-    paginaAtual++;
-    atualizarVisualizacao();
-  }
-});
-
-function voltarParaCurriculo() {
-  window.location.href = "curriculo.html";
-}
-
-async function redirecionarParaLoading() {
-  const telefone = dados.telefone || "";
-
-  try {
-    await fetch("SEU_ENDPOINT_AQUI", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ telefone })
+    document.getElementById("voltar").addEventListener("click", () => {
+      if (paginaAtual > 0) {
+        paginaAtual--;
+        atualizarVisualizacao();
+      }
     });
 
-    localStorage.setItem("curriculoParaEnviar", "true");
-    localStorage.setItem("entradaViaSplash", "true");
-    localStorage.setItem("navegandoInternamente", "true");
-
-    window.removeEventListener("unload", enviarLogAbandono);
-    document.removeEventListener("visibilitychange", handleVisibilityChange);
-
-    window.location.href = "loading.html";
-  } catch (error) {
-    console.error("Erro ao enviar telefone:", error);
-    alert("Falha ao conectar com o servidor.");
-  }
-}
-
-// 🔍 Rastreio de abandono
-console.log("📍 Rastreamento iniciado");
-console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
-console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
-
-const inicio = Date.now();
-const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
-let etapaAtual = "Visualizou";
-let logEnviado = false;
-
-let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-
-document.addEventListener("click", (e) => {
-  const el = e.target.closest("a");
-  if (el && el.href && el.href.includes(window.location.origin)) {
-    navegandoInternamente = true;
-    console.log("➡️ Navegação interna detectada via clique");
-  }
-});
-
-let rastreioLiberado = false;
-setTimeout(() => { rastreioLiberado = true }, 300);
-
-window.enviarLogAbandono = function () {
-  if (logEnviado || !entradaViaSplash || navegandoInternamente) {
-    console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
-    return;
-  }
-
-  logEnviado = true;
-  const tempo = Math.round((Date.now() - inicio) / 1000);
-  console.log("🚨 Disparando log de abandono após", tempo, "segundos");
-
-  const payload = JSON.stringify({
-    acao: "etapa",
-    nome,
-    etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
-    timestamp: new Date().toISOString()
-  });
-
-  try {
-    const blob = new Blob([payload], { type: "application/json" });
-    const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
-    if (!ok) throw new Error("sendBeacon falhou");
-  } catch (err) {
-    console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
-    fetch("https://officeexpress.onrender.com/api/logs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload,
-      keepalive: true
+    document.getElementById("avancar").addEventListener("click", () => {
+      const paginas = document.querySelectorAll(".pagina");
+      if (paginaAtual < paginas.length - 1) {
+        paginaAtual++;
+        atualizarVisualizacao();
+      }
     });
-  }
-};
 
-window.handleVisibilityChange = function () {
-  console.log("👀 visibilitychange =", document.visibilityState);
-  if (document.visibilityState === "hidden" && rastreioLiberado) {
-    enviarLogAbandono();
-  }
-};
+    function voltarParaCurriculo() {
+      window.location.href = "curriculo.html";
+    }
 
-window.addEventListener("unload", () => {
-  console.log("💥 unload disparado");
-  enviarLogAbandono();
-});
+    async function redirecionarParaLoading() {
+      const telefone = dados.telefone || "";
 
-document.addEventListener("visibilitychange", handleVisibilityChange);
-</script>
+      try {
+        await fetch("SEU_ENDPOINT_AQUI", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telefone })
+        });
+
+        localStorage.setItem("curriculoParaEnviar", "true");
+        localStorage.setItem("entradaViaSplash", "true");
+        localStorage.setItem("navegandoInternamente", "true");
+
+        window.removeEventListener("unload", enviarLogAbandono);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+        window.location.href = "loading.html";
+      } catch (error) {
+        console.error("Erro ao enviar telefone:", error);
+        alert("Falha ao conectar com o servidor.");
+      }
+    }
+
+    // 🔍 Rastreio de abandono
+    console.log("📍 Rastreamento iniciado");
+    console.log("entradaViaSplash =", localStorage.getItem("entradaViaSplash"));
+    console.log("navegandoInternamente =", localStorage.getItem("navegandoInternamente"));
+
+    const inicio = Date.now();
+    const nome = JSON.parse(localStorage.getItem("curriculo"))?.nome || "visitante";
+    let etapaAtual = "Visualizou";
+    let logEnviado = false
+        let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+    let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest("a");
+      if (el && el.href && el.href.includes(window.location.origin)) {
+        navegandoInternamente = true;
+        console.log("➡️ Navegação interna detectada via clique");
+      }
+    });
+
+    let rastreioLiberado = false;
+    setTimeout(() => { rastreioLiberado = true }, 300);
+
+    window.enviarLogAbandono = function () {
+      if (logEnviado || !entradaViaSplash || navegandoInternamente) {
+        console.log("⛔ Log bloqueado — entradaViaSplash =", entradaViaSplash, "| navegandoInternamente =", navegandoInternamente);
+        return;
+      }
+
+      logEnviado = true;
+      const tempo = Math.round((Date.now() - inicio) / 1000);
+      console.log("🚨 Disparando log de abandono após", tempo, "segundos");
+
+      const payload = JSON.stringify({
+        acao: "etapa",
+        nome,
+        etapa: `Abandonou ${etapaAtual} após ${tempo}s`,
+        timestamp: new Date().toISOString()
+      });
+
+      try {
+        const blob = new Blob([payload], { type: "application/json" });
+        const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
+        if (!ok) throw new Error("sendBeacon falhou");
+      } catch (err) {
+        console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
+        fetch("https://officeexpress.onrender.com/api/logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true
+        });
+      }
+    };
+
+    window.handleVisibilityChange = function () {
+      console.log("👀 visibilitychange =", document.visibilityState);
+      if (document.visibilityState === "hidden" && rastreioLiberado) {
+        enviarLogAbandono();
+      }
+    };
+
+    window.addEventListener("unload", () => {
+      console.log("💥 unload disparado");
+      enviarLogAbandono();
+    });
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+  </script>
 </body>
 </html>
