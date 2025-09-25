@@ -238,40 +238,46 @@
 
       <!-- Etapa 5 -->
       <div class="etapa">
-        <h2>Histórico de Conquistas</h2>
-<label>Conte onde você já brilhou</label>
-<div id="experiencias">
-  <div class="experiencia">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <input type="text" name="empresa[]" id="empresa" placeholder="Empresa" />
-      <button type="button" onclick="reconhecerCampo('empresa')" style="background: none; border: none; cursor: pointer;">
-        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-      </button>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <input type="text" name="cargo[]" id="cargo" placeholder="Cargo" />
-      <button type="button" onclick="reconhecerCampo('cargo')" style="background: none; border: none; cursor: pointer;">
-        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-      </button>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <textarea name="atividades[]" id="atividades-texto" placeholder="Atividades desenvolvidas..."></textarea>
-      <button type="button" onclick="reconhecerAtividades('atividades-texto')" style="background: none; border: none; cursor: pointer;">
-        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-      </button>
-    </div>
-  
-            <label>Início:</label>
-            <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano">
-            <label>Fim:</label>
-            <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano">
-          </div>
-        </div>
-        <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
+  <h2>Histórico de Conquistas</h2>
+  <label>Conte onde você já brilhou</label>
+  <div id="experiencias">
+    <div class="experiencia">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <input type="text" name="empresa[]" id="empresa" placeholder="Empresa" />
+        <button type="button" onclick="reconhecerCampo('empresa')" style="background: none; border: none; cursor: pointer;">
+          <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+        </button>
       </div>
 
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <input type="text" name="cargo[]" id="cargo" placeholder="Cargo" />
+        <button type="button" onclick="reconhecerCampo('cargo')" style="background: none; border: none; cursor: pointer;">
+          <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+        </button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <textarea name="atividades[]" id="atividades-texto" placeholder="Atividades desenvolvidas..."></textarea>
+        <button type="button" onclick="reconhecerAtividades('atividades-texto')" style="background: none; border: none; cursor: pointer;">
+          <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+        </button>
+      </div>
+
+      <!-- ✅ Datas com layout responsivo -->
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+        <div style="flex: 1; min-width: 140px;">
+          <label>Início:</label>
+          <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano">
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+          <label>Fim:</label>
+          <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano">
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
+</div>
       <!-- Etapa 6 -->
       <div class="etapa">
                 <h2>O Que Te Torna Único</h2>
