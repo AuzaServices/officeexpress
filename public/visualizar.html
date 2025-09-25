@@ -179,7 +179,14 @@
           <h1>${dados.nome || ""}</h1>
           ${dados.email ? `<p><strong>Email:</strong> ${dados.email}</p>` : ""}
           ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
-          ${dados.endereco ? `<p><strong>Endereço:</strong> ${dados.endereco}</p>` : ""}
+          ${(dados.endereco || dados.numero || dados.complemento || dados.bairro || dados.cidade || dados.cep) ? `
+  <p><strong>Endereço:</strong> 
+    ${dados.endereco || ""}${dados.numero ? `, ${dados.numero}` : ""}
+    ${dados.complemento ? `, ${dados.complemento}` : ""}
+    ${dados.bairro ? ` - ${dados.bairro}` : ""}
+    ${dados.cidade ? `, ${dados.cidade}` : ""}
+    ${dados.cep ? ` - CEP: ${dados.cep}` : ""}
+  </p>` : ""}
           ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
         </div>
         ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
