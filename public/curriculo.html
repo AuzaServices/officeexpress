@@ -85,7 +85,17 @@
 
 
 <!-- Etapa 2B — Endereço -->
+ 
 <div class="etapa">
+    <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+    <label for="cep">CEP</label>
+    <input type="text" name="cep" id="cep" />
+    <small style="display:block; margin-top:6px;">
+      <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" style="color:#00324a; text-decoration:underline;">
+        Não sabe seu CEP? Clique aqui para buscar no site dos Correios
+      </a>
+    </small>
+  </div>
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
     <label for="endereco">Endereço (Rua)</label>
     <div style="display: flex; align-items: center; gap: 10px;">
@@ -129,16 +139,6 @@
         <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
       </button>
     </div>
-  </div>
-
-  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-    <label for="cep">CEP</label>
-    <input type="text" name="cep" id="cep" />
-    <small style="display:block; margin-top:6px;">
-      <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" style="color:#00324a; text-decoration:underline;">
-        Não sabe seu CEP? Clique aqui para buscar no site dos Correios
-      </a>
-    </small>
   </div>
 </div>
 <script>
