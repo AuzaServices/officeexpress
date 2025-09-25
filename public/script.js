@@ -173,22 +173,23 @@ function adicionarExperiencia() {
     <input type="text" name="empresa[]" placeholder="Empresa" />
     <input type="text" name="cargo[]" placeholder="Cargo" />
     <textarea name="atividades[]" placeholder="Atividades desenvolvidas..."></textarea>
+    <label>Início:</label>
+    <input type="text" class="mesAno" name="periodo_inicio[]" placeholder="Selecione mês e ano" />
+    <label>Fim:</label>
+    <input type="text" class="mesAno" name="periodo_fim[]" placeholder="Selecione mês e ano" />
   `;
   container.appendChild(nova);
 
-  // Reaplica o Flatpickr nos novos campos
-nova.querySelectorAll(".mesAno").forEach(input => {
-  flatpickr(input, {
-    locale: flatpickr.l10ns.pt,
-    plugins: [
-      new monthSelectPlugin({
-        shorthand: false,
+  // Aplica Flatpickr apenas se ainda não estiver aplicado
+  nova.querySelectorAll(".mesAno").forEach(input => {
+    if (!input._flatpickr) {
+      flatpickr(input, {
+        locale: flatpickr.l10ns.pt,
         dateFormat: "m/Y",
-        altFormat: "F Y"
-      })
-    ]
+        disableMobile: true
+      });
+    }
   });
-});
 }
   // Aplica Flatpickr nos campos já existentes ao carregar a página
 document.querySelectorAll(".mesAno").forEach(input => {
@@ -320,13 +321,11 @@ document.getElementById("adicionarObjetivo").addEventListener("click", () => {
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".mesAno").forEach(input => {
     if (!input._flatpickr) {
-flatpickr(input, {
-  locale: flatpickr.l10ns.pt,
-  dateFormat: "m/Y",
-  altFormat: "F Y",
-  plugins: [], // ← remove o plugin
-  disableMobile: true
-});
+      flatpickr(input, {
+        locale: flatpickr.l10ns.pt,
+        dateFormat: "m/Y",
+        disableMobile: true
+      });
     }
   });
 });
