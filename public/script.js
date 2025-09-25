@@ -326,14 +326,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!input._flatpickr) {
 flatpickr(input, {
   locale: flatpickr.l10ns.pt,
-  disableMobile: true, // ← ESSENCIAL
-  plugins: [
-    new monthSelectPlugin({
-      shorthand: false,
-      dateFormat: "m/Y",
-      altFormat: "F Y"
-    })
-  ]
+  dateFormat: "m/Y",
+  altInput: true,
+  altFormat: "F Y",
+  plugins: [], // ← remove o plugin
+  disableMobile: true
 });
     }
   });
