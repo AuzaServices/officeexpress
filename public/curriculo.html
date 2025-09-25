@@ -739,16 +739,17 @@ function adicionarExperiencia() {
   setTimeout(() => {
     [inicioInput, fimInput].forEach(input => {
       if (!input._flatpickr) {
-        flatpickr(input, {
-          locale: flatpickr.l10ns.pt,
-          plugins: [
-            new monthSelectPlugin({
-              shorthand: false,
-              dateFormat: "m/Y",
-              altFormat: "F Y"
-            })
-          ]
-        });
+flatpickr(input, {
+  locale: flatpickr.l10ns.pt,
+  disableMobile: true, // ← ESSENCIAL
+  plugins: [
+    new monthSelectPlugin({
+      shorthand: false,
+      dateFormat: "m/Y",
+      altFormat: "F Y"
+    })
+  ]
+});
       }
     });
   }, 0);

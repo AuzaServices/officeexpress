@@ -324,16 +324,17 @@ document.getElementById("adicionarObjetivo").addEventListener("click", () => {
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".mesAno").forEach(input => {
     if (!input._flatpickr) {
-      flatpickr(input, {
-        locale: flatpickr.l10ns.pt,
-        plugins: [
-          new monthSelectPlugin({
-            shorthand: false,
-            dateFormat: "m/Y",
-            altFormat: "F Y"
-          })
-        ]
-      });
+flatpickr(input, {
+  locale: flatpickr.l10ns.pt,
+  disableMobile: true, // ← ESSENCIAL
+  plugins: [
+    new monthSelectPlugin({
+      shorthand: false,
+      dateFormat: "m/Y",
+      altFormat: "F Y"
+    })
+  ]
+});
     }
   });
 });
