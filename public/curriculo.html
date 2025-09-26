@@ -29,17 +29,16 @@
 </head>
 
 <body>
-  <!-- 🧡 Caixa de vidro translúcido -->
-<div id="impactoFinal" style="
+<!-- 🟠 Mensagem 1 -->
+<div id="impactoFinal1" style="
   display: none;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: rgba(255, 153, 0, 0.08);
-  border: 1px solid rgba(255, 153, 0, 0.15);
+background: rgba(255, 153, 0, 0.03);
+border: 1px solid rgba(255, 153, 0, 0.07);
   color: #2a2a2a;
   padding: 24px 32px;
   border-radius: 16px;
@@ -48,44 +47,95 @@
   text-align: center;
   box-shadow: 0 0 40px rgba(255, 153, 0, 0.2);
   z-index: 9999;
-  width: 360px; /* ← largura aumentada */
+  width: 360px;
   max-width: 95%;
   opacity: 0;
   transition: opacity 0.6s ease;
 ">
   <div style="margin-bottom: 16px;">
-    Cada campo preenchido é um degrau rumo à vaga que pode mudar sua vida.
+    Não é sobre preencher campos. É sobre decidir seu futuro. Termine agora.
   </div>
-  <div style="height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden;">
-    <div id="barraTempo" style="height: 100%; width: 100%; background: linear-gradient(to right, #ff6a00, #ffcc00); transition: width 0.1s;"></div>
+  <div style="height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px;">
+    <div id="barraTempo1" style="height: 100%; width: 100%; background: linear-gradient(to right, #ff6a00, #ffcc00); transition: width 0.1s;"></div>
   </div>
 </div>
 
-<!-- 🔥 Script com detecção de inatividade -->
+<!-- 🟡 Mensagem 2 -->
+<div id="impactoFinal2" style="
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(8px);
+background: rgba(255, 153, 0, 0.03);
+border: 1px solid rgba(255, 153, 0, 0.07);
+  color: #2a2a2a;
+  padding: 24px 32px;
+  border-radius: 16px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(255, 153, 0, 0.2);
+  z-index: 9999;
+  width: 360px;
+  max-width: 95%;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+">
+  <div style="margin-bottom: 16px;">
+    Ei, ainda tá aí? A vaga não vai esperar pra sempre. Bora finalizar esse currículo.
+  </div>
+  <div style="height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px;">
+    <div id="barraTempo2" style="height: 100%; width: 100%; background: linear-gradient(to right, #ff6a00, #ffcc00); transition: width 0.1s;"></div>
+  </div>
+</div>
+
 <script>
   let tempoInativo = 0;
   let intervaloInatividade;
-  let explosaoMostrada = false;
+  let mensagem1Mostrada = false;
+  let mensagem2Mostrada = false;
+  let aguardandoSegunda = false;
+  let tempoParaSegunda = 0;
 
   function resetarInatividade() {
     tempoInativo = 0;
-    if (explosaoMostrada) return;
+    if (mensagem1Mostrada && !mensagem2Mostrada) {
+      aguardandoSegunda = true;
+      tempoParaSegunda = 0;
+    }
   }
 
   function iniciarMonitoramento() {
     intervaloInatividade = setInterval(() => {
       tempoInativo++;
-      if (tempoInativo >= 5 && !explosaoMostrada) {
-        mostrarImpactoFinal();
-        explosaoMostrada = true;
+
+      if (tempoInativo >= 3 && !mensagem1Mostrada) {
+        mostrarImpacto("impactoFinal1", "barraTempo1", 3000);
+        mensagem1Mostrada = true;
+        aguardandoSegunda = true;
+        tempoParaSegunda = 0;
+      }
+
+      if (aguardandoSegunda && !mensagem2Mostrada) {
+        tempoParaSegunda++;
+        if (tempoParaSegunda >= 10) {
+          mostrarImpacto("impactoFinal2", "barraTempo2", 10000, true);
+          mensagem2Mostrada = true;
+          aguardandoSegunda = false;
+        }
+      }
+
+      if (mensagem1Mostrada && mensagem2Mostrada) {
         clearInterval(intervaloInatividade);
       }
     }, 1000);
   }
 
-  function mostrarImpactoFinal() {
-    const box = document.getElementById("impactoFinal");
-    const barra = document.getElementById("barraTempo");
+  function mostrarImpacto(idCaixa, idBarra, tempoSumir, permitirClique = false) {
+    const box = document.getElementById(idCaixa);
+    const barra = document.getElementById(idBarra);
     box.style.display = "block";
     setTimeout(() => box.style.opacity = "1", 50);
 
@@ -96,12 +146,21 @@
       if (tempo <= 0) {
         clearInterval(intervalo);
         box.style.opacity = "0";
-        setTimeout(() => box.style.display = "none", 1500);
+        setTimeout(() => box.style.display = "none", tempoSumir);
       }
-    }, 30);
+    }, tempoSumir / 100);
+
+    if (permitirClique) {
+      const fechar = () => {
+        box.style.opacity = "0";
+        setTimeout(() => box.style.display = "none", 300);
+        document.removeEventListener("click", fechar);
+      };
+      document.addEventListener("click", fechar);
+    }
   }
 
-  ["mousemove", "keydown", "scroll", "touchstart"].forEach(evento => {
+  ["mousemove", "keydown", "scroll", "touchstart", "click"].forEach(evento => {
     document.addEventListener(evento, resetarInatividade);
   });
 
