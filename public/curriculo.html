@@ -30,6 +30,7 @@
 
 <body>
 <!-- 🟠 Mensagem 1 -->
+<!-- 🟠 Mensagem 1 -->
 <div id="impactoFinal1" style="
   display: none;
   position: fixed;
@@ -37,8 +38,8 @@
   left: 50%;
   transform: translate(-50%, -50%);
   backdrop-filter: blur(8px);
-background: rgba(255, 153, 0, 0.03);
-border: 1px solid rgba(255, 153, 0, 0.07);
+  background: rgba(255, 153, 0, 0.03);
+  border: 1px solid rgba(255, 153, 0, 0.07);
   color: #2a2a2a;
   padding: 24px 32px;
   border-radius: 16px;
@@ -68,8 +69,8 @@ border: 1px solid rgba(255, 153, 0, 0.07);
   left: 50%;
   transform: translate(-50%, -50%);
   backdrop-filter: blur(8px);
-background: rgba(255, 153, 0, 0.03);
-border: 1px solid rgba(255, 153, 0, 0.07);
+  background: rgba(255, 153, 0, 0.03);
+  border: 1px solid rgba(255, 153, 0, 0.07);
   color: #2a2a2a;
   padding: 24px 32px;
   border-radius: 16px;
@@ -111,8 +112,8 @@ border: 1px solid rgba(255, 153, 0, 0.07);
     intervaloInatividade = setInterval(() => {
       tempoInativo++;
 
-      if (tempoInativo >= 3 && !mensagem1Mostrada) {
-        mostrarImpacto("impactoFinal1", "barraTempo1", 3000);
+      if (tempoInativo >= 5 && !mensagem1Mostrada) {
+        mostrarImpacto("impactoFinal1", "barraTempo1", 5000);
         mensagem1Mostrada = true;
         aguardandoSegunda = true;
         tempoParaSegunda = 0;
@@ -120,7 +121,7 @@ border: 1px solid rgba(255, 153, 0, 0.07);
 
       if (aguardandoSegunda && !mensagem2Mostrada) {
         tempoParaSegunda++;
-        if (tempoParaSegunda >= 10) {
+        if (tempoParaSegunda >= 90) {
           mostrarImpacto("impactoFinal2", "barraTempo2", 10000, true);
           mensagem2Mostrada = true;
           aguardandoSegunda = false;
