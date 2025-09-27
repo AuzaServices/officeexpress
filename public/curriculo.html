@@ -29,23 +29,39 @@
 </head>
 
 <body>
-<!-- 🟠 Mensagem 1 -->
+
+<!-- 🟡 Mensagem 2 -->
+<!-- 🔲 Fundo escuro suave -->
+<div id="fundoEscuro" style="
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+"></div>
+
+<!-- 🟠 Mensagem 1 (corrigida) -->
 <div id="impactoFinal1" style="
   display: none;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  backdrop-filter: blur(8px);
-  background: rgba(255, 153, 0, 0.03);
+  background: #ffffff;
   color: #2a2a2a;
   padding: 24px 32px;
   border-radius: 16px;
   font-size: 1.3rem;
   font-weight: 600;
   text-align: center;
-box-shadow: none;
-border: 0.1px solid #00324a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border: 0.1px solid #00324a;
   z-index: 9999;
   width: 360px;
   max-width: 95%;
@@ -53,7 +69,7 @@ border: 0.1px solid #00324a;
   transition: opacity 0.6s ease;
 ">
   <div style="margin-bottom: 16px;">
-    Não é sobre preencher campos. É sobre decidir seu futuro. Não desista do seu Currículo.
+    Não é sobre preencher campos. É sobre decidir seu futuro. Não desista de fazer seu Currículo.
   </div>
   <div style="height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px;">
     <div id="barraTempo1" style="height: 100%; width: 100%; background: linear-gradient(to right, #ff6a00, #ffcc00); transition: width 0.1s;"></div>
@@ -67,16 +83,15 @@ border: 0.1px solid #00324a;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  backdrop-filter: blur(8px);
-  background: rgba(255, 153, 0, 0.03);
+  background: #ffffff;
   color: #2a2a2a;
   padding: 24px 32px;
   border-radius: 16px;
   font-size: 1.3rem;
   font-weight: 600;
   text-align: center;
-box-shadow: none;
-border: 0.1px solid #00324a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border: 0.1px solid #00324a;
   z-index: 9999;
   width: 360px;
   max-width: 95%;
@@ -136,8 +151,14 @@ border: 0.1px solid #00324a;
   function mostrarImpacto(idCaixa, idBarra, tempoSumir, permitirClique = false) {
     const box = document.getElementById(idCaixa);
     const barra = document.getElementById(idBarra);
+    const fundo = document.getElementById("fundoEscuro");
+
+    fundo.style.display = "block";
     box.style.display = "block";
-    setTimeout(() => box.style.opacity = "1", 50);
+    setTimeout(() => {
+      fundo.style.opacity = "1";
+      box.style.opacity = "1";
+    }, 50);
 
     let tempo = 100;
     const intervalo = setInterval(() => {
@@ -146,14 +167,22 @@ border: 0.1px solid #00324a;
       if (tempo <= 0) {
         clearInterval(intervalo);
         box.style.opacity = "0";
-        setTimeout(() => box.style.display = "none", tempoSumir);
+        fundo.style.opacity = "0";
+        setTimeout(() => {
+          box.style.display = "none";
+          fundo.style.display = "none";
+        }, tempoSumir);
       }
     }, tempoSumir / 100);
 
     if (permitirClique) {
       const fechar = () => {
         box.style.opacity = "0";
-        setTimeout(() => box.style.display = "none", 300);
+        fundo.style.opacity = "0";
+        setTimeout(() => {
+          box.style.display = "none";
+          fundo.style.display = "none";
+        }, 300);
         document.removeEventListener("click", fechar);
       };
       document.addEventListener("click", fechar);
