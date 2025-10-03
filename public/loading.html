@@ -136,6 +136,7 @@ container.innerHTML = `
       <h1><strong>${dados.nome || ""}</strong></h1>
       <p><strong>Email:</strong> ${dados.email || ""}</p>
       <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+      ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
       <p><strong>Endereço:</strong> ${enderecoCompleto}</p>
       ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
     </div>

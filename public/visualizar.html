@@ -173,27 +173,28 @@
     const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
     const curriculo = document.createElement("div");
     curriculo.id = "curriculo";
-    curriculo.innerHTML = `
-      <div class="info-topo">
-        <div>
-          <h1>${dados.nome || ""}</h1>
-          ${dados.email ? `<p><strong>Email:</strong> ${dados.email}</p>` : ""}
-          ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
-          ${(dados.endereco || dados.numero || dados.complemento || dados.bairro || dados.cidade || dados.cep) ? `
-  <p><strong>Endereço:</strong> 
-    ${dados.endereco || ""}${dados.numero ? `, ${dados.numero}` : ""}
-    ${dados.complemento ? ` (${dados.complemento})` : ""}
-    ${dados.bairro ? ` - ${dados.bairro}` : ""}
-    ${dados.cidade ? `, ${dados.cidade}` : ""}
-    ${dados.cep ? ` - CEP: ${dados.cep}` : ""}
-  </p>` : ""}
-          ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
-        </div>
-        ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
-      </div>
-      ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
-      ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
-    `;
+curriculo.innerHTML = `
+  <div class="info-topo">
+    <div>
+      <h1>${dados.nome || ""}</h1>
+      ${dados.email ? `<p><strong>Email:</strong> ${dados.email}</p>` : ""}
+      ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
+      ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
+      ${(dados.endereco || dados.numero || dados.complemento || dados.bairro || dados.cidade || dados.cep) ? `
+        <p><strong>Endereço:</strong> 
+          ${dados.endereco || ""}${dados.numero ? `, ${dados.numero}` : ""}
+          ${dados.complemento ? ` (${dados.complemento})` : ""}
+          ${dados.bairro ? ` - ${dados.bairro}` : ""}
+          ${dados.cidade ? `, ${dados.cidade}` : ""}
+          ${dados.cep ? ` - CEP: ${dados.cep}` : ""}
+        </p>` : ""}
+      ${dados.infoAdicional ? `<p>${dados.infoAdicional}</p>` : ""}
+    </div>
+    ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
+  </div>
+  ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
+  ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
+`;
 
     if (Array.isArray(dados.curso)) {
       let html = "";
