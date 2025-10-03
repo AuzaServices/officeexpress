@@ -29,6 +29,7 @@
 
 const dados = {
   nome: form.nome?.value.trim() || "",
+  idade: form.idade?.value.trim() || "", // ✅ Adiciona a idade aqui
   email: form.email?.value.trim() || "",
   telefone: valores("telefone").filter(t => t).join(" "),
   endereco: form.endereco?.value.trim() || "",
@@ -37,7 +38,7 @@ const dados = {
   bairro: form.bairro?.value.trim() || "",
   cidade: form.cidade?.value.trim() || "",
   cep: form.cep?.value.trim() || "",
-infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "", // ← ESSENCIAL
+  infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
   objetivo: form.objetivo?.value.trim() || "",
   formacao: form.formacao?.value.trim() || "",
   habilidades: form.habilidades?.value.trim() || "",
