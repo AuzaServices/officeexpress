@@ -215,6 +215,49 @@
   transform: scale(1.05);
   box-shadow: 0 0 15px #ff8800dd;
 }
+.botao-brilhante {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  box-shadow: 0 0 10px #e09d00aa;
+  background-color: #ff8800;
+  color: #00324a;
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.botao-brilhante::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #ffffff88, transparent);
+  transform: skewX(-20deg);
+  animation: brilhoBotao 2.5s infinite;
+}
+
+@keyframes brilhoBotao {
+  0% {
+    left: -75%;
+  }
+  50% {
+    left: 125%;
+  }
+  100% {
+    left: 125%;
+  }
+}
+
+.botao-brilhante:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #e09d00dd;
+}
 </style>
 </head>
 <body>
@@ -271,11 +314,9 @@
         onkeydown="return bloquearEspaco(event)" 
         style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom:20px;" 
       />
-      <button 
-        onclick="iniciarCurriculo()" 
-        style="background-color:#e09d00; color:#00324a; border:none; padding:10px 20px; font-weight:bold; border-radius:30px; cursor:pointer;">
-        Iniciar
-      </button>
+<button onclick="iniciarCurriculo()" class="botao-brilhante">
+  Iniciar
+</button>
     </div>
   </div>
 
