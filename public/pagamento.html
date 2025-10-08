@@ -26,6 +26,41 @@
       transition: opacity 0.5s ease;
       z-index: 9999;
     }
+    .btn-brilhante {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  box-shadow: 0 0 10px #ff8800aa;
+}
+
+.btn-brilhante::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #fff6cc88, transparent);
+  transform: skewX(-20deg);
+  animation: brilhoBotao 2.5s infinite;
+}
+
+@keyframes brilhoBotao {
+  0% {
+    left: -75%;
+  }
+  50% {
+    left: 125%;
+  }
+  100% {
+    left: 125%;
+  }
+}
+
+.btn-brilhante:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #ff8800dd;
+}
   </style>
 </head>
 <body class="relative py-20 px-4 text-white">
@@ -51,9 +86,9 @@
       class="w-full text-center font-bold text-[#0056b3] bg-[#eef6ff] border border-gray-300 rounded-lg py-3 mb-4"
       value="00020126640014BR.GOV.BCB.PIX0121andrielysom@gmail.com0217Currículo/Análise52040000530398654044.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63044F6F" />
 
-    <button onclick="copiarPix()" class="w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
-      Copiar chave Pix
-    </button>
+<button onclick="copiarPix()" class="btn-brilhante w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
+  Copiar chave Pix
+</button>
 
     <button onclick="liberarPDF()" class="w-full bg-gradient-to-r from-[#E7C75F] to-[#d4b84a] text-black font-black text-xl py-4 rounded-lg hover:from-green-600 hover:to-green-700 hover:text-white transition transform hover:scale-105 shadow-2xl">
       ✅ Já paguei — quero meu Currículo
@@ -63,7 +98,7 @@
 <p class="text-lg mt-4">Parabéns! Seu currículo está pronto para abrir portas e gerar oportunidades reais.</p>
 <a href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20de%20R$4,99%20e%20quero%20receber%20meu%20currículo%20em%20PDF."
    target="_blank"
-   class="block mt-4 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
+   class="btn-brilhante block mt-4 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
   Receber agora pelo WhatsApp
 </a>
     </div>
