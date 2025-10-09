@@ -457,3 +457,75 @@ input.mesAno[type="date"] {
     opacity: 1;
   }
 }
+
+@keyframes derreter {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scaleY(0.2) scaleX(1.2); opacity: 0; }
+}
+
+.botao-ia-particles.derretendo {
+  animation: derreter 0.8s ease forwards;
+}
+
+/* Container geral da barra + frase */
+.bloco-barra {
+  margin-bottom: 32px;
+  max-width: 600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Barra de progresso + número */
+.barra-container {
+  margin-top: 24px; /* empurra a barra pra baixo */
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.barra {
+  flex: 1;
+  width: 0% !important; /* força o reset */
+  height: 14px;
+  background: linear-gradient(to right, #e09d00, #00324a);
+  border-radius: 7px;
+  transition: width 0.3s ease-in-out;
+}
+
+.porcentagem {
+  font-weight: bold;
+  color: #00324a;
+  min-width: 40px;
+  text-align: right;
+  transition: all 0.3s ease-in-out;
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Frases abaixo da barra */
+.frases-barra {
+  list-style: none;
+  padding: 0;
+  margin: 2px 0 0; /* reduz espaço acima */
+  font-size: 0.85rem; /* levemente menor */
+  color: #555;
+  text-align: left;
+  line-height: 1.3; /* mais compacto */
+}
+
+.frases-barra li {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  margin-left: 2px; /* menos recuo */
+  margin-top: -2px; /* sobe um pouco */
+}
+
+.frases-barra li.visivel {
+  display: block;
+  opacity: 1;
+}
