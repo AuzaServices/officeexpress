@@ -219,8 +219,6 @@ function iniciarCarregamento() {
   const frases1 = document.querySelectorAll("#frases1 li");
   const frases2 = document.querySelectorAll("#frases2 li");
 
-  let p1 = 0;
-  let p2 = 0;
   let etapa1 = 0;
   let etapa2 = 0;
   let barra1Finalizada = false;
@@ -262,14 +260,22 @@ function iniciarCarregamento() {
         } else {
           alert("O envio falhou. Tente novamente.");
         }
-      }, 500); // atraso final antes de redirecionar
+      }, 500);
     }
   }
 
-  // Barra 1 começa imediatamente
+function curvaProgresso(t) {
+  // Curva de easing suave e sempre crescente
+  return t < 0.5
+    ? 2 * t * t
+    : -1 + (4 - 2 * t) * t;
+}
+
+  let t1 = 0;
   const intervalo1 = setInterval(() => {
-    p1 += 2;
-    if (p1 > 100) p1 = 100;
+    t1 += 0.015;
+    if (t1 > 1) t1 = 1;
+    const p1 = Math.min(100, Math.floor(curvaProgresso(t1) * 100));
     barra1.style.transform = `scaleX(${p1 / 100})`;
     pct1.innerText = p1 + "%";
 
@@ -289,15 +295,16 @@ function iniciarCarregamento() {
     if (p1 === 100 && !barra1Finalizada) {
       barra1Finalizada = true;
       clearInterval(intervalo1);
-      setTimeout(verificarFinalizacao, 500); // atraso final da barra 1
+      setTimeout(verificarFinalizacao, 500);
     }
   }, 120);
 
-  // Barra 2 começa com atraso de 600ms
+  let t2 = 0;
   setTimeout(() => {
     const intervalo2 = setInterval(() => {
-      p2 += 2;
-      if (p2 > 100) p2 = 100;
+      t2 += 0.015;
+      if (t2 > 1) t2 = 1;
+      const p2 = Math.min(100, Math.floor(curvaProgresso(t2) * 100));
       barra2.style.transform = `scaleX(${p2 / 100})`;
       pct2.innerText = p2 + "%";
 
@@ -317,7 +324,7 @@ function iniciarCarregamento() {
       if (p2 === 100 && !barra2Finalizada) {
         barra2Finalizada = true;
         clearInterval(intervalo2);
-        setTimeout(verificarFinalizacao, 500); // atraso final da barra 2
+        setTimeout(verificarFinalizacao, 500);
       }
     }, 120);
   }, 600);
