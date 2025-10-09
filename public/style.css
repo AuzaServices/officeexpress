@@ -478,7 +478,7 @@ input.mesAno[type="date"] {
 
 /* Barra de progresso + número */
 .barra-container {
-  margin-top: 24px; /* empurra a barra pra baixo */
+  margin-top: 24px;
   margin-bottom: 6px;
   display: flex;
   align-items: center;
@@ -487,13 +487,21 @@ input.mesAno[type="date"] {
   max-width: 600px;
 }
 
-.barra {
+.barra-wrapper {
   flex: 1;
-  width: 0% !important; /* força o reset */
   height: 14px;
-  background: linear-gradient(to right, #e09d00, #00324a);
+  background-color: #eee;
   border-radius: 7px;
-  transition: width 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.barra {
+  height: 100%;
+  background: linear-gradient(to right, #e09d00, #00324a);
+  transform: scaleX(0); /* começa zerada */
+  transform-origin: left;
+  transition: transform 0.3s ease-in-out;
+  border-radius: 7px;
 }
 
 .porcentagem {
@@ -510,19 +518,19 @@ input.mesAno[type="date"] {
 .frases-barra {
   list-style: none;
   padding: 0;
-  margin: 2px 0 0; /* reduz espaço acima */
-  font-size: 0.85rem; /* levemente menor */
+  margin: 2px 0 0;
+  font-size: 0.85rem;
   color: #555;
   text-align: left;
-  line-height: 1.3; /* mais compacto */
+  line-height: 1.3;
 }
 
 .frases-barra li {
   display: none;
   opacity: 0;
   transition: opacity 0.4s ease;
-  margin-left: 2px; /* menos recuo */
-  margin-top: -2px; /* sobe um pouco */
+  margin-left: 2px;
+  margin-top: -2px;
 }
 
 .frases-barra li.visivel {

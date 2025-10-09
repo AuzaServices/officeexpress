@@ -4,18 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Analisar Currículo | Office Express</title>
-
-  <!-- Ícones e fontes -->
   <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Estilos -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- Partículas de fundo -->
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
-</head>
+  <style>
+    .barra-container {
+      margin-top: 24px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 600px;
+    }
 
+    .barra-wrapper {
+      flex: 1;
+      height: 14px;
+      background-color: #eee;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .barra {
+      height: 100%;
+      background: linear-gradient(to right, #e09d00, #00324a);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .porcentagem {
+      font-weight: bold;
+      color: #00324a;
+      min-width: 40px;
+      text-align: right;
+    }
+  </style>
+</head>
 <body>
   <div id="particles-js"></div>
 
@@ -37,49 +64,42 @@
       <input type="file" id="curriculo" name="curriculo" accept=".pdf,.doc,.docx" required />
 
       <div id="area-botao">
-  <button id="botao-ia" class="botao-ia-particles">
-    IA Scanner
-    <span class="particula" style="top: 10%; left: 20%; animation-delay: 0s;"></span>
-    <span class="particula" style="top: 30%; left: 80%; animation-delay: 0.4s;"></span>
-    <span class="particula" style="top: 60%; left: 40%; animation-delay: 0.8s;"></span>
-    <span class="particula" style="top: 80%; left: 70%; animation-delay: 1.2s;"></span>
-    <span class="particula" style="top: 50%; left: 10%; animation-delay: 1.6s;"></span>
-    <span class="particula" style="top: 20%; left: 60%; animation-delay: 2s;"></span>
-    <span class="particula" style="top: 70%; left: 30%; animation-delay: 2.4s;"></span>
-    <span class="particula" style="top: 40%; left: 50%; animation-delay: 2.8s;"></span>
-    <span class="particula" style="top: 85%; left: 15%; animation-delay: 3.2s;"></span>
-    <span class="particula" style="top: 25%; left: 75%; animation-delay: 3.6s;"></span>
-  </button>
-</div>
+        <button id="botao-ia" class="botao-ia-particles">
+          IA Scanner
+          <!-- partículas decorativas -->
+        </button>
+      </div>
 
-<!-- Painel de carregamento começa oculto -->
-<div id="painel-carregamento" style="display: none;">
-  <div class="barra-container">
-    <div class="barra" id="barra1"></div>
-    <div class="porcentagem" id="porcentagem1">0%</div>
-  </div>
-  <ul class="frases-barra" id="frases1">
-    <li>Detectando palavras-chave</li>
-    <li>Avaliando competências</li>
-    <li>Mapeando áreas de atuação</li>
-  </ul>
+      <div id="painel-carregamento" style="visibility: hidden;">
+        <div class="barra-container">
+          <div class="barra-wrapper">
+            <div class="barra" id="barra1"></div>
+          </div>
+          <div class="porcentagem" id="porcentagem1">0%</div>
+        </div>
+        <ul class="frases-barra" id="frases1">
+          <li>Detectando palavras-chave</li>
+          <li>Avaliando competências</li>
+          <li>Mapeando áreas de atuação</li>
+        </ul>
 
-  <div class="barra-container">
-    <div class="barra" id="barra2"></div>
-    <div class="porcentagem" id="porcentagem2">0%</div>
-  </div>
-  <ul class="frases-barra" id="frases2">
-    <li>Verificando alinhamento profissional</li>
-    <li>Comparando com vagas atuais</li>
-    <li>Gerando insights personalizados</li>
-  </ul>
-</div>
+        <div class="barra-container">
+          <div class="barra-wrapper">
+            <div class="barra" id="barra2"></div>
+          </div>
+          <div class="porcentagem" id="porcentagem2">0%</div>
+        </div>
+        <ul class="frases-barra" id="frases2">
+          <li>Verificando alinhamento profissional</li>
+          <li>Comparando com vagas atuais</li>
+          <li>Gerando insights personalizados</li>
+        </ul>
+      </div>
     </form>
 
     <div id="notificacoes"></div>
   </div>
 
-  <!-- Scripts -->
   <script>
     tsParticles.load("particles-js", {
       fullScreen: { enable: false },
@@ -100,9 +120,7 @@
         color: { value: "#f4f7fa" }
       }
     });
-  </script>
 
-  <script>
     const campoTelefone = document.getElementById('telefone');
     campoTelefone.addEventListener('input', function (e) {
       let valor = e.target.value.replace(/\D/g, '');
@@ -118,9 +136,7 @@
       }
       e.target.value = formatado;
     });
-  </script>
 
-  <script>
     document.getElementById("botao-ia").addEventListener("click", async () => {
       const nome = document.getElementById("nome").value.trim();
       const telefone = document.getElementById("telefone").value.trim();
@@ -134,27 +150,34 @@
       const botao = document.getElementById("botao-ia");
       botao.classList.add("derretendo");
 
-setTimeout(() => {
-  document.getElementById("area-botao").style.display = "none";
+      setTimeout(() => {
+        document.getElementById("area-botao").style.display = "none";
 
-  // desativa transição e zera
-  const barra1 = document.getElementById("barra1");
-  const barra2 = document.getElementById("barra2");
-  barra1.style.transition = "none";
-  barra2.style.transition = "none";
-  barra1.style.width = "0%";
-  barra2.style.width = "0%";
-  document.getElementById("porcentagem1").innerText = "0%";
-  document.getElementById("porcentagem2").innerText = "0%";
+        const painel = document.getElementById("painel-carregamento");
+        const barra1 = document.getElementById("barra1");
+        const barra2 = document.getElementById("barra2");
+        const pct1 = document.getElementById("porcentagem1");
+        const pct2 = document.getElementById("porcentagem2");
 
-  // mostra painel e reativa transição
-  setTimeout(() => {
-    document.getElementById("painel-carregamento").style.display = "block";
-    barra1.style.transition = "width 0.3s ease-in-out";
-    barra2.style.transition = "width 0.3s ease-in-out";
-    iniciarCarregamento();
-  }, 100);
-}, 800);
+        painel.style.visibility = "hidden";
+
+        barra1.style.transition = "none";
+        barra2.style.transition = "none";
+        barra1.style.transform = "scaleX(0)";
+        barra2.style.transform = "scaleX(0)";
+        pct1.innerText = "0%";
+        pct2.innerText = "0%";
+
+        barra1.offsetWidth;
+        barra2.offsetWidth;
+
+        barra1.style.transition = "transform 0.3s ease-in-out";
+        barra2.style.transition = "transform 0.3s ease-in-out";
+        painel.style.visibility = "visible";
+
+        iniciarCarregamento();
+      }, 800);
+
       const formData = new FormData();
       formData.append("nome", nome);
       formData.append("telefone", telefone);
@@ -173,116 +196,102 @@ setTimeout(() => {
         }
 
         window.processoPronto = true;
-
       } catch (err) {
         console.error(err);
         alert("Falha ao enviar arquivo.");
       }
     });
-function iniciarCarregamento() {
-  const barra1 = document.getElementById("barra1");
-  const barra2 = document.getElementById("barra2");
-  const pct1 = document.getElementById("porcentagem1");
-  const pct2 = document.getElementById("porcentagem2");
-  const frases1 = document.querySelectorAll("#frases1 li");
-  const frases2 = document.querySelectorAll("#frases2 li");
 
-  let p1 = 0;
-  let p2 = 0;
-  let etapa1 = 0;
-  let etapa2 = 0;
+    function iniciarCarregamento() {
+      const barra1 = document.getElementById("barra1");
+      const barra2 = document.getElementById("barra2");
+      const pct1 = document.getElementById("porcentagem1");
+      const pct2 = document.getElementById("porcentagem2");
+      const frases1 = document.querySelectorAll("#frases1 li");
+      const frases2 = document.querySelectorAll("#frases2 li");
 
-  // Zera visualmente e força reflow
-  barra1.style.transition = "none";
-  barra2.style.transition = "none";
-  barra1.style.width = "0%";
-  barra2.style.width = "0%";
-  pct1.innerText = "0%";
-  pct2.innerText = "0%";
-  barra1.offsetWidth;
-  barra2.offsetWidth;
-  barra1.style.transition = "width 0.3s ease-in-out";
-  barra2.style.transition = "width 0.3s ease-in-out";
+      let p1 = 0;
+      let p2 = 0;
+      let etapa1 = 0;
+      let etapa2 = 0;
 
-  frases1.forEach(f => {
-    f.classList.remove("visivel");
-    f.style.display = "none";
-  });
-  frases2.forEach(f => {
-    f.classList.remove("visivel");
-    f.style.display = "none";
-  });
+      frases1.forEach(f => {
+        f.classList.remove("visivel");
+        f.style.display = "none";
+      });
+      frases2.forEach(f => {
+        f.classList.remove("visivel");
+        f.style.display = "none";
+      });
 
-  function mostrarFrase(lista, index) {
-    lista.forEach((f, i) => {
-      f.classList.remove("visivel");
-      f.style.display = "none";
-    });
+      function mostrarFrase(lista, index) {
+        lista.forEach((f, i) => {
+          f.classList.remove("visivel");
+          f.style.display = "none";
+        });
+        if (lista[index]) {
+          lista[index].style.display = "block";
+          setTimeout(() => {
+            lista[index].classList.add("visivel");
+          }, 50);
 
-    if (lista[index]) {
-      lista[index].style.display = "block";
-      setTimeout(() => {
-        lista[index].classList.add("visivel");
-      }, 50);
-
-      setTimeout(() => {
-        lista[index].classList.remove("visivel");
-        lista[index].style.display = "none";
-      }, 2000);
-    }
-  }
-
-  const intervalo = setInterval(() => {
-    p1 += 2;
-    p2 += 2;
-
-    if (p1 > 100) p1 = 100;
-    if (p2 > 100) p2 = 100;
-
-    barra1.style.width = p1 + "%";
-    barra2.style.width = p2 + "%";
-    pct1.innerText = p1 + "%";
-    pct2.innerText = p2 + "%";
-
-    if (p1 >= 20 && etapa1 === 0) {
-      mostrarFrase(frases1, 0);
-      etapa1++;
-    }
-    if (p1 >= 50 && etapa1 === 1) {
-      mostrarFrase(frases1, 1);
-      etapa1++;
-    }
-    if (p1 >= 80 && etapa1 === 2) {
-      mostrarFrase(frases1, 2);
-      etapa1++;
-    }
-
-    if (p2 >= 20 && etapa2 === 0) {
-      mostrarFrase(frases2, 0);
-      etapa2++;
-    }
-    if (p2 >= 50 && etapa2 === 1) {
-      mostrarFrase(frases2, 1);
-      etapa2++;
-    }
-    if (p2 >= 80 && etapa2 === 2) {
-      mostrarFrase(frases2, 2);
-      etapa2++;
-    }
-
-    if (p1 === 100 && p2 === 100) {
-      clearInterval(intervalo);
-      setTimeout(() => {
-        if (window.processoPronto) {
-          window.location.href = "pagamentoanalise.html";
-        } else {
-          alert("O envio falhou. Tente novamente.");
+          setTimeout(() => {
+            lista[index].classList.remove("visivel");
+            lista[index].style.display = "none";
+          }, 2000);
         }
-      }, 500);
+      }
+
+      const intervalo = setInterval(() => {
+        p1 += 2;
+        p2 += 2;
+
+        if (p1 > 100) p1 = 100;
+        if (p2 > 100) p2 = 100;
+
+        barra1.style.transform = `scaleX(${p1 / 100})`;
+        barra2.style.transform = `scaleX(${p2 / 100})`;
+        pct1.innerText = p1 + "%";
+        pct2.innerText = p2 + "%";
+
+        if (p1 >= 20 && etapa1 === 0) {
+          mostrarFrase(frases1, 0);
+          etapa1++;
+        }
+        if (p1 >= 50 && etapa1 === 1) {
+          mostrarFrase(frases1, 1);
+          etapa1++;
+        }
+        if (p1 >= 80 && etapa1 === 2) {
+          mostrarFrase(frases1, 2);
+          etapa1++;
+        }
+
+        if (p2 >= 20 && etapa2 === 0) {
+          mostrarFrase(frases2, 0);
+          etapa2++;
+        }
+        if (p2 >= 50 && etapa2 === 1) {
+          mostrarFrase(frases2, 1);
+          etapa2++;
+        }
+        if (p2 >= 80 && etapa2 === 2) {
+          mostrarFrase(frases2, 2);
+          etapa2++;
+        }
+
+        if (p1 === 100 && p2 === 100) {
+          clearInterval(intervalo);
+          setTimeout(() => {
+            if (window.processoPronto) {
+              window.location.href = "pagamentoanalise.html";
+            } else {
+              alert("O envio falhou. Tente novamente.");
+            }
+          }, 500);
+        }
+      }, 120);
     }
-  }, 120);
-}
   </script>
 </body>
 </html>
-        
