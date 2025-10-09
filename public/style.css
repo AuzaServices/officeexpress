@@ -458,13 +458,19 @@ input.mesAno[type="date"] {
   }
 }
 
-@keyframes derreter {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scaleY(0.2) scaleX(1.2); opacity: 0; }
+@keyframes sumir-suave {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 
 .botao-ia-particles.derretendo {
-  animation: derreter 0.8s ease forwards;
+  animation: sumir-suave 0.6s ease-out forwards;
 }
 
 /* Container geral da barra + frase */
