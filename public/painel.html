@@ -124,7 +124,7 @@
 
           data.forEach(pdf => {
             const telefone = pdf.telefone?.replace(/\D/g, '');
-            const mensagem = encodeURIComponent("Seu currículo está pronto. Finalize o pagamento e receba o PDF agora mesmo — não perca tempo!");
+            const mensagem = encodeURIComponent("🎉 Seu Currículo está pronto para impressionar os recrutadores! Agora é só finalizar o pagamento para receber o PDF na hora — sem complicações, sem espera! 👉 Acesse agora: https://officeexpress.onrender.com/pagamento.html 📌 O Pix para copiar e colar está lá te esperando!");
             const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
             const linha = document.createElement('tr');
@@ -178,7 +178,7 @@ linha.innerHTML = `
 
           data.forEach(rel => {
             const telefone = rel.telefone?.replace(/\D/g, '');
-            const mensagem = encodeURIComponent("Seu relatório de currículo está pronto. Finalize o pagamento para recebe-lo via PDF!");
+            const mensagem = encodeURIComponent("📄 Seu relatório de currículo está prontinho! Finalize o pagamento agora e receba o PDF diretamente — rápido, fácil e sem complicações! 👉 Acesse: https://officeexpress.onrender.com/pagamentoanalise.html 💡 O Pix para copiar e colar está disponível lá!");
             const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
             const linha = document.createElement('tr');
