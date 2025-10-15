@@ -470,14 +470,14 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
 // Frase de incentivo + link
 doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-   .text('💡 Dica final');
+   .text('Dica final');
 
 doc.font('Helvetica').fontSize(12).fillColor('#333333')
    .text('Se seu currículo recebeu alertas importantes, considere criar uma nova versão mais completa e atrativa.');
 
 doc.moveDown();
 
-doc.fillColor('#1E90FF').text('Clique aqui para acessar o editor de currículos OfficeExpress', {
+doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
   link: 'https://officeexpress.onrender.com/splash.html',
   underline: true
 });
