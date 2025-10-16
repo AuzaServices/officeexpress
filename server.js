@@ -482,6 +482,13 @@ doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos
   underline: true
 });
 
+// Rodapé
+doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
+   .text('Office Express 2025. Todos os Direitos Reservados', 50, doc.page.height - 50, {
+     align: 'center',
+     width: doc.page.width - 100
+   });
+
     doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err.message);
