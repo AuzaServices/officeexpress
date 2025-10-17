@@ -411,17 +411,22 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
     doc.on('data', buffers.push.bind(buffers));
     doc.on('end', async () => {
-      const pdfBuffer = Buffer.concat(buffers);
-      const filename = `relatorio-${Date.now()}.pdf`.slice(0, 255); // evita estourar campo
-      const telefoneLimpo = telefone.slice(0, 20); // evita estourar campo
+      try {
+        const pdfBuffer = Buffer.concat(buffers);
+        const filename = `relatorio-${Date.now()}.pdf`.slice(0, 255);
+        const telefoneLimpo = telefone.slice(0, 20);
 
-      const query = `
-        INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
-        VALUES (?, ?, ?, ?, ?)
-      `;
-      await pool.query(query, [nome, telefoneLimpo, filename, 'application/pdf', pdfBuffer]);
+        const query = `
+          INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
+          VALUES (?, ?, ?, ?, ?)
+        `;
+        await pool.query(query, [nome, telefoneLimpo, filename, 'application/pdf', pdfBuffer]);
 
-      res.json({ sucesso: true });
+        res.json({ sucesso: true });
+      } catch (err) {
+        console.error('❌ Erro ao salvar no banco:', err);
+        res.status(500).json({ erro: 'Erro ao salvar no banco' });
+      }
     });
 
     // Cabeçalho
@@ -484,6 +489,10 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     });
 
     // Rodapé fixo no final da página atual
+    if (doc.y > doc.page.height - 100) {
+      doc.addPage(); // se o conteúdo já ocupou demais, cria nova página
+    }
+
     const rodapeY = doc.page.height - 40;
 
     doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
