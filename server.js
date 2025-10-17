@@ -479,19 +479,20 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       underline: true
     });
 
-    // Verifica se ainda há espaço suficiente na página atual
-    if (doc.y > doc.page.height - 100) {
-      doc.addPage(); // evita que o rodapé seja empurrado
-    }
+// Rodapé fixo no final da página atual
+doc.switchToPage(doc.page.index); // garante que estamos na página atual
 
-    // Rodapé fixo no final da página atual
-    const rodapeY = doc.page.height - 40;
+const rodapeY = doc.page.height - 50;
 
-    doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
-       .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
-         align: 'center',
-         width: doc.page.width - 100
-       });
+// Adiciona linha de separação (opcional)
+doc.moveTo(50, rodapeY - 10).lineTo(doc.page.width - 50, rodapeY - 10).strokeColor('#CCCCCC').stroke();
+
+// Posiciona o texto do rodapé
+doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
+   .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
+     align: 'center',
+     width: doc.page.width - 100
+   });
 
     doc.end();
   } catch (err) {
