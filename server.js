@@ -479,15 +479,9 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       underline: true
     });
 
-// Rodapé fixo no final da página atual
-doc.switchToPage(doc.page.index); // garante que estamos na página atual
+// Garante que o rodapé seja inserido sem ultrapassar os limites da página
+const rodapeY = doc.page.maxY ? doc.page.maxY - 40 : doc.page.height - 40;
 
-const rodapeY = doc.page.height - 50;
-
-// Adiciona linha de separação (opcional)
-doc.moveTo(50, rodapeY - 10).lineTo(doc.page.width - 50, rodapeY - 10).strokeColor('#CCCCCC').stroke();
-
-// Posiciona o texto do rodapé
 doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
    .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
      align: 'center',
