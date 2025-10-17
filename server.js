@@ -488,10 +488,8 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       underline: true
     });
 
-    // Rodapé fixo no final da página atual
-    if (doc.y > doc.page.height - 100) {
-      doc.addPage(); // se o conteúdo já ocupou demais, cria nova página
-    }
+    // Força nova página só pro rodapé
+    doc.addPage();
 
     const rodapeY = doc.page.height - 40;
 
