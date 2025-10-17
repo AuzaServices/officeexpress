@@ -412,13 +412,14 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     doc.on('data', buffers.push.bind(buffers));
     doc.on('end', async () => {
       const pdfBuffer = Buffer.concat(buffers);
-      const filename = `relatorio-${Date.now()}.pdf`;
+      const filename = `relatorio-${Date.now()}.pdf`.slice(0, 255); // evita estourar campo
+      const telefoneLimpo = telefone.slice(0, 20); // evita estourar campo
 
       const query = `
         INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
         VALUES (?, ?, ?, ?, ?)
       `;
-      await pool.query(query, [nome, telefone, filename, 'application/pdf', pdfBuffer]);
+      await pool.query(query, [nome, telefoneLimpo, filename, 'application/pdf', pdfBuffer]);
 
       res.json({ sucesso: true });
     });
@@ -468,61 +469,33 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
     doc.moveDown().moveDown();
 
-// Frase de incentivo + link
-doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-   .text('Dica final');
+    // Frase de incentivo + link
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+       .text('Dica final');
 
-doc.font('Helvetica').fontSize(12).fillColor('#333333')
-   .text('Se seu currículo recebeu alertas importantes, considere criar uma nova versão mais completa e atrativa.');
+    doc.font('Helvetica').fontSize(12).fillColor('#333333')
+       .text('Se seu currículo recebeu alertas importantes, considere criar uma nova versão mais completa e atrativa.');
 
-doc.moveDown();
+    doc.moveDown();
 
-doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
-  link: 'https://officeexpress.onrender.com/splash.html',
-  underline: true
-});
+    doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
+      link: 'https://officeexpress.onrender.com/splash.html',
+      underline: true
+    });
 
-// Rodapé
-  doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
-     .text('Office Express® 2025. Todos os Direitos Reservados', 50, doc.page.height - 50, {
-       align: 'center',
-       width: doc.page.width - 100
-     });
+    // Rodapé fixo no final da página atual
+    const rodapeY = doc.page.height - 40;
+
+    doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
+       .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
+         align: 'center',
+         width: doc.page.width - 100
+       });
 
     doc.end();
   } catch (err) {
-    console.error('Erro na análise e salvamento:', err.message);
+    console.error('Erro na análise e salvamento:', err);
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
-  }
-});
-app.get('/api/analises', async (req, res) => {
-  try {
-    const query = `
-      SELECT 
-        id, 
-        nome, 
-        telefone, 
-        filename, 
-        mimetype, 
-        criado_em
-      FROM analises
-      ORDER BY id DESC
-    `;
-    
-    const [results] = await pool.query(query);
-
-    if (!Array.isArray(results)) {
-      return res.status(500).json({ error: 'Formato inválido de resposta' });
-    }
-
-    res.json(results);
-  } catch (err) {
-    console.error('❌ Erro ao buscar análises:', {
-      mensagem: err.message,
-      codigo: err.code,
-      sql: err.sql
-    });
-    res.status(500).json({ error: 'Erro ao buscar análises' });
   }
 });
 
