@@ -482,14 +482,11 @@ doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos
   underline: true
 });
 
-// Rodapé
-// Verifica se ainda há espaço suficiente na página atual
-if (doc.y > doc.page.height - 100) {
-  doc.addPage(); // evita que o rodapé seja empurrado
-}
-
-// Rodapé fixo no final da página atual
+// Garante que o rodapé fique na parte inferior da página atual
 const rodapeY = doc.page.height - 40;
+
+// Move o cursor manualmente para o rodapé, sem criar nova página
+doc.y = rodapeY;
 
 doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
    .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
