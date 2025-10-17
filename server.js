@@ -483,11 +483,19 @@ doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos
 });
 
 // Rodapé
-  doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
-     .text('Office Express® 2025. Todos os Direitos Reservados', 50, doc.page.height - 50, {
-       align: 'center',
-       width: doc.page.width - 100
-     });
+// Verifica se ainda há espaço suficiente na página atual
+if (doc.y > doc.page.height - 100) {
+  doc.addPage(); // evita que o rodapé seja empurrado
+}
+
+// Rodapé fixo no final da página atual
+const rodapeY = doc.page.height - 40;
+
+doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
+   .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
+     align: 'center',
+     width: doc.page.width - 100
+   });
 
     doc.end();
   } catch (err) {
