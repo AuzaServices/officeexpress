@@ -360,9 +360,6 @@ app.get('/api/logs', async (req, res) => {
   }
 });
 
-//////////////////////////
-// 📥 Analisar e salvar relatório em PDF
-//////////////////////////
 app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) => {
   const { nome, telefone } = req.body;
   if (!req.file || !nome || !telefone) {
@@ -468,31 +465,33 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
     doc.moveDown().moveDown();
 
-// Frase de incentivo + link
-doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-   .text('Dica final');
+    // Frase de incentivo + link
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+       .text('Dica final');
 
-doc.font('Helvetica').fontSize(12).fillColor('#333333')
-   .text('Se seu currículo recebeu alertas importantes, considere criar uma nova versão mais completa e atrativa.');
+    doc.font('Helvetica').fontSize(12).fillColor('#333333')
+       .text('Se seu currículo recebeu alertas importantes, considere criar uma nova versão mais completa e atrativa.');
 
-doc.moveDown();
+    doc.moveDown();
 
-doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
-  link: 'https://officeexpress.onrender.com/splash.html',
-  underline: true
-});
+    doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
+      link: 'https://officeexpress.onrender.com/splash.html',
+      underline: true
+    });
 
-// Garante que o rodapé fique na parte inferior da página atual
-const rodapeY = doc.page.height - 40;
+    // Verifica se ainda há espaço suficiente na página atual
+    if (doc.y > doc.page.height - 100) {
+      doc.addPage(); // evita que o rodapé seja empurrado
+    }
 
-// Move o cursor manualmente para o rodapé, sem criar nova página
-doc.y = rodapeY;
+    // Rodapé fixo no final da página atual
+    const rodapeY = doc.page.height - 40;
 
-doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
-   .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
-     align: 'center',
-     width: doc.page.width - 100
-   });
+    doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
+       .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
+         align: 'center',
+         width: doc.page.width - 100
+       });
 
     doc.end();
   } catch (err) {
