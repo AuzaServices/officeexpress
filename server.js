@@ -507,6 +507,36 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
+app.get('/api/analises', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        id, 
+        nome, 
+        telefone, 
+        filename, 
+        mimetype, 
+        criado_em
+      FROM analises
+      ORDER BY id DESC
+    `;
+    
+    const [results] = await pool.query(query);
+
+    if (!Array.isArray(results)) {
+      return res.status(500).json({ error: 'Formato inválido de resposta' });
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error('❌ Erro ao buscar análises:', {
+      mensagem: err.message,
+      codigo: err.code,
+      sql: err.sql
+    });
+    res.status(500).json({ error: 'Erro ao buscar análises' });
+  }
+});
 
 app.get('/api/analises/:id/download', async (req, res) => {
   const { id } = req.params;
