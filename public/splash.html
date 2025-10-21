@@ -300,6 +300,50 @@ body {
   100% { transform: translateX(-200%); }
 }
 
+.carrossel-empresas {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: #001f33;
+  box-shadow: 0 0 10px #00000033;
+}
+
+.carrossel-empresas-inner {
+  display: flex;
+  width: calc(100% * 2 + 40px); /* 2 grupos + espaçamento extra */
+  column-gap: 190px; /* distância entre os grupos */
+  animation: deslizarEmpresas 8s infinite;
+}
+
+.carrossel-empresas .grupo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: -194px;
+  flex: 0 0 100%;
+  padding: 12px;
+  gap: 20px; /* aumenta o espaçamento entre logos sem exagerar */
+}
+
+.carrossel-empresas img {
+  height: 32px;
+  max-width: 64px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+@keyframes deslizarEmpresas {
+  0% { transform: translateX(0%); }
+  45% { transform: translateX(0%); }
+  50% { transform: translateX(-100%); }
+  95% { transform: translateX(-100%); }
+  100% { transform: translateX(0%); }
+}
+
 </style>
 </head>
 <!-- Dentro do <body> -->
@@ -320,14 +364,24 @@ body {
     </div>
   </div>
 
-  <div class="empresas-section">
-    <h2>Empresas que abriram portas para nossos usuários:</h2>
-    <div class="logos">
-      <img src="1.png" alt="Empresa 1" style="margin-top: 20px;">
-      <img src="3.png" alt="Empresa 2" style="height: 60px; max-width: 140px;">
-      <img src="2.png" alt="Empresa 3" style="margin-top: 20px;">
+<div class="empresas-section">
+  <h2>Empresas que abriram portas para nossos usuários:</h2>
+  <div class="carrossel-empresas">
+    <div class="carrossel-empresas-inner">
+      <div class="grupo">
+        <img src="1.png" alt="Empresa 1" />
+        <img src="3.png" alt="Empresa 5" style="height: 60px; max-width: 120px; margin-top: -5px;" />
+        <img src="2.png" alt="Empresa 3" />
+      </div>
+      <div class="grupo">
+        <img src="4.png" alt="Empresa 4" style="height: 60px; max-width: 120px; margin-top: 0px;" />
+        <img src="5.png" alt="Empresa 5" style="height: 60px; max-width: 120px; margin-top: -22px;" />
+        <img src="6.png" alt="Empresa 6" />
+      </div>
+      <!-- Adicione mais grupos conforme necessário -->
     </div>
   </div>
+</div>
 
 <hr />
 
