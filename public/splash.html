@@ -18,21 +18,20 @@
     box-sizing: border-box;
   }
 
-  body {
-    margin: 0;
-    padding: 0;
-    background: linear-gradient(to right, #001f33, #00324a);
-    font-family: 'Inter', sans-serif;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
-    text-align: center;
-    padding: 10px;
-  }
+body {
+  margin: 0;
+  padding: 10px;
+  background: linear-gradient(to right, #001f33, #00324a);
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  text-align: center;
+}
 
   .fade-in {
     animation: fadeIn 1.2s ease-in-out;
@@ -258,50 +257,108 @@
   transform: scale(1.05);
   box-shadow: 0 0 15px #e09d00dd;
 }
+
+.depoimentos-section {
+  margin-top: -10px;
+  text-align: center;
+}
+
+.carrossel {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #00000033;
+}
+
+.carrossel-inner {
+  display: flex;
+  width: 300%;
+  animation: deslizar 12s infinite;
+}
+
+.carrossel-inner img {
+  width: 100%;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+@keyframes deslizar {
+  0% { transform: translateX(0%); }
+  33% { transform: translateX(0%); }
+  38% { transform: translateX(-100%); }
+  66% { transform: translateX(-100%); }
+  71% { transform: translateX(-200%); }
+  100% { transform: translateX(-200%); }
+}
+
 </style>
 </head>
-<body>
-  <div class="fade-in">
-    <img src="https://i.imgur.com/HjzGCoA.png" alt="Logo Office Express" class="top-image">
+<!-- Dentro do <body> -->
+<div class="fade-in">
+  <img src="https://i.imgur.com/HjzGCoA.png" alt="Logo Office Express" class="top-image">
 
-    <h1>Seu Futuro Começa Aqui</h1>
-    <p>Potencialize sua Carreira com um Curriculo Perfeito</p>
+  <h1>Seu Futuro Começa Aqui</h1>
+  <p>Potencialize sua Carreira com um Currículo Perfeito</p>
 
-    <div class="stats">
-      <div>
-        <div class="stat" id="usuarios">0</div>
-        <div class="label">pessoas usam nossos serviços</div>
-      </div>
-      <div>
-        <div class="stat" id="taxa">0%</div>
-        <div class="label">taxa de empregabilidade</div>
-      </div>
+  <div class="stats">
+    <div>
+      <div class="stat" id="usuarios">0</div>
+      <div class="label">pessoas usam nossos serviços</div>
     </div>
-
-    <div class="empresas-section">
-      <h2>Empresas que abriram portas para nossos usuários:</h2>
-      <div class="logos">
-        <img src="1.png" alt="Empresa 1" style="margin-top: 20px;">
-        <img src="3.png" alt="Empresa 2" style="height: 60px; max-width: 140px;">
-        <img src="2.png" alt="Empresa 3" style="margin-top: 20px;">
-      </div>
-    </div>
-
-    <div style="margin-bottom: 10px;">
-      <button class="btn-entrar" onclick="document.getElementById('modalNome').style.display='flex'">Criar Currículo</button>
-      <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">Leva menos de 10 minutos</p>
-    </div>
-
-    <hr />
-
-    <div class="secao-analisar">
-      <h2 class="titulo-secao">Já tem um currículo?</h2>
-      <button class="btn-entrar" onclick="analisar()">Analisar Currículo</button>
-      <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">
-        Envie seu currículo para análise e receba sugestões de melhoria.
-      </p>
+    <div>
+      <div class="stat" id="taxa">0%</div>
+      <div class="label">taxa de empregabilidade</div>
     </div>
   </div>
+
+  <div class="empresas-section">
+    <h2>Empresas que abriram portas para nossos usuários:</h2>
+    <div class="logos">
+      <img src="1.png" alt="Empresa 1" style="margin-top: 20px;">
+      <img src="3.png" alt="Empresa 2" style="height: 60px; max-width: 140px;">
+      <img src="2.png" alt="Empresa 3" style="margin-top: 20px;">
+    </div>
+  </div>
+
+<hr />
+
+<div style="margin-bottom: 10px;">
+  <h2 class="titulo-secao">Hora de se destacar</h2>
+  <button class="btn-entrar" onclick="document.getElementById('modalNome').style.display='flex'">Criar Currículo</button>
+  <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">Leva menos de 10 minutos</p>
+  <p style="font-size: 0.75rem; color: #cbd5e1; margin-top: 4px;">
+    O formato do currículo foi pensado para chamar atenção dos recrutadores em segundos.
+  </p>
+</div>
+
+  <hr />
+
+  <div class="secao-analisar">
+    <h2 class="titulo-secao">Já tem um Currículo?</h2>
+    <button class="btn-entrar" onclick="analisar()">Analisar Currículo</button>
+    <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">
+      Descubra o que pode estar te impedindo de ser chamado(a).
+    </p>
+  </div>
+</div>
+
+<hr />
+
+<div class="depoimentos-section">
+  <h2 style="color: #ff8800; font-size: 1rem; margin-bottom: 6px;">Veja o que dizem sobre a Office Express</h2>
+  <div class="carrossel">
+    <div class="carrossel-inner" id="carrosselInner">
+      <img src="https://i.imgur.com/m0uihWw.jpeg" alt="Depoimento 1" />
+      <img src="https://i.imgur.com/qjqnSV6.jpeg" alt="Depoimento 2" />
+      <img src="https://i.imgur.com/08B5NBm.jpeg" alt="Depoimento 3" />
+      <img src="https://i.imgur.com/pEcL8xM.jpeg" alt="Depoimento 3" />
+      <img src="https://i.imgur.com/ctMK0lZ.jpeg" alt="Depoimento 3" />
+    </div>
+  </div>
+</div>
 
   <!-- Modal para capturar primeiro nome -->
   <div id="modalNome" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000000aa; justify-content:center; align-items:center; z-index:999;">
