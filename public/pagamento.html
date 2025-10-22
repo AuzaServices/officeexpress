@@ -61,9 +61,21 @@
   transform: scale(1.05);
   box-shadow: 0 0 15px #ff8800dd;
 }
+
+#faixa-promocao {
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
   </style>
 </head>
 <body class="relative py-20 px-4 text-white">
+<div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2 whitespace-nowrap">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  <span class="text-xs font-medium">Promoção por tempo limitado - <span id="cronometro" class="font-bold">06:00</span> restantes!</span>
+</div>
   <div id="particles-js" class="absolute inset-0 -z-10"></div>
 
   <section class="max-w-4xl mx-auto text-center">
@@ -248,6 +260,24 @@
   });
 
   document.addEventListener("visibilitychange", handleVisibilityChange);
+
+let tempoRestante = 6 * 60; // 6 minutos em segundos
+
+function atualizarCronometro() {
+  const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
+  const segundos = String(tempoRestante % 60).padStart(2, '0');
+  document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
+
+  if (tempoRestante <= 0) {
+    window.location.href = "pagamentototal.html";
+  } else {
+    tempoRestante--;
+    setTimeout(atualizarCronometro, 1000);
+  }
+}
+
+atualizarCronometro();
+
   </script>
 
 </body>
