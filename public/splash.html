@@ -356,6 +356,30 @@ body {
   animation: pulsante 1.6s infinite ease-in-out;
 }
 
+.rodape {
+  position: relative;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  background-color: #001f33;
+  color: #cbd5e1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  border-top: 1px solid #ffffff22;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rodape .marca {
+  font-size: 0.65rem;
+  vertical-align: super;
+  color: #ff8800;
+}
+
 </style>
 </head>
 <!-- Dentro do <body> -->
@@ -518,5 +542,8 @@ body {
   document.getElementById('modalNome').style.display = 'none';
 }
   </script>
+<footer class="rodape">
+  Office Express <span class="marca">&reg;</span> 2025. Todos os Direitos Reservados.
+</footer>
 </body>
 </html>
