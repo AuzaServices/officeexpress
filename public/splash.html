@@ -163,6 +163,7 @@ body {
 
     .btn-entrar {
       padding: 8px 18px;
+      top: -5px;
       font-size: 0.85rem;
     }
 
@@ -344,6 +345,16 @@ body {
   100% { transform: translateX(0%); }
 }
 
+@keyframes pulsante {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.botao-pulsante {
+  animation: pulsante 1.6s infinite ease-in-out;
+}
+
 </style>
 </head>
 <!-- Dentro do <body> -->
@@ -387,7 +398,9 @@ body {
 
 <div style="margin-bottom: 10px;">
   <h2 class="titulo-secao">Hora de se destacar</h2>
-  <button class="btn-entrar" onclick="document.getElementById('modalNome').style.display='flex'">Criar Currículo</button>
+  <button class="btn-entrar botao-pulsante" onclick="document.getElementById('modalNome').style.display='flex'">
+  Criar Currículo
+</button>
   <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">Leva menos de 10 minutos</p>
   <p style="font-size: 0.75rem; color: #cbd5e1; margin-top: 4px;">
     O formato do currículo foi pensado para chamar atenção dos recrutadores em segundos.
@@ -398,7 +411,7 @@ body {
 
   <div class="secao-analisar">
     <h2 class="titulo-secao">Já tem um Currículo?</h2>
-    <button class="btn-entrar" onclick="analisar()">Analisar Currículo</button>
+    <button class="btn-entrar botao-pulsante" onclick="analisar()">Analisar Currículo</button>
     <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">
       Descubra o que pode estar te impedindo de ser chamado(a).
     </p>
