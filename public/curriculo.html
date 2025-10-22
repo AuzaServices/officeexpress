@@ -272,7 +272,7 @@
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
     <label for="endereco">Endereço (Rua)</label>
     <div style="display: flex; align-items: center; gap: 10px;">
-      <input type="text" id="endereco" name="endereco" placeholder="Endereço completo" />
+      <input type="text" id="endereco" name="endereco" placeholder="" />
       <button type="button" onclick="reconhecerCampo('endereco')" style="background: none; border: none; cursor: pointer;">
         <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
       </button>
@@ -280,8 +280,8 @@
   </div>
 
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-    <label for="numero">Número</label>
-    <input type="text" name="numero" id="numero" />
+<label for="numero">Número <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+<input type="text" id="numero" name="numero">
   </div>
 
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
@@ -350,31 +350,45 @@
   </p>
   <textarea name="infoAdicional" id="infoAdicional" rows="4" placeholder="Habilitação, disponibilidade, áreas de interesse..."></textarea>
 
-  <label style="margin-top: 30px;">Objetivo – o que você quer conquistar?</label>
-  <p style="margin-top: 10px; font-weight: 500; color: #555;">
-    Escreva com clareza o que você busca. Se estiver sem ideia, eu te ajudo a encontrar as palavras certas.
-  </p>
-  <textarea name="objetivo" required></textarea>
+<label style="margin-top: 30px;">Objetivo – Qual seu objetivo profissional?</label>
+<p style="margin-top: 10px; font-weight: 500; color: #555;">
+  Escreva seu objetivo profissional. Se estiver sem ideias, clique em <strong>Gerar Objetivo</strong> para se inspirar.
+</p>
+<textarea name="objetivo" id="objetivo" required style="width: 100%; height: 100px; font-size: 16px; padding: 10px; resize: vertical;"></textarea>
 
-  <div id="ajuda-objetivo" style="margin-top: 30px;">
-    <p style="font-weight: bold; font-size: 16px;">Está sem ideia de objetivo? <span style="color: #e09d00;">Eu te ajudo!</span></p>
+<div id="ajuda-objetivo" style="margin-top: 30px;">
+  <button id="gerarFrase" class="botao-personalizado">Gerar Objetivo</button>
+</div>
 
-    <label for="intuito">Qual é o seu foco?</label>
-    <select id="intuito">
-      <option value="">-- Escolha seu destino profissional --</option>
-      <option value="emprego">Conseguir um emprego</option>
-      <option value="estagio">Obter um estágio</option>
-      <option value="promocao">Buscar promoção interna</option>
-      <option value="freelance">Trabalhos freelance</option>
-      <option value="transicao">Mudar de área</option>
-    </select>
+<script>
+const frases = [
+  "Conquistar uma oportunidade de emprego em uma organização que valorize o desenvolvimento humano, onde eu possa aplicar minhas competências técnicas e comportamentais para gerar resultados consistentes, crescer profissionalmente e contribuir para um ambiente colaborativo e inovador.",
+  "Obter uma posição profissional que me permita transformar conhecimento em ação, atuando com propósito, responsabilidade e foco em soluções que agreguem valor real ao negócio e à sociedade.",
+  "Ser contratado por uma empresa que reconheça o potencial de seus colaboradores, oferecendo espaço para autonomia, criatividade e evolução contínua, enquanto contribuo com minha experiência e visão estratégica.",
+  "Buscar uma vaga de emprego que me desafie a sair da zona de conforto, estimulando meu crescimento pessoal e profissional por meio de projetos relevantes, metas ousadas e um ambiente que valorize a diversidade de ideias.",
+  "Ingressar em uma organização que esteja alinhada aos meus valores éticos e profissionais, onde eu possa atuar com integridade, empatia e excelência, contribuindo para a construção de uma cultura forte e resultados sustentáveis.",
+  "Conquistar uma posição que me permita aplicar minhas habilidades de comunicação, liderança e resolução de problemas em contextos desafiadores, promovendo impacto positivo nas equipes e nos processos organizacionais.",
+  "Obter uma oportunidade de trabalho em uma empresa que valorize o protagonismo e a inteligência emocional, permitindo que eu contribua com minha capacidade de adaptação, escuta ativa e tomada de decisão assertiva.",
+  "Ser contratado por uma organização que incentive o aprendizado contínuo, a inovação e o trabalho em equipe, onde eu possa crescer como profissional e como ser humano, contribuindo com soluções criativas e eficazes.",
+  "Buscar uma vaga de emprego que me permita atuar com propósito, alinhando minhas competências às necessidades da empresa e aos desafios do mercado, com foco em resultados e em relações interpessoais saudáveis.",
+  "Conquistar uma oportunidade profissional em um ambiente que valorize a confiança, o respeito e a colaboração, onde eu possa desenvolver projetos com impacto estratégico e construir uma trajetória sólida e significativa.",
+  "Obter uma posição que me permita integrar equipes multidisciplinares, contribuindo com minha visão sistêmica, capacidade analítica e comprometimento com a excelência em cada entrega realizada.",
+  "Ser contratado por uma empresa que esteja em constante evolução, onde eu possa aplicar minha energia, criatividade e senso de responsabilidade para enfrentar desafios e construir soluções inovadoras.",
+  "Buscar uma vaga de emprego que me permita atuar com autonomia e clareza de propósito, contribuindo para o crescimento da organização e para o fortalecimento da minha jornada profissional.",
+  "Conquistar uma posição em uma empresa que valorize a escuta ativa, o diálogo e o desenvolvimento de talentos, permitindo que eu contribua com minha experiência e aprenda com diferentes perspectivas.",
+  "Obter uma oportunidade de trabalho que me permita aplicar minha paixão por resultados, minha capacidade de liderança e minha habilidade de construir relações de confiança com colegas e clientes.",
+  "Ser contratado por uma organização que reconheça o valor da inteligência coletiva, onde eu possa colaborar com equipes diversas e contribuir para a construção de soluções que gerem impacto positivo.",
+  "Buscar uma vaga de emprego que me permita atuar com foco, disciplina e entusiasmo, enfrentando desafios com resiliência e contribuindo para o crescimento sustentável da empresa.",
+  "Conquistar uma posição profissional que me permita alinhar meus talentos e valores aos objetivos estratégicos da organização, promovendo inovação, engajamento e resultados duradouros.",
+  "Obter uma oportunidade de trabalho em uma empresa que valorize o equilíbrio entre performance e bem-estar, permitindo que eu contribua com excelência e mantenha minha saúde emocional e motivação.",
+  "Ser contratado por uma organização que compreenda a importância da cultura organizacional, onde eu possa atuar com autenticidade, propósito e impacto, construindo uma trajetória de sucesso compartilhado."
+];
 
-    <button id="gerarFrase" class="botao-personalizado">Gerar Objetivo</button>
-
-    <div id="fraseGerada" style="margin-top: 10px; font-style: italic; color: #333;"></div>
-
-    <button id="adicionarObjetivo" class="botao-personalizado">Adicionar</button>
-  </div>
+  document.getElementById("gerarFrase").addEventListener("click", function () {
+    const frase = frases[Math.floor(Math.random() * frases.length)];
+    document.getElementById("objetivo").value = frase;
+  });
+</script>
 </div>
 
       <!-- Etapa 4 -->
@@ -412,8 +426,17 @@
       <!-- Etapa 5 -->
       <!-- Etapa 5 -->
 <div class="etapa">
-  <h2>Histórico de Conquistas</h2>
+  <h2>Experiências Profissionais</h2>
   <label>Conte onde você já brilhou</label>
+
+  <!-- Botão Primeiro Emprego -->
+<div style="margin: 10px 0;">
+  <label for="primeiroEmpregoCheck" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 6px; font-weight: 500; color: #333; cursor: pointer;">
+    <input type="checkbox" id="primeiroEmpregoCheck" style="margin: 0; transform: scale(1.1); accent-color: #007bff;" />
+    É meu primeiro emprego
+  </label>
+</div>
+
   <div id="experiencias">
     <div class="experiencia">
       <!-- Empresa -->
@@ -453,8 +476,36 @@
       </div>
     </div>
   </div>
+
   <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
 </div>
+
+<script>
+document.getElementById("primeiroEmpregoCheck").addEventListener("change", function () {
+  const marcado = this.checked;
+
+  // Desabilita ou habilita todos os campos de experiência
+  document.querySelectorAll("#experiencias input, #experiencias textarea, #experiencias button").forEach(el => {
+    el.disabled = marcado;
+    el.style.opacity = marcado ? "0.6" : "1";
+    el.style.pointerEvents = marcado ? "none" : "auto";
+  });
+
+  // Se marcado, salva no localStorage como Primeiro Emprego
+  if (marcado) {
+    const experiencia = {
+      empresa: "<strong>Primeiro Emprego</strong>",
+      cargo: "",
+      atividades: "",
+      inicio: "",
+      fim: ""
+    };
+    localStorage.setItem("primeiroEmprego", JSON.stringify(experiencia));
+  } else {
+    localStorage.removeItem("primeiroEmprego");
+  }
+});
+</script>
       <!-- Etapa 6 -->
       <div class="etapa">
                 <h2>O Que Te Torna Único</h2>

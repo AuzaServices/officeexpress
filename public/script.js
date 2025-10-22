@@ -275,68 +275,6 @@ btnVoltar.addEventListener('click', () => {
 
 mostrarEtapa(etapaAtual);
 
-const frasesObjetivo = {
-  emprego: [
-    "Estou em busca de uma oportunidade profissional que me permita aplicar minhas habilidades técnicas e interpessoais, crescer com a empresa e contribuir de forma estratégica para os resultados.",
-    "Desejo integrar uma equipe comprometida e inovadora, onde eu possa desenvolver minha carreira com propósito, agregando valor através da minha experiência e dedicação.",
-    "Procuro uma vaga que me desafie intelectualmente e me permita evoluir profissionalmente, colaborando com soluções práticas, criatividade e visão de futuro.",
-    "Tenho como objetivo atuar em uma empresa que valorize o crescimento contínuo, a colaboração entre equipes e o desenvolvimento de talentos internos.",
-    "Quero contribuir com minha experiência, aprender com novos desafios e participar ativamente da construção de projetos que impactem positivamente o negócio.",
-    "Busco uma posição que me permita aplicar meus conhecimentos técnicos, desenvolver novas competências e crescer em um ambiente que valorize inovação e excelência."
-  ],
-  estagio: [
-    "Procuro uma oportunidade de estágio para aplicar os conhecimentos adquiridos na formação acadêmica, adquirir experiência prática e contribuir com entusiasmo e responsabilidade.",
-    "Desejo iniciar minha trajetória profissional em um ambiente que estimule o aprendizado contínuo, a troca de experiências e o desenvolvimento de habilidades reais.",
-    "Busco um estágio que me permita crescer pessoal e profissionalmente, colaborando com dedicação, curiosidade e vontade de aprender com os desafios do dia a dia.",
-    "Quero fazer parte de uma equipe que valorize jovens talentos, ofereça espaço para evolução e incentive a construção de uma base sólida para minha carreira.",
-    "Estou em busca de uma oportunidade para iniciar minha carreira com responsabilidade, comprometimento e abertura para absorver novos conhecimentos.",
-    "Meu objetivo é adquirir vivência profissional, desenvolver habilidades práticas e contribuir com ideias e energia em projetos reais e relevantes."
-  ],
-  promocao: [
-    "Tenho como meta assumir novos desafios dentro da empresa, contribuindo com soluções estratégicas, liderança proativa e foco em resultados sustentáveis.",
-    "Desejo crescer profissionalmente e ocupar posições que me permitam ampliar meu impacto, responsabilidade e capacidade de tomada de decisão.",
-    "Busco reconhecimento pelo meu desempenho e dedicação, visando alcançar cargos de maior relevância e contribuir com visão de longo prazo.",
-    "Quero evoluir dentro da organização, assumindo funções que valorizem minha experiência, comprometimento e capacidade de gerar resultados.",
-    "Meu objetivo é conquistar uma promoção por mérito, demonstrando resultados consistentes, postura colaborativa e espírito de liderança.",
-    "Pretendo ampliar minha atuação na empresa, contribuindo com visão estratégica, inovação e engajamento em projetos de alto impacto."
-  ],
-  freelance: [
-    "Estou em busca de projetos freelance que me permitam aplicar minha criatividade, entregar soluções sob medida e colaborar com clientes de forma personalizada.",
-    "Desejo atuar de forma independente, oferecendo serviços com qualidade, agilidade e foco em resultados que realmente façam diferença.",
-    "Procuro oportunidades como freelancer para colaborar com empresas e clientes em projetos pontuais, desafiadores e com alto potencial de impacto.",
-    "Quero expandir minha atuação profissional através de trabalhos autônomos que valorizem minha expertise, flexibilidade e comprometimento.",
-    "Busco liberdade para criar e inovar, atendendo demandas específicas com excelência, empatia e foco em entregar valor real.",
-    "Meu objetivo é construir parcerias duradouras como freelancer, entregando soluções criativas, eficientes e alinhadas às necessidades de cada projeto."
-  ],
-  transicao: [
-    "Estou em busca de uma transição de carreira que me permita explorar novas áreas, aplicar minha versatilidade e crescer em um ambiente diferente e estimulante.",
-    "Desejo mudar de segmento e encontrar oportunidades que estejam alinhadas com meus novos interesses, valores e habilidades em desenvolvimento.",
-    "Procuro uma nova trajetória profissional que traga desafios diferentes, estimule meu crescimento pessoal e me permita reinventar minha atuação.",
-    "Quero redirecionar minha carreira para uma área que me motive, me desafie e me permita contribuir com uma nova perspectiva e energia renovada.",
-    "Meu objetivo é iniciar uma nova fase profissional, aproveitando minha experiência anterior e aprendendo com novos contextos e demandas.",
-    "Pretendo migrar para um campo que valorize minha capacidade de adaptação, minha vontade de evoluir e meu desejo de construir algo significativo."
-  ]
-};
-
-document.getElementById("gerarFrase").addEventListener("click", () => {
-  const intuito = document.getElementById("intuito").value;
-  const frases = frasesObjetivo[intuito];
-  if (!frases) {
-    document.getElementById("fraseGerada").textContent = "Escolha um foco para gerar seu objetivo 😉";
-    return;
-  }
-  const aleatoria = frases[Math.floor(Math.random() * frases.length)];
-  document.getElementById("fraseGerada").textContent = aleatoria;
-});
-
-document.getElementById("adicionarObjetivo").addEventListener("click", () => {
-  const frase = document.getElementById("fraseGerada").textContent;
-  const campoObjetivo = document.querySelector('[name="objetivo"]');
-  if (frase && campoObjetivo) {
-    campoObjetivo.value = frase;
-  }
-});
-
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".mesAno").forEach(input => {
     if (!input._flatpickr) {

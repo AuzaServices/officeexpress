@@ -543,3 +543,22 @@ input.mesAno[type="date"] {
   display: block;
   opacity: 1;
 }
+
+.primeiro-emprego {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.primeiro-emprego input[type="checkbox"] {
+  transform: scale(1.2);
+  accent-color: #007bff;
+  cursor: pointer;
+}
+
+.primeiro-emprego label {
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+}
