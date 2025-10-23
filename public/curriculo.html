@@ -954,6 +954,12 @@ function adicionarCurso() {
 
 // Adiciona bloco de experiência
 function adicionarExperiencia() {
+  const checkbox = document.getElementById("primeiroEmpregoCheck");
+  if (checkbox.checked) {
+    alert("Você marcou 'Primeiro Emprego'. Não é necessário adicionar experiências.");
+    return;
+  }
+
   const container = document.getElementById("experiencias");
   const index = document.querySelectorAll(".experiencia").length;
 
@@ -1090,14 +1096,14 @@ function adicionarExperiencia() {
   setTimeout(() => {
     [inicioInput, fimInput].forEach(input => {
       if (!input._flatpickr) {
-flatpickr(input, {
-  locale: flatpickr.l10ns.pt,
-  dateFormat: "m/Y",
-  altInput: true,
-  altFormat: "F Y",
-  plugins: [], // ← remove o plugin
-  disableMobile: true
-});
+        flatpickr(input, {
+          locale: flatpickr.l10ns.pt,
+          dateFormat: "m/Y",
+          altInput: true,
+          altFormat: "F Y",
+          plugins: [],
+          disableMobile: true
+        });
       }
     });
   }, 0);
