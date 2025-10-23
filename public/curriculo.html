@@ -483,69 +483,32 @@ const frases = [
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const checkbox = document.getElementById("primeiroEmpregoCheck");
-  const experienciaContainer = document.getElementById("experiencias");
-  const empresaInput = experienciaContainer.querySelector('[name="empresa[]"]');
-  const cargoInput = experienciaContainer.querySelector('[name="cargo[]"]');
-  const atividadesInput = experienciaContainer.querySelector('[name="atividades[]"]');
-  const inicioInput = experienciaContainer.querySelector('[name="periodo_inicio[]"]');
-  const fimInput = experienciaContainer.querySelector('[name="periodo_fim[]"]');
+  const experiencia = document.querySelector(".experiencia");
 
-  // Função para desativar ou ativar campos
-  function desativarCampos(estado) {
-    experienciaContainer.querySelectorAll("input, textarea, button").forEach(el => {
-      el.disabled = estado;
-      el.style.opacity = estado ? "0.6" : "1";
-      el.style.pointerEvents = estado ? "none" : "auto";
-    });
-  }
-
-  // Carregamento inicial
-  const dados = JSON.parse(localStorage.getItem("curriculo") || "{}");
-  const empresaSalva = dados.empresa?.[0] || "";
-  const primeiroEmpregoAtivo = empresaSalva === "Primeiro Emprego";
-
-  checkbox.checked = primeiroEmpregoAtivo;
-
-  if (primeiroEmpregoAtivo) {
-    empresaInput.value = "Primeiro Emprego";
-    cargoInput.value = "";
-    atividadesInput.value = "";
-    inicioInput.value = "";
-    fimInput.value = "";
-    desativarCampos(true);
-  } else {
-    empresaInput.value = empresaSalva;
-    desativarCampos(false);
-  }
-
-  // Quando o usuário marca ou desmarca
-  checkbox.addEventListener("change", function () {
-    const marcado = this.checked;
+  checkbox.addEventListener("change", () => {
+    const marcado = checkbox.checked;
+    const campos = experiencia.querySelectorAll("input, textarea, button");
 
     if (marcado) {
-      empresaInput.value = "Primeiro Emprego";
-      cargoInput.value = "";
-      atividadesInput.value = "";
-      inicioInput.value = "";
-      fimInput.value = "";
+      const campoEmpresa = experiencia.querySelector('[name="empresa[]"]');
+      campoEmpresa.value = "Primeiro Emprego";
     } else {
-      if (empresaInput.value === "Primeiro Emprego") {
-        empresaInput.value = "";
+      const campoEmpresa = experiencia.querySelector('[name="empresa[]"]');
+      if (campoEmpresa.value === "Primeiro Emprego") {
+        campoEmpresa.value = "";
       }
     }
 
-    desativarCampos(marcado);
-  });
+    campos.forEach(el => {
+      el.disabled = marcado;
+      el.style.opacity = marcado ? "0.6" : "1";
+      el.style.pointerEvents = marcado ? "none" : "auto";
+    });
 
-  // Evita duplicação no salvamento
-  document.getElementById("formulario").addEventListener("submit", function () {
-    if (checkbox.checked) {
-      empresaInput.value = "Primeiro Emprego";
-      cargoInput.value = "";
-      atividadesInput.value = "";
-      inicioInput.value = "";
-      fimInput.value = "";
-    }
+    // Reativa o checkbox mesmo quando desativado
+    checkbox.disabled = false;
+    checkbox.style.opacity = "1";
+    checkbox.style.pointerEvents = "auto";
   });
 });
 </script>
