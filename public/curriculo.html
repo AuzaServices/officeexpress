@@ -483,13 +483,23 @@ const frases = [
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const checkbox = document.getElementById("primeiroEmpregoCheck");
-  const empresaInput = document.querySelector('[name="empresa[]"]');
-  const cargoInput = document.querySelector('[name="cargo[]"]');
-  const atividadesInput = document.querySelector('[name="atividades[]"]');
-  const inicioInput = document.querySelector('[name="periodo_inicio[]"]');
-  const fimInput = document.querySelector('[name="periodo_fim[]"]');
+  const experienciaContainer = document.getElementById("experiencias");
+  const empresaInput = experienciaContainer.querySelector('[name="empresa[]"]');
+  const cargoInput = experienciaContainer.querySelector('[name="cargo[]"]');
+  const atividadesInput = experienciaContainer.querySelector('[name="atividades[]"]');
+  const inicioInput = experienciaContainer.querySelector('[name="periodo_inicio[]"]');
+  const fimInput = experienciaContainer.querySelector('[name="periodo_fim[]"]');
 
-  // Carrega estado salvo
+  // Função para desativar ou ativar campos
+  function desativarCampos(estado) {
+    experienciaContainer.querySelectorAll("input, textarea, button").forEach(el => {
+      el.disabled = estado;
+      el.style.opacity = estado ? "0.6" : "1";
+      el.style.pointerEvents = estado ? "none" : "auto";
+    });
+  }
+
+  // Carregamento inicial
   const dados = JSON.parse(localStorage.getItem("curriculo") || "{}");
   const empresaSalva = dados.empresa?.[0] || "";
   const primeiroEmpregoAtivo = empresaSalva === "Primeiro Emprego";
@@ -508,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
     desativarCampos(false);
   }
 
-  // Atualiza ao marcar/desmarcar
+  // Quando o usuário marca ou desmarca
   checkbox.addEventListener("change", function () {
     const marcado = this.checked;
 
@@ -527,13 +537,16 @@ document.addEventListener("DOMContentLoaded", () => {
     desativarCampos(marcado);
   });
 
-  function desativarCampos(estado) {
-    document.querySelectorAll("#experiencias input, #experiencias textarea, #experiencias button").forEach(el => {
-      el.disabled = estado;
-      el.style.opacity = estado ? "0.6" : "1";
-      el.style.pointerEvents = estado ? "none" : "auto";
-    });
-  }
+  // Evita duplicação no salvamento
+  document.getElementById("formulario").addEventListener("submit", function () {
+    if (checkbox.checked) {
+      empresaInput.value = "Primeiro Emprego";
+      cargoInput.value = "";
+      atividadesInput.value = "";
+      inicioInput.value = "";
+      fimInput.value = "";
+    }
+  });
 });
 </script>
       <!-- Etapa 6 -->
