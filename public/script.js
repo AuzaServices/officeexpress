@@ -9,15 +9,40 @@
     });
   }
 
-  function adicionarTelefone() {
-    const container = document.getElementById("telefones");
-    const input = document.createElement("input");
-    input.type = "text";
-    input.name = "telefone[]";
-    input.style.marginTop = "10px";
-    container.appendChild(input);
-    aplicarMascaraTelefone(input);
-  }
+function adicionarTelefone() {
+  const container = document.getElementById("telefones");
+
+  const bloco = document.createElement("div");
+  bloco.className = "telefone-bloco";
+  bloco.style.marginBottom = "10px";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.name = "telefone[]";
+  input.className = "telefone-input";
+  input.placeholder = "(DDD) 9XXXX-XXXX";
+  input.style.marginTop = "10px";
+
+  const erro = document.createElement("span");
+  erro.className = "erro-telefone";
+  erro.textContent = "Número inválido";
+  erro.style.color = "red";
+  erro.style.fontSize = "13px";
+  erro.style.display = "none";
+
+  bloco.appendChild(input);
+  bloco.appendChild(erro);
+  container.appendChild(bloco);
+
+  aplicarMascaraTelefone(input);
+
+  // Validação visual igual ao primeiro campo
+  input.addEventListener("input", function () {
+    const valor = input.value.replace(/\D/g, "");
+    const valido = /^(\d{2})(9\d{8})$/.test(valor);
+    erro.style.display = valor.length > 0 && !valido ? "inline" : "none";
+  });
+}
 
   document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
 

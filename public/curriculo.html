@@ -251,10 +251,71 @@
 
   <label>Telefones</label>
   <div id="telefones">
-    <input type="text" name="telefone[]" />
+    <div class="telefone-bloco" style="margin-bottom: 10px;">
+      <input type="text" name="telefone[]" class="telefone-input" placeholder="(DDD) 9XXXX-XXXX" />
+      <span class="erro-telefone" style="color: red; font-size: 13px; display: none;">Número inválido</span>
+    </div>
   </div>
   <button type="button" class="sub-botao" onclick="adicionarTelefone()">+ Adicionar Telefone</button>
 </div>
+
+<script>
+function aplicarMascaraEValidacao(input, erroSpan) {
+  input.addEventListener("input", function () {
+    let valor = input.value.replace(/\D/g, "");
+    if (valor.length > 11) valor = valor.slice(0, 11);
+
+    let formatado = valor;
+    if (valor.length >= 2) {
+      formatado = `(${valor.slice(0, 2)})`;
+      if (valor.length >= 7) {
+        formatado += `${valor.slice(2, 7)}-${valor.slice(7)}`;
+      } else {
+        formatado += valor.slice(2);
+      }
+    }
+
+    input.value = formatado;
+
+    const valido = /^(\d{2})(9\d{8})$/.test(valor);
+    erroSpan.style.display = valor.length > 0 && !valido ? "inline" : "none";
+  });
+}
+
+function adicionarTelefone() {
+  const container = document.getElementById("telefones");
+
+  const bloco = document.createElement("div");
+  bloco.className = "telefone-bloco";
+  bloco.style.marginBottom = "10px";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.name = "telefone[]";
+  input.className = "telefone-input";
+  input.placeholder = "(DDD) 9XXXX-XXXX";
+
+  const erro = document.createElement("span");
+  erro.className = "erro-telefone";
+  erro.textContent = "Número inválido";
+  erro.style.color = "red";
+  erro.style.fontSize = "13px";
+  erro.style.display = "none";
+
+  bloco.appendChild(input);
+  bloco.appendChild(erro);
+  container.appendChild(bloco);
+
+  aplicarMascaraEValidacao(input, erro); // aplica direto no novo campo
+}
+
+// Aplica nos campos já existentes ao carregar
+document.querySelectorAll(".telefone-bloco").forEach(bloco => {
+  const input = bloco.querySelector(".telefone-input");
+  const erro = bloco.querySelector(".erro-telefone");
+  aplicarMascaraEValidacao(input, erro);
+});
+</script>
 
 
 <!-- Etapa 2B — Endereço -->
