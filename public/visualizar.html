@@ -235,23 +235,6 @@ curriculo.innerHTML = `
       if (html) curriculo.innerHTML += `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
     }
 
-        const primeiroEmprego = JSON.parse(localStorage.getItem("primeiroEmprego"));
-if (primeiroEmprego) {
-  let html = "<li>";
-  html += `<strong>${primeiroEmprego.empresa}</strong>`;
-  if (primeiroEmprego.inicio || primeiroEmprego.fim) {
-    const periodo = primeiroEmprego.inicio && primeiroEmprego.fim
-      ? `${primeiroEmprego.inicio} à ${primeiroEmprego.fim}`
-      : primeiroEmprego.inicio || primeiroEmprego.fim;
-    html += ` — <em>${periodo}</em>`;
-  }
-  if (primeiroEmprego.cargo) html += `<br>${primeiroEmprego.cargo}`;
-  if (primeiroEmprego.atividades) html += `<br><span>${primeiroEmprego.atividades}</span>`;
-  html += "</li>";
-
-  curriculo.innerHTML += `<h2>Experiência Profissional</h2><ul>${html}</ul>`;
-}
-
     if (dados.habilidades) {
       curriculo.innerHTML += `<h2>Habilidades</h2><p>${dados.habilidades}</p>`;
     }

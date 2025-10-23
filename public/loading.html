@@ -165,42 +165,29 @@ p, li {
     // Experiência Profissional (inclui Primeiro Emprego)
     let exp = "";
 
-    const primeiroEmprego = JSON.parse(localStorage.getItem("primeiroEmprego"));
-    if (primeiroEmprego) {
+if (Array.isArray(dados.empresa)) {
+  for (let i = 0; i < dados.empresa.length; i++) {
+    const empresa = dados.empresa[i]?.trim();
+    const cargo = dados.cargo?.[i]?.trim();
+    const inicio = dados.periodo_inicio?.[i]?.trim();
+    const fim = dados.periodo_fim?.[i]?.trim();
+    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
+    const atividades = dados.atividades?.[i]?.trim();
+
+    if (empresa || cargo || periodo || atividades) {
       exp += "<li>";
-      exp += `${primeiroEmprego.empresa}`;
-      const periodo = primeiroEmprego.inicio && primeiroEmprego.fim
-        ? `${primeiroEmprego.inicio} à ${primeiroEmprego.fim}`
-        : primeiroEmprego.inicio || primeiroEmprego.fim || "";
-      if (periodo) exp += ` — <em>${periodo}</em>`;
-      if (primeiroEmprego.cargo) exp += `<br>${primeiroEmprego.cargo}`;
-      if (primeiroEmprego.atividades) exp += `<br><span>${primeiroEmprego.atividades}</span>`;
+      if (empresa) {
+        exp += `<strong>${empresa}</strong>`;
+        if (periodo) exp += ` — <em>${periodo}</em>`;
+      } else if (periodo) {
+        exp += `<em>${periodo}</em>`;
+      }
+      if (cargo) exp += `<br>${cargo}`;
+      if (atividades) exp += `<br><span>${atividades}</span>`;
       exp += "</li>";
     }
-
-    if (Array.isArray(dados.empresa)) {
-      for (let i = 0; i < dados.empresa.length; i++) {
-        const empresa = dados.empresa[i]?.trim();
-        const cargo = dados.cargo?.[i]?.trim();
-        const inicio = dados.periodo_inicio?.[i]?.trim();
-        const fim = dados.periodo_fim?.[i]?.trim();
-        const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-        const atividades = dados.atividades?.[i]?.trim();
-
-        if (empresa || cargo || periodo || atividades) {
-          exp += "<li>";
-          if (empresa) {
-            exp += `<strong>${empresa}</strong>`;
-            if (periodo) exp += ` — <em>${periodo}</em>`;
-          } else if (periodo) {
-            exp += `<em>${periodo}</em>`;
-          }
-          if (cargo) exp += `<br>${cargo}`;
-          if (atividades) exp += `<br><span>${atividades}</span>`;
-          exp += "</li>";
-        }
-      }
-    }
+  }
+}
 
     if (exp) container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
 
