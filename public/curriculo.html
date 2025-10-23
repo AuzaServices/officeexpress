@@ -517,21 +517,142 @@ document.getElementById("primeiroEmpregoCheck").addEventListener("change", funct
   </button>
 </div>
 
-<label>Habilidades</label>
-<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+<!-- HABILIDADES -->
+<!-- HABILIDADES -->
+<label for="habilidades-texto">Habilidades <span style="font-weight: normal; color: #888;">(opcional)</span></label>
+<div class="linha-flex">
   <textarea id="habilidades-texto" name="habilidades" placeholder="Ex: Comunicação, Liderança, Criatividade" autocapitalize="sentences"></textarea>
-  <button type="button" onclick="reconhecerCampo('habilidades-texto')" style="background: none; border: none; cursor: pointer;">
-    <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-  </button>
 </div>
+<div id="habilidades-opcoes" class="sugestoes"></div>
 
-<label>Hobbies</label>
-<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+<!-- HOBBIES -->
+<label for="hobbies-texto">Hobbies <span style="font-weight: normal; color: #888;">(opcional)</span></label>
+<div class="linha-flex">
   <textarea id="hobbies-texto" name="hobbies" placeholder="Ex: Dançar, Ler, Praticar Exercícios" autocapitalize="sentences"></textarea>
-  <button type="button" onclick="reconhecerCampo('hobbies-texto')" style="background: none; border: none; cursor: pointer;">
-    <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-  </button>
 </div>
+<div id="hobbies-opcoes" class="sugestoes"></div>
+
+<!-- ESTILO -->
+<style>
+.sugestoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.sugestoes button {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.sugestoes button:hover {
+  background-color: #f0f0f0;
+  border-color: #999;
+}
+
+.sugestoes button.selecionado {
+  background-color: #00324a;
+  color: #fff;
+  border-color: #00324a;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* 📱 Mobile refinado */
+@media screen and (max-width: 480px) {
+  .sugestoes {
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 0 8px;
+  }
+
+  .sugestoes button {
+    font-size: 13px;
+    padding: 5px 10px;
+    margin-bottom: 6px;
+  }
+
+  textarea,
+  input[type="text"],
+  input[type="email"],
+  input[type="number"] {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .etapa {
+    padding: 0 10px;
+  }
+}
+</style>
+
+<!-- SCRIPT -->
+<!-- Outras funções e scripts acima... -->
+
+<script>
+  // ⬇⬇⬇ Cola aqui sua função criarSugestoes
+function criarSugestoes(lista, containerId, textareaId) {
+  const container = document.getElementById(containerId);
+  lista.forEach(palavra => {
+    const btn = document.createElement("button");
+    btn.setAttribute("type", "button");
+    btn.textContent = palavra;
+
+    // ✅ Substitui comportamento padrão por clique seguro
+    btn.addEventListener("click", function (e) {
+      e.preventDefault(); // impede submit
+      e.stopImmediatePropagation(); // impede qualquer outro evento
+
+      const textarea = document.getElementById(textareaId);
+      const selecionadas = textarea.value.split(",").map(p => p.trim()).filter(p => p);
+
+      if (selecionadas.includes(palavra)) {
+        textarea.value = selecionadas.filter(p => p !== palavra).join(", ");
+        btn.classList.remove("selecionado");
+      } else {
+        if (selecionadas.length >= 5) {
+          alert("Você pode escolher até 5 opções.");
+          return;
+        }
+        selecionadas.push(palavra);
+        textarea.value = selecionadas.join(", ");
+        btn.classList.add("selecionado");
+      }
+    });
+
+    container.appendChild(btn);
+  });
+}
+
+  // ⬇⬇⬇ E logo abaixo, chama a função com os dados
+  const habilidades = [
+    "Comunicação", "Liderança", "Criatividade", "Empatia", "Resiliência",
+    "Trabalho em equipe", "Organização", "Flexibilidade", "Pensamento crítico", "Proatividade"
+  ];
+
+  const hobbies = [
+    "Dançar", "Ler", "Praticar Exercícios", "Cozinhar", "Viajar",
+    "Jogar", "Fotografar", "Meditar", "Ouvir música", "Desenhar"
+  ];
+
+  criarSugestoes(habilidades, "habilidades-opcoes", "habilidades-texto");
+  criarSugestoes(hobbies, "hobbies-opcoes", "hobbies-texto");
+</script>
+
+</body>
+</html>
 
         <p style="text-align: center; font-size: 1.1rem; margin-top: 30px; color: #00324a;">
 Você está a um clique de transformar sua história profissional. <strong>Finalize e surpreenda-se com o resultado.</strong>
