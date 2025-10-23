@@ -481,28 +481,58 @@ const frases = [
 </div>
 
 <script>
-document.getElementById("primeiroEmpregoCheck").addEventListener("change", function () {
-  const marcado = this.checked;
+document.addEventListener("DOMContentLoaded", () => {
+  const checkbox = document.getElementById("primeiroEmpregoCheck");
+  const empresaInput = document.querySelector('[name="empresa[]"]');
+  const cargoInput = document.querySelector('[name="cargo[]"]');
+  const atividadesInput = document.querySelector('[name="atividades[]"]');
+  const inicioInput = document.querySelector('[name="periodo_inicio[]"]');
+  const fimInput = document.querySelector('[name="periodo_fim[]"]');
 
-  // Desabilita ou habilita todos os campos de experiência
-  document.querySelectorAll("#experiencias input, #experiencias textarea, #experiencias button").forEach(el => {
-    el.disabled = marcado;
-    el.style.opacity = marcado ? "0.6" : "1";
-    el.style.pointerEvents = marcado ? "none" : "auto";
+  // Carrega estado salvo
+  const dados = JSON.parse(localStorage.getItem("curriculo") || "{}");
+  const empresaSalva = dados.empresa?.[0] || "";
+  const primeiroEmpregoAtivo = empresaSalva === "Primeiro Emprego";
+
+  checkbox.checked = primeiroEmpregoAtivo;
+
+  if (primeiroEmpregoAtivo) {
+    empresaInput.value = "Primeiro Emprego";
+    cargoInput.value = "";
+    atividadesInput.value = "";
+    inicioInput.value = "";
+    fimInput.value = "";
+    desativarCampos(true);
+  } else {
+    empresaInput.value = empresaSalva;
+    desativarCampos(false);
+  }
+
+  // Atualiza ao marcar/desmarcar
+  checkbox.addEventListener("change", function () {
+    const marcado = this.checked;
+
+    if (marcado) {
+      empresaInput.value = "Primeiro Emprego";
+      cargoInput.value = "";
+      atividadesInput.value = "";
+      inicioInput.value = "";
+      fimInput.value = "";
+    } else {
+      if (empresaInput.value === "Primeiro Emprego") {
+        empresaInput.value = "";
+      }
+    }
+
+    desativarCampos(marcado);
   });
 
-  // Se marcado, salva no localStorage como Primeiro Emprego
-  if (marcado) {
-    const experiencia = {
-      empresa: "<strong>Primeiro Emprego</strong>",
-      cargo: "",
-      atividades: "",
-      inicio: "",
-      fim: ""
-    };
-    localStorage.setItem("primeiroEmprego", JSON.stringify(experiencia));
-  } else {
-    localStorage.removeItem("primeiroEmprego");
+  function desativarCampos(estado) {
+    document.querySelectorAll("#experiencias input, #experiencias textarea, #experiencias button").forEach(el => {
+      el.disabled = estado;
+      el.style.opacity = estado ? "0.6" : "1";
+      el.style.pointerEvents = estado ? "none" : "auto";
+    });
   }
 });
 </script>
