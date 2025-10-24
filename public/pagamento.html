@@ -62,7 +62,10 @@
 
 <div id="miniatura-container" class="mb-8">
   <h3 class="text-white text-lg font-semibold mb-2 text-center">Prévia do seu currículo:</h3>
-  <img id="miniatura-curriculo" src="" alt="Miniatura do currículo" class="rounded-lg shadow-lg border border-white/20 w-full max-w-md mx-auto" />
+  <div style="width: 198px; height: 280px; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.3); border: 1px solid #ccc; border-radius: 6px; overflow: hidden; margin: 0 auto;">
+    <img id="miniatura-curriculo" src="" alt="Miniatura do currículo"
+      style="width: 100%; height: 100%; object-fit: fill; display: block;" />
+  </div>
 </div>
 
     <div class="bg-black/80 border border-[#E7C75F]/50 rounded-xl p-6 mb-8">
@@ -128,16 +131,7 @@
     background: { color: { value: "transparent" } }
   });
 
-  // ✅ Carrega a miniatura do currículo
-  const miniatura = localStorage.getItem("miniaturaCurriculo");
-  if (miniatura && miniatura.startsWith("data:image")) {
-    const img = document.getElementById("miniatura-curriculo");
-    if (img) {
-      img.src = miniatura;
-    }
-  } else {
-    console.warn("❌ Miniatura não encontrada ou inválida");
-  }
+  // ✅ Carrega a miniatura do currícul
 
   // Cronômetro regressivo
   let tempoRestante = 6 * 60;
@@ -153,6 +147,12 @@
     }
   }
   atualizarCronometro();
+
+const miniatura = localStorage.getItem("miniaturaCurriculo");
+if (miniatura && miniatura.startsWith("data:image")) {
+  document.getElementById("miniatura-curriculo").src = miniatura;
+}
+
 </script>
 </body>
 </html>
