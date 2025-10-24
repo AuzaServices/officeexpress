@@ -104,44 +104,55 @@
     <p class="mt-4 text-[#E7C75F] font-bold">Office Express © 2025 - Todos os direitos reservados</p>
   </footer>
 
-  <script>
-    function copiarPix() {
-      const chave = document.getElementById("pix").value;
-      navigator.clipboard.writeText(chave);
-    }
+<script>
+  function copiarPix() {
+    const chave = document.getElementById("pix").value;
+    navigator.clipboard.writeText(chave);
+  }
 
-    tsParticles.load("particles-js", {
-      fullScreen: { enable: false },
-      particles: {
-        number: { value: 60 },
-        color: { value: "#e09d00" },
-        shape: { type: "circle" },
-        opacity: { value: 0.3 },
-        size: { value: 4 },
-        move: {
-          enable: true,
-          speed: 1.5,
-          direction: "none",
-          outModes: { default: "bounce" }
-        }
-      },
-      background: { color: { value: "transparent" } }
-    });
-
-    // Cronômetro regressivo
-    let tempoRestante = 6 * 60;
-    function atualizarCronometro() {
-      const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
-      const segundos = String(tempoRestante % 60).padStart(2, '0');
-      document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
-      if (tempoRestante <= 0) {
-        window.location.href = "pagamentototal.html";
-      } else {
-        tempoRestante--;
-        setTimeout(atualizarCronometro, 1000);
+  tsParticles.load("particles-js", {
+    fullScreen: { enable: false },
+    particles: {
+      number: { value: 60 },
+      color: { value: "#e09d00" },
+      shape: { type: "circle" },
+      opacity: { value: 0.3 },
+      size: { value: 4 },
+      move: {
+        enable: true,
+        speed: 1.5,
+        direction: "none",
+        outModes: { default: "bounce" }
       }
+    },
+    background: { color: { value: "transparent" } }
+  });
+
+  // ✅ Carrega a miniatura do currículo
+  const miniatura = localStorage.getItem("miniaturaCurriculo");
+  if (miniatura && miniatura.startsWith("data:image")) {
+    const img = document.getElementById("miniatura-curriculo");
+    if (img) {
+      img.src = miniatura;
     }
-    atualizarCronometro();
-  </script>
+  } else {
+    console.warn("❌ Miniatura não encontrada ou inválida");
+  }
+
+  // Cronômetro regressivo
+  let tempoRestante = 6 * 60;
+  function atualizarCronometro() {
+    const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
+    const segundos = String(tempoRestante % 60).padStart(2, '0');
+    document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
+    if (tempoRestante <= 0) {
+      window.location.href = "pagamentototal.html";
+    } else {
+      tempoRestante--;
+      setTimeout(atualizarCronometro, 1000);
+    }
+  }
+  atualizarCronometro();
+</script>
 </body>
 </html>
