@@ -252,11 +252,16 @@ curriculo.innerHTML = `
     clone.style.boxSizing = "border-box";
     document.body.appendChild(clone);
 
-    (async () => {
-      const canvas = await html2canvas(clone, { scale: 1 });
-      document.body.removeChild(clone);
-      const pageHeightPx = 1123;
-      const totalPages = Math.ceil(canvas.height / pageHeightPx);
+(async () => {
+  const canvas = await html2canvas(clone, { scale: 1 });
+
+  // ✅ Salva a miniatura no localStorage
+  const miniatura = canvas.toDataURL("image/png");
+  localStorage.setItem("miniaturaCurriculo", miniatura);
+
+  document.body.removeChild(clone);
+  const pageHeightPx = 1123;
+  const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
       for (let i = 0; i < totalPages; i++) {
         const pageCanvas = document.createElement("canvas");
