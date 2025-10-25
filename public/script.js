@@ -159,16 +159,33 @@ inputFoto.addEventListener("change", () => {
     reader.readAsDataURL(file);
   }
 
-function adicionarCurso() {
+function adicionarCurso(curso = "", instituicao = "", carga = "") {
   const container = document.getElementById("cursos");
   const novo = document.createElement("div");
   novo.className = "curso";
   novo.innerHTML = `
-    <input type="text" name="curso[]" placeholder="Nome do curso" />
-    <input type="text" name="instituicao[]" placeholder="Instituição (opcional)" />
-    <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" />
+    <input type="text" name="curso[]" placeholder="Nome do curso" value="${curso}" />
+    <input type="text" name="instituicao[]" placeholder="Instituição (opcional)" value="${instituicao}" />
+    <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" value="${carga}" />
   `;
   container.appendChild(novo);
+
+  // Salvar ao digitar
+  novo.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", salvarCursos);
+  });
+  salvarCursos();
+}
+
+function salvarCursos() {
+  const cursos = [];
+  document.querySelectorAll(".curso").forEach(bloco => {
+    const curso = bloco.querySelector('[name="curso[]"]').value;
+    const instituicao = bloco.querySelector('[name="instituicao[]"]').value;
+    const carga = bloco.querySelector('[name="carga[]"]').value;
+    cursos.push({ curso, instituicao, carga });
+  });
+  localStorage.setItem("cursosSalvos", JSON.stringify(cursos));
 }
 
   // Dispara o log assim que o site é acessado
@@ -191,7 +208,7 @@ function adicionarCurso() {
       color: { value: "#f4f7fa" }
     }
   });
-function adicionarExperiencia() {
+function adicionarExperiencia(empresaVal = "", cargoVal = "", atividadesVal = "", inicioVal = "", fimVal = "") {
   const container = document.getElementById("experiencias");
   const nova = document.createElement("div");
   nova.className = "experiencia";
@@ -200,15 +217,18 @@ function adicionarExperiencia() {
   empresa.type = "text";
   empresa.name = "empresa[]";
   empresa.placeholder = "Empresa";
+  empresa.value = empresaVal;
 
   const cargo = document.createElement("input");
   cargo.type = "text";
   cargo.name = "cargo[]";
   cargo.placeholder = "Cargo";
+  cargo.value = cargoVal;
 
   const atividades = document.createElement("textarea");
   atividades.name = "atividades[]";
   atividades.placeholder = "Atividades desenvolvidas...";
+  atividades.value = atividadesVal;
 
   const inicioLabel = document.createElement("label");
   inicioLabel.textContent = "Início:";
@@ -218,6 +238,7 @@ function adicionarExperiencia() {
   inicio.name = "periodo_inicio[]";
   inicio.className = "mesAno";
   inicio.placeholder = "Selecione mês e ano";
+  inicio.value = inicioVal;
 
   const fimLabel = document.createElement("label");
   fimLabel.textContent = "Fim:";
@@ -227,6 +248,7 @@ function adicionarExperiencia() {
   fim.name = "periodo_fim[]";
   fim.className = "mesAno";
   fim.placeholder = "Selecione mês e ano";
+  fim.value = fimVal;
 
   nova.appendChild(empresa);
   nova.appendChild(cargo);
@@ -238,15 +260,32 @@ function adicionarExperiencia() {
 
   container.appendChild(nova);
 
-  [inicio, fim].forEach(input => {
-    if (!input._flatpickr) {
-      flatpickr(input, {
-        locale: flatpickr.l10ns.pt,
-        dateFormat: "m/Y",
-        disableMobile: true
-      });
-    }
+  [empresa, cargo, atividades, inicio, fim].forEach(el => {
+    el.addEventListener("input", salvarExperiencias);
   });
+
+  [inicio, fim].forEach(input => {
+    flatpickr(input, {
+      locale: flatpickr.l10ns.pt,
+      dateFormat: "m/Y",
+      disableMobile: true
+    });
+  });
+
+  salvarExperiencias();
+}
+
+function salvarExperiencias() {
+  const experiencias = [];
+  document.querySelectorAll(".experiencia").forEach(bloco => {
+    const empresa = bloco.querySelector('[name="empresa[]"]').value;
+    const cargo = bloco.querySelector('[name="cargo[]"]').value;
+    const atividades = bloco.querySelector('[name="atividades[]"]').value;
+    const inicio = bloco.querySelector('[name="periodo_inicio[]"]').value;
+    const fim = bloco.querySelector('[name="periodo_fim[]"]').value;
+    experiencias.push({ empresa, cargo, atividades, inicio, fim });
+  });
+  localStorage.setItem("experienciasSalvas", JSON.stringify(experiencias));
 }
 
   document.querySelectorAll('.carga-input').forEach(input => {
@@ -310,4 +349,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const cursosSalvos = JSON.parse(localStorage.getItem("cursosSalvos") || "[]");
+  cursosSalvos.forEach(c => adicionarCurso(c.curso, c.instituicao, c.carga));
+
+  const experienciasSalvas = JSON.parse(localStorage.getItem("experienciasSalvas") || "[]");
+  experienciasSalvas.forEach(e => adicionarExperiencia(e.empresa, e.cargo, e.atividades, e.inicio, e.fim));
 });
