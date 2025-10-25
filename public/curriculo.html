@@ -229,7 +229,7 @@
           </div>
         </div>
 
-<label>Seu Nome Completo <span style="font-weight: normal; color: #666;">(Como você quer ser lembrado)</span></label>
+<label>Nome Completo <span style="font-weight: normal; color: #666;"></span></label>
 <div style="display: flex; align-items: center; gap: 10px;">
   <input type="text" name="nome" id="nome" required />
   <button type="button" onclick="reconhecerVoz('nome')" style="background: none; border: none; cursor: pointer;">
@@ -238,7 +238,7 @@
 </div>
 
 <!-- ✅ NOVO CAMPO DE IDADE -->
-<label for="idade">Sua Idade <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+<label for="idade">Idade <span style="font-weight: normal; color: #666;">(opcional)</span></label>
 <div style="display: flex; align-items: center; gap: 10px;">
   <input type="number" name="idade" id="idade" min="1" max="120" required style="width: 80px;" />
   </button>
@@ -338,7 +338,7 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
     </small>
   </div>
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-    <label for="endereco">Endereço (Rua)</label>
+    <label for="endereco">Rua/Avenida</label>
     <div style="display: flex; align-items: center; gap: 10px;">
       <input type="text" id="endereco" name="endereco" placeholder="" />
       <button type="button" onclick="reconhecerCampo('endereco')" style="background: none; border: none; cursor: pointer;">
@@ -416,7 +416,7 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
   <p style="margin-top: 10px; font-weight: 500; color: #555;">
    
   </p>
-  <textarea name="infoAdicional" id="infoAdicional" rows="4" placeholder="Habilitação, disponibilidade, áreas de interesse..."></textarea>
+  <textarea name="infoAdicional" id="infoAdicional" rows="4" placeholder="CNH, Disponibilidade de horarios, áreas de interesse e etc..."></textarea>
 
 <label style="margin-top: 30px;">Objetivo – Qual seu objetivo profissional?</label>
 <p style="margin-top: 10px; font-weight: 500; color: #555;">
@@ -452,24 +452,31 @@ const frases = [
   "Ser contratado por uma organização que compreenda a importância da cultura organizacional, onde eu possa atuar com autenticidade, propósito e impacto, construindo uma trajetória de sucesso compartilhado."
 ];
 
-  document.getElementById("gerarFrase").addEventListener("click", function () {
-    const frase = frases[Math.floor(Math.random() * frases.length)];
-    document.getElementById("objetivo").value = frase;
-  });
+document.getElementById("gerarFrase").addEventListener("click", function () {
+  const btn = this;
+  btn.classList.add("flash-luz");
+
+  setTimeout(() => {
+    btn.classList.remove("flash-luz");
+  }, 600); // mesma duração da animação
+
+  const frase = frases[Math.floor(Math.random() * frases.length)];
+  document.getElementById("objetivo").value = frase;
+});
 </script>
 </div>
 
       <!-- Etapa 4 -->
       <div class="etapa">
-        <h2>Seu Conhecimento é Seu Diferencial</h2>
-<label>Cursos que moldaram sua jornada</label>
+        <h2>Cursos</h2>
+<label>Caso não tenha deixe em branco</label>
         <div id="cursos">
           <div class="curso">
 <!-- Nome do curso -->
 <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
   <label for="curso">Nome do curso</label>
   <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="text" name="curso[]" id="curso" placeholder="Nome do curso" />
+    <input type="text" name="curso[]" id="curso" placeholder="Ex: Informática Básica, Administração e etc..." />
     <button type="button" onclick="reconhecerCampo('curso')" style="background: none; border: none; cursor: pointer;">
       <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
     </button>
@@ -525,7 +532,7 @@ const frases = [
 
       <!-- Atividades -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <textarea name="atividades[]" id="atividades-0" placeholder="Atividades desenvolvidas..."></textarea>
+        <textarea name="atividades[]" id="atividades-0" placeholder="Atividades desenvolvidas (opcional)..."></textarea>
         <button type="button" onclick="reconhecerAtividades('atividades-0')" style="background: none; border: none; cursor: pointer;">
           <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
         </button>
@@ -582,7 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
       <!-- Etapa 6 -->
       <div class="etapa">
-                <h2>O Que Te Torna Único</h2>
+                <h2>Escolaridade / O Que Te Torna Único(a)</h2>
 <label>Formação Acadêmica</label>
 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
   <textarea name="formacao" id="formacao" required autocapitalize="sentences"></textarea>
@@ -963,7 +970,7 @@ function adicionarCurso() {
   cursoInput.type = "text";
   cursoInput.name = "curso[]";
   cursoInput.id = `curso-${index}`;
-  cursoInput.placeholder = "Nome do curso";
+  cursoInput.placeholder = "Ex: Informática Básica, Administração e etc...";
 
   const cursoMic = document.createElement("button");
   cursoMic.type = "button";
@@ -1008,7 +1015,7 @@ function adicionarCurso() {
   cargaInput.type = "text";
   cargaInput.name = "carga[]";
   cargaInput.id = `carga-${index}`;
-  cargaInput.placeholder = "Ex: 40 horas";
+  cargaInput.placeholder = "Carga horária (ex: 40h)";
 
   div.appendChild(cursoLabel);
   div.appendChild(cursoWrapper);
