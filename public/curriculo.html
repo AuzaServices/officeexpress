@@ -127,7 +127,7 @@
       tempoInativo++;
 
       if (tempoInativo >= 5 && !mensagem1Mostrada) {
-        mostrarImpacto("impactoFinal1", "barraTempo1", 5000);
+        mostrarImpacto("impactoFinal1", "barraTempo1", 5000, true); // permitir clique
         mensagem1Mostrada = true;
         aguardandoSegunda = true;
         tempoParaSegunda = 0;
@@ -171,7 +171,7 @@
         setTimeout(() => {
           box.style.display = "none";
           fundo.style.display = "none";
-        }, tempoSumir);
+        }, 300);
       }
     }, tempoSumir / 100);
 
