@@ -127,7 +127,7 @@
       tempoInativo++;
 
       if (tempoInativo >= 5 && !mensagem1Mostrada) {
-        mostrarImpacto("impactoFinal1", "barraTempo1", 5000, true); // permitir clique
+        mostrarImpacto("impactoFinal1", "barraTempo1", 5000, true); // ✅ permitir clique
         mensagem1Mostrada = true;
         aguardandoSegunda = true;
         tempoParaSegunda = 0;
@@ -189,9 +189,16 @@
     }
   }
 
+  // Eventos que contam como atividade
   ["mousemove", "keydown", "scroll", "touchstart", "click"].forEach(evento => {
     document.addEventListener(evento, resetarInatividade);
   });
+
+  // ✅ Interação ao escolher foto
+  const campoFoto = document.querySelector('input[type="file"]');
+  if (campoFoto) {
+    campoFoto.addEventListener("change", resetarInatividade);
+  }
 
   iniciarMonitoramento();
 </script>
