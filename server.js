@@ -493,14 +493,6 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       doc.addPage(); // se o conteúdo já ocupou demais, cria nova página
     }
 
-    const rodapeY = doc.page.height - 40;
-
-    doc.font('Helvetica-Oblique').fontSize(10).fillColor('#666666')
-       .text('Office Express® 2025. Todos os Direitos Reservados', 50, rodapeY, {
-         align: 'center',
-         width: doc.page.width - 100
-       });
-
     doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err);
