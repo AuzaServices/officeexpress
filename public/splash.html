@@ -281,8 +281,8 @@ body {
 
 .carrossel-inner {
   display: flex;
-  width: 300%;
-  animation: deslizar 12s infinite;
+  width: 600%; /* 6 imagens = 6 x 100% */
+  animation: deslizar 24s infinite; /* tempo proporcional */
 }
 
 .carrossel-inner img {
@@ -294,12 +294,17 @@ body {
 }
 
 @keyframes deslizar {
-  0% { transform: translateX(0%); }
-  33% { transform: translateX(0%); }
-  38% { transform: translateX(-100%); }
-  66% { transform: translateX(-100%); }
-  71% { transform: translateX(-200%); }
-  100% { transform: translateX(-200%); }
+  0%   { transform: translateX(0%); }
+  16%  { transform: translateX(0%); }
+  20%  { transform: translateX(-100%); }
+  36%  { transform: translateX(-100%); }
+  40%  { transform: translateX(-200%); }
+  56%  { transform: translateX(-200%); }
+  60%  { transform: translateX(-300%); }
+  76%  { transform: translateX(-300%); }
+  80%  { transform: translateX(-400%); }
+  96%  { transform: translateX(-400%); }
+  100% { transform: translateX(-500%); }
 }
 
 .carrossel-empresas {
