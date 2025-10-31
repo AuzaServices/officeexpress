@@ -50,15 +50,17 @@
     <h1>Envie seu Currículo para Análise Inteligente</h1>
     <p class="subtexto">
       Aceitamos apenas arquivos no formato <strong>.pdf</strong>.
-      O relatório será gerado automaticamente após o pagamento.
+      O relatório será gerado e enviado para seu numero de Whatsapp.
     </p>
 
     <form id="form-analisar" enctype="multipart/form-data" onsubmit="return false;">
       <label for="nome">Seu nome:</label>
       <input type="text" id="nome" name="nome" required />
 
-      <label for="telefone">Seu telefone:</label>
-      <input type="text" id="telefone" name="telefone" required />
+<label for="telefone">
+  Seu telefone: <span style="color: #bfc2c6;">(Whatsapp)</span>
+</label>
+<input type="text" id="telefone" name="telefone" required placeholder="(DDD)9XXXX-XXXX" />
 
       <label for="curriculo">Selecione seu currículo:</label>
       <input type="file" id="curriculo" name="curriculo" accept=".pdf,.doc,.docx" required />
