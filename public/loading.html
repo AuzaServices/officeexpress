@@ -138,7 +138,7 @@ p, li {
           <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
           ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
 <p><strong>Endereço:</strong> ${enderecoCompleto}</p>
-${dados.infoAdicional ? `<br><p>${dados.infoAdicional}</p>` : ""}
+${dados.infoAdicional ? `<p style="margin-top:6px;">${dados.infoAdicional}</p>` : ""}
         </div>
         ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
       </div>
