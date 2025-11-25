@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Office Express | Seu Futuro Começa Aqui</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
+
+<meta property="og:title" content="Currículo pronto em 10 minutos — sem fila, sem lan house">
+<meta property="og:description" content="Clique e crie seu currículo agora mesmo ou envie o seu para nossa IA avaliar. Rápido, profissional e direto ao ponto.">
+<meta property="og:image" content="https://i.imgur.com/bNZ3HWQ.png">
+<meta property="og:url" content="https://officeexpress.onrender.com/splash.html">
+<meta property="og:type" content="website">
+
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+body {
+  margin: 0;
+  padding: 10px;
+  background: linear-gradient(to right, #001f33, #00324a);
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  text-align: center;
+}
+
+  .fade-in {
+    animation: fadeIn 1.2s ease-in-out;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+.top-image {
+  width: 180px;
+  height: auto;
+  margin-top: 30px; /* 👈 desce a imagem */
+  margin-bottom: 10px;
+}
+
+  h1 {
+    font-size: 1.6rem;
+    color: #ff8800;
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #f0f4f8;
+    margin-bottom: 12px;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff8800;
+  }
+
+  .label {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    margin-top: 4px;
+  }
+
+  .empresas-section {
+    margin: 10px 0;
+  }
+
+  .empresas-section h2 {
+    font-size: 0.85rem;
+    color: #ff8800;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .logos {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .logos img {
+    height: 24px;
+    max-width: 60px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+    transition: transform 0.3s ease;
+  }
+
+  .logos img:hover {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+
+  .btn-entrar {
+    background-color: #ff8800;
+    color: #00324a;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-entrar:hover {
+    background-color: #ff8800;
+    transform: scale(1.05);
+  }
+
+  .secao-analisar {
+    margin-top: 20px;
+  }
+
+  hr {
+    border: none;
+    height: 1px;
+    background-color: #cbd5e133;
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+  }
+
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 1.4rem;
+    }
+
+    .stat {
+      font-size: 1.5rem;
+    }
+
+    .label {
+      font-size: 1.0rem;
+    }
+
+    .empresas-section h2 {
+      font-size: 0.75rem;
+    }
+
+    .btn-entrar {
+      padding: 8px 18px;
+      top: -5px;
+      font-size: 0.85rem;
+    }
+
+    .top-image {
+      width: 140px;
+    }
+  }
+
+  .btn-entrar {
+  background-color: #ff8800;
+  color: #00324a;
+  border: none;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  box-shadow: 0 0 10px #ff8800aa;
+}
+
+.btn-entrar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #fff6cc88, transparent);
+  transform: skewX(-20deg);
+  animation: brilhoBotao 2.5s infinite;
+}
+
+@keyframes brilhoBotao {
+  0% {
+    left: -75%;
+  }
+  50% {
+    left: 125%;
+  }
+  100% {
+    left: 125%;
+  }
+}
+
+.btn-entrar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #ff8800dd;
+}
+.botao-brilhante {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  box-shadow: 0 0 10px #e09d00aa;
+  background-color: #ff8800;
+  color: #00324a;
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.botao-brilhante::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #ffffff88, transparent);
+  transform: skewX(-20deg);
+  animation: brilhoBotao 2.5s infinite;
+}
+
+@keyframes brilhoBotao {
+  0% {
+    left: -75%;
+  }
+  50% {
+    left: 125%;
+  }
+  100% {
+    left: 125%;
+  }
+}
+
+.botao-brilhante:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #e09d00dd;
+}
+
+.depoimentos-section {
+  margin-top: -10px;
+  text-align: center;
+}
+
+.carrossel {
+  width: 100%;
+  max-width: 320px;
+  max-height: 700px; /* Aumentado aqui */
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #00000033;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carrossel-inner {
+  display: flex;
+  width: 600%;
+  animation: deslizar 24s infinite;
+}
+
+.carrossel-inner img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  flex: 0 0 100%;
+  border-radius: 12px;
+}
+
+@keyframes deslizar {
+  0%   { transform: translateX(0%); }
+  13%  { transform: translateX(0%); }
+  17%  { transform: translateX(-100%); }
+  30%  { transform: translateX(-100%); }
+  34%  { transform: translateX(-200%); }
+  47%  { transform: translateX(-200%); }
+  51%  { transform: translateX(-300%); }
+  64%  { transform: translateX(-300%); }
+  68%  { transform: translateX(-400%); }
+  81%  { transform: translateX(-400%); }
+  85%  { transform: translateX(-500%); }
+  98%  { transform: translateX(-500%); }
+  100% { transform: translateX(0%); }
+}
+
+
+.carrossel-empresas {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: #001f33;
+  box-shadow: 0 0 10px #00000033;
+}
+
+.carrossel-empresas-inner {
+  display: flex;
+  width: calc(100% * 2 + 40px); /* 2 grupos + espaçamento extra */
+  column-gap: 190px; /* distância entre os grupos */
+  animation: deslizarEmpresas 8s infinite;
+}
+
+.carrossel-empresas .grupo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: -194px;
+  flex: 0 0 100%;
+  padding: 12px;
+  gap: 20px; /* aumenta o espaçamento entre logos sem exagerar */
+}
+
+.carrossel-empresas img {
+  height: 32px;
+  max-width: 64px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+@keyframes deslizarEmpresas {
+  0% { transform: translateX(0%); }
+  45% { transform: translateX(0%); }
+  50% { transform: translateX(-100%); }
+  95% { transform: translateX(-100%); }
+  100% { transform: translateX(0%); }
+}
+
+@keyframes pulsante {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.botao-pulsante {
+  animation: pulsante 1.6s infinite ease-in-out;
+}
+
+.rodape {
+  position: relative;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  background-color: #001f33;
+  color: #cbd5e1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  border-top: 1px solid #ffffff22;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rodape .marca {
+  font-size: 0.65rem;
+  vertical-align: super;
+  color: #ff8800;
+}
+
+</style>
+</head>
+<!-- Dentro do <body> -->
+<div class="fade-in">
+  <img src="https://i.imgur.com/HjzGCoA.png" alt="Logo Office Express" class="top-image">
+
+  <h1>Seu Futuro Começa Aqui</h1>
+  <p>Impulsione sua Carreira com um Currículo que prende o olhar dos Recrutadores de imediato</p>
+
+  <div class="stats">
+    <div>
+      <div class="stat" id="usuarios">0</div>
+      <div class="label">pessoas usam nossos serviços</div>
+    </div>
+    <div>
+      <div class="stat" id="taxa">0%</div>
+      <div class="label">taxa de empregabilidade</div>
+    </div>
+  </div>
+
+<div class="empresas-section">
+  <h2>Empresas que abriram portas para nossos usuários:</h2>
+  <div class="carrossel-empresas">
+    <div class="carrossel-empresas-inner">
+      <div class="grupo">
+        <img src="1.png" alt="Empresa 1" />
+        <img src="3.png" alt="Empresa 5" style="height: 60px; max-width: 120px; margin-top: -5px;" />
+        <img src="2.png" alt="Empresa 3" />
+      </div>
+      <div class="grupo">
+        <img src="4.png" alt="Empresa 4" style="height: 60px; max-width: 120px; margin-top: 0px;" />
+        <img src="5.png" alt="Empresa 5" style="height: 60px; max-width: 120px; margin-top: -22px;" />
+        <img src="6.png" alt="Empresa 6" />
+      </div>
+      <!-- Adicione mais grupos conforme necessário -->
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<div style="margin-bottom: 10px;">
+  <h2 class="titulo-secao">Hora de se destacar</h2>
+  <button class="btn-entrar botao-pulsante" onclick="document.getElementById('modalNome').style.display='flex'">
+  Criar Currículo
+</button>
+  <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">Leva menos de 10 minutos</p>
+<p style="font-size: 0.75rem; color: #cbd5e1; margin-top: 4px;">
+  O formato do Currículo foi estudado e testado para chamar atenção dos recrutadores 
+  <span style="color: #ffffff;">em Segundos</span>.
+</p>
+</div>
+
+  <hr />
+
+  <div class="secao-analisar">
+    <h2 class="titulo-secao">Já tem um Currículo?</h2>
+    <button class="btn-entrar botao-pulsante" onclick="analisar()">Analisar Currículo</button>
+    <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 6px;">
+      Descubra o que pode estar te impedindo de ser chamado(a).
+    </p>
+  </div>
+</div>
+
+<hr />
+
+<div class="depoimentos-section">
+  <h2 style="color: #ff8800; font-size: 1rem; margin-bottom: 6px;">Veja o que dizem sobre a Office Express</h2>
+  <div class="carrossel">
+    <div class="carrossel-inner" id="carrosselInner">
+      <img src="https://i.imgur.com/m0uihWw.jpeg" alt="Depoimento 1" />
+      <img src="https://i.imgur.com/qjqnSV6.jpeg" alt="Depoimento 2" />
+      <img src="https://i.imgur.com/08B5NBm.jpeg" alt="Depoimento 3" />
+      <img src="https://i.imgur.com/pEcL8xM.jpeg" alt="Depoimento 4" />
+      <img src="https://i.imgur.com/ctMK0lZ.jpeg" alt="Depoimento 5" />
+      <img src="https://i.imgur.com/C3WIPQm.jpeg" alt="Depoimento 6" />
+    </div>
+  </div>
+</div>
+
+  <!-- Modal para capturar primeiro nome -->
+  <div id="modalNome" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000000aa; justify-content:center; align-items:center; z-index:999;">
+<div style="background:#fff; padding:30px; border-radius:12px; text-align:center; max-width:300px; width:90%; position: relative;">
+  <button onclick="fecharModal()" style="
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff3b3b;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 28px;
+    cursor: pointer;
+    box-shadow: 0 0 8px #ff3b3b88;
+  ">×</button>
+      <h2 style="color:#00324a; margin-bottom:12px;">Seu primeiro nome</h2>
+      <input 
+        type="text" 
+        id="primeiroNome" 
+        placeholder="Ex: João" 
+        onkeydown="return bloquearEspaco(event)" 
+        style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom:20px;" 
+      />
+<button onclick="iniciarCurriculo()" class="botao-brilhante">
+  Iniciar
+</button>
+    </div>
+  </div>
+
+  <script>
+    function analisar() {
+      window.location.href = "analise.html";
+    }
+
+    function animateValue(id, start, end, duration, suffix = '') {
+      const obj = document.getElementById(id);
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        obj.innerText = value.toLocaleString('pt-BR') + suffix;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    animateValue("usuarios", 0, 10258, 3500);
+    animateValue("taxa", 0, 98, 3500, '%');
+  </script>
+
+  <script>
+    function bloquearEspaco(e) {
+      if (e.key === " " || e.keyCode === 32) {
+        e.preventDefault();
+        return false;
+      }
+      return true;
+    }
+
+    function iniciarCurriculo() {
+      const input = document.getElementById("primeiroNome");
+      const nome = input.value.trim();
+
+      if (nome === "" || nome.includes(" ")) {
+        alert("Digite apenas o primeiro nome, sem espaços.");
+        input.focus();
+        return;
+      }
+
+      localStorage.setItem("nomeUsuario", nome);
+      localStorage.setItem("entradaViaSplash", "true");
+      window.location.href = "curriculo.html";
+    }
+    function fecharModal() {
+  document.getElementById('modalNome').style.display = 'none';
+}
+  </script>
+<footer class="rodape">
+  Office Express <span class="marca">&reg;</span> 2025. Todos os Direitos Reservados.
+</footer>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="icon" href="icon.png" type="image/png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerando seu Currículo...</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .spinner-border {
+      width: 4rem;
+      height: 4rem;
+    }
+
+    h2 {
+      margin-top: 20px;
+      color: #343a40;
+    }
+
+    #curriculo {
+      position: absolute;
+      top: 0;
+      left: -9999px;
+      width: 794px;
+      padding: 60px;
+      background: white;
+      font-family: 'Arial', sans-serif;
+      box-sizing: border-box;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #00324a;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-top: 30px;
+      color: #00324a;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+p, li {
+  font-size: 16px;
+  margin: 2px 0; /* ↓ reduzido */
+  line-height: 1.2; /* ↓ mais compacto */
+}
+
+    ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+.info-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px; /* ↓ reduzido */
+}
+
+    .foto {
+      width: 120px;
+      height: 160px;
+      border-radius: 5px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      margin-left: 30px;
+    }
+@media (max-width: 576px) {
+  .text-center .spinner-border {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  .text-center h2 {
+    font-size: 35px !important;
+    margin-top: 40px !important;
+  }
+
+  .text-center p.text-muted {
+    font-size: 25px !important;
+  }
+
+  .text-center {
+    padding: 80px 20px !important;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="text-center">
+    <div class="spinner-border text-primary" role="status"></div>
+    <h2>Gerando seu currículo</h2>
+    <p class="text-muted">Aguarde nessa página alguns instantes</p>
+  </div>
+
+  <div id="curriculo"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+  localStorage.removeItem("navegandoInternamente");
+
+  async function enviarCurriculo() {
+    const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
+    if (!precisaEnviar) return;
+
+    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+    const container = document.getElementById("curriculo");
+
+    let enderecoCompleto = "";
+    if (dados.endereco) enderecoCompleto += dados.endereco;
+    if (dados.numero) enderecoCompleto += ", " + dados.numero;
+    if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
+    if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
+    if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
+    if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
+
+    container.innerHTML = `
+      <div class="info-topo">
+        <div>
+          <h1><strong>${dados.nome || ""}</strong></h1>
+          <p><strong>Email:</strong> ${dados.email || ""}</p>
+          <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+          ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
+<p><strong>Endereço:</strong> ${enderecoCompleto}</p>
+${dados.infoAdicional ? `<p style="margin-top:6px;">${dados.infoAdicional}</p>` : ""}
+        </div>
+        ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
+      </div>
+      ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
+      ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p>${dados.formacao}</p>` : ""}
+    `;
+
+    if (Array.isArray(dados.curso)) {
+      let cursos = "";
+      for (let i = 0; i < dados.curso.length; i++) {
+        const nome = dados.curso[i]?.trim();
+        const inst = dados.instituicao[i]?.trim();
+        let carga = dados.carga[i]?.trim();
+        if (carga && /^\d+$/.test(carga)) {
+          carga = `${carga}hs`;
+        }
+        if (nome || inst || carga) {
+          cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
+        }
+      }
+      if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
+    }
+
+    // Experiência Profissional (inclui Primeiro Emprego)
+    let exp = "";
+
+if (Array.isArray(dados.empresa)) {
+  for (let i = 0; i < dados.empresa.length; i++) {
+    const empresa = dados.empresa[i]?.trim();
+    const cargo = dados.cargo?.[i]?.trim();
+    const inicio = dados.periodo_inicio?.[i]?.trim();
+    const fim = dados.periodo_fim?.[i]?.trim();
+    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
+    const atividades = dados.atividades?.[i]?.trim();
+
+    if (empresa || cargo || periodo || atividades) {
+      exp += "<li>";
+      if (empresa) {
+        exp += `<strong>${empresa}</strong>`;
+        if (periodo) exp += ` — <em>${periodo}</em>`;
+      } else if (periodo) {
+        exp += `<em>${periodo}</em>`;
+      }
+      if (cargo) exp += `<br>${cargo}`;
+      if (atividades) exp += `<br><span>${atividades}</span>`;
+      exp += "</li>";
+    }
+  }
+}
+
+    if (exp) container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
+
+    if (dados.habilidades) {
+      container.innerHTML += `<h2><strong>Habilidades</strong></h2><p>${dados.habilidades}</p>`;
+    }
+
+    if (dados.hobbies) {
+      container.innerHTML += `<h2><strong>Hobbies</strong></h2><p>${dados.hobbies}</p>`;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const canvas = await html2canvas(container, { scale: 2 });
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const marginX = 10;
+    const marginY = 10;
+    const usableWidth = pageWidth - marginX * 2;
+    const usableHeight = pageHeight - marginY * 2;
+
+    const imgWidth = usableWidth;
+    const imgHeight = canvas.height * (imgWidth / canvas.width);
+    const totalPages = Math.ceil(imgHeight / usableHeight);
+
+    for (let i = 0; i < totalPages; i++) {
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      const sliceHeight = Math.min(canvas.height - i * (usableHeight * canvas.height / imgHeight), (usableHeight * canvas.height / imgHeight));
+      pageCanvas.height = sliceHeight;
+
+      const ctx = pageCanvas.getContext("2d");
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+      ctx.drawImage(
+        canvas,
+        0,
+        i * (usableHeight * canvas.height / imgHeight),
+        canvas.width,
+        sliceHeight,
+        0,
+        0,
+        canvas.width,
+        sliceHeight
+      );
+
+      const imgData = pageCanvas.toDataURL("image/jpeg", 1.0);
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, "JPEG", marginX, marginY, imgWidth, sliceHeight * (imgWidth / canvas.width));
+    }
+
+    const pdfBlob = pdf.output("blob");
+    const formData = new FormData();
+    formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
+    formData.append("telefone", dados.telefone || "");
+
+    try {
+      await fetch("https://officeexpress.onrender.com/api/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      localStorage.removeItem("curriculoParaEnviar");
+      localStorage.setItem("entradaViaSplash", "true");
+      window.location.href = "pagamento.html";
+    } catch (err) {
+      alert("Erro ao enviar PDF. Tente novamente.");
+      console.error(err);
+    }
+  }
+
+  setTimeout(enviarCurriculo, 2000);
+
+  fetch("https://officeexpress.onrender.com/api/logs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      acao: "etapa",
+      nome: localStorage.getItem("curriculo") ? JSON.parse(localStorage.getItem("curriculo")).nome : "visitante",
+      etapa: "Loading",
+      timestamp: new Date().toISOString()
+    })
+  });
+</script>
+</body>
+</html>

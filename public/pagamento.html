@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento | Currículo</title>
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to right, #001f33, #00324a);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .btn-brilhante {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+      box-shadow: 0 0 10px #ff8800aa;
+    }
+    .btn-brilhante::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, #fff6cc88, transparent);
+      transform: skewX(-20deg);
+      animation: brilhoBotao 2.5s infinite;
+    }
+    @keyframes brilhoBotao {
+      0% { left: -75%; }
+      50% { left: 125%; }
+      100% { left: 125%; }
+    }
+    .btn-brilhante:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #ff8800dd;
+    }
+    #faixa-promocao {
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body class="relative py-20 px-4 text-white">
+  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2 whitespace-nowrap">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <span class="text-xs font-medium">Promoção por tempo limitado - <span id="cronometro" class="font-bold">06:00</span> restantes!</span>
+  </div>
+
+  <div id="particles-js" class="absolute inset-0 -z-10"></div>
+
+  <section class="max-w-4xl mx-auto text-center">
+    <h2 class="text-5xl font-black mb-6 text-white/80 font-sans">
+      CURRÍCULO <span class="text-[#ff8800]">PRONTO</span>
+    </h2>
+    <p class="text-xl text-white/80 mb-4">Você pode continuar sendo ignorado(a) pelos recrutadores...</p>
+    <p class="text-2xl text-[#ff8800] font-bold mb-8">Ou pode AGIR AGORA e transformar seu currículo numa máquina de gerar entrevistas</p>
+
+    <div class="bg-black/80 border border-[#E7C75F]/50 rounded-xl p-6 mb-8">
+      <div class="flex justify-center items-center space-x-4 mb-4">
+        <span class="text-3xl text-white/50 line-through">R$12,50</span>
+        <span class="text-6xl font-black text-[#ff8800] font-['Anton'] animate-pulse">R$4,99</span>
+      </div>
+      <p class="text-green-400 font-semibold mb-2">HOJE APENAS</p>
+      <p class="text-white/60 text-sm">Valor promocional para os primeiros 100 currículos gerados nesta semana</p>
+    </div>
+
+    <input type="text" id="pix" readonly
+      class="w-full text-center font-bold text-[#0056b3] bg-[#eef6ff] border border-gray-300 rounded-lg py-3 mb-4"
+      value="00020126640014BR.GOV.BCB.PIX0121andrielysom@gmail.com0217Currículo/Análise52040000530398654044.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63044F6F" />
+
+    <button onclick="copiarPix()" class="btn-brilhante w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
+      Copiar chave Pix
+    </button>
+
+    <a href="https://wa.me/5585991340658?text=Olá,%20acabei%20de%20realizar%20o%20pagamento%20de%20R$4,99%20e%20quero%20receber%20meu%20currículo%20em%20PDF."
+       target="_blank"
+       class="btn-brilhante block w-full bg-green-500 text-white font-bold py-4 rounded-lg hover:bg-green-600 transition text-xl">
+      ✅ Já paguei — Enviar comprovante pelo WhatsApp
+    </a>
+    <p class="text-xs text-white/60 mt-2 text-center italic">O currículo só será entregue após confirmação do pagamento</p>
+
+    <div class="mt-6 text-sm text-white/60 space-y-2">
+      <div class="flex justify-center gap-4">
+        <span>🔒 Pagamento 100% seguro</span>
+        <span>⚡ Entrega imediata</span>
+        <span>🛡️ Garantia de satisfação por 7 dias</span>
+      </div>
+      <p class="mt-4">Mais de <span class="text-[#ff8800] font-bold">10.000 pessoas</span> já criaram seus currículos com a Office Express</p>
+      <p class="text-red-400 font-bold">Não espere mais. Sua chance de ser chamado começa com um currículo profissional.</p>
+    </div>
+  </section>
+
+  <footer class="mt-20 pt-8 text-center text-sm text-white/60">
+    <p class="mt-4 text-[#E7C75F] font-bold">Office Express © 2025 - Todos os direitos reservados</p>
+  </footer>
+
+<script>
+  function copiarPix() {
+    const chave = document.getElementById("pix").value;
+    navigator.clipboard.writeText(chave);
+  }
+
+  tsParticles.load("particles-js", {
+    fullScreen: { enable: false },
+    particles: {
+      number: { value: 60 },
+      color: { value: "#e09d00" },
+      shape: { type: "circle" },
+      opacity: { value: 0.3 },
+      size: { value: 4 },
+      move: {
+        enable: true,
+        speed: 1.5,
+        direction: "none",
+        outModes: { default: "bounce" }
+      }
+    },
+    background: { color: { value: "transparent" } }
+  });
+
+  // Cronômetro regressivo
+  let tempoRestante = 6 * 60;
+  function atualizarCronometro() {
+    const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
+    const segundos = String(tempoRestante % 60).padStart(2, '0');
+    document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
+    if (tempoRestante <= 0) {
+      window.location.href = "pagamentototal.html";
+    } else {
+      tempoRestante--;
+      setTimeout(atualizarCronometro, 1000);
+    }
+  }
+  atualizarCronometro();
+</script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Registros</title>
+  <link rel="icon" href="icon.png" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 30px;
+      text-align: left;
+      font-weight: 600;
+      color: #343a40;
+    }
+    table th {
+      background-color: #e9ecef;
+    }
+    .btn-sm {
+      font-size: 0.9rem;
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Painel de Arquivos PDF</h1>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle" id="tabela-arquivos">
+        <thead class="table-light">
+          <tr>
+<th>ID</th>
+<th>Arquivo</th>
+<th>Data</th>
+<th>Ação</th>
+<th>Contato</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h1 class="mt-5 d-flex justify-content-between align-items-center">
+      Registros de Acessos
+      <button onclick="apagarTodosLogs()" class="btn btn-danger btn-sm">Apagar Tudo</button>
+    </h1>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle" id="tabela-acessos">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Ação</th>
+            <th>Horário</th>
+            <th>Etapa</th>
+            <th>Localização</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h1 class="mt-5">Relatórios de Currículos</h1>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover align-middle" id="tabela-relatorios">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Arquivo</th>
+            <th>Data</th>
+            <th>Ação</th>
+            <th>Contato</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function apagarRegistro(id, tipo) {
+      if (!confirm("Tem certeza que deseja apagar este registro?")) return;
+
+      fetch(`/api/${tipo}/${id}`, { method: "DELETE" })
+        .then(res => {
+          if (!res.ok) throw new Error("Erro ao apagar");
+          if (tipo === "pdfs") carregarPDFs();
+          else if (tipo === "analises") carregarRelatorios();
+        })
+        .catch(err => {
+          console.error(`Erro ao apagar ${tipo} ${id}:`, err);
+          alert("Erro ao apagar registro.");
+        });
+    }
+
+    function apagarTodosLogs() {
+      if (!confirm("Tem certeza que deseja apagar TODOS os registros de acesso?")) return;
+
+      fetch('/api/logs', { method: 'DELETE' })
+        .then(res => {
+          if (!res.ok) throw new Error("Erro ao apagar logs");
+          carregarLogs();
+        })
+        .catch(err => {
+          console.error('Erro ao apagar todos os logs:', err);
+          alert("Erro ao apagar registros.");
+        });
+    }
+
+    function carregarPDFs() {
+      fetch('/api/pdfs')
+        .then(res => res.json())
+        .then(data => {
+          const tabela = document.querySelector('#tabela-arquivos tbody');
+          tabela.innerHTML = '';
+
+          data.forEach(pdf => {
+            const telefone = pdf.telefone?.replace(/\D/g, '');
+const mensagem = encodeURIComponent(
+  "📄 Seu *Currículo* está pronto!\n\n_O formato foi cuidadosamente pensado e testado para chamar a atenção dos recrutadores em segundos. Ele segue padrões visuais e estratégicos que aumentam suas chances de ser notado(a) e chamado(a) para entrevistas._\n\n💳 *Finalize o pagamento agora* e receba o PDF completo direto no seu WhatsApp — rápido, direto e sem complicações.\n\n🔸 Acesse:\nhttps://officeexpress.onrender.com/pagamento.html\n🔹 O Pix para copiar e colar está disponível lá!"
+);
+            const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+
+            const linha = document.createElement('tr');
+linha.innerHTML = `
+  <td>${pdf.id}</td>
+  <td>${pdf.filename || '—'}</td>
+  <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
+  <td>
+    <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+    <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+  <td>
+    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
+  </td>
+`;
+            tabela.appendChild(linha);
+          });
+        });
+    }
+
+    function carregarLogs() {
+      fetch('/api/logs')
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector('#tabela-acessos tbody');
+          tbody.innerHTML = '';
+
+          data.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${log.id}</td>
+              <td>${log.acao}</td>
+              <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
+              <td>${log.etapa || '—'}</td>
+              <td>${log.localizacao || '—'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => {
+          console.error('Erro ao buscar acessos:', err);
+        });
+    }
+
+    function carregarRelatorios() {
+      fetch('/api/analises')
+        .then(res => res.json())
+        .then(data => {
+          const tabela = document.querySelector('#tabela-relatorios tbody');
+          tabela.innerHTML = '';
+
+          data.forEach(rel => {
+            const telefone = rel.telefone?.replace(/\D/g, '');
+const mensagem = encodeURIComponent(
+  "📄 Seu *Relatório de Currículo* está pronto!\n\n_Mandar currículo sem saber o que está errado é perder tempo. Essa análise mostra exatamente o que está travando suas chances — e o que você precisa ajustar pra começar a ser chamado(a)._\n\n💳 *Finalize o pagamento agora* e receba o PDF completo direto no seu WhatsApp — rápido, direto e sem complicações.\n\n🔸 Acesse:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n🔹 O Pix para copiar e colar está disponível lá!"
+);
+            const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+
+            const linha = document.createElement('tr');
+linha.innerHTML = `
+  <td>${rel.id}</td>
+  <td>${rel.filename || '—'}</td>
+  <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+  <td>
+    <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+    <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+  <td>
+    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
+  </td>
+`;
+            tabela.appendChild(linha);
+          });
+        })
+        .catch(err => {
+          console.error('Erro ao buscar análises:', err);
+        });
+    }
+
+    // Atualiza a cada 2 segundos
+    setInterval(() => {
+      carregarPDFs();
+      carregarLogs();
+      carregarRelatorios();
+    }, 2000);
+
+    // Carrega imediatamente ao abrir
+    carregarPDFs();
+    carregarLogs();
+    carregarRelatorios();
+  </script>
+</body>
+</html>

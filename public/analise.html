@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analisar Currículo | Office Express</title>
+  <link rel="icon" href="icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+  <style>
+    .barra-container {
+      margin-top: 24px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .barra-wrapper {
+      flex: 1;
+      height: 14px;
+      background-color: #eee;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .barra {
+      height: 100%;
+      background: linear-gradient(to right, #e09d00, #00324a);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .porcentagem {
+      font-weight: bold;
+      color: #00324a;
+      min-width: 40px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+
+  <div class="container">
+    <h1>Envie seu Currículo para Análise Inteligente</h1>
+    <p class="subtexto">
+      Aceitamos apenas arquivos no formato <strong>.pdf</strong>.
+      O relatório será gerado e enviado para seu numero de Whatsapp.
+    </p>
+
+    <form id="form-analisar" enctype="multipart/form-data" onsubmit="return false;">
+      <label for="nome">Seu nome:</label>
+      <input type="text" id="nome" name="nome" required />
+
+<label for="telefone">
+  Seu telefone: <span style="color: #bfc2c6;">(Whatsapp)</span>
+</label>
+<input type="text" id="telefone" name="telefone" required placeholder="(DDD)9XXXX-XXXX" />
+
+      <label for="curriculo">Selecione seu currículo:</label>
+      <input type="file" id="curriculo" name="curriculo" accept=".pdf,.doc,.docx" required />
+
+<div id="area-botao">
+  <button id="botao-ia" class="botao-ia-particles">
+    Analisar Currículo
+    <span class="particula" style="top: 10%; left: 20%; animation-delay: 0s;"></span>
+    <span class="particula" style="top: 30%; left: 80%; animation-delay: 0.4s;"></span>
+    <span class="particula" style="top: 60%; left: 40%; animation-delay: 0.8s;"></span>
+    <span class="particula" style="top: 80%; left: 70%; animation-delay: 1.2s;"></span>
+    <span class="particula" style="top: 50%; left: 10%; animation-delay: 1.6s;"></span>
+    <span class="particula" style="top: 20%; left: 60%; animation-delay: 2s;"></span>
+    <span class="particula" style="top: 70%; left: 30%; animation-delay: 2.4s;"></span>
+    <span class="particula" style="top: 40%; left: 50%; animation-delay: 2.8s;"></span>
+    <span class="particula" style="top: 85%; left: 15%; animation-delay: 3.2s;"></span>
+    <span class="particula" style="top: 25%; left: 75%; animation-delay: 3.6s;"></span>
+  </button>
+</div>
+
+      <div id="painel-carregamento" style="visibility: hidden;">
+        <div class="barra-container">
+          <div class="barra-wrapper">
+            <div class="barra" id="barra1"></div>
+          </div>
+          <div class="porcentagem" id="porcentagem1">0%</div>
+        </div>
+        <ul class="frases-barra" id="frases1">
+          <li>Detectando palavras-chave</li>
+          <li>Avaliando competências</li>
+          <li>Mapeando áreas de atuação</li>
+        </ul>
+
+        <div class="barra-container">
+          <div class="barra-wrapper">
+            <div class="barra" id="barra2"></div>
+          </div>
+          <div class="porcentagem" id="porcentagem2">0%</div>
+        </div>
+        <ul class="frases-barra" id="frases2">
+          <li>Verificando alinhamento profissional</li>
+          <li>Comparando com vagas atuais</li>
+          <li>Gerando insights personalizados</li>
+        </ul>
+      </div>
+    </form>
+
+    <div id="notificacoes"></div>
+  </div>
+
+  <script>
+    tsParticles.load("particles-js", {
+      fullScreen: { enable: false },
+      particles: {
+        number: { value: 60 },
+        color: { value: "#e09d00" },
+        shape: { type: "circle" },
+        opacity: { value: 0.3 },
+        size: { value: 4 },
+        move: {
+          enable: true,
+          speed: 1.5,
+          direction: "none",
+          outModes: { default: "bounce" }
+        }
+      },
+      background: {
+        color: { value: "#f4f7fa" }
+      }
+    });
+
+    const campoTelefone = document.getElementById('telefone');
+    campoTelefone.addEventListener('input', function (e) {
+      let valor = e.target.value.replace(/\D/g, '');
+      if (valor.length > 11) valor = valor.slice(0, 11);
+      let formatado = valor;
+      if (valor.length >= 2) {
+        formatado = `(${valor.slice(0, 2)})`;
+        if (valor.length >= 7) {
+          formatado += `${valor.slice(2, 7)}-${valor.slice(7)}`;
+        } else {
+          formatado += valor.slice(2);
+        }
+      }
+      e.target.value = formatado;
+    });
+
+    document.getElementById("botao-ia").addEventListener("click", async () => {
+      const nome = document.getElementById("nome").value.trim();
+      const telefone = document.getElementById("telefone").value.trim();
+      const arquivo = document.getElementById("curriculo").files[0];
+
+      if (!nome || !telefone || !arquivo) {
+        alert("Preencha todos os campos e selecione um arquivo.");
+        return;
+      }
+
+      const botao = document.getElementById("botao-ia");
+      botao.classList.add("derretendo");
+
+      setTimeout(() => {
+        document.getElementById("area-botao").style.display = "none";
+
+        const painel = document.getElementById("painel-carregamento");
+        const barra1 = document.getElementById("barra1");
+        const barra2 = document.getElementById("barra2");
+        const pct1 = document.getElementById("porcentagem1");
+        const pct2 = document.getElementById("porcentagem2");
+
+        painel.style.visibility = "hidden";
+
+        barra1.style.transition = "none";
+        barra2.style.transition = "none";
+        barra1.style.transform = "scaleX(0)";
+        barra2.style.transform = "scaleX(0)";
+        pct1.innerText = "0%";
+        pct2.innerText = "0%";
+
+        barra1.offsetWidth;
+        barra2.offsetWidth;
+
+        barra1.style.transition = "transform 0.3s ease-in-out";
+        barra2.style.transition = "transform 0.3s ease-in-out";
+        painel.style.visibility = "visible";
+
+        iniciarCarregamento();
+      }, 800);
+
+      const formData = new FormData();
+      formData.append("nome", nome);
+      formData.append("telefone", telefone);
+      formData.append("curriculo", arquivo);
+
+      try {
+        const res = await fetch("/api/analisar-e-salvar", {
+          method: "POST",
+          body: formData
+        });
+
+        const resultado = await res.json();
+        if (!resultado.sucesso) {
+          alert("Erro: " + resultado.erro);
+          return;
+        }
+
+        window.processoPronto = true;
+      } catch (err) {
+        console.error(err);
+        alert("Falha ao enviar arquivo.");
+      }
+    });
+
+function iniciarCarregamento() {
+  const barra1 = document.getElementById("barra1");
+  const barra2 = document.getElementById("barra2");
+  const pct1 = document.getElementById("porcentagem1");
+  const pct2 = document.getElementById("porcentagem2");
+  const frases1 = document.querySelectorAll("#frases1 li");
+  const frases2 = document.querySelectorAll("#frases2 li");
+
+  let etapa1 = 0;
+  let etapa2 = 0;
+  let barra1Finalizada = false;
+  let barra2Finalizada = false;
+
+  frases1.forEach(f => {
+    f.classList.remove("visivel");
+    f.style.display = "none";
+  });
+  frases2.forEach(f => {
+    f.classList.remove("visivel");
+    f.style.display = "none";
+  });
+
+  function mostrarFrase(lista, index) {
+    lista.forEach((f, i) => {
+      f.classList.remove("visivel");
+      f.style.display = "none";
+    });
+
+    if (lista[index]) {
+      lista[index].style.display = "block";
+      setTimeout(() => {
+        lista[index].classList.add("visivel");
+      }, 50);
+
+      setTimeout(() => {
+        lista[index].classList.remove("visivel");
+        lista[index].style.display = "none";
+      }, 2000);
+    }
+  }
+
+  function verificarFinalizacao() {
+    if (barra1Finalizada && barra2Finalizada) {
+      setTimeout(() => {
+        if (window.processoPronto) {
+          window.location.href = "pagamentoanalise.html";
+        } else {
+          alert("O envio falhou. Tente novamente.");
+        }
+      }, 500);
+    }
+  }
+
+function curvaProgresso(t) {
+  // Curva de easing suave e sempre crescente
+  return t < 0.5
+    ? 2 * t * t
+    : -1 + (4 - 2 * t) * t;
+}
+
+  let t1 = 0;
+  const intervalo1 = setInterval(() => {
+    t1 += 0.015;
+    if (t1 > 1) t1 = 1;
+    const p1 = Math.min(100, Math.floor(curvaProgresso(t1) * 100));
+    barra1.style.transform = `scaleX(${p1 / 100})`;
+    pct1.innerText = p1 + "%";
+
+    if (p1 >= 20 && etapa1 === 0) {
+      mostrarFrase(frases1, 0);
+      etapa1++;
+    }
+    if (p1 >= 50 && etapa1 === 1) {
+      mostrarFrase(frases1, 1);
+      etapa1++;
+    }
+    if (p1 >= 80 && etapa1 === 2) {
+      mostrarFrase(frases1, 2);
+      etapa1++;
+    }
+
+    if (p1 === 100 && !barra1Finalizada) {
+      barra1Finalizada = true;
+      clearInterval(intervalo1);
+      setTimeout(verificarFinalizacao, 500);
+    }
+  }, 120);
+
+  let t2 = 0;
+  setTimeout(() => {
+    const intervalo2 = setInterval(() => {
+      t2 += 0.015;
+      if (t2 > 1) t2 = 1;
+      const p2 = Math.min(100, Math.floor(curvaProgresso(t2) * 100));
+      barra2.style.transform = `scaleX(${p2 / 100})`;
+      pct2.innerText = p2 + "%";
+
+      if (p2 >= 20 && etapa2 === 0) {
+        mostrarFrase(frases2, 0);
+        etapa2++;
+      }
+      if (p2 >= 50 && etapa2 === 1) {
+        mostrarFrase(frases2, 1);
+        etapa2++;
+      }
+      if (p2 >= 80 && etapa2 === 2) {
+        mostrarFrase(frases2, 2);
+        etapa2++;
+      }
+
+      if (p2 === 100 && !barra2Finalizada) {
+        barra2Finalizada = true;
+        clearInterval(intervalo2);
+        setTimeout(verificarFinalizacao, 500);
+      }
+    }, 120);
+  }, 600);
+}
+  </script>
+</body>
+</html>
