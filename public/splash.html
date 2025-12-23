@@ -67,11 +67,17 @@
       width: auto;
       display: block;
     }
-    nav.menu {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+nav.menu a {
+  margin-left: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+
+nav.menu a:hover {
+  color: var(--brand);
+}
     .btn {
       display: inline-flex;
       align-items: center;
@@ -182,56 +188,60 @@
 
     /* Empresas (marcas) */
     .empresas-section {
-      margin: 8px 0 6px;
-      text-align: center;
-    }
-    .empresas-section h2 {
-      font-size: 0.95rem;
-      color: var(--brand);
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-    .carrossel-empresas {
-      width: 100%;
-      overflow: hidden;
-      border-radius: 12px;
-      background-color: var(--card);
-      box-shadow: 0 0 10px #00000033;
-    }
-    .carrossel-empresas-inner {
-      display: flex;
-      width: calc(100% * 2);
-      column-gap: 160px;
-      animation: deslizarEmpresas 12s infinite;
-      padding: 10px 12px;
-      align-items: center;
-    }
-    .carrossel-empresas .grupo {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 22px;
-      flex: 0 0 100%;
-    }
-    .carrossel-empresas img {
-      height: 36px;
-      max-width: 120px;
-      object-fit: contain;
-      filter: brightness(0) invert(1);
-      opacity: 0.85;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-    }
-    .carrossel-empresas img:hover {
-      transform: scale(1.06);
-      opacity: 1;
-    }
-    @keyframes deslizarEmpresas {
-      0% { transform: translateX(0%); }
-      45% { transform: translateX(0%); }
-      50% { transform: translateX(-100%); }
-      95% { transform: translateX(-100%); }
-      100% { transform: translateX(0%); }
-    }
+  margin: 20px 0;
+  text-align: center;
+}
+
+.empresas-section h2 {
+  font-size: 1rem;
+  color: var(--brand);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.carrossel-empresas {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: var(--card);
+  box-shadow: 0 0 10px #00000033;
+}
+
+.carrossel-empresas-inner {
+  display: flex;
+  animation: deslizarEmpresas 12s infinite linear;
+}
+
+.carrossel-empresas .grupo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px; /* espaçamento uniforme */
+  flex: 0 0 100%;
+  padding: 12px 0;
+}
+
+.carrossel-empresas img {
+  height: 40px;       /* altura fixa */
+  width: auto;        /* largura proporcional */
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.carrossel-empresas img:hover {
+  transform: scale(1.08);
+  opacity: 1;
+}
+
+@keyframes deslizarEmpresas {
+  0%   { transform: translateX(0%); }
+  45%  { transform: translateX(0%); }
+  50%  { transform: translateX(-100%); }
+  95%  { transform: translateX(-100%); }
+  100% { transform: translateX(0%); }
+}
 
     /* CTA sections */
     .section {
@@ -398,10 +408,10 @@
     <div class="container">
       <div class="wrap">
         <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        <nav class="menu">
-          <a href="#criar" class="btn btn-primary">Criar Currículo</a>
-          <a href="#analisar" class="btn btn-ghost">Analisar Currículo</a>
-        </nav>
+<nav class="menu">
+  <a href="contato.html">Contato</a>
+  <a href="sobre.html">Sobre nós</a>
+</nav>
         <button class="hamburguer" id="btnMenu" aria-label="Abrir menu">
           ☰
         </button>
@@ -410,12 +420,12 @@
   </header>
 
   <!-- Mobile quick CTA bar (when menu hidden) -->
-  <div class="container" id="mobileMenu" style="display:none; position:fixed; top:56px; left:0; right:0; z-index:999;">
-    <div style="display:flex; gap:8px; justify-content:center; padding:10px; background:rgba(0,31,51,0.92); border-bottom:1px solid var(--border);">
-      <a href="#criar" class="btn btn-primary" style="flex:1; justify-content:center;">Criar Currículo</a>
-      <a href="#analisar" class="btn btn-ghost" style="flex:1; justify-content:center;">Analisar</a>
-    </div>
+<div class="container" id="mobileMenu" style="display:none; position:fixed; top:56px; left:0; right:0; z-index:999;">
+  <div style="display:flex; flex-direction:column; gap:12px; justify-content:center; padding:14px; background:rgba(0,31,51,0.92); border-bottom:1px solid var(--border); text-align:center;">
+    <a href="contato.html" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
+    <a href="sobre.html" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
   </div>
+</div>
 
   <!-- Hero -->
 <section class="hero">
@@ -445,25 +455,25 @@
   <div class="divider"></div>
 
   <!-- Empresas -->
-  <section class="empresas-section">
-    <div class="container">
-      <h2>Empresas que abriram portas para nossos usuários</h2>
-      <div class="carrossel-empresas">
-        <div class="carrossel-empresas-inner">
-          <div class="grupo">
-            <img src="1.png" alt="Empresa 1" />
-            <img src="3.png" alt="Empresa 3" style="height: 48px;" />
-            <img src="2.png" alt="Empresa 2" />
-          </div>
-          <div class="grupo">
-            <img src="4.png" alt="Empresa 4" style="height: 48px;" />
-            <img src="5.png" alt="Empresa 5" style="height: 48px;" />
-            <img src="6.png" alt="Empresa 6" />
-          </div>
+<section class="empresas-section">
+  <div class="container">
+    <h2>Empresas que abriram portas para nossos usuários</h2>
+    <div class="carrossel-empresas">
+      <div class="carrossel-empresas-inner">
+        <div class="grupo">
+          <img src="1.png" alt="Empresa 1" />
+          <img src="2.png" alt="Empresa 2" />
+          <img src="3.png" alt="Empresa 3" />
+        </div>
+        <div class="grupo">
+          <img src="4.png" alt="Empresa 4" />
+          <img src="5.png" alt="Empresa 5" />
+          <img src="6.png" alt="Empresa 6" />
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <div class="divider"></div>
 
