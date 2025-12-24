@@ -237,9 +237,13 @@ nav.menu a:hover {
 
 @keyframes deslizarEmpresas {
   0%   { transform: translateX(0%); }
-  45%  { transform: translateX(0%); }
-  50%  { transform: translateX(-100%); }
-  95%  { transform: translateX(-100%); }
+  20%  { transform: translateX(0%); }
+  25%  { transform: translateX(-100%); }
+  45%  { transform: translateX(-100%); }
+  50%  { transform: translateX(-200%); }
+  70%  { transform: translateX(-200%); }
+  75%  { transform: translateX(-300%); }
+  95%  { transform: translateX(-300%); }
   100% { transform: translateX(0%); }
 }
 
@@ -399,6 +403,33 @@ nav.menu a:hover {
       .hero p.lead { font-size: 0.98rem; }
       .btn-primary { padding: 10px 16px; }
     }
+
+    /* estilo base para todas */
+.empresa {
+  width: 100px;
+  height: 40px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* ajustes individuais */
+.empresa1 { width: 60px !important; margin-top: 15px; }
+.empresa2 { width: 80px !important;  margin-top: 5px; }
+.empresa3 { width: 110px; margin-top: 8px; }
+
+.empresa4 { width: 100px; margin-top: 8px; }
+.empresa5 { width: 130px; margin-top: -15px; }
+.empresa6 { width: 95px;  margin-top: 6px; }
+
+.empresa7 { width: 80px !important; margin-top: 10px; }
+.empresa8 { width: 115px; margin-top: 14px; }
+.empresa9 { width: 100px; margin-top: 10px; }
+
+.empresa10 { width: 80px !important; margin-top: 9px; }
+.empresa11 { width: 110px; margin-top: 11px; }
+.empresa12 { width: 100px; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -459,18 +490,28 @@ nav.menu a:hover {
   <div class="container">
     <h2>Empresas que abriram portas para nossos usuários</h2>
     <div class="carrossel-empresas">
-      <div class="carrossel-empresas-inner">
-        <div class="grupo">
-          <img src="1.png" alt="Empresa 1" />
-          <img src="2.png" alt="Empresa 2" />
-          <img src="3.png" alt="Empresa 3" />
-        </div>
-        <div class="grupo">
-          <img src="4.png" alt="Empresa 4" />
-          <img src="5.png" alt="Empresa 5" />
-          <img src="6.png" alt="Empresa 6" />
-        </div>
-      </div>
+<div class="carrossel-empresas-inner">
+  <div class="grupo">
+  <img src="1.png" alt="Empresa 1" class="empresa empresa1" />
+  <img src="2.png" alt="Empresa 2" class="empresa empresa2" />
+  <img src="3.png" alt="Empresa 3" class="empresa empresa3" />
+</div>
+<div class="grupo">
+  <img src="4.png" alt="Empresa 4" class="empresa empresa4" />
+  <img src="5.png" alt="Empresa 5" class="empresa empresa5" />
+  <img src="6.png" alt="Empresa 6" class="empresa empresa6" />
+</div>
+<div class="grupo">
+  <img src="7.png" alt="Empresa 7" class="empresa empresa7" />
+  <img src="8.png" alt="Empresa 8" class="empresa empresa8" />
+  <img src="9.png" alt="Empresa 9" class="empresa empresa9" />
+</div>
+<div class="grupo">
+  <img src="10.png" alt="Empresa 10" class="empresa empresa10" />
+  <img src="11.png" alt="Empresa 11" class="empresa empresa11" />
+  <img src="12.png" alt="Empresa 12" class="empresa empresa12" />
+</div>
+</div>
     </div>
   </div>
 </section>
