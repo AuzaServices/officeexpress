@@ -1260,28 +1260,38 @@ document.addEventListener("DOMContentLoaded", () => {
   if (dadosSalvos.hobbies) document.getElementById("hobbies").value = dadosSalvos.hobbies;
 
   // Telefones
-  if (dadosSalvos.telefone) {
-    const telefones = dadosSalvos.telefone.split(" ");
-    telefones.forEach(t => {
-      adicionarTelefone();
-      const ultimoInput = document.querySelector("#telefones .telefone-input:last-of-type");
-      ultimoInput.value = t;
-    });
-  }
+if (dadosSalvos.telefone && Array.isArray(dadosSalvos.telefone)) {
+  dadosSalvos.telefone.forEach(t => {
+    adicionarTelefone();
+    const ultimoInput = document.querySelector("#telefones .telefone-input:last-of-type");
+    ultimoInput.value = t;
+  });
+}
 
   // Cursos
-  if (dadosSalvos.curso) {
-    dadosSalvos.curso.forEach((c, i) => {
-      adicionarCurso(c, dadosSalvos.instituicao[i], dadosSalvos.carga[i]);
-    });
-  }
+if (dadosSalvos.curso && Array.isArray(dadosSalvos.curso)) {
+  dadosSalvos.curso.forEach((c, i) => {
+    adicionarCurso(c, dadosSalvos.instituicao?.[i] || "", dadosSalvos.carga?.[i] || "");
+  });
+}
 
   // Experiências
-  if (dadosSalvos.empresa) {
-    dadosSalvos.empresa.forEach((emp, i) => {
-      adicionarExperiencia(emp, dadosSalvos.cargo[i], dadosSalvos.atividades[i], dadosSalvos.periodo_inicio[i], dadosSalvos.periodo_fim[i]);
-    });
-  }
+if (dadosSalvos.empresa && Array.isArray(dadosSalvos.empresa)) {
+  dadosSalvos.empresa.forEach((emp, i) => {
+    adicionarExperiencia(
+      emp,
+      dadosSalvos.cargo?.[i] || "",
+      dadosSalvos.atividades?.[i] || "",
+      dadosSalvos.periodo_inicio?.[i] || "",
+      dadosSalvos.periodo_fim?.[i] || ""
+    );
+  });
+}
+
+if (dadosSalvos.infoAdicional) {
+  document.querySelector('[name="infoAdicional"]').value = dadosSalvos.infoAdicional;
+}
+
 });
 </script>
 </body>
