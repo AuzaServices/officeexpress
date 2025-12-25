@@ -1240,40 +1240,49 @@ window.handleVisibilityChange = function () {
   document.addEventListener("visibilitychange", handleVisibilityChange);
 })();
 </script>
+
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const dadosSalvos = JSON.parse(localStorage.getItem("curriculo") || "{}");
+document.addEventListener("DOMContentLoaded", () => {
+  const dadosSalvos = JSON.parse(localStorage.getItem("curriculo") || "{}");
 
-      if (dadosSalvos.nome) document.getElementById("nome").value = dadosSalvos.nome;
-      if (dadosSalvos.idade) document.getElementById("idade").value = dadosSalvos.idade;
-      if (dadosSalvos.email) document.getElementById("email").value = dadosSalvos.email;
-      if (dadosSalvos.endereco) document.getElementById("endereco").value = dadosSalvos.endereco;
+  if (dadosSalvos.nome) document.getElementById("nome").value = dadosSalvos.nome;
+  if (dadosSalvos.idade) document.getElementById("idade").value = dadosSalvos.idade;
+  if (dadosSalvos.email) document.getElementById("email").value = dadosSalvos.email;
+  if (dadosSalvos.endereco) document.getElementById("endereco").value = dadosSalvos.endereco;
+  if (dadosSalvos.numero) document.getElementById("numero").value = dadosSalvos.numero;
+  if (dadosSalvos.complemento) document.getElementById("complemento").value = dadosSalvos.complemento;
+  if (dadosSalvos.bairro) document.getElementById("bairro").value = dadosSalvos.bairro;
+  if (dadosSalvos.cidade) document.getElementById("cidade").value = dadosSalvos.cidade;
+  if (dadosSalvos.cep) document.getElementById("cep").value = dadosSalvos.cep;
+  if (dadosSalvos.objetivo) document.getElementById("objetivo").value = dadosSalvos.objetivo;
+  if (dadosSalvos.formacao) document.getElementById("formacao").value = dadosSalvos.formacao;
+  if (dadosSalvos.habilidades) document.getElementById("habilidades").value = dadosSalvos.habilidades;
+  if (dadosSalvos.hobbies) document.getElementById("hobbies").value = dadosSalvos.hobbies;
 
-      // Telefones
-      if (dadosSalvos.telefone) {
-        const telefones = dadosSalvos.telefone.split(" ");
-        telefones.forEach(t => {
-          adicionarTelefone();
-          const ultimoInput = document.querySelector("#telefones .telefone-input:last-of-type");
-          ultimoInput.value = t;
-        });
-      }
-
-      // Cursos
-      if (dadosSalvos.curso) {
-        dadosSalvos.curso.forEach((c, i) => {
-          adicionarCurso(c, dadosSalvos.instituicao[i], dadosSalvos.carga[i]);
-        });
-      }
-
-      // Experiências
-      if (dadosSalvos.empresa) {
-        dadosSalvos.empresa.forEach((emp, i) => {
-          adicionarExperiencia(emp, dadosSalvos.cargo[i], dadosSalvos.atividades[i], dadosSalvos.periodo_inicio[i], dadosSalvos.periodo_fim[i]);
-        });
-      }
+  // Telefones
+  if (dadosSalvos.telefone) {
+    const telefones = dadosSalvos.telefone.split(" ");
+    telefones.forEach(t => {
+      adicionarTelefone();
+      const ultimoInput = document.querySelector("#telefones .telefone-input:last-of-type");
+      ultimoInput.value = t;
     });
-  </script>
-</body>
+  }
 
+  // Cursos
+  if (dadosSalvos.curso) {
+    dadosSalvos.curso.forEach((c, i) => {
+      adicionarCurso(c, dadosSalvos.instituicao[i], dadosSalvos.carga[i]);
+    });
+  }
+
+  // Experiências
+  if (dadosSalvos.empresa) {
+    dadosSalvos.empresa.forEach((emp, i) => {
+      adicionarExperiencia(emp, dadosSalvos.cargo[i], dadosSalvos.atividades[i], dadosSalvos.periodo_inicio[i], dadosSalvos.periodo_fim[i]);
+    });
+  }
+});
+</script>
+</body>
 </html>
