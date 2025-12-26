@@ -416,7 +416,7 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
   <p style="margin-top: 10px; font-weight: 500; color: #555;">
    
   </p>
-  <textarea name="infoAdicional" id="infoAdicional" rows="4" placeholder="CNH, Disponibilidade de horarios, áreas de interesse e etc..."></textarea>
+  <textarea name="infoAdicional" id="infoAdicional" rows="4" placeholder="CPF, CNH, Disponibilidade de horarios, áreas de interesse e etc..."></textarea>
 
 <label style="margin-top: 30px;">Objetivo – Qual seu objetivo profissional?</label>
 <p style="margin-top: 10px; font-weight: 500; color: #555;">
@@ -1270,18 +1270,38 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Cursos
-  if (dadosSalvos.curso) {
-    dadosSalvos.curso.forEach((c, i) => {
+// Cursos
+if (dadosSalvos.curso) {
+  dadosSalvos.curso.forEach((c, i) => {
+    if (i === 0) {
+      // Preenche o primeiro campo já existente no HTML
+      document.querySelector('[name="curso[]"]').value = c;
+      document.querySelector('[name="instituicao[]"]').value = dadosSalvos.instituicao[i];
+      document.querySelector('[name="carga[]"]').value = dadosSalvos.carga[i];
+    } else {
+      // Cria novos campos para os demais
       adicionarCurso(c, dadosSalvos.instituicao[i], dadosSalvos.carga[i]);
-    });
-  }
+    }
+  });
+}
 
   // Experiências
-  if (dadosSalvos.empresa) {
-    dadosSalvos.empresa.forEach((emp, i) => {
+// Experiências
+if (dadosSalvos.empresa) {
+  dadosSalvos.empresa.forEach((emp, i) => {
+    if (i === 0) {
+      // Preenche o primeiro campo já existente no HTML
+      document.querySelector('[name="empresa[]"]').value = emp;
+      document.querySelector('[name="cargo[]"]').value = dadosSalvos.cargo[i];
+      document.querySelector('[name="atividades[]"]').value = dadosSalvos.atividades[i];
+      document.querySelector('[name="periodo_inicio[]"]').value = dadosSalvos.periodo_inicio[i];
+      document.querySelector('[name="periodo_fim[]"]').value = dadosSalvos.periodo_fim[i];
+    } else {
+      // Cria novos campos para os demais
       adicionarExperiencia(emp, dadosSalvos.cargo[i], dadosSalvos.atividades[i], dadosSalvos.periodo_inicio[i], dadosSalvos.periodo_fim[i]);
-    });
-  }
+    }
+  });
+}
 });
 </script>
 
