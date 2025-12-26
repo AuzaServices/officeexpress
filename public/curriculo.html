@@ -427,7 +427,7 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
 <textarea name="objetivo" id="objetivo" required style="width: 100%; height: 100px; font-size: 16px; padding: 10px; resize: vertical;"></textarea>
 
 <div id="ajuda-objetivo" style="margin-top: 30px;">
-  <button id="gerarFrase" class="botao-personalizado">Gerar Objetivo</button>
+  <button type="button" id="gerarFrase" class="botao-personalizado">Gerar Objetivo</button>
 </div>
 
 <script>
@@ -454,16 +454,21 @@ const frases = [
   "Ser contratado por uma organização que compreenda a importância da cultura organizacional, onde eu possa atuar com autenticidade, propósito e impacto, construindo uma trajetória de sucesso compartilhado."
 ];
 
-document.getElementById("gerarFrase").addEventListener("click", function () {
+document.getElementById("gerarFrase").addEventListener("click", function (e) {
+  e.preventDefault();
+  e.stopPropagation();
+
   const btn = this;
   btn.classList.add("flash-luz");
-
-  setTimeout(() => {
-    btn.classList.remove("flash-luz");
-  }, 600); // mesma duração da animação
+  setTimeout(() => btn.classList.remove("flash-luz"), 600);
 
   const frase = frases[Math.floor(Math.random() * frases.length)];
-  document.getElementById("objetivo").value = frase;
+  const objetivo = document.getElementById("objetivo");
+  objetivo.value = frase;
+
+  const dadosSalvos = JSON.parse(localStorage.getItem("curriculo") || "{}");
+  dadosSalvos.objetivo = frase;
+  localStorage.setItem("curriculo", JSON.stringify(dadosSalvos));
 });
 </script>
 </div>
