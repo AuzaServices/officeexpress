@@ -56,7 +56,7 @@ const dados = {
   nome: form.nome?.value.trim() || "",
   idade: form.idade?.value.trim() || "", // ✅ Adiciona a idade aqui
   email: form.email?.value.trim() || "",
-  telefone: valores("telefone").filter(t => t),
+  telefone: valores("telefone").filter(t => t).join(" "),
   endereco: form.endereco?.value.trim() || "",
   numero: form.numero?.value.trim() || "",
   complemento: form.complemento?.value.trim() || "",
