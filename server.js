@@ -20,16 +20,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
 
 // 🔁 Conexão com MySQL
+require('dotenv').config();
+const mysql = require('mysql2');
+
 const pool = mysql.createPool({
-  host: 'sql10.freesqldatabase.com',
-  user: 'sql10799195',
-  password: 'rT9BIiqNUY',
-  database: 'sql10799195',
-  port: 3306,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
+
+module.exports = pool;
 
 // 🔍 Função para extrair IP público
 function getPublicIP(req) {

@@ -1,0 +1,14 @@
+# Arquivo de configuração sensível
+.env
+
+# Backend não deve ser distribuído
+server.js
+
+# Dependências
+/node_modules
+
+# Logs
+*.log
+
+# Arquivos temporários
+.DS_Store
