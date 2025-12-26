@@ -19,17 +19,28 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
 
-// 🔁 Conexão com MySQL
 const pool = mysql.createPool({
-  host: 'sql10.freesqldatabase.com',
-  user: 'sql10799195',
-  password: 'rT9BIiqNUY',
-  database: 'sql10799195',
-  port: 3306,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  port: Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
+  // Se seu provedor exigir SSL, habilite:
+  // , ssl: { rejectUnauthorized: false }
 });
+
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log('✅ Conexão MySQL estabelecida');
+    conn.release();
+  } catch (err) {
+    console.error('❌ Falha ao conectar ao MySQL:', err.code, err.message);
+  }
+})();
 
 // 🔍 Função para extrair IP público
 function getPublicIP(req) {

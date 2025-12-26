@@ -1,9 +1,6 @@
 # Arquivo de configuração sensível
 .env
 
-# Backend não deve ser distribuído
-server.js
-
 # Dependências
 /node_modules
 
