@@ -1,11 +1,10 @@
-require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
-const pdfParse = require('pdf-parse');
+const pdfParse = require('pdf-parse'); // 📥 Novo
 const cron = require('node-cron');
 
 const storage = multer.memoryStorage();
@@ -22,28 +21,15 @@ app.use(bodyParser.text({ type: 'text/plain' }));
 
 // 🔁 Conexão com MySQL
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
+  host: 'sql10.freesqldatabase.com',
+  user: 'sql10799195',
+  password: 'rT9BIiqNUY',
+  database: 'sql10799195',
+  port: 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
-  // Se o provedor exigir SSL:
-  // ssl: { rejectUnauthorized: false }
+  queueLimit: 0
 });
-
-// Teste inicial da conexão
-(async () => {
-  try {
-    const conn = await pool.getConnection();
-    console.log('✅ Conexão MySQL estabelecida com sucesso');
-    conn.release();
-  } catch (err) {
-    console.error('❌ Falha ao conectar ao MySQL:', err.code, err.message);
-  }
-})();
 
 // 🔍 Função para extrair IP público
 function getPublicIP(req) {
