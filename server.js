@@ -1,10 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
-const pdfParse = require('pdf-parse'); // 📥 Novo
+const pdfParse = require('pdf-parse');
 const cron = require('node-cron');
 
 const storage = multer.memoryStorage();
@@ -20,20 +21,29 @@ app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
 
 // 🔁 Conexão com MySQL
-require('dotenv').config();
-
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  // Se o provedor exigir SSL:
+  // ssl: { rejectUnauthorized: false }
 });
 
-module.exports = pool;
+// Teste inicial da conexão
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log('✅ Conexão MySQL estabelecida com sucesso');
+    conn.release();
+  } catch (err) {
+    console.error('❌ Falha ao conectar ao MySQL:', err.code, err.message);
+  }
+})();
 
 // 🔍 Função para extrair IP público
 function getPublicIP(req) {
