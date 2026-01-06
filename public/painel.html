@@ -122,41 +122,40 @@ function carregarPDFs() {
       const tabela = document.querySelector('#tabela-arquivos tbody');
       tabela.innerHTML = '';
 
-      data.forEach(pdf => {
-        const telefone = pdf.telefone?.replace(/\D/g, '');
-        // tenta extrair primeiro nome de um campo existente
-        const primeiroNome = pdf.nome 
-          ? pdf.nome.split(' ')[0] 
-          : (pdf.filename ? pdf.filename.split('_')[0] : 'Cliente');
+     data.forEach(pdf => {
+  const telefone = pdf.telefone?.replace(/\D/g, '');
+  const filename = pdf.filename || '';
+  const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
+  const primeiroNome = nomeSemExtensao.split(' ')[0] || 'Cliente';
 
-const mensagem = encodeURIComponent(
-  `📄 ${primeiroNome}, seu *Currículo Profissional* está pronto!\n\n` +
-  `Ele foi criado para destacar suas habilidades e chamar atenção dos recrutadores em segundos.\n\n` +
-  `⏰ Atenção: a demanda está muito grande e só conseguimos manter seu currículo disponível por *1 hora*. ` +
-  `Após esse prazo ele é apagado automaticamente e será necessário refazê-lo.\n\n` +
-  `🔥 Garanta já: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
-  `💳 Link:\nhttps://officeexpress.onrender.com/pagamento.html\n` +
-  `🔹 Pix disponível lá!\n\n` +
-  `✅ Seu diferencial competitivo começa agora!`
-);
+  const mensagem = encodeURIComponent(
+    `📄 ${primeiroNome}, seu *Currículo Profissional* está pronto!\n\n` +
+    `Ele foi criado para destacar suas habilidades e chamar atenção dos recrutadores em segundos.\n\n` +
+    `⏰ Atenção: a demanda está muito grande e só conseguimos manter seu currículo disponível por *1 hora*. ` +
+    `Após esse prazo ele é apagado automaticamente e será necessário refazê-lo.\n\n` +
+    `🔥 Garanta já: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
+    `💳 Link:\nhttps://officeexpress.onrender.com/pagamento.html\n` +
+    `🔹 Pix disponível lá!\n\n` +
+    `✅ Seu diferencial competitivo começa agora!`
+  );
 
-        const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+  const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${pdf.id}</td>
-          <td>${pdf.filename || '—'}</td>
-          <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
-          <td>
-            <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-            <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-          </td>
-          <td>
-            ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
-          </td>
-        `;
-        tabela.appendChild(linha);
-      });
+  const linha = document.createElement('tr');
+  linha.innerHTML = `
+    <td>${pdf.id}</td>
+    <td>${pdf.filename || '—'}</td>
+    <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
+    <td>
+      <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+      <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+    </td>
+    <td>
+      ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
+    </td>
+  `;
+  tabela.appendChild(linha);
+});
     });
 }
 
@@ -193,18 +192,20 @@ const mensagem = encodeURIComponent(
 
       data.forEach(rel => {
         const telefone = rel.telefone?.replace(/\D/g, '');
-        const primeiroNome = rel.nome ? rel.nome.split(' ')[0] : 'Amigo';
+        const filename = rel.filename || '';
+        const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
+        const primeiroNome = nomeSemExtensao.split(' ')[0] || 'Cliente';
 
-const mensagem = encodeURIComponent(
-  `📊 ${primeiroNome}, seu *Relatório de Currículo* está pronto!\n\n` +
-  `Ele mostra o que trava suas chances e os ajustes que liberam entrevistas.\n\n` +
-  `⏰ Atenção: a demanda está muito grande e só conseguimos manter sua análise disponível por *1 hora*. ` +
-  `Depois disso ela é apagada automaticamente e será preciso solicitar novamente.\n\n` +
-  `🚀 Não perca: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
-  `💳 Link:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n` +
-  `🔹 Pix disponível lá!\n\n` +
-  `✅ Avance hoje mesmo rumo às entrevistas!`
-);
+        const mensagem = encodeURIComponent(
+          `📊 ${primeiroNome}, seu *Relatório de Currículo* está pronto!\n\n` +
+          `Ele mostra o que trava suas chances e os ajustes que liberam entrevistas.\n\n` +
+          `⏰ Atenção: a demanda está muito grande e só conseguimos manter sua análise disponível por *1 hora*. ` +
+          `Depois disso ela é apagada automaticamente e será preciso solicitar novamente.\n\n` +
+          `🚀 Não perca: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
+          `💳 Link:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n` +
+          `🔹 Pix disponível lá!\n\n` +
+          `✅ Avance hoje mesmo rumo às entrevistas!`
+        );
 
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
