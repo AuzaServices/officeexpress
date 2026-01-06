@@ -115,7 +115,7 @@
         });
     }
 
-    function carregarPDFs() {
+function carregarPDFs() {
   fetch('/api/pdfs')
     .then(res => res.json())
     .then(data => {
@@ -124,19 +124,21 @@
 
       data.forEach(pdf => {
         const telefone = pdf.telefone?.replace(/\D/g, '');
-        const primeiroNome = pdf.nome ? pdf.nome.split(' ')[0] : 'Amigo';
+        // tenta extrair primeiro nome de um campo existente
+        const primeiroNome = pdf.nome 
+          ? pdf.nome.split(' ')[0] 
+          : (pdf.filename ? pdf.filename.split('_')[0] : 'Cliente');
 
-        const mensagem = encodeURIComponent(
-          `📄 ${primeiroNome}, seu *Currículo Profissional* está pronto!\n\n` +
-          `Ele foi cuidadosamente pensado e testado para chamar a atenção dos recrutadores em segundos. ` +
-          `Segue padrões visuais e estratégicos que aumentam suas chances reais de ser notado(a) e chamado(a) para entrevistas.\n\n` +
-          `⏰ Atenção: o sistema guarda seu currículo por apenas *2 horas*. Depois disso ele é apagado automaticamente ` +
-          `e será necessário refazê-lo do zero.\n\n` +
-          `🔥 Não perca tempo: finalize o pagamento agora e receba o PDF completo direto no seu WhatsApp — rápido, exclusivo e sem complicações.\n\n` +
-          `💳 Link seguro:\nhttps://officeexpress.onrender.com/pagamento.html\n` +
-          `🔹 O Pix para copiar e colar está disponível lá!\n\n` +
-          `✅ Garanta já seu diferencial competitivo no mercado!`
-        );
+const mensagem = encodeURIComponent(
+  `📄 ${primeiroNome}, seu *Currículo Profissional* está pronto!\n\n` +
+  `Ele foi criado para destacar suas habilidades e chamar atenção dos recrutadores em segundos.\n\n` +
+  `⏰ Atenção: a demanda está muito grande e só conseguimos manter seu currículo disponível por *1 hora*. ` +
+  `Após esse prazo ele é apagado automaticamente e será necessário refazê-lo.\n\n` +
+  `🔥 Garanta já: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
+  `💳 Link:\nhttps://officeexpress.onrender.com/pagamento.html\n` +
+  `🔹 Pix disponível lá!\n\n` +
+  `✅ Seu diferencial competitivo começa agora!`
+);
 
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
@@ -193,17 +195,16 @@
         const telefone = rel.telefone?.replace(/\D/g, '');
         const primeiroNome = rel.nome ? rel.nome.split(' ')[0] : 'Amigo';
 
-        const mensagem = encodeURIComponent(
-          `📊 ${primeiroNome}, sua *Análise de Currículo* está pronta!\n\n` +
-          `Mandar currículo sem saber o que está errado é perder tempo. Essa análise mostra exatamente ` +
-          `o que está travando suas chances — e o que você precisa ajustar pra começar a ser chamado(a).\n\n` +
-          `⏰ Atenção: o sistema guarda sua análise por apenas *2 horas*. Depois disso ela é apagada automaticamente ` +
-          `e será necessário solicitar novamente.\n\n` +
-          `💳 *Finalize o pagamento agora* e receba o PDF completo direto no seu WhatsApp — rápido, direto e sem complicações.\n\n` +
-          `🔸 Acesse:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n` +
-          `🔹 O Pix para copiar e colar está disponível lá!\n\n` +
-          `✅ Avance hoje mesmo rumo às entrevistas que você merece!`
-        );
+const mensagem = encodeURIComponent(
+  `📊 ${primeiroNome}, seu *Relatório de Currículo* está pronto!\n\n` +
+  `Ele mostra o que trava suas chances e os ajustes que liberam entrevistas.\n\n` +
+  `⏰ Atenção: a demanda está muito grande e só conseguimos manter sua análise disponível por *1 hora*. ` +
+  `Depois disso ela é apagada automaticamente e será preciso solicitar novamente.\n\n` +
+  `🚀 Não perca: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
+  `💳 Link:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n` +
+  `🔹 Pix disponível lá!\n\n` +
+  `✅ Avance hoje mesmo rumo às entrevistas!`
+);
 
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
