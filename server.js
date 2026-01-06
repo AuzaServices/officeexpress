@@ -425,11 +425,13 @@ doc.on('end', async () => {
   try {
     const pdfBuffer = Buffer.concat(buffers);
 
-    // usa o nome do usuário como filename com prefixo "Relatório"
+    // ⬇️ Aqui você coloca o código de sanitização
     let nomeSanitizado = nome.trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, ' ')
       .replace(/[\/\\?%*:|"<>]/g, '');
-    const filename = `Relatório - ${nomeSanitizado}.pdf`.slice(0, 255);
+    const filename = `Relatorio - ${nomeSanitizado}.pdf`.slice(0, 255);
 
     const telefoneLimpo = telefone.slice(0, 20);
 
