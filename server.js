@@ -227,8 +227,8 @@ app.post('/gerar-e-salvar-pdf', async (req, res) => {
 app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
 
-  const { mimetype, buffer } = req.file;
-  const { telefone, nome } = req.body; // ⬅️ pega o campo Nome do formulário
+  const { originalname, mimetype, buffer } = req.file;
+  const { telefone } = req.body;
 
   try {
     // 1. Verifica quantos PDFs existem
@@ -241,25 +241,9 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
       await pool.query(`DELETE FROM pdfs WHERE id IN (${placeholders})`, idsParaApagar);
     }
 
-    // 3. Sanitiza o nome
-    let nomeSanitizado = nome.trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // remove acentos
-      .replace(/\s+/g, ' ')
-      .replace(/[\/\\?%*:|"<>]/g, '');
-
-    // 4. Pega apenas primeiro e último nome
-    const partes = nomeSanitizado.split(' ');
-    const primeiroUltimo = partes.length > 1 
-      ? `${partes[0]} ${partes[partes.length - 1]}` 
-      : partes[0];
-
-    // 5. Monta o filename
-    const filename = `Curriculo - ${primeiroUltimo}.pdf`.slice(0, 255);
-
-    // 6. Salva no banco
+    // 3. Salva o novo PDF
     const query = 'INSERT INTO pdfs (filename, mimetype, data, telefone) VALUES (?, ?, ?, ?)';
-    const [result] = await pool.query(query, [filename, mimetype, buffer, telefone]);
+    const [result] = await pool.query(query, [originalname, mimetype, buffer, telefone]);
 
     res.status(200).json({ message: 'PDF salvo com sucesso', id: result.insertId });
   } catch (err) {
