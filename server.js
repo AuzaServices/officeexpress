@@ -421,24 +421,30 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     const buffers = [];
 
     doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', async () => {
-      try {
-        const pdfBuffer = Buffer.concat(buffers);
-        const filename = `relatorio-${Date.now()}.pdf`.slice(0, 255);
-        const telefoneLimpo = telefone.slice(0, 20);
+doc.on('end', async () => {
+  try {
+    const pdfBuffer = Buffer.concat(buffers);
 
-        const query = `
-          INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
-          VALUES (?, ?, ?, ?, ?)
-        `;
-        await pool.query(query, [nome, telefoneLimpo, filename, 'application/pdf', pdfBuffer]);
+    // usa o nome do usuário como filename com prefixo "Relatório"
+    let nomeSanitizado = nome.trim()
+      .replace(/\s+/g, ' ')
+      .replace(/[\/\\?%*:|"<>]/g, '');
+    const filename = `Relatório - ${nomeSanitizado}.pdf`.slice(0, 255);
 
-        res.json({ sucesso: true });
-      } catch (err) {
-        console.error('❌ Erro ao salvar no banco:', err);
-        res.status(500).json({ erro: 'Erro ao salvar no banco' });
-      }
-    });
+    const telefoneLimpo = telefone.slice(0, 20);
+
+    const query = `
+      INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    await pool.query(query, [nome, telefoneLimpo, filename, 'application/pdf', pdfBuffer]);
+
+    res.json({ sucesso: true });
+  } catch (err) {
+    console.error('❌ Erro ao salvar no banco:', err);
+    res.status(500).json({ erro: 'Erro ao salvar no banco' });
+  }
+});
 
     // Cabeçalho
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
