@@ -116,36 +116,47 @@
     }
 
     function carregarPDFs() {
-      fetch('/api/pdfs')
-        .then(res => res.json())
-        .then(data => {
-          const tabela = document.querySelector('#tabela-arquivos tbody');
-          tabela.innerHTML = '';
+  fetch('/api/pdfs')
+    .then(res => res.json())
+    .then(data => {
+      const tabela = document.querySelector('#tabela-arquivos tbody');
+      tabela.innerHTML = '';
 
-          data.forEach(pdf => {
-            const telefone = pdf.telefone?.replace(/\D/g, '');
-const mensagem = encodeURIComponent(
-  "📄 Seu *Currículo* está pronto!\n\n_O formato foi cuidadosamente pensado e testado para chamar a atenção dos recrutadores em segundos. Ele segue padrões visuais e estratégicos que aumentam suas chances de ser notado(a) e chamado(a) para entrevistas._\n\n💳 *Finalize o pagamento agora* e receba o PDF completo direto no seu WhatsApp — rápido, direto e sem complicações.\n\n🔸 Acesse:\nhttps://officeexpress.onrender.com/pagamento.html\n🔹 O Pix para copiar e colar está disponível lá!"
-);
-            const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+      data.forEach(pdf => {
+        const telefone = pdf.telefone?.replace(/\D/g, '');
+        const primeiroNome = pdf.nome ? pdf.nome.split(' ')[0] : 'Amigo';
 
-            const linha = document.createElement('tr');
-linha.innerHTML = `
-  <td>${pdf.id}</td>
-  <td>${pdf.filename || '—'}</td>
-  <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
-  <td>
-    <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-    <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-  </td>
-  <td>
-    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
-  </td>
-`;
-            tabela.appendChild(linha);
-          });
-        });
-    }
+        const mensagem = encodeURIComponent(
+          `📄 ${primeiroNome}, seu *Currículo Profissional* está pronto!\n\n` +
+          `Ele foi cuidadosamente pensado e testado para chamar a atenção dos recrutadores em segundos. ` +
+          `Segue padrões visuais e estratégicos que aumentam suas chances reais de ser notado(a) e chamado(a) para entrevistas.\n\n` +
+          `⏰ Atenção: o sistema guarda seu currículo por apenas *2 horas*. Depois disso ele é apagado automaticamente ` +
+          `e será necessário refazê-lo do zero.\n\n` +
+          `🔥 Não perca tempo: finalize o pagamento agora e receba o PDF completo direto no seu WhatsApp — rápido, exclusivo e sem complicações.\n\n` +
+          `💳 Link seguro:\nhttps://officeexpress.onrender.com/pagamento.html\n` +
+          `🔹 O Pix para copiar e colar está disponível lá!\n\n` +
+          `✅ Garanta já seu diferencial competitivo no mercado!`
+        );
+
+        const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+          <td>${pdf.id}</td>
+          <td>${pdf.filename || '—'}</td>
+          <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
+          <td>
+            <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+            <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+          </td>
+          <td>
+            ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
+          </td>
+        `;
+        tabela.appendChild(linha);
+      });
+    });
+}
 
     function carregarLogs() {
       fetch('/api/logs')
@@ -172,39 +183,50 @@ linha.innerHTML = `
     }
 
     function carregarRelatorios() {
-      fetch('/api/analises')
-        .then(res => res.json())
-        .then(data => {
-          const tabela = document.querySelector('#tabela-relatorios tbody');
-          tabela.innerHTML = '';
+  fetch('/api/analises')
+    .then(res => res.json())
+    .then(data => {
+      const tabela = document.querySelector('#tabela-relatorios tbody');
+      tabela.innerHTML = '';
 
-          data.forEach(rel => {
-            const telefone = rel.telefone?.replace(/\D/g, '');
-const mensagem = encodeURIComponent(
-  "📄 Seu *Relatório de Currículo* está pronto!\n\n_Mandar currículo sem saber o que está errado é perder tempo. Essa análise mostra exatamente o que está travando suas chances — e o que você precisa ajustar pra começar a ser chamado(a)._\n\n💳 *Finalize o pagamento agora* e receba o PDF completo direto no seu WhatsApp — rápido, direto e sem complicações.\n\n🔸 Acesse:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n🔹 O Pix para copiar e colar está disponível lá!"
-);
-            const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+      data.forEach(rel => {
+        const telefone = rel.telefone?.replace(/\D/g, '');
+        const primeiroNome = rel.nome ? rel.nome.split(' ')[0] : 'Amigo';
 
-            const linha = document.createElement('tr');
-linha.innerHTML = `
-  <td>${rel.id}</td>
-  <td>${rel.filename || '—'}</td>
-  <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
-  <td>
-    <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-    <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-  </td>
-  <td>
-    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
-  </td>
-`;
-            tabela.appendChild(linha);
-          });
-        })
-        .catch(err => {
-          console.error('Erro ao buscar análises:', err);
-        });
-    }
+        const mensagem = encodeURIComponent(
+          `📊 ${primeiroNome}, sua *Análise de Currículo* está pronta!\n\n` +
+          `Mandar currículo sem saber o que está errado é perder tempo. Essa análise mostra exatamente ` +
+          `o que está travando suas chances — e o que você precisa ajustar pra começar a ser chamado(a).\n\n` +
+          `⏰ Atenção: o sistema guarda sua análise por apenas *2 horas*. Depois disso ela é apagada automaticamente ` +
+          `e será necessário solicitar novamente.\n\n` +
+          `💳 *Finalize o pagamento agora* e receba o PDF completo direto no seu WhatsApp — rápido, direto e sem complicações.\n\n` +
+          `🔸 Acesse:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n` +
+          `🔹 O Pix para copiar e colar está disponível lá!\n\n` +
+          `✅ Avance hoje mesmo rumo às entrevistas que você merece!`
+        );
+
+        const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+          <td>${rel.id}</td>
+          <td>${rel.filename || '—'}</td>
+          <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+          <td>
+            <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+            <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+          </td>
+          <td>
+            ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
+          </td>
+        `;
+        tabela.appendChild(linha);
+      });
+    })
+    .catch(err => {
+      console.error('Erro ao buscar análises:', err);
+    });
+}
 
     // Atualiza a cada 2 segundos
     setInterval(() => {
