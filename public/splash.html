@@ -681,32 +681,30 @@ footer.rodape {
 
 /* Setas */
 .arrow {
-  background: none;
+  background: #1a3a4d; 
+  color: #F98D2E;
   border: none;
-  font-size: 2rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: #0b2533;
-  padding: 0 12px;
+  transition: background 0.3s ease;
+  margin: 0 4px;
 }
-
-.arrow:disabled {
-  opacity: 0.3;
-  cursor: default;
+.arrow:hover {
+  background: #1a3a4d33;
 }
 
 /* Texto do depoimento */
-.card p {
-  font-size: 0.9rem;       /* tamanho legível */
-  line-height: 1.3;        /* altura da linha mais compacta */
-  color: #243a48;          /* cor escura para contraste */
-  margin: 0 auto 12px;     /* espaçamento abaixo */
-  max-width: 600px;        /* limita largura para não ficar esticado */
-}
 
 .card p {
   position: relative;
   font-size: 0.95rem;
   line-height: 1.3;
+  padding: 10px 20px; /* espaço para as aspas */
   color: #243a48;
   margin: 0 auto 12px;
   max-width: 600px;
@@ -715,27 +713,26 @@ footer.rodape {
 
 /* Aspa de abertura */
 .card p::before {
-  font-family: "Font Awesome 6 Free"; /* garante uso do FA */
-  font-weight: 900;                   /* sólido */
-  content: "\f10d";                   /* ícone fa-quote-left */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  content: "\f10d"; /* ícone fa-quote-left */
   font-size: 1.4rem;
   color: #0b2533;
   position: absolute;
-  left: -15px;
-  top: -10px;
+  left: 0;
+  top: 0;
 }
-
-/* Aspa de fechamento */
 .card p::after {
   font-family: "Font Awesome 6 Free";
   font-weight: 900;
-  content: "\f10e";                   /* ícone fa-quote-right */
+  content: "\f10e"; /* ícone fa-quote-right */
   font-size: 1.4rem;
   color: #0b2533;
   position: absolute;
-  right: 10px;
-  bottom: -10px;
+  right: 0;
+  bottom: 0;
 }
+
 
 /* Responsivo */
 @media (max-width: 768px) {
@@ -837,7 +834,10 @@ footer.rodape {
     <h2>Depoimentos de quem usou e aprovou</h2>
     <div class="carousel">
       <!-- Seta esquerda -->
-      <button class="arrow left" id="prevBtn" aria-label="Anterior">‹</button>
+      <button class="arrow left" id="prevBtn" aria-label="Anterior">
+  <i class="fas fa-chevron-left"></i>
+</button>
+
 
       <!-- Track (janela visível) -->
       <div class="carousel-track">
@@ -894,7 +894,7 @@ footer.rodape {
 
           <!-- Card 7 -->
           <div class="card">
-            <img src="dp9.jpg" alt="Fernanda Alves" class="avatar-round">
+            <img src="dp9.webp" alt="Fernanda Alves" class="avatar-round">
             <p>A análise apontou detalhes que eu nunca tinha percebido. Corrigi e fui chamada rápido.</p>
             <span class="nome">Fernanda Alves</span>
             <span class="cargo">Professora</span>
@@ -928,7 +928,10 @@ footer.rodape {
       </div>
 
       <!-- Seta direita -->
-      <button class="arrow right" id="nextBtn" aria-label="Próximo">›</button>
+      <button class="arrow right" id="nextBtn" aria-label="Próximo">
+  <i class="fas fa-chevron-right"></i>
+</button>
+
     </div>
   </div>
 </section>
