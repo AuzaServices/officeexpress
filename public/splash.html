@@ -740,6 +740,17 @@ footer.rodape {
     padding: 18px;
   }
 }
+
+section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease;
+}
+section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
   </style>
 </head>
 <body>
@@ -1194,6 +1205,18 @@ function updateCarousel() {
   updateCarousel();
   startAutoPlay();
 });
+
+const sections = document.querySelectorAll('section');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.2 });
+
+sections.forEach(section => observer.observe(section));
+
 </script>
 </body>
 </html>
