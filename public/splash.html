@@ -1057,15 +1057,44 @@ section.visible {
 <script>
   const estados = document.querySelectorAll("#mapBrasil .estado");
   const info = document.getElementById("infoEstado");
+  let animacaoAtiva = false;
+  let animacaoTimeouts = [];
 
-  // Função para selecionar estado
+  // Função para selecionar estado manualmente
   function selecionarEstado(estado) {
+    // Se o usuário clicar durante a animação, interrompe
+    if (animacaoAtiva) {
+      animacaoAtiva = false;
+      animacaoTimeouts.forEach(t => clearTimeout(t));
+      animacaoTimeouts = [];
+    }
+
     estados.forEach(e => e.classList.remove("active"));
     estado.classList.add("active");
 
     const sigla = estado.id;
     const qtd = estado.dataset.curriculos || 0;
     info.innerHTML = `${sigla}: <span class="numero">${Number(qtd).toLocaleString('pt-BR')}</span> Currículos entregues`;
+  }
+
+  // Função para ativar estados em sequência (efeito visual)
+  function ativarEstados() {
+    animacaoAtiva = true;
+    estados.forEach((estado, i) => {
+      const timeout = setTimeout(() => {
+        if (!animacaoAtiva) return; // se o usuário clicou, interrompe
+        estado.classList.add("active");
+
+        // Quando chegar no último estado, resetar
+        if (i === estados.length - 1) {
+          setTimeout(() => {
+            estados.forEach(e => e.classList.remove("active"));
+            animacaoAtiva = false;
+          }, 500); // pequena pausa antes de resetar
+        }
+      }, (6000 / estados.length) * i); // distribui os 6s igualmente
+      animacaoTimeouts.push(timeout);
+    });
   }
 
   // Centralizar automaticamente as siglas no centro de cada path
@@ -1093,6 +1122,18 @@ section.visible {
       }
     });
   });
+
+  // Observa quando o mapa entra na tela
+  const mapa = document.querySelector(".mapa-brasil");
+// Observer para o mapa
+const mapaObserver = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) {
+    ativarEstados();
+    mapaObserver.disconnect();
+  }
+}, { threshold: 0.3 });
+
+mapaObserver.observe(document.querySelector('.mapa-brasil'));
 </script>
 
   <!-- Empresas -->
@@ -1501,6 +1542,8 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.2 });
 
 sections.forEach(section => observer.observe(section));
+
+
 
 </script>
 </body>
