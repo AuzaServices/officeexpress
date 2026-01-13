@@ -751,6 +751,10 @@ section.visible {
   transform: translateY(0);
 }
 
+*:focus {
+  outline: none;
+}
+
   </style>
 </head>
 <body>
@@ -978,16 +982,17 @@ section.visible {
 
 /* Caixa de informações do estado */
 .info-estado {
-  margin-top: auto;            /* empurra para o pé do wrapper */
+  margin-top: 16px;         /* espaço relativo ao mapa */
   font-weight: 700;
   color: var(--text-primary);
   background: rgba(0,31,51,0.6);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 16px;
-  display: inline-block;
   box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+  text-align: center;       /* centraliza o texto dentro da caixa */
 }
+
 
 /* Estados */
 .estado path,
