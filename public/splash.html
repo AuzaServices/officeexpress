@@ -751,6 +751,40 @@ section.visible {
   transform: translateY(0);
 }
 
+.mapa-brasil {
+  text-align: center;
+  margin: 40px 0;
+}
+
+#mapBrasil {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.estado .sigla {
+  fill: white;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none; /* sigla não bloqueia clique */
+}
+
+.estado.active path {
+  fill: #ff8800; /* laranja */
+}
+
+.estado.active .sigla {
+  fill: #00324a; /* azul marinho */
+}
+
+.info-estado {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
   </style>
 </head>
 <body>
@@ -806,6 +840,33 @@ section.visible {
 </section>
 
   <div class="divider"></div>
+
+  <!-- Mapa do Brasil -->
+<section class="mapa-brasil">
+  <div class="container">
+    <h2>Currículos entregues por estado</h2>
+    <svg id="mapBrasil" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+      <!-- Exemplo: Ceará -->
+      <g id="CE" class="estado" data-curriculos="1520">
+        <path d="M...Z" fill="transparent" stroke="white" stroke-width="1.5"></path>
+        <text x="500" y="300" class="sigla">CE</text>
+      </g>
+      <!-- Exemplo: São Paulo -->
+      <g id="SP" class="estado" data-curriculos="8420">
+        <path d="M...Z" fill="transparent" stroke="white" stroke-width="1.5"></path>
+        <text x="600" y="700" class="sigla">SP</text>
+      </g>
+      <!-- Adicionar os outros estados -->
+    </svg>
+
+    <!-- Painel de informações -->
+    <div id="infoEstado" class="info-estado">
+      Clique em um estado para ver os dados.
+    </div>
+  </div>
+</section>
+
+ <div class="divider"></div>
 
   <!-- Empresas -->
 <section class="empresas-section">
@@ -1215,6 +1276,24 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.2 });
 
 sections.forEach(section => observer.observe(section));
+
+const estados = document.querySelectorAll("#mapBrasil .estado");
+const info = document.getElementById("infoEstado");
+
+estados.forEach(estado => {
+  estado.addEventListener("click", () => {
+    // Remove seleção anterior
+    estados.forEach(e => e.classList.remove("active"));
+
+    // Marca estado atual
+    estado.classList.add("active");
+
+    // Atualiza painel
+    const sigla = estado.id;
+    const qtd = estado.dataset.curriculos;
+    info.textContent = `${sigla}: ${qtd} currículos entregues`;
+  });
+});
 
 </script>
 </body>
