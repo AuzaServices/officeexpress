@@ -942,12 +942,18 @@ section.visible {
 </section>
 
 <style>
- .mapa-brasil .map-wrapper {
+ /* ============================
+   Mapa do Brasil Interativo
+   ============================ */
+
+/* Wrapper principal */
+.mapa-brasil .map-wrapper {
   display: flex;
-  justify-content: center;   /* centraliza horizontalmente */
-  align-items: center;       /* centraliza verticalmente */
+  flex-direction: column;   /* mapa em cima, info embaixo */
+  align-items: center;      /* centraliza horizontalmente */
+  justify-content: center;  /* centraliza verticalmente */
   width: 100%;
-  height: 100%;              /* ocupa toda a altura do container */
+  height: 100%;
 }
 
 /* O próprio mapa */
@@ -960,21 +966,19 @@ section.visible {
 /* Ajustes específicos para telas menores (mobile) */
 @media (max-width: 768px) {
   .mapa-brasil .map-wrapper {
-    height: 100vh;             /* ocupa a tela inteira no mobile */
+    height: 70vh;             /* ocupa a tela inteira no mobile */
   }
 
   #mapBrasil {
-    max-width: 95%;     
-    margin-top: -200px;     /* controla largura no mobile */
-    transform: scale(1.2);   /* zoom */
-    transform-origin: center;
+    max-width: 95%;            /* controla largura no mobile */
+    transform: scale(1.2);     /* zoom */
+    transform-origin: center;  /* mantém centralizado */
   }
-
 }
 
 /* Caixa de informações do estado */
 .info-estado {
-  margin-top: 16px;
+  margin-top: auto;            /* empurra para o pé do wrapper */
   font-weight: 700;
   color: var(--text-primary);
   background: rgba(0,31,51,0.6);
@@ -986,7 +990,8 @@ section.visible {
 }
 
 /* Estados */
-.estado path, .estado polygon {
+.estado path,
+.estado polygon {
   fill: transparent;
   stroke: #ffffff;
   stroke-width: 1.5;
@@ -998,6 +1003,7 @@ section.visible {
   fill: #ffffff;
   font: 700 14px 'Inter', sans-serif;
   text-anchor: middle;
+  dominant-baseline: middle; /* centraliza verticalmente */
   pointer-events: none;
 }
 
