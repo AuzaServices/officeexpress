@@ -967,6 +967,15 @@ section.visible {
   height: auto;
 }
 
+.mapa-brasil h2 {
+  text-align: center;       /* centraliza horizontalmente */
+  white-space: nowrap;      /* impede quebra de linha */
+  color: var(--brand);
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+  font-weight: 700;
+}
+
 /* Ajustes específicos para telas menores (mobile) */
 @media (max-width: 768px) {
   .mapa-brasil .map-wrapper {
@@ -978,7 +987,23 @@ section.visible {
     transform: scale(1.2);     /* zoom */
     transform-origin: center;  /* mantém centralizado */
   }
+
+    .mapa-brasil h2 {
+    font-size: 1.1rem;       /* reduz tamanho da fonte */
+    white-space: normal;     /* permite quebra se necessário */
+    word-break: keep-all;    /* mantém palavras inteiras */
+  }
+
 }
+
+@media (min-width: 769px) {
+  #mapBrasil {
+    max-width: 50%;          /* diminui largura no desktop */
+    transform: scale(1);     /* remove zoom */
+    margin: 0 auto;          /* centraliza */
+  }
+}
+
 
 /* Caixa de informações do estado */
 .info-estado {
