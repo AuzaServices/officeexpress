@@ -1045,6 +1045,13 @@ section.visible {
 .estado.active .sigla {
   fill: #00324a;
 }
+
+.numero {
+  color: var(--brand);        /* laranja da paleta (#ff8800) */
+  font-weight: 800;
+}
+
+
 </style>
 
 <script>
@@ -1058,7 +1065,7 @@ section.visible {
 
     const sigla = estado.id;
     const qtd = estado.dataset.curriculos || 0;
-    info.textContent = `${sigla}: ${Number(qtd).toLocaleString('pt-BR')} Currículos entregues`;
+    info.innerHTML = `${sigla}: <span class="numero">${Number(qtd).toLocaleString('pt-BR')}</span> Currículos entregues`;
   }
 
   // Centralizar automaticamente as siglas no centro de cada path
