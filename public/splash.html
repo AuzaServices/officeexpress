@@ -751,8 +751,8 @@ section.visible {
   transform: translateY(0);
 }
 
-*:focus {
-  outline: none;
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
   </style>
@@ -1033,7 +1033,7 @@ section.visible {
 
     const sigla = estado.id;
     const qtd = estado.dataset.curriculos || 0;
-    info.textContent = `${sigla}: ${Number(qtd).toLocaleString('pt-BR')} currículos entregues`;
+    info.textContent = `${sigla}: ${Number(qtd).toLocaleString('pt-BR')} Currículos entregues`;
   }
 
   // Centralizar automaticamente as siglas no centro de cada path
