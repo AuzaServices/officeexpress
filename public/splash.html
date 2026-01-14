@@ -755,6 +755,23 @@ section.visible {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Cursor piscando */
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.3rem;
+  background-color: var(--brand);
+  margin-left: 4px;
+  animation: blink 0.8s infinite;
+  vertical-align: bottom;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
   </style>
 </head>
 <body>
@@ -816,9 +833,8 @@ section.visible {
      ========================= -->
 <section class="mapa-brasil">
   <div class="container">
-    <h2 style="color: var(--brand); font-size: 1.3rem; margin-bottom: 18px; font-weight: 700;">
-      Currículos entregues por estado
-    </h2>
+<h2 id="typing" style="color: var(--brand); font-size: 1.3rem; margin-bottom: 18px; font-weight: 700;">
+</h2>
 
     <div class="map-wrapper">
       <!-- SVG inline -->
@@ -1051,6 +1067,30 @@ section.visible {
   font-weight: 800;
 }
 
+/* Estados padrão */
+.estado path,
+.estado polygon {
+  fill: transparent;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  transition: fill 0.3s ease;
+  cursor: pointer;
+}
+
+/* Apenas efeito visual ao passar o mouse */
+.estado:hover path,
+.estado:hover polygon {
+  fill: #ff8800;   /* laranja sólido */
+}
+
+/* Sigla continua branca */
+.estado .sigla {
+  fill: #ffffff;
+  font: 700 14px 'Inter', sans-serif;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
 
 </style>
 
@@ -1543,7 +1583,22 @@ const observer = new IntersectionObserver(entries => {
 
 sections.forEach(section => observer.observe(section));
 
+const text = "Pessoas em todo o Brasil já utilizam nossos serviços";
+const typingElement = document.getElementById("typing");
 
+let i = 0;
+
+function typeWriter() {
+  if (i < text.length) {
+    typingElement.innerHTML = text.substring(0, i + 1) + '<span class="cursor"></span>';
+    i++;
+    setTimeout(typeWriter, 80); // velocidade da digitação
+  } else {
+    typingElement.innerHTML = text + '<span class="cursor"></span>'; // mantém cursor no final
+  }
+}
+
+typeWriter();
 
 </script>
 </body>
