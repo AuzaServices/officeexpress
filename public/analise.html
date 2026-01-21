@@ -158,6 +158,10 @@
         return;
       }
 
+       const primeiroNome = nome.split(" ")[0];
+  sessionStorage.setItem("primeiroNome", primeiroNome);
+
+
       const botao = document.getElementById("botao-ia");
       botao.classList.add("derretendo");
 
