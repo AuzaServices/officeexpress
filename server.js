@@ -707,6 +707,13 @@ app.get('/api/painel/:nome', async (req, res) => {
   }
 });
 
+app.get('/api/painel/codigo/:codigo', async (req, res) => {
+  const { codigo } = req.params;
+  const [rows] = await pool.query('SELECT nome, codigo FROM usuarios WHERE codigo = ?', [codigo]);
+  if (rows.length === 0) return res.status(404).json({ error: 'Código não encontrado' });
+  res.json(rows[0]);
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////

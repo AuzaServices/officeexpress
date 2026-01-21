@@ -1609,6 +1609,16 @@ const codigo = params.get("codigo");
 
 if (codigo) {
   sessionStorage.setItem("codigoIndicacao", codigo);
+
+  // Buscar nome do indicador no backend
+  fetch(`/api/painel/codigo/${codigo}`)
+    .then(resp => resp.json())
+    .then(data => {
+      if (data.nome) {
+        sessionStorage.setItem("nomeIndicador", data.nome);
+      }
+    })
+    .catch(err => console.error("Erro ao buscar indicador:", err));
 }
 
 

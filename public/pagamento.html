@@ -157,8 +157,7 @@ function copiarPix() {
 
 function atualizarLinkWhatsApp() {
   const codigo = sessionStorage.getItem("codigoIndicacao");
-  const nomeIndicador = sessionStorage.getItem("nomeIndicador"); 
-  // você pode salvar esse nome no sessionStorage lá no splash ou login
+  const nomeIndicador = sessionStorage.getItem("nomeIndicador");
 
   let mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
 
@@ -170,11 +169,7 @@ function atualizarLinkWhatsApp() {
   document.getElementById("whatsappLink").href = url;
 }
 
-// Chama ao carregar a página
-window.onload = () => {
-  atualizarLinkWhatsApp();
-};
-
+window.onload = atualizarLinkWhatsApp;
 </script>
 </body>
 </html>
