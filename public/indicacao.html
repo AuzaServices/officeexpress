@@ -1,46 +1,755 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Sistema de Indicação</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #f9f9f9; text-align: center; padding: 40px; }
-  .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); max-width: 500px; margin: auto; }
-  h1 { color: #333; }
-  input { padding: 10px; width: 80%; margin: 10px 0; }
-  button { padding: 10px 20px; background: #0078d7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-  button:hover { background: #005a9e; }
-  .link { margin-top: 20px; font-weight: bold; color: #0078d7; word-break: break-all; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Office Express | Sobre Nós</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-1: #001f33;
+      --bg-2: #00324a;
+      --text-primary: #ffffff;
+      --text-secondary: #e0e6eb;
+      --text-muted: #cbd5e1;
+      --brand: #ff8800;
+      --brand-dark: #e67300;
+      --card: #001f33;
+      --border: #ffffff22;
+      --shadow: rgba(0,0,0,0.2);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: #e6f0fa;
+}
+
+    /* Layout container */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header */
+header.cabecalho {
+  position: fixed;
+  top: 0;
+  left: 0; 
+  right: 0;
+  z-index: 1000;
+  background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+  border-bottom: 1px solid var(--border);
+}
+    .cabecalho .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+    }
+    .logo {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+nav.menu a {
+  margin-left: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+
+nav.menu a:hover {
+  color: var(--brand);
+}
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background-color: var(--brand);
+      color: #00324a;
+      padding: 10px 18px;
+      box-shadow: 0 4px 12px rgba(255,136,0,0.35);
+    }
+    .btn-primary:hover {
+      background-color: var(--brand-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(255,136,0,0.45);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover {
+      border-color: #ffffff44;
+      transform: translateY(-1px);
+    }
+    /* Mobile menu button */
+.hamburguer {
+  display: none;
+  background: transparent;   /* remove fundo */
+  border: none;              /* remove borda */
+  color: var(--text-primary);/* mantém cor do ícone */
+  font-size: 1.6rem;         /* aumenta tamanho do ícone ☰ */
+  cursor: pointer;
+}
+
+    /* Hero */
+    .hero {
+      padding-top: 120px; /* space for fixed header */
+      padding-bottom: 40px;
+    }
+    .hero .wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      text-align: center;
+    }
+    .hero .top-image {
+      height: 64px;
+      margin: 0 auto 6px;
+      opacity: 0.92;
+    }
+    .hero h1 {
+      font-size: 2.2rem;
+      line-height: 1.2;
+      color: var(--brand);
+      margin: 6px 0;
+      font-weight: 800;
+    }
+    .hero p.lead {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin: 0 auto 16px;
+      max-width: 720px;
+    }
+    .hero .ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Section divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      width: 100%;
+      max-width: 900px;
+      margin: 22px auto;
+    }
+
+    /* Footer */
+    footer.rodape {
+      margin-top: 24px;
+      background-color: var(--bg-1);
+      color: var(--text-muted);
+      text-align: center;
+      padding: 12px 0;
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+    }
+    .rodape .marca {
+      font-size: 0.75rem;
+      vertical-align: super;
+      color: var(--brand);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #00000099;
+      justify-content: center;
+      align-items: center;
+      z-index: 1100;
+      padding: 16px;
+    }
+    .modal-card {
+      background: #ffffff;
+      color: #00324a;
+      padding: 22px 22px 18px;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 360px;
+      position: relative;
+      box-shadow: 0 10px 24px var(--shadow);
+    }
+    .modal-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #00324a;
+    }
+    .modal-card input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d7d7d7;
+      margin-bottom: 12px;
+      font-size: 0.98rem;
+      outline: none;
+    }
+    .modal-card input:focus {
+      border-color: #ffbb66;
+      box-shadow: 0 0 0 3px #ffe3c1;
+    }
+.modal-close {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: transparent;   /* sem fundo */
+  color: #000;               /* X preto */
+  border: none;
+  font-size: 20px;           /* maior e mais elegante */
+  font-weight: 700;
+  cursor: pointer;
+}
+.modal-close:hover {
+  color: #333;               /* leve mudança no hover */
+}
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .hero h1 { font-size: 2rem; }
+      .stat-value { font-size: 1.6rem; }
+    }
+    @media (max-width: 768px) {
+      nav.menu { display: none; }
+      .hamburguer { display: inline-flex; }
+      .hero h1 { font-size: 1.8rem; }
+      .hero .top-image { height: 54px; }
+      .stats { grid-template-columns: 1fr; max-width: 420px; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.6rem; }
+      .hero p.lead { font-size: 0.98rem; }
+      .btn-primary { padding: 10px 16px; }
+    }
+
+    /* estilo base para todas */
+
+#mobileMenu {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgba(0,31,51,0.92);
+  border-bottom: 1px solid var(--border);
+
+  max-height: 0;          /* começa fechado */
+  overflow: hidden;       /* esconde conteúdo */
+  transition: max-height 0.4s ease; /* animação suave */
+}
+
+#mobileMenu.open {
+  max-height: 200px;      /* altura suficiente para mostrar opções */
+}
+
+#mobileMenu > div {
+  background: rgba(0,31,51,0.75); /* fundo semi-transparente */
+  backdrop-filter: blur(4px);     /* efeito de vidro fosco opcional */
+}
+
+.institucional-section {
+  width: 100%; /* ocupa toda a largura */
+  background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+  padding: 40px 60px;
+  border-top: 2px solid #ddd;
+}
+
+.institucional-grid {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 40px;
+}
+
+.institucional-col {
+  flex: 1;
+  color: #ffffff;
+  min-width: 250px;
+}
+
+.institucional-logo {
+  max-width: 180px;
+  margin-bottom: 15px;
+}
+
+.institucional-col h4 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: #ff892e;
+}
+
+.institucional-col ul {
+  list-style: none;
+  padding: 0;
+}
+
+.institucional-col ul li {
+  margin-bottom: 8px;
+}
+
+.institucional-col ul li a {
+  text-decoration: none;
+  color: #ffffff;
+  transition: color 0.3s ease;
+}
+
+.institucional-col ul li a:hover {
+  color: #ff892e;
+}
+
+.redes-sociais {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.redes-sociais a img {
+  width: 28px;
+  height: 28px;
+  transition: transform 0.3s ease;
+}
+
+.redes-sociais a:hover img {
+  transform: scale(1.2);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .institucional-grid {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* Ajuste global para sections */
+section {
+  width: 100%;           /* ocupa toda a largura */
+  padding: 40px 20px;    /* espaçamento interno */
+  box-sizing: border-box;
+}
+
+/* Grid institucional e similares */
+.institucional-grid {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Colunas */
+.institucional-col {
+  flex: 1;
+  min-width: 280px;      /* aumenta o mínimo para não comprimir demais */
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .institucional-grid {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .institucional-col {
+    width: 100%;          /* ocupa toda a largura no mobile */
+    min-width: unset;     /* remove limite mínimo */
+    margin-bottom: 20px;
+  }
+
+  section {
+    padding: 30px 15px;   /* espaçamento mais leve no mobile */
+  }
+}
+
+.redes-sociais img {
+  width: 28px;
+  height: 28px;
+  transition: transform 0.3s ease;
+}
+
+.redes-sociais img:hover {
+  transform: scale(1.2);
+}
+
+.redes-sociais i {
+  font-size: 28px;
+  color: #F98D2E; /* laranja */
+  transition: transform 0.3s ease;
+}
+
+.redes-sociais i:hover {
+  transform: scale(1.2);
+}
+
+footer.rodape {
+  margin-top: 0; /* remove espaço extra acima do footer */
+}
+
+.institucional-section {
+  padding-bottom: 20px; /* reduz espaço inferior */
+}
+
+.divider {
+  height: 1px;
+  background: #ccc;
+  margin: 0 auto; /* sem espaço extra */
+}
+
+/* Estilo para o conteúdo principal (main) */
+main {
+  max-width: 900px;              /* largura máxima para leitura confortável */
+  margin: 120px auto 40px;       /* espaço no topo para o cabeçalho fixo */
+  padding: 20px 24px;            /* espaçamento interno */
+  background: #ffffff;           /* fundo branco para contraste */
+  border-radius: 8px;            /* cantos arredondados */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* leve sombra */
+  color: #333;                   /* cor padrão do texto */
+  line-height: 1.6;              /* altura da linha para leitura */
+}
+
+/* Título principal */
+main h1 {
+  color: var(--brand);           /* usa a cor de destaque definida no root */
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Subtítulos */
+main h2 {
+  color: #00324a;                /* tom escuro para contraste */
+  margin-top: 24px;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* Parágrafos */
+main p {
+  margin: 12px 0;
+  font-size: 1rem;
+  color: #444;
+}
+
+/* Links dentro do main */
+main a {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+main a:hover {
+  text-decoration: underline;
+}
+
+.sobre-nos {
+  width: 100%;
+  padding: 80px 20px; /* espaçamento interno */
+}
+
+.sobre-nos-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+  flex-wrap: wrap; /* quebra no mobile */
+}
+
+.sobre-nos-imagem img {
+  max-width: 600px;
+    flex: 0 0 500px; /* define largura fixa para o bloco da imagem */
+  width: 100%;
+  border-radius: 12px;
+}
+
+.sobre-nos-texto {
+  flex: 1;
+  min-width: 280px;
+  color: #00324a;
+}
+
+.sobre-nos-texto h1 {
+  font-size: 2rem;
+  color: var(--brand);
+  margin-bottom: 16px;
+}
+
+.sobre-nos-texto p {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  color: #444;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .sobre-nos-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .sobre-nos-texto {
+    margin-top: 20px;
+  }
+
+  .sobre-nos-imagem img {
+    max-width: 100%;   /* ocupa toda a largura disponível */
+    width: 100%;
+    height: auto;      /* mantém proporção */
+  }
+
+}
+
+
+.sobre-nos-texto p {
+  font-size: 1.1rem;   /* aumenta o tamanho da fonte */
+  line-height: 1.8;    /* mais espaçamento entre linhas */
+  margin-bottom: 16px; /* mais espaço entre parágrafos */
+  color: #333;
+}
+
+.bg-img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1; /* joga a imagem para trás do conteúdo */
+}
+
+.section-indicacao {
+  max-width: 600px;
+  margin: 60px auto;
+  margin-top: 100px;
+  padding: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+/* Os cards dentro dessa section */
+.section-indicacao .card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  transition: transform 0.2s ease;
+}
+
+.section-indicacao .card:hover {
+  transform: translateY(-3px);
+}
+
+.section-indicacao .card h1 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.section-indicacao .card input {
+  width: 90%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.section-indicacao .card input:focus {
+  border-color: #0078d7;
+  box-shadow: 0 0 6px rgba(0,120,215,0.3);
+}
+
+.section-indicacao .card button {
+  width: 90%;
+  padding: 12px;
+  margin-top: 12px;
+  background: #0078d7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.section-indicacao .card button:hover {
+  background: #005a9e;
+  transform: scale(1.03);
+}
+
+.section-indicacao .card p {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #555;
+}
+
+.section-indicacao .card a {
+  color: #0078d7;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.section-indicacao .card a:hover {
+  text-decoration: underline;
+}
+
+.section-indicacao .link {
+  margin: 15px 0;
+  font-weight: bold;
+  color: #0078d7;
+  word-break: break-all;
+}
+
+  </style>
 </head>
 <body>
 
-<div class="card" id="cadastro">
-  <h1>Cadastro</h1>
-  <input type="text" id="nome" placeholder="Seu nome">
-  <input type="password" id="senha" placeholder="Senha">
-  <button onclick="cadastrar()">Cadastrar</button>
-  <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
-</div>
+  <!-- Header -->
+  <header class="cabecalho">
+    <div class="container">
+      <div class="wrap">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        <nav class="menu">
+          <a href="contato.html">Contato</a>
+          <a href="sobre.html">Sobre nós</a>
+        </nav>
+        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu">
+          ☰
+        </button>
+      </div>
+    </div>
+  </header>
 
-<div class="card" id="login" style="display:none;">
-  <h1>Login</h1>
-  <input type="text" id="loginNome" placeholder="Seu nome">
-  <input type="password" id="loginSenha" placeholder="Senha">
-  <button onclick="logar()">Entrar</button>
-  <p>Ainda não tem cadastro? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
-</div>
+  <!-- Mobile quick CTA bar (when menu hidden) -->
+  <div class="container" id="mobileMenu">
+    <div style="display:flex; flex-direction:column; gap:12px; justify-content:center; padding:14px; background:rgba(0,31,51,0.92); border-bottom:1px solid var(--border); text-align:center;">
+      <a href="contato.html" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
+      <a href="sobre.html" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
+    </div>
+  </div>
 
-<div class="card" id="painel" style="display:none;">
-  <h1>Painel do Usuário</h1>
-  <div id="bemvindo"></div>
-  <div class="link" id="link"></div>
-  <button onclick="copiarLink()">Copiar Link</button>
-  <p id="indicacoes"></p>
-  <button onclick="logout()">Sair</button>
-</div>
+<section class="section-indicacao">
+  <div class="card" id="cadastro">
+    <h1>Cadastro</h1>
+    <input type="text" id="nome" placeholder="Seu nome">
+    <input type="password" id="senha" placeholder="Senha">
+    <button onclick="cadastrar()">Cadastrar</button>
+    <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
+  </div>
 
-<script>
+  <div class="card" id="login" style="display:none;">
+    <h1>Login</h1>
+    <input type="text" id="loginNome" placeholder="Seu nome">
+    <input type="password" id="loginSenha" placeholder="Senha">
+    <button onclick="logar()">Entrar</button>
+    <p>Ainda não tem cadastro? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
+  </div>
+
+  <div class="card" id="painel" style="display:none;">
+    <h1>Painel do Usuário</h1>
+    <div id="bemvindo"></div>
+    <div class="link" id="link"></div>
+    <button onclick="copiarLink()">Copiar Link</button>
+    <p id="indicacoes"></p>
+    <button onclick="logout()">Sair</button>
+  </div>
+</section>
+
+  <!-- Section institucional -->
+  <section id="contato" class="institucional-section scroll-reveal">
+    <div class="institucional-grid">
+      <!-- Coluna 1 -->
+      <div class="institucional-col">
+        <img src="icon.png" alt="Logo Office Express" class="institucional-logo" />
+        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+      </div>
+      <!-- Coluna 2 -->
+      <div class="institucional-col">
+        <h4>Menu rápido</h4>
+        <ul>
+        <li><a href="splash.html">Início</a></li>
+        <li><a href="cadastro.html">Cadastro</a></li>
+        <li><a href="servicos.html">Serviços</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+      <!-- Coluna 3 -->
+      <div class="institucional-col">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="politica.html" target="_blank">Política de Privacidade</a></li>
+          <li><a href="termos.html" target="_blank">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Ícones sociais -->
+    <div class="redes-sociais">
+      <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+      <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+      <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="rodape">
+    Office Express <span class="marca"></span> 2026. Todos os Direitos Reservados.
+  </footer>
+
+  <script>
+    const btnMenu = document.getElementById('btnMenu');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    btnMenu?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mobileMenu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && e.target !== btnMenu) {
+        mobileMenu.classList.remove('open');
+      }
+    });
+    
 async function cadastrar() {
   const nome = document.getElementById("nome").value;
   const senha = document.getElementById("senha").value;
@@ -145,6 +854,7 @@ window.onload = async () => {
     mostrarLogin();
   }
 };
-</script>
+
+  </script>
 </body>
 </html>
