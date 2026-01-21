@@ -6,6 +6,7 @@ const multer = require('multer');
 const axios = require('axios');
 const pdfParse = require('pdf-parse'); // 📥 Novo
 const cron = require('node-cron');
+const bcrypt = require('bcrypt'); // para hash seguro da senha
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -608,6 +609,75 @@ app.delete('/api/analises/:id', async (req, res) => {
   } catch (err) {
     console.error('Erro ao apagar análise:', err.message);
     res.status(500).json({ error: 'Erro ao apagar análise' });
+  }
+});
+
+// Cadastro
+app.post('/api/cadastro', async (req, res) => {
+  const { nome, senha } = req.body;
+  if (!nome || !senha) {
+    return res.status(400).json({ error: 'Preencha todos os campos' });
+  }
+
+  try {
+    // Gera código único de indicação
+    const codigo = Math.random().toString(36).substring(2, 10);
+    const hash = await bcrypt.hash(senha, 10);
+
+    const query = 'INSERT INTO usuarios (nome, senha, codigo) VALUES (?, ?, ?)';
+    await pool.query(query, [nome, hash, codigo]);
+
+    res.json({ message: 'Cadastro realizado com sucesso', codigo });
+  } catch (err) {
+    console.error('Erro no cadastro:', err.message);
+    res.status(500).json({ error: 'Erro no cadastro' });
+  }
+});
+
+// Login
+app.post('/api/login', async (req, res) => {
+  const { nome, senha } = req.body;
+  try {
+    const [rows] = await pool.query('SELECT * FROM usuarios WHERE nome = ?', [nome]);
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Usuário não encontrado' });
+    }
+
+    const usuario = rows[0];
+    const match = await bcrypt.compare(senha, usuario.senha);
+    if (!match) {
+      return res.status(401).json({ error: 'Senha incorreta' });
+    }
+
+    res.json({
+      message: 'Login realizado com sucesso',
+      nome: usuario.nome,
+      codigo: usuario.codigo,
+      indicacoes: usuario.indicacoes,
+      metaAtingida: usuario.indicacoes >= 5
+    });
+  } catch (err) {
+    console.error('Erro no login:', err.message);
+    res.status(500).json({ error: 'Erro no login' });
+  }
+});
+
+// Atualizar indicações (quando alguém paga via link)
+app.post('/api/indicar', async (req, res) => {
+  const { codigo } = req.body;
+  try {
+    const [rows] = await pool.query('SELECT * FROM usuarios WHERE codigo = ?', [codigo]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Código não encontrado' });
+    }
+
+    const usuario = rows[0];
+    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [codigo]);
+
+    res.json({ message: 'Indicação registrada', indicacoes: usuario.indicacoes + 1 });
+  } catch (err) {
+    console.error('Erro ao registrar indicação:', err.message);
+    res.status(500).json({ error: 'Erro ao registrar indicação' });
   }
 });
 

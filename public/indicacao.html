@@ -7,23 +7,38 @@
   body { font-family: Arial, sans-serif; background: #f9f9f9; text-align: center; padding: 40px; }
   .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); max-width: 500px; margin: auto; }
   h1 { color: #333; }
-  .link { margin-top: 20px; font-weight: bold; color: #0078d7; word-break: break-all; }
-  .msg { margin-top: 15px; font-size: 18px; color: #444; }
-  button { margin-top: 20px; padding: 10px 20px; background: #0078d7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+  input { padding: 10px; width: 80%; margin: 10px 0; }
+  button { padding: 10px 20px; background: #0078d7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
   button:hover { background: #005a9e; }
+  .link { margin-top: 20px; font-weight: bold; color: #0078d7; word-break: break-all; }
 </style>
 </head>
 <body>
-<div class="card">
-  <h1>Programa de Indicação</h1>
+
+<div class="card" id="cadastro">
+  <h1>Cadastro</h1>
+  <input type="text" id="nome" placeholder="Seu nome">
+  <input type="password" id="senha" placeholder="Senha">
+  <button onclick="cadastrar()">Cadastrar</button>
+  <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
+</div>
+
+<div class="card" id="login" style="display:none;">
+  <h1>Login</h1>
+  <input type="text" id="loginNome" placeholder="Seu nome">
+  <input type="password" id="loginSenha" placeholder="Senha">
+  <button onclick="logar()">Entrar</button>
+</div>
+
+<div class="card" id="painel" style="display:none;">
+  <h1>Painel do Usuário</h1>
+  <div id="bemvindo"></div>
   <div class="link" id="link"></div>
-  <div class="msg">Seu código de indicação foi gerado. Copie e divulgue!</div>
-  <button onclick="copiarLink()">Copiar Link</button>
+  <p id="indicacoes"></p>
 </div>
 
 <script>
 function gerarCodigo() {
-  // Gera um código randômico simples (8 caracteres)
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let codigo = "";
   for (let i = 0; i < 8; i++) {
@@ -32,16 +47,41 @@ function gerarCodigo() {
   return codigo;
 }
 
-// Gera o código ao carregar a página
-const codigo = gerarCodigo();
-// Agora usamos query string (?codigo=...)
-const link = `https://officeexpress.onrender.com/splash.html?codigo=${codigo}`;
-document.getElementById("link").innerText = link;
+function cadastrar() {
+  const nome = document.getElementById("nome").value;
+  const senha = document.getElementById("senha").value;
+  if (!nome || !senha) { alert("Preencha todos os campos!"); return; }
+  
+  const codigo = gerarCodigo();
+  const usuario = { nome, senha, codigo, indicacoes: 0 };
+  localStorage.setItem(nome, JSON.stringify(usuario));
+  alert("Cadastro realizado com sucesso!");
+  mostrarLogin();
+}
 
-function copiarLink() {
-  navigator.clipboard.writeText(link).then(() => {
-    alert("Link copiado para a área de transferência!");
-  });
+function mostrarLogin() {
+  document.getElementById("cadastro").style.display = "none";
+  document.getElementById("login").style.display = "block";
+}
+
+function logar() {
+  const nome = document.getElementById("loginNome").value;
+  const senha = document.getElementById("loginSenha").value;
+  const dados = localStorage.getItem(nome);
+  if (!dados) { alert("Usuário não encontrado!"); return; }
+  const usuario = JSON.parse(dados);
+  if (usuario.senha !== senha) { alert("Senha incorreta!"); return; }
+  
+  mostrarPainel(usuario);
+}
+
+function mostrarPainel(usuario) {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("painel").style.display = "block";
+  document.getElementById("bemvindo").innerText = "Bem-vindo, " + usuario.nome;
+  const link = `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`;
+  document.getElementById("link").innerText = "Seu link de indicação: " + link;
+  document.getElementById("indicacoes").innerText = "Indicações concluídas: " + usuario.indicacoes;
 }
 </script>
 </body>
