@@ -770,8 +770,8 @@ app.post('/api/pagamentos', async (req, res) => {
   const { codigo, indicado_nome, tipo } = req.body;
   try {
     await pool.query(
-      'INSERT INTO pagamentos (codigo, indicado_nome, tipo, status) VALUES (?, ?, ?, "pendente")',
-      [codigo, indicado_nome, tipo]
+      'INSERT INTO pagamentos (codigo, indicado_nome, tipo, status) VALUES (?, ?, ?, ?)',
+      [codigo, indicado_nome, tipo, 'pendente']
     );
     res.json({ message: 'Pagamento registrado como pendente' });
   } catch (err) {
