@@ -112,28 +112,34 @@
   </footer>
 
 <script>
-  function copiarPix() {
-    const chave = document.getElementById("pix").value;
-    navigator.clipboard.writeText(chave);
-  }
+function copiarPix() {
+  const chave = document.getElementById("pix").value;
+  navigator.clipboard.writeText(chave).then(() => {
+    alert("Chave Pix copiada!");
 
-  tsParticles.load("particles-js", {
-    fullScreen: { enable: false },
-    particles: {
-      number: { value: 60 },
-      color: { value: "#e09d00" },
-      shape: { type: "circle" },
-      opacity: { value: 0.3 },
-      size: { value: 4 },
-      move: {
-        enable: true,
-        speed: 1.5,
-        direction: "none",
-        outModes: { default: "bounce" }
-      }
-    },
-    background: { color: { value: "transparent" } }
+    // Recupera o código de indicação salvo em sessionStorage
+    const codigo = sessionStorage.getItem("codigoIndicacao");
+    if (codigo) {
+      // Envia para o backend registrar a indicação
+      fetch("/api/indicar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.error) {
+          console.error("Erro ao registrar indicação:", data.error);
+        } else {
+          console.log("Indicação registrada:", data);
+        }
+      })
+      .catch(err => console.error("Falha na conexão:", err));
+    } else {
+      console.warn("Nenhum código de indicação encontrado na sessão");
+    }
   });
+}
 
   // Cronômetro regressivo
   let tempoRestante = 6 * 60;
