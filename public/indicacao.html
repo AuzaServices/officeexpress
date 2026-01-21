@@ -38,41 +38,55 @@
 </div>
 
 <script>
-function gerarCodigo() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let codigo = "";
-  for (let i = 0; i < 8; i++) {
-    codigo += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return codigo;
-}
-
-function cadastrar() {
+async function cadastrar() {
   const nome = document.getElementById("nome").value;
   const senha = document.getElementById("senha").value;
   if (!nome || !senha) { alert("Preencha todos os campos!"); return; }
-  
-  const codigo = gerarCodigo();
-  const usuario = { nome, senha, codigo, indicacoes: 0 };
-  localStorage.setItem(nome, JSON.stringify(usuario));
-  alert("Cadastro realizado com sucesso!");
-  mostrarLogin();
+
+  try {
+    const resp = await fetch("/api/cadastro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, senha })
+    });
+    const data = await resp.json();
+
+    if (resp.ok) {
+      alert("Cadastro realizado com sucesso!");
+      mostrarLogin();
+    } else {
+      alert("Erro no cadastro: " + data.error);
+    }
+  } catch (err) {
+    alert("Falha na conexão com o servidor");
+  }
+}
+
+async function logar() {
+  const nome = document.getElementById("loginNome").value;
+  const senha = document.getElementById("loginSenha").value;
+
+  try {
+    const resp = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, senha })
+    });
+    const data = await resp.json();
+
+    if (resp.ok) {
+      mostrarPainel(data);
+    } else {
+      alert("Erro no login: " + data.error);
+    }
+  } catch (err) {
+    alert("Falha na conexão com o servidor");
+  }
 }
 
 function mostrarLogin() {
   document.getElementById("cadastro").style.display = "none";
   document.getElementById("login").style.display = "block";
-}
-
-function logar() {
-  const nome = document.getElementById("loginNome").value;
-  const senha = document.getElementById("loginSenha").value;
-  const dados = localStorage.getItem(nome);
-  if (!dados) { alert("Usuário não encontrado!"); return; }
-  const usuario = JSON.parse(dados);
-  if (usuario.senha !== senha) { alert("Senha incorreta!"); return; }
-  
-  mostrarPainel(usuario);
 }
 
 function mostrarPainel(usuario) {
