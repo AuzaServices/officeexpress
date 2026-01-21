@@ -620,7 +620,19 @@ app.post('/api/cadastro', async (req, res) => {
   }
 
   try {
-    // Gera código único de indicação
+    // 1. Verifica se já existe usuário com esse nome
+    const [rows] = await pool.query('SELECT id FROM usuarios WHERE nome = ?', [nome]);
+    if (rows.length > 0) {
+      return res.status(400).json({ error: 'Nome já cadastrado, escolha outro' });
+    }
+
+    // 2. Valida força da senha
+    const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+    if (!senhaForte.test(senha)) {
+      return res.status(400).json({ error: 'Senha fraca. Use ao menos 8 caracteres, incluindo maiúsculas, minúsculas, números e símbolos.' });
+    }
+
+    // 3. Gera código único de indicação
     const codigo = Math.random().toString(36).substring(2, 10);
     const hash = await bcrypt.hash(senha, 10);
 
@@ -680,7 +692,6 @@ app.post('/api/indicar', async (req, res) => {
     res.status(500).json({ error: 'Erro ao registrar indicação' });
   }
 });
-
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
