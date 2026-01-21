@@ -251,16 +251,19 @@ function carregarPDFs() {
 }
 
     // Atualiza a cada 2 segundos
-    setInterval(() => {
-      carregarPDFs();
-      carregarLogs();
-      carregarRelatorios();
-    }, 2000);
+// Atualiza a cada 2 segundos
+setInterval(() => {
+  carregarPDFs();
+  carregarLogs();
+  carregarRelatorios();
+  carregarIndicacoes(); // <--- adicionar aqui
+}, 2000);
 
-    // Carrega imediatamente ao abrir
-    carregarPDFs();
-    carregarLogs();
-    carregarRelatorios();
+// Carrega imediatamente ao abrir
+carregarPDFs();
+carregarLogs();
+carregarRelatorios();
+carregarIndicacoes(); // <--- adicionar aqui
 
 function carregarIndicacoes() {
   fetch('/api/pagamentos')
