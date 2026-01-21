@@ -768,6 +768,8 @@ app.post('/api/indicacoes', async (req, res) => {
 
 app.post('/api/pagamentos', async (req, res) => {
   const { codigo, indicado_nome, tipo } = req.body;
+  console.log('Dados recebidos:', req.body);
+
   try {
     await pool.query(
       'INSERT INTO pagamentos (codigo, indicado_nome, tipo, status) VALUES (?, ?, ?, ?)',
@@ -775,8 +777,8 @@ app.post('/api/pagamentos', async (req, res) => {
     );
     res.json({ message: 'Pagamento registrado como pendente' });
   } catch (err) {
-    console.error('Erro ao registrar pagamento:', err.message);
-    res.status(500).json({ error: 'Erro ao registrar pagamento' });
+    console.error('Erro ao registrar pagamento:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
