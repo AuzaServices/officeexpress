@@ -276,13 +276,7 @@ if (Array.isArray(dados.empresa)) {
 
 const codigo = sessionStorage.getItem("codigoIndicacao");
 if (codigo) {
-  console.log("Código recuperado:", codigo);
-  // Se quiser mostrar na tela:
-  const div = document.createElement("div");
-  div.style.marginTop = "20px";
-  div.style.fontWeight = "bold";
-  div.innerText = "Código de indicação: " + codigo;
-  document.body.appendChild(div);
+  sessionStorage.setItem("codigoIndicacao", codigo);
 }
 
 </script>

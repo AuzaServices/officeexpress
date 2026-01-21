@@ -692,6 +692,21 @@ app.post('/api/indicar', async (req, res) => {
     res.status(500).json({ error: 'Erro ao registrar indicação' });
   }
 });
+
+app.get('/api/painel/:nome', async (req, res) => {
+  const { nome } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT nome, codigo, indicacoes FROM usuarios WHERE nome = ?', [nome]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Erro ao carregar painel:', err.message);
+    res.status(500).json({ error: 'Erro ao carregar painel' });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
