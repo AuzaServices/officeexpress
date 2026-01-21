@@ -714,6 +714,58 @@ app.get('/api/painel/codigo/:codigo', async (req, res) => {
   res.json(rows[0]);
 });
 
+// Confirmar pagamento
+app.post('/api/pdfs/:id/pago', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Busca o registro do PDF
+    const [rows] = await pool.query('SELECT * FROM pdfs WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Registro não encontrado' });
+
+    const registro = rows[0];
+
+    // Atualiza status de pago
+    await pool.query('UPDATE pdfs SET pago = 1 WHERE id = ?', [id]);
+
+    // Se veio com código de indicação, incrementa
+    if (registro.codigo_indicador) {
+      await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [registro.codigo_indicador]);
+    }
+
+    res.json({ message: 'Pagamento confirmado e indicação registrada' });
+  } catch (err) {
+    console.error('Erro ao confirmar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao confirmar pagamento' });
+  }
+});
+
+app.post('/api/indicacoes', async (req, res) => {
+  const { codigo, indicado_nome, tipo } = req.body;
+
+  try {
+    // Descobre o usuário dono do código
+    const [rows] = await pool.query('SELECT id, nome FROM usuarios WHERE codigo = ?', [codigo]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Código inválido' });
+
+    const usuario = rows[0];
+
+    // Registra a indicação
+    await pool.query(
+      'INSERT INTO indicacoes (usuario_id, indicado_nome, codigo, tipo) VALUES (?, ?, ?, ?)',
+      [usuario.id, indicado_nome, codigo, tipo]
+    );
+
+    // Atualiza contador no usuário
+    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE id = ?', [usuario.id]);
+
+    res.json({ message: 'Indicação registrada com sucesso' });
+  } catch (err) {
+    console.error('Erro ao registrar indicação:', err.message);
+    res.status(500).json({ error: 'Erro ao registrar indicação' });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////

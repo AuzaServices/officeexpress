@@ -85,6 +85,23 @@
     </div>
   </div>
 
+  <h1 class="mt-5">Indicações</h1>
+<div class="table-responsive">
+  <table class="table table-bordered table-hover align-middle" id="tabela-indicacoes">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Indicador</th>
+        <th>Indicado</th>
+        <th>Código</th>
+        <th>Tipo</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
   <script>
     function apagarRegistro(id, tipo) {
       if (!confirm("Tem certeza que deseja apagar este registro?")) return;
@@ -243,6 +260,30 @@ function carregarPDFs() {
     carregarPDFs();
     carregarLogs();
     carregarRelatorios();
+
+function carregarIndicacoes() {
+  fetch('/api/indicacoes')
+    .then(res => res.json())
+    .then(data => {
+      const tabela = document.querySelector('#tabela-indicacoes tbody');
+      tabela.innerHTML = '';
+
+      data.forEach(ind => {
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+          <td>${ind.id}</td>
+          <td>${ind.indicador_nome}</td>
+          <td>${ind.indicado_nome}</td>
+          <td>${ind.codigo}</td>
+          <td>${ind.tipo}</td>
+          <td>${new Date(ind.created_at).toLocaleString('pt-BR')}</td>
+        `;
+        tabela.appendChild(linha);
+      });
+    })
+    .catch(err => console.error('Erro ao carregar indicações:', err));
+}
+
   </script>
 </body>
 </html>
