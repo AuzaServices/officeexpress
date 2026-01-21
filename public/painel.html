@@ -281,7 +281,11 @@ function carregarIndicacoes() {
           <td>${p.codigo}</td>
           <td>${p.tipo}</td>
           <td>${new Date(p.created_at).toLocaleString('pt-BR')}</td>
-          <td>${p.status}</td>
+          <td>
+            ${p.status === 'pendente' 
+              ? `<button onclick="confirmarPago(${p.id}, '${p.codigo}')" class="btn btn-success btn-sm">Pago</button>` 
+              : '<span class="badge bg-success">Pago</span>'}
+          </td>
         `;
         tabela.appendChild(linha);
       });
@@ -321,8 +325,9 @@ function confirmarPago(id, codigo) {
     .then(res => res.json())
     .then(data => {
       alert("Pagamento confirmado!");
-      carregarPagamentos();
-    });
+      carregarIndicacoes(); // atualiza a tabela de indicações
+    })
+    .catch(err => console.error("Erro ao confirmar pagamento:", err));
 }
 
   </script>
