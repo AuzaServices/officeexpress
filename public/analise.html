@@ -332,10 +332,13 @@ function curvaProgresso(t) {
   }, 600);
 }
 
-// Exemplo: depois que o usuário digita o nome em um input
-const nomeCompleto = document.getElementById("nome").value;
-const primeiroNome = nomeCompleto.split(" ")[0]; // pega só o primeiro nome
-sessionStorage.setItem("primeiroNome", primeiroNome);
+function salvarNome() {
+  const nomeCompleto = document.getElementById("nome").value.trim();
+  const primeiroNome = nomeCompleto.split(" ")[0]; // pega só o primeiro nome
+  sessionStorage.setItem("primeiroNome", primeiroNome);
+  alert("Nome salvo: " + primeiroNome);
+}
+
 
   </script>
 </body>
