@@ -28,6 +28,7 @@
   <input type="text" id="loginNome" placeholder="Seu nome">
   <input type="password" id="loginSenha" placeholder="Senha">
   <button onclick="logar()">Entrar</button>
+  <p>Ainda não tem cadastro? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
 </div>
 
 <div class="card" id="painel" style="display:none;">
@@ -75,9 +76,9 @@ async function logar() {
       body: JSON.stringify({ nome, senha })
     });
     const data = await resp.json();
+    console.log("Resposta do login:", data); // debug
 
     if (resp.ok) {
-      // guarda sessão até fechar navegador
       sessionStorage.setItem("usuario", JSON.stringify(data));
       mostrarPainel(data);
     } else {
@@ -94,21 +95,32 @@ function mostrarLogin() {
   document.getElementById("painel").style.display = "none";
 }
 
+function mostrarCadastro() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("painel").style.display = "none";
+  document.getElementById("cadastro").style.display = "block";
+}
+
 function mostrarPainel(usuario) {
   document.getElementById("login").style.display = "none";
   document.getElementById("cadastro").style.display = "none";
   document.getElementById("painel").style.display = "block";
 
   document.getElementById("bemvindo").innerText = "Bem-vindo, " + usuario.nome;
-  const link = `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`;
+  const link = usuario.codigo 
+    ? `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`
+    : "Código não disponível";
   document.getElementById("link").innerText = "Seu link de indicação: " + link;
-  document.getElementById("indicacoes").innerText = "Indicações concluídas: " + usuario.indicacoes;
+  document.getElementById("indicacoes").innerText = "Indicações concluídas: " + (usuario.indicacoes || 0);
 }
 
 function copiarLink() {
   const link = document.getElementById("link").innerText.replace("Seu link de indicação: ", "");
+  console.log("Copiando:", link); // debug
   navigator.clipboard.writeText(link).then(() => {
     alert("Link copiado para a área de transferência!");
+  }).catch(err => {
+    alert("Erro ao copiar: " + err);
   });
 }
 
@@ -117,7 +129,6 @@ function logout() {
   mostrarLogin();
 }
 
-// Verifica se já existe sessão ao carregar
 window.onload = () => {
   const usuario = sessionStorage.getItem("usuario");
   if (usuario) {
