@@ -812,6 +812,19 @@ app.get('/api/indicacoes', async (req, res) => {
   }
 });
 
+// Listar todos os pagamentos (para o painel)
+app.get('/api/pagamentos', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, codigo, indicado_nome, tipo, status, created_at FROM pagamentos ORDER BY created_at DESC'
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro ao carregar pagamentos:', err.message);
+    res.status(500).json({ error: 'Erro ao carregar pagamentos' });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
