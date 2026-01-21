@@ -817,10 +817,14 @@ app.get('/api/indicacoes', async (req, res) => {
 });
 
 // Listar todos os pagamentos (para o painel)
+// Listar todos os pagamentos/indicações para o painel
 app.get('/api/pagamentos', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT id, codigo, indicado_nome, tipo, status, created_at FROM pagamentos ORDER BY created_at DESC'
+      'SELECT p.id, u.nome AS indicador_nome, p.indicado_nome, p.codigo, p.tipo, p.status, p.created_at ' +
+      'FROM pagamentos p ' +
+      'LEFT JOIN usuarios u ON p.codigo = u.codigo ' +
+      'ORDER BY p.created_at DESC'
     );
     res.json(rows);
   } catch (err) {
