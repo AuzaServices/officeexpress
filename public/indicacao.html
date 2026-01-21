@@ -7,6 +7,7 @@
   <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
 
   <style>
     :root {
@@ -637,6 +638,106 @@ main a:hover {
   word-break: break-all;
 }
 
+/* Painel do usuário */
+#painel {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  text-align: center;
+  position: relative;
+}
+
+/* Cabeçalho do painel */
+#painel h1 {
+  font-size: 26px;
+  color: #333;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Botão de sair como ícone */
+#painel .logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #d9534f;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.3s;
+}
+
+#painel .logout-btn:hover {
+  color: #b52b27;
+  transform: scale(1.1);
+}
+
+/* Caixa do link */
+#painel .link {
+  background: #f4f7fa;
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 20px 0;
+  font-weight: bold;
+  color: #0078d7;
+  word-break: break-all;
+}
+
+/* Botões principais */
+#painel button {
+  padding: 12px 20px;
+  margin: 10px 0;
+  background: linear-gradient(135deg, #0078d7, #005a9e);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+#painel button:hover {
+  background: linear-gradient(135deg, #005a9e, #004080);
+  transform: scale(1.05);
+}
+
+/* Indicações concluídas */
+#indicacoes {
+  font-size: 16px;
+  margin-top: 15px;
+  color: #555;
+}
+
+#indicacoes span {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff8800; /* número laranja bonito */
+}
+
+#painel .logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #d9534f; /* vermelho elegante */
+  cursor: pointer;
+  transition: transform 0.2s, color 0.3s;
+}
+
+#painel .logout-btn:hover {
+  color: #b52b27;
+  transform: scale(1.1);
+}
+
   </style>
 </head>
 <body>
@@ -682,14 +783,18 @@ main a:hover {
     <p>Ainda não tem cadastro? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
   </div>
 
-  <div class="card" id="painel" style="display:none;">
-    <h1>Painel do Usuário</h1>
-    <div id="bemvindo"></div>
-    <div class="link" id="link"></div>
-    <button onclick="copiarLink()">Copiar Link</button>
-    <p id="indicacoes"></p>
-    <button onclick="logout()">Sair</button>
-  </div>
+<div class="card" id="painel" style="display:none;">
+  <h1>
+    Painel do Usuário
+    <button class="logout-btn" onclick="logout()" title="Sair">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
+  </h1>
+  <div id="bemvindo"></div>
+  <div class="link" id="link"></div>
+  <button onclick="copiarLink()">Copiar Link</button>
+  <p id="indicacoes">Indicações concluídas: <span>0</span></p>
+</div>
 </section>
 
   <!-- Section institucional -->
