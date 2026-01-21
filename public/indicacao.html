@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Indicação</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f9f9f9; text-align: center; padding: 40px; }
+  .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); max-width: 500px; margin: auto; }
+  h1 { color: #333; }
+  .link { margin-top: 20px; font-weight: bold; color: #0078d7; word-break: break-all; }
+  .msg { margin-top: 15px; font-size: 18px; color: #444; }
+  button { margin-top: 20px; padding: 10px 20px; background: #0078d7; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #005a9e; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Programa de Indicação</h1>
+  <div class="link" id="link"></div>
+  <div class="msg">Seu código de indicação foi gerado. Copie e divulgue!</div>
+  <button onclick="copiarLink()">Copiar Link</button>
+</div>
+
+<script>
+function gerarCodigo() {
+  // Gera um código randômico simples (8 caracteres)
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let codigo = "";
+  for (let i = 0; i < 8; i++) {
+    codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return codigo;
+}
+
+// Gera o código ao carregar a página
+const codigo = gerarCodigo();
+const link = `https://officeexpress.onrender.com/splash.html/${codigo}`;
+document.getElementById("link").innerText = link;
+
+function copiarLink() {
+  navigator.clipboard.writeText(link).then(() => {
+    alert("Link copiado para a área de transferência!");
+  });
+}
+</script>
+</body>
+</html>

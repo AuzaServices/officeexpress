@@ -1601,5 +1601,24 @@ function typeWriter() {
 typeWriter();
 
 </script>
+
+<script>
+// Captura o parâmetro "codigo" da URL
+const params = new URLSearchParams(window.location.search);
+const codigo = params.get("codigo");
+
+// Exibe no console ou usa como quiser
+if (codigo) {
+  console.log("Código de indicação:", codigo);
+  // Exemplo: mostrar na página
+  const div = document.createElement("div");
+  div.style.marginTop = "20px";
+  div.style.fontWeight = "bold";
+  div.innerText = "Código de indicação: " + codigo;
+  document.body.appendChild(div);
+}
+</script>
+
+
 </body>
 </html>
