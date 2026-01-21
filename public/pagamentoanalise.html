@@ -137,6 +137,57 @@ async function copiarPix() {
     const data = await resp.json();
     console.log("Pagamento registrado:", data);
 
+async function copiarPix() {
+  const chave = document.getElementById("pix").value;
+
+  try {
+    // Copia a chave Pix para a área de transferência
+    await navigator.clipboard.writeText(chave);
+    mostrarToast("Chave Pix copiada!");
+
+    // 🔎 Captura o nome digitado pelo cliente
+    const nomeCompleto = document.getElementById("nome")?.value || "Cliente";
+    const primeiroNome = nomeCompleto.trim().split(" ")[0]; // pega só o primeiro nome
+
+    // Salva no sessionStorage para usar depois
+    sessionStorage.setItem("primeiroNome", primeiroNome);
+
+    // Captura o código do indicador (já salvo em sessionStorage em outra etapa do fluxo)
+    const codigo = sessionStorage.getItem("codigoIndicacao");
+
+    // Registra o pagamento como pendente no backend
+    const resp = await fetch("/api/pagamentos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        codigo,
+        indicado_nome: primeiroNome,
+        tipo: "analise"   // diferencia currículo de análise
+      })
+    });
+
+    const data = await resp.json();
+    console.log("Pagamento registrado:", data);
+
+  } catch (err) {
+    console.error("Erro ao copiar Pix ou registrar pagamento:", err);
+    mostrarToast("Erro ao copiar ou registrar pagamento!");
+  }
+}
+
+// Função auxiliar para mostrar toast
+function mostrarToast(mensagem) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerText = mensagem;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = 1; }, 100);
+  setTimeout(() => {
+    toast.style.opacity = 0;
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
+}
+
   } catch (err) {
     console.error("Erro ao copiar Pix ou registrar pagamento:", err);
     mostrarToast("Erro ao copiar ou registrar pagamento!");
