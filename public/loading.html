@@ -116,51 +116,58 @@ p, li {
   localStorage.removeItem("navegandoInternamente");
 
   async function enviarCurriculo() {
-    const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
-    if (!precisaEnviar) return;
+  const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
+  if (!precisaEnviar) return;
 
-    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-    const container = document.getElementById("curriculo");
+  const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+  const container = document.getElementById("curriculo");
 
-    let enderecoCompleto = "";
-    if (dados.endereco) enderecoCompleto += dados.endereco;
-    if (dados.numero) enderecoCompleto += ", " + dados.numero;
-    if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
-    if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-    if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
-    if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
+  let enderecoCompleto = "";
+  if (dados.endereco) enderecoCompleto += dados.endereco;
+  if (dados.numero) enderecoCompleto += ", " + dados.numero;
+  if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
+  if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
+  if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
+  if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
 
-    container.innerHTML = `
-      <div class="info-topo">
-        <div>
-          <h1><strong>${dados.nome || ""}</strong></h1>
-          <p><strong>Email:</strong> ${dados.email || ""}</p>
-          <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
-          ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
-<p><strong>Endereço:</strong> ${enderecoCompleto}</p>
-${dados.infoAdicional ? `<p style="margin-top:6px;">${dados.infoAdicional}</p>` : ""}
-        </div>
-        ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
+  container.innerHTML = `
+    <div class="info-topo">
+      <div>
+        <h1><strong>${dados.nome || ""}</strong></h1>
+        <p><strong>Email:</strong> ${dados.email || ""}</p>
+        <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
+        ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
+        <p><strong>Endereço:</strong> ${enderecoCompleto}</p>
+        ${dados.infoAdicional ? `<p style="margin-top:6px;">${dados.infoAdicional}</p>` : ""}
       </div>
-      ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
-      ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p>${dados.formacao}</p>` : ""}
-    `;
+      ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
+    </div>
+    ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
+    ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p>${dados.formacao}</p>` : ""}
+  `;
 
-    if (Array.isArray(dados.curso)) {
-      let cursos = "";
-      for (let i = 0; i < dados.curso.length; i++) {
-        const nome = dados.curso[i]?.trim();
-        const inst = dados.instituicao[i]?.trim();
-        let carga = dados.carga[i]?.trim();
-        if (carga && /^\d+$/.test(carga)) {
-          carga = `${carga}hs`;
-        }
-        if (nome || inst || carga) {
-          cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
-        }
+  // 🔎 Ajuste: salvar o primeiro nome no sessionStorage
+  if (dados.nome) {
+    const primeiroNome = dados.nome.trim().split(" ")[0];
+    sessionStorage.setItem("primeiroNome", primeiroNome);
+    console.log("Primeiro nome salvo:", primeiroNome);
+  }
+
+  if (Array.isArray(dados.curso)) {
+    let cursos = "";
+    for (let i = 0; i < dados.curso.length; i++) {
+      const nome = dados.curso[i]?.trim();
+      const inst = dados.instituicao[i]?.trim();
+      let carga = dados.carga[i]?.trim();
+      if (carga && /^\d+$/.test(carga)) {
+        carga = `${carga}hs`;
       }
-      if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
+      if (nome || inst || carga) {
+        cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
+      }
     }
+    if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
+  }
 
     // Experiência Profissional (inclui Primeiro Emprego)
     let exp = "";
