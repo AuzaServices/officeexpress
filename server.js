@@ -800,11 +800,15 @@ app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
 });
 
 // Listar todas as indicações/pagamentos
+// Listar indicações com nome do indicador
 app.get('/api/indicacoes', async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT id, codigo, indicado_nome, tipo, status, created_at FROM pagamentos ORDER BY created_at DESC'
-    );
+    const [rows] = await pool.query(`
+      SELECT p.id, u.nome AS indicador_nome, p.indicado_nome, p.codigo, p.tipo, p.status, p.created_at
+      FROM pagamentos p
+      LEFT JOIN usuarios u ON p.codigo = u.codigo
+      ORDER BY p.created_at DESC
+    `);
     res.json(rows);
   } catch (err) {
     console.error('Erro ao carregar indicações:', err.message);
@@ -822,6 +826,29 @@ app.get('/api/pagamentos', async (req, res) => {
   } catch (err) {
     console.error('Erro ao carregar pagamentos:', err.message);
     res.status(500).json({ error: 'Erro ao carregar pagamentos' });
+  }
+});
+
+// Apagar indicação/pagamento
+app.delete('/api/indicacoes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Busca o registro
+    const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Registro não encontrado' });
+
+    const codigo = rows[0].codigo;
+
+    // Apaga da tabela pagamentos
+    await pool.query('DELETE FROM pagamentos WHERE id = ?', [id]);
+
+    // Decrementa contador no usuário indicador
+    await pool.query('UPDATE usuarios SET indicacoes = indicacoes - 1 WHERE codigo = ?', [codigo]);
+
+    res.json({ message: 'Indicação apagada com sucesso' });
+  } catch (err) {
+    console.error('Erro ao apagar indicação:', err.message);
+    res.status(500).json({ error: 'Erro ao apagar indicação' });
   }
 });
 

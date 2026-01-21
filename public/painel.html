@@ -266,25 +266,26 @@ carregarRelatorios();
 carregarIndicacoes(); // <--- adicionar aqui
 
 function carregarIndicacoes() {
-  fetch('/api/pagamentos')
+  fetch('/api/indicacoes')
     .then(res => res.json())
     .then(data => {
       const tabela = document.querySelector('#tabela-indicacoes tbody');
       tabela.innerHTML = '';
 
-      data.forEach(p => {
+      data.forEach(ind => {
         const linha = document.createElement('tr');
         linha.innerHTML = `
-          <td>${p.id}</td>
-          <td>${p.codigo}</td>
-          <td>${p.indicado_nome}</td>
-          <td>${p.codigo}</td>
-          <td>${p.tipo}</td>
-          <td>${new Date(p.created_at).toLocaleString('pt-BR')}</td>
+          <td>${ind.id}</td>
+          <td>${ind.indicador_nome || '—'}</td>
+          <td>${ind.indicado_nome}</td>
+          <td>${ind.codigo}</td>
+          <td>${ind.tipo}</td>
+          <td>${new Date(ind.created_at).toLocaleString('pt-BR')}</td>
           <td>
-            ${p.status === 'pendente' 
-              ? `<button onclick="confirmarPago(${p.id}, '${p.codigo}')" class="btn btn-success btn-sm">Pago</button>` 
+            ${ind.status === 'pendente'
+              ? `<button onclick="confirmarPago(${ind.id}, '${ind.codigo}')" class="btn btn-success btn-sm">Pago</button>`
               : '<span class="badge bg-success">Pago</span>'}
+            <button onclick="apagarIndicacao(${ind.id})" class="btn btn-danger btn-sm ms-2">Apagar</button>
           </td>
         `;
         tabela.appendChild(linha);
@@ -328,6 +329,21 @@ function confirmarPago(id, codigo) {
       carregarIndicacoes(); // atualiza a tabela de indicações
     })
     .catch(err => console.error("Erro ao confirmar pagamento:", err));
+}
+
+function apagarIndicacao(id) {
+  if (!confirm("Tem certeza que deseja apagar esta indicação?")) return;
+
+  fetch(`/api/indicacoes/${id}`, { method: "DELETE" })
+    .then(res => res.json())
+    .then(data => {
+      alert("Indicação apagada!");
+      carregarIndicacoes(); // atualiza a tabela
+    })
+    .catch(err => {
+      console.error("Erro ao apagar indicação:", err);
+      alert("Erro ao apagar indicação.");
+    });
 }
 
   </script>
