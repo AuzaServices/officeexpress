@@ -34,7 +34,8 @@ function gerarCodigo() {
 
 // Gera o código ao carregar a página
 const codigo = gerarCodigo();
-const link = `https://officeexpress.onrender.com/splash.html/${codigo}`;
+// Agora usamos query string (?codigo=...)
+const link = `https://officeexpress.onrender.com/splash.html?codigo=${codigo}`;
 document.getElementById("link").innerText = link;
 
 function copiarLink() {
