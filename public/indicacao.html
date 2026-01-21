@@ -721,21 +721,77 @@ main a:hover {
   color: #ff8800; /* número laranja bonito */
 }
 
-#painel .logout-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: none;
-  border: none;
-  font-size: 22px;
-  color: #d9534f; /* vermelho elegante */
-  cursor: pointer;
-  transition: transform 0.2s, color 0.3s;
+#painel {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  position: relative;
 }
 
-#painel .logout-btn:hover {
-  color: #b52b27;
-  transform: scale(1.1);
+/* Título */
+#painel h1 {
+  font-size: 26px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Texto acima do link */
+#painel .titulo-link {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+/* Caixa do link */
+#painel .link {
+  background: #f4f7fa;
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #0078d7;
+  word-break: break-all;
+}
+
+/* Botão copiar */
+#painel button {
+  padding: 12px 20px;
+  margin: 10px 0;
+  background: linear-gradient(135deg, #0078d7, #005a9e);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#painel button:hover {
+  background: linear-gradient(135deg, #005a9e, #004080);
+}
+
+/* Indicações concluídas */
+#indicacoes {
+  font-size: 16px;
+  margin-top: 15px;
+  color: #555;
+}
+
+#indicacoes span {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff8800; /* número laranja bonito */
+}
+
+/* Ícone de saída abaixo das indicações */
+.logout-icon {
+  margin-top: 20px;
+  font-size: 28px;
+  color: #d9534f; /* vermelho elegante */
+  cursor: pointer;
 }
 
   </style>
@@ -784,16 +840,21 @@ main a:hover {
   </div>
 
 <div class="card" id="painel" style="display:none;">
-  <h1>
-    Painel do Usuário
-    <button class="logout-btn" onclick="logout()" title="Sair">
-      <i class="fas fa-sign-out-alt"></i>
-    </button>
-  </h1>
+  <h1>Painel do Usuário</h1>
+  
   <div id="bemvindo"></div>
+  
+  <p class="titulo-link">Seu link de indicação:</p>
   <div class="link" id="link"></div>
+  
   <button onclick="copiarLink()">Copiar Link</button>
+  
   <p id="indicacoes">Indicações concluídas: <span>0</span></p>
+  
+  <!-- Ícone de saída abaixo das indicações -->
+  <div class="logout-icon" onclick="logout()" title="Sair">
+    <i class="fas fa-sign-out-alt"></i>
+  </div>
 </div>
 </section>
 
