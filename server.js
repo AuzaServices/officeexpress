@@ -852,6 +852,39 @@ app.delete('/api/indicacoes/:id', async (req, res) => {
   }
 });
 
+// Registrar pagamento da análise
+app.post('/api/pagamentos-analise', async (req, res) => {
+  const { codigo, indicado_nome } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO pagamentos (codigo, indicado_nome, tipo, status) VALUES (?, ?, ?, ?)',
+      [codigo, indicado_nome, 'analise', 'pendente']
+    );
+    res.json({ message: 'Pagamento da análise registrado como pendente' });
+  } catch (err) {
+    console.error('Erro ao registrar pagamento da análise:', err.message);
+    res.status(500).json({ error: 'Erro ao registrar pagamento da análise' });
+  }
+});
+
+// Confirmar pagamento da análise
+app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
+
+    const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
+    const codigo = rows[0].codigo;
+
+    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [codigo]);
+
+    res.json({ message: 'Pagamento da análise confirmado e indicação registrada' });
+  } catch (err) {
+    console.error('Erro ao confirmar pagamento da análise:', err.message);
+    res.status(500).json({ error: 'Erro ao confirmar pagamento da análise' });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////

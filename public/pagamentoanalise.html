@@ -109,11 +109,37 @@
   </footer>
 
   <script>
-    function copiarPix() {
-      const chave = document.getElementById("pix").value;
-      navigator.clipboard.writeText(chave).then(() => {
+function copiarPix() {
+    const chave = document.getElementById("pix").value;
+    navigator.clipboard.writeText(chave).then(() => {
+      mostrarToast("Chave Pix copiada!");
+    });
+  }
+
+  async function liberarPDF() {
+    const btn = event.target;
+    btn.innerText = "✅ Pagamento confirmado!";
+    btn.disabled = true;
+    btn.style.backgroundColor = "#28a745";
+    document.getElementById("pdf").style.display = "block";
+
+    // 🔎 Registrar pagamento da análise no backend
+    const codigo = sessionStorage.getItem("codigoIndicacao");
+    const indicadoNome = sessionStorage.getItem("primeiroNome");
+
+    try {
+      const resp = await fetch("/api/pagamentos-analise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo, indicado_nome: indicadoNome })
       });
+      const data = await resp.json();
+      console.log("Pagamento da análise registrado:", data);
+    } catch (err) {
+      console.error("Erro ao registrar pagamento da análise:", err);
     }
+  }
+
 
     function liberarPDF() {
       const btn = event.target;
