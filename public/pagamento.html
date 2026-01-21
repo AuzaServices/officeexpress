@@ -78,11 +78,10 @@
       Copiar chave Pix
     </button>
 
-    <a href="https://wa.me/5585991340658?text=Olá,%20acabei%20de%20realizar%20o%20pagamento%20de%20R$5,99%20e%20quero%20receber%20meu%20currículo%20em%20PDF."
-       target="_blank"
-       class="btn-brilhante block w-full bg-green-500 text-white font-bold py-4 rounded-lg hover:bg-green-600 transition text-xl">
-      ✅ Já paguei — Enviar comprovante pelo WhatsApp
-    </a>
+<a id="whatsappLink" target="_blank"
+   class="btn-brilhante block w-full bg-green-500 text-white font-bold py-4 rounded-lg hover:bg-green-600 transition text-xl">
+  ✅ Já paguei — Enviar comprovante pelo WhatsApp
+</a>
     <p class="text-xs text-white/60 mt-2 text-center italic">O currículo só será entregue após confirmação do pagamento</p>
 
     <div class="mt-6 text-sm text-white/60 space-y-2">
@@ -155,6 +154,27 @@ function copiarPix() {
     }
   }
   atualizarCronometro();
+
+function atualizarLinkWhatsApp() {
+  const codigo = sessionStorage.getItem("codigoIndicacao");
+  const nomeIndicador = sessionStorage.getItem("nomeIndicador"); 
+  // você pode salvar esse nome no sessionStorage lá no splash ou login
+
+  let mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
+
+  if (codigo && nomeIndicador) {
+    mensagem += `\n\nIndicação: ${nomeIndicador} (código: ${codigo})`;
+  }
+
+  const url = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
+  document.getElementById("whatsappLink").href = url;
+}
+
+// Chama ao carregar a página
+window.onload = () => {
+  atualizarLinkWhatsApp();
+};
+
 </script>
 </body>
 </html>
