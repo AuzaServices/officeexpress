@@ -116,21 +116,44 @@ function copiarPix() {
   navigator.clipboard.writeText(chave).then(() => {
     alert("Chave Pix copiada!");
 
+    // Recupera dados da sessão
     const codigo = sessionStorage.getItem("codigoIndicacao");
     const nomeIndicador = sessionStorage.getItem("nomeIndicador");
-    const indicadoNome = sessionStorage.getItem("primeiroNome"); // você salva isso quando gera o PDF
+    const indicadoNome = sessionStorage.getItem("primeiroNome"); // precisa ter sido salvo antes
     const tipo = "Currículo"; // ou "Análise"
 
-    if (codigo) {
-      fetch("/api/pagamentos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codigo, indicado_nome: indicadoNome, tipo })
-      })
-      .then(resp => resp.json())
-      .then(data => console.log("Pagamento pendente registrado:", data))
-      .catch(err => console.error("Erro ao registrar pendente:", err));
+    // Log para debug
+    console.log("Dados para registrar pagamento:", {
+      codigo,
+      nomeIndicador,
+      indicado_nome: indicadoNome,
+      tipo
+    });
+
+    // Validação antes de enviar
+    if (!codigo || !indicadoNome || !tipo) {
+      console.error("Dados incompletos para registrar pagamento");
+      return;
     }
+
+    // Faz o POST para o backend
+    fetch("/api/pagamentos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codigo, indicado_nome: indicadoNome, tipo })
+    })
+    .then(resp => {
+      if (!resp.ok) {
+        throw new Error("Erro HTTP " + resp.status);
+      }
+      return resp.json();
+    })
+    .then(data => {
+      console.log("Pagamento pendente registrado:", data);
+    })
+    .catch(err => {
+      console.error("Erro ao registrar pendente:", err);
+    });
   });
 }
 
