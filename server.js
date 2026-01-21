@@ -799,6 +799,19 @@ app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
   }
 });
 
+// Listar todas as indicações/pagamentos
+app.get('/api/indicacoes', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, codigo, indicado_nome, tipo, status, created_at FROM pagamentos ORDER BY created_at DESC'
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro ao carregar indicações:', err.message);
+    res.status(500).json({ error: 'Erro ao carregar indicações' });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
