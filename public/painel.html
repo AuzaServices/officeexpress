@@ -89,14 +89,15 @@
 <div class="table-responsive">
   <table class="table table-bordered table-hover align-middle" id="tabela-indicacoes">
     <thead class="table-light">
-      <tr>
-        <th>ID</th>
-        <th>Indicador</th>
-        <th>Indicado</th>
-        <th>Código</th>
-        <th>Tipo</th>
-        <th>Data</th>
-      </tr>
+<tr>
+  <th>ID</th>
+  <th>Indicador</th>
+  <th>Indicado</th>
+  <th>Código</th>
+  <th>Tipo</th>
+  <th>Data</th>
+  <th>Status</th>
+</tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -282,6 +283,42 @@ function carregarIndicacoes() {
       });
     })
     .catch(err => console.error('Erro ao carregar indicações:', err));
+}
+
+function carregarPagamentos() {
+  fetch('/api/pagamentos')
+    .then(res => res.json())
+    .then(data => {
+      const tabela = document.querySelector('#tabela-pagamentos tbody');
+      tabela.innerHTML = '';
+
+      data.forEach(p => {
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+          <td>${p.id}</td>
+          <td>${p.codigo}</td>
+          <td>${p.indicado_nome}</td>
+          <td>${p.tipo}</td>
+          <td>${p.status}</td>
+          <td>${new Date(p.created_at).toLocaleString('pt-BR')}</td>
+          <td>
+            ${p.status === 'pendente' ? 
+              `<button onclick="confirmarPago(${p.id}, '${p.codigo}')" class="btn btn-success btn-sm">Pago</button>` 
+              : '—'}
+          </td>
+        `;
+        tabela.appendChild(linha);
+      });
+    });
+}
+
+function confirmarPago(id, codigo) {
+  fetch(`/api/pagamentos/${id}/confirmar`, { method: "POST" })
+    .then(res => res.json())
+    .then(data => {
+      alert("Pagamento confirmado!");
+      carregarPagamentos();
+    });
 }
 
   </script>

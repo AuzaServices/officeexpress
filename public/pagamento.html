@@ -116,26 +116,20 @@ function copiarPix() {
   navigator.clipboard.writeText(chave).then(() => {
     alert("Chave Pix copiada!");
 
-    // Recupera o código de indicação salvo em sessionStorage
     const codigo = sessionStorage.getItem("codigoIndicacao");
+    const nomeIndicador = sessionStorage.getItem("nomeIndicador");
+    const indicadoNome = sessionStorage.getItem("primeiroNome"); // você salva isso quando gera o PDF
+    const tipo = "Currículo"; // ou "Análise"
+
     if (codigo) {
-      // Envia para o backend registrar a indicação
-      fetch("/api/indicar", {
+      fetch("/api/pagamentos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codigo })
+        body: JSON.stringify({ codigo, indicado_nome: indicadoNome, tipo })
       })
       .then(resp => resp.json())
-      .then(data => {
-        if (data.error) {
-          console.error("Erro ao registrar indicação:", data.error);
-        } else {
-          console.log("Indicação registrada:", data);
-        }
-      })
-      .catch(err => console.error("Falha na conexão:", err));
-    } else {
-      console.warn("Nenhum código de indicação encontrado na sessão");
+      .then(data => console.log("Pagamento pendente registrado:", data))
+      .catch(err => console.error("Erro ao registrar pendente:", err));
     }
   });
 }

@@ -766,6 +766,40 @@ app.post('/api/indicacoes', async (req, res) => {
   }
 });
 
+app.post('/api/pagamentos', async (req, res) => {
+  const { codigo, indicado_nome, tipo } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO pagamentos (codigo, indicado_nome, tipo) VALUES (?, ?, ?)',
+      [codigo, indicado_nome, tipo]
+    );
+    res.json({ message: 'Pagamento registrado como pendente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao registrar pagamento' });
+  }
+});
+
+app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // marca como pago
+    await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
+
+    // pega o código
+    const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
+    const codigo = rows[0].codigo;
+
+    // incrementa no usuário
+    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [codigo]);
+
+    res.json({ message: 'Pagamento confirmado e indicação registrada' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao confirmar pagamento' });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
