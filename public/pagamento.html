@@ -162,7 +162,7 @@ function atualizarLinkWhatsApp() {
   let mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
 
   if (codigo && nomeIndicador) {
-    mensagem += `\n\nIndicação: ${nomeIndicador} (código: ${codigo})`;
+    mensagem += `\n\n*Indicação: ${nomeIndicador}*\n*Código: ${codigo}*`;
   }
 
   const url = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
