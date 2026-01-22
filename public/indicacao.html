@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Office Express | Sobre Nós</title>
+  <title>Office Express | Indicação</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -1012,28 +1012,26 @@ function mostrarCadastro() {
 }
 
 function mostrarPainel(usuario) {
-  // Esconde cadastro e login, mostra painel
+  console.log("Usuário recebido:", usuario); // debug
+
   document.getElementById("login").style.display = "none";
   document.getElementById("cadastro").style.display = "none";
   document.getElementById("painel").style.display = "block";
 
   // Bem-vindo com o nome do usuário
-  document.getElementById("bemvindo").innerText = "Bem-vindo, " + (usuario.nome || "Usuário");
+  document.getElementById("bemvindo").innerText = "Bem-vindo, " + (usuario?.nome || "Usuário");
 
-  // Link de indicação (apenas o link dentro da caixa)
-  const link = usuario.codigo 
+  const link = usuario?.codigo 
     ? `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`
     : "Código não disponível";
   document.getElementById("link").innerText = link;
 
-  // Indicações concluídas com contador estilo 5/10
-  const qtdIndicacoes = usuario.indicacoes || 0;
+  const qtdIndicacoes = usuario?.indicacoes || 0;
   document.getElementById("indicacoes").innerText = "Indicações concluídas:";
   document.getElementById("progresso").innerHTML = `<span class="contador">${qtdIndicacoes}/10</span>`;
 
-  // Botão de prêmio quando atingir 10 indicações
   const premioEl = document.getElementById("premio");
-  if (premioEl) premioEl.innerHTML = ""; // limpa antes
+  if (premioEl) premioEl.innerHTML = "";
 
   if (qtdIndicacoes >= 10) {
     const btn = document.createElement("button");
@@ -1043,7 +1041,7 @@ function mostrarPainel(usuario) {
       const url = `https://wa.me/5585991340658?text=${encodeURIComponent(mensagem)}`;
       window.open(url, "_blank");
     };
-    if (premioEl) premioEl.appendChild(btn);
+    premioEl.appendChild(btn);
   }
 }
 
