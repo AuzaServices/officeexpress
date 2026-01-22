@@ -964,11 +964,10 @@ async function cadastrar() {
     });
     const data = await resp.json();
 
-    if (resp.ok) {
-      alert("Cadastro realizado com sucesso!");
-      // 🔑 Salva o usuário com nome no sessionStorage
-      sessionStorage.setItem("usuario", JSON.stringify(data));
-      mostrarPainel(data);
+if (resp.ok) {
+  alert("Cadastro realizado com sucesso!");
+  mostrarLogin(); // volta pro login
+
     } else {
       alert("Erro no cadastro: " + data.error);
     }
@@ -990,9 +989,10 @@ async function logar() {
     const data = await resp.json();
     console.log("Resposta do login:", data); // debug
 
-    if (resp.ok) {
-      sessionStorage.setItem("usuario", JSON.stringify(data));
-      mostrarPainel(data);
+if (resp.ok) {
+  sessionStorage.setItem("usuario", JSON.stringify(data));
+  mostrarPainel(data); // aqui o nome precisa aparecer
+
     } else {
       alert("Erro no login: " + data.error);
     }
@@ -1014,7 +1014,8 @@ function mostrarCadastro() {
 }
 
 function mostrarPainel(usuario) {
-  console.log("Usuário recebido:", usuario); // debug
+console.log("Usuário recebido:", usuario);
+alert("Nome recebido: " + usuario.nome);
 
   document.getElementById("login").style.display = "none";
   document.getElementById("cadastro").style.display = "none";
