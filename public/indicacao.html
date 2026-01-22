@@ -643,7 +643,6 @@ main a:hover {
   background: #fff;
   padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   text-align: center;
   position: relative;
 }
@@ -792,6 +791,13 @@ main a:hover {
   font-size: 28px;
   color: #d9534f; /* vermelho elegante */
   cursor: pointer;
+  display: inline-block;
+  transition: transform 0.2s ease, color 0.3s ease;
+}
+
+.logout-icon:hover {
+  transform: translateY(-4px); /* levanta o ícone */
+  color: #b52b27;             /* tom mais escuro no hover */
 }
 
   </style>
