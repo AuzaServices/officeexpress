@@ -103,6 +103,24 @@
   </table>
 </div>
 
+<h1 class="mt-5">Usuários Cadastrados</h1>
+<div class="table-responsive">
+  <table class="table table-bordered table-hover align-middle" id="tabela-usuarios">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Código</th>
+        <th>WhatsApp</th>
+        <th>Indicações</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+
   <script>
     function apagarRegistro(id, tipo) {
       if (!confirm("Tem certeza que deseja apagar este registro?")) return;
@@ -344,6 +362,32 @@ function apagarIndicacao(id) {
       alert("Erro ao apagar indicação.");
     });
 }
+
+async function carregarUsuarios() {
+  const resp = await fetch('/api/usuarios');
+  const usuarios = await resp.json();
+
+  const tbody = document.querySelector('#tabela-usuarios tbody');
+  tbody.innerHTML = '';
+
+  usuarios.forEach(u => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${u.id}</td>
+        <td>${u.nome}</td>
+        <td>${u.codigo}</td>
+        <td>${u.whatsapp}</td>
+        <td>${u.indicacoes}</td>
+        <td>
+          <button class="btn btn-success btn-sm" onclick="alterarIndicacoes(${u.id}, 'mais')">+</button>
+          <button class="btn btn-warning btn-sm" onclick="alterarIndicacoes(${u.id}, 'menos')">-</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+carregarUsuarios();
 
   </script>
 </body>

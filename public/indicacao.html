@@ -995,7 +995,11 @@ main a:hover {
   <!-- Card de Cadastro -->
 <div class="card" id="cadastro">
   <h1>Cadastro</h1>
+  
   <input type="text" id="nome" placeholder="Seu primeiro nome" maxlength="10" oninput="validarNome(this)">
+  
+  <input type="text" id="whatsapp" placeholder="WhatsApp" maxlength="15">
+  
   <input type="password" id="senha" placeholder="Senha" onkeyup="validarSenha()">
 
   <!-- Regras de senha -->
@@ -1106,20 +1110,25 @@ main a:hover {
 async function cadastrar() {
   const nome = document.getElementById("nome").value;
   const senha = document.getElementById("senha").value;
-  if (!nome || !senha) { alert("Preencha todos os campos!"); return; }
+  const whatsapp = document.getElementById("whatsapp").value;
+
+  if (!nome || !senha || !whatsapp) {
+    alert("Preencha todos os campos!");
+    return;
+  }
 
   try {
     const resp = await fetch("/api/cadastro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, senha })
+      body: JSON.stringify({ nome, senha, whatsapp }) // agora envia também o whatsapp
     });
+
     const data = await resp.json();
 
-if (resp.ok) {
-  alert("Cadastro realizado com sucesso!");
-  mostrarLogin(); // volta pro login
-
+    if (resp.ok) {
+      alert("Cadastro realizado com sucesso!");
+      mostrarLogin(); // volta pro login
     } else {
       alert("Erro no cadastro: " + data.error);
     }
@@ -1388,7 +1397,6 @@ function copiarLink() {
 
   const link = document.getElementById("link").innerText;
   navigator.clipboard.writeText(link).then(() => {
-    alert("Link copiado!");
   });
 }
 

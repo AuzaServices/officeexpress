@@ -614,8 +614,9 @@ app.delete('/api/analises/:id', async (req, res) => {
 
 // Cadastro
 app.post('/api/cadastro', async (req, res) => {
-  const { nome, senha } = req.body;
-  if (!nome || !senha) {
+  const { nome, senha, whatsapp } = req.body; // agora também recebe whatsapp
+
+  if (!nome || !senha || !whatsapp) {
     return res.status(400).json({ error: 'Preencha todos os campos' });
   }
 
@@ -634,25 +635,16 @@ app.post('/api/cadastro', async (req, res) => {
       });
     }
 
-    // 3. Gera código único de indicação
-    const codigo = Math.random().toString(36).substring(2, 10);
-    const hash = await bcrypt.hash(senha, 10);
+    // 3. Insere no banco
+    await pool.query(
+      'INSERT INTO usuarios (nome, senha, whatsapp, indicacoes) VALUES (?, ?, ?, 0)',
+      [nome, senha, whatsapp]
+    );
 
-    // 4. Insere usuário no banco
-    const query = 'INSERT INTO usuarios (nome, senha, codigo, indicacoes) VALUES (?, ?, ?, ?)';
-    await pool.query(query, [nome, hash, codigo, 0]);
-
-    // 5. Retorna todos os dados necessários para o painel
-    res.json({
-      message: 'Cadastro realizado com sucesso',
-      nome,
-      codigo,
-      indicacoes: 0,
-      metaAtingida: false
-    });
+    res.json({ success: true });
   } catch (err) {
-    console.error('Erro no cadastro:', err.message);
-    res.status(500).json({ error: 'Erro no cadastro' });
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
 
@@ -947,6 +939,33 @@ app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
   } catch (err) {
     console.error('Erro ao confirmar pagamento da análise:', err.message);
     res.status(500).json({ error: 'Erro ao confirmar pagamento da análise' });
+  }
+});
+
+app.get('/api/usuarios', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, nome, codigo, whatsapp, indicacoes FROM usuarios');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar usuários' });
+  }
+});
+
+app.post('/api/usuarios/:id/indicacoes', async (req, res) => {
+  const { id } = req.params;
+  const { acao } = req.body; // "mais" ou "menos"
+
+  try {
+    if (acao === 'mais') {
+      await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE id = ?', [id]);
+    } else if (acao === 'menos') {
+      await pool.query('UPDATE usuarios SET indicacoes = GREATEST(indicacoes - 1, 0) WHERE id = ?', [id]);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao atualizar indicações' });
   }
 });
 
