@@ -337,7 +337,6 @@ function apagarIndicacao(id) {
   fetch(`/api/indicacoes/${id}`, { method: "DELETE" })
     .then(res => res.json())
     .then(data => {
-      alert("Indicação apagada!");
       carregarIndicacoes(); // atualiza a tabela
     })
     .catch(err => {

@@ -836,6 +836,50 @@ main a:hover {
   margin-top: 8px;
 }
 
+.seta-container {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+}
+
+.seta {
+  font-size: 32px;
+  color: #333;
+  cursor: pointer;
+  transition: transform 0.3s, color 0.3s;
+}
+
+.seta:hover {
+  transform: scale(1.2);
+  color: #ff8800;
+}
+
+.section-indicacao {
+  position: relative; /* necessário para a seta ficar dentro do container */
+}
+
+.regras-section {
+  padding: 20px;
+  background: #f9f9f9;
+  border-top: 2px solid #ddd;
+  margin-top: 40px;
+}
+
+.regras-section h2 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.regras-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.regras-section li {
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
   </style>
 </head>
 <body>
@@ -899,7 +943,22 @@ main a:hover {
   <div class="logout-icon" onclick="logout()" title="Sair">
     <i class="fas fa-sign-out-alt"></i>
   </div>
+
+<!-- Ícone seta para regras -->
+<div class="seta-container">
+  <i class="fas fa-arrow-right seta" onclick="irParaRegras()" title="Ver regras"></i>
 </div>
+
+</div>
+</section>
+
+<section id="regras" class="regras-section">
+  <h2>Regras da Indicação</h2>
+  <ul>
+    <li>1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
+    <li>2. Cada indicação deve ser única e não pode ser repetida para o mesmo serviço.</li>
+    <li>3. O prêmio só é liberado quando você atingir o número mínimo de indicações válidas.</li>
+  </ul>
 </section>
 
   <!-- Section institucional -->
@@ -1125,12 +1184,17 @@ function atualizarIndicacoes(qtd) {
     const btn = document.createElement("button");
     btn.innerText = "Receber R$50,00";
     btn.onclick = () => {
-      const mensagem = "Consegui completar o desafio e indicar e quero receber meu prêmio de *R$50,00*";
+      const mensagem = "Consegui completar o desafio e quero receber meu prêmio de *R$50,00*";
       const url = `https://wa.me/5585991340658?text=${encodeURIComponent(mensagem)}`;
       window.open(url, "_blank");
     };
     premioEl.appendChild(btn);
   }
+}
+
+function irParaRegras() {
+  const regrasEl = document.getElementById("regras");
+  regrasEl.scrollIntoView({ behavior: "smooth" });
 }
 
   </script>
