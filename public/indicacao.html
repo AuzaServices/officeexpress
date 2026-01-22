@@ -838,21 +838,36 @@ main a:hover {
 
 .logout-info {
   display: flex;
-  gap: 20px; /* distância moderada entre ícones */
-  justify-content: flex-end;
-  margin-top: 15px;
+  justify-content: flex-end; /* joga para a direita */
+  align-items: center;       /* alinha verticalmente */
+  gap: 20px;                 /* distância moderada entre ícones */
+  margin-top: 20px;
 }
 
-.logout-icon i, .info-icon i {
+/* Ícone de sair */
+.logout-icon i {
   font-size: 24px;
   cursor: pointer;
-  color: #333;
-  transition: color 0.3s, transform 0.3s;
+  color: darkred; /* vermelho */
+  transition: transform 0.3s;
 }
 
-.logout-icon i:hover, .info-icon i:hover {
-  color: #000;
+.logout-icon i:hover {
   transform: scale(1.1);
+  color: darkred; /* vermelho mais escuro no hover */
+}
+
+/* Ícone de informação */
+.info-icon i {
+  font-size: 24px;
+  cursor: pointer;
+  color: #000080; /* azul marinho */
+  transition: transform 0.3s;
+}
+
+.info-icon i:hover {
+  transform: scale(1.1);
+  color: #000080; /* azul marinho mais intenso no hover */
 }
 
 /* Modal */
@@ -920,6 +935,7 @@ main a:hover {
   </div>
 
 <section class="section-indicacao">
+  <!-- Card de Cadastro -->
   <div class="card" id="cadastro">
     <h1>Cadastro</h1>
     <input type="text" id="nome" placeholder="Seu nome">
@@ -928,6 +944,7 @@ main a:hover {
     <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
   </div>
 
+  <!-- Card de Login -->
   <div class="card" id="login" style="display:none;">
     <h1>Login</h1>
     <input type="text" id="loginNome" placeholder="Seu nome">
@@ -936,34 +953,35 @@ main a:hover {
     <p>Ainda não tem cadastro? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
   </div>
 
-<div class="card" id="painel" style="display:none;">
-  <h1>Painel do Usuário</h1>
+  <!-- Painel do Usuário -->
+  <div class="card" id="painel" style="display:none;">
+    <h1>Painel do Usuário</h1>
 
-  <div id="bemvindo"></div>
+    <div id="bemvindo"></div>
 
-  <p class="titulo-link">Seu link de indicação:</p>
-  <div class="link" id="link"></div>
+    <p class="titulo-link">Seu link de indicação:</p>
+    <div class="link" id="link"></div>
 
-  <button onclick="copiarLink()">Copiar Link</button>
+    <button onclick="copiarLink()">Copiar Link</button>
 
-  <p id="indicacoes"></p>
-  <div id="progresso"></div>
+    <p id="indicacoes"></p>
+    <div id="progresso"></div>
 
-  <div id="premio"></div>
+    <div id="premio"></div>
 
-<div class="logout-info">
-  <!-- Ícone de sair -->
-  <div class="logout-icon" onclick="logout()" title="Sair">
-    <i class="fas fa-sign-out-alt"></i>
+    <!-- Ícones de sair e informação -->
+    <div class="logout-info">
+      <div class="logout-icon" onclick="logout()" title="Sair">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <div class="info-icon" onclick="abrirModal()" title="Regras">
+        <i class="fas fa-info-circle"></i>
+      </div>
+    </div>
   </div>
+</section>
 
-  <!-- Ícone de informação -->
-  <div class="info-icon" onclick="abrirModal()" title="Regras">
-    <i class="fas fa-info-circle"></i>
-  </div>
-</div>
-
-<!-- Modal de regras -->
+<!-- Modal de regras (fora da section para cobrir a tela inteira) -->
 <div id="modalRegras" class="modal">
   <div class="modal-content">
     <span class="close" onclick="fecharModal()">&times;</span>
@@ -975,9 +993,6 @@ main a:hover {
     </ul>
   </div>
 </div>
-
-</div>
-</section>
 
   <!-- Section institucional -->
   <section id="contato" class="institucional-section scroll-reveal">
