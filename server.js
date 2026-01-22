@@ -629,17 +629,27 @@ app.post('/api/cadastro', async (req, res) => {
     // 2. Valida força da senha
     const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (!senhaForte.test(senha)) {
-      return res.status(400).json({ error: 'Senha fraca. Use ao menos 8 caracteres, incluindo maiúsculas, minúsculas, números e símbolos.' });
+      return res.status(400).json({
+        error: 'Senha fraca. Use ao menos 8 caracteres, incluindo maiúsculas, minúsculas, números e símbolos.'
+      });
     }
 
     // 3. Gera código único de indicação
     const codigo = Math.random().toString(36).substring(2, 10);
     const hash = await bcrypt.hash(senha, 10);
 
-    const query = 'INSERT INTO usuarios (nome, senha, codigo) VALUES (?, ?, ?)';
-    await pool.query(query, [nome, hash, codigo]);
+    // 4. Insere usuário no banco
+    const query = 'INSERT INTO usuarios (nome, senha, codigo, indicacoes) VALUES (?, ?, ?, ?)';
+    await pool.query(query, [nome, hash, codigo, 0]);
 
-    res.json({ message: 'Cadastro realizado com sucesso', codigo });
+    // 5. Retorna todos os dados necessários para o painel
+    res.json({
+      message: 'Cadastro realizado com sucesso',
+      nome,
+      codigo,
+      indicacoes: 0,
+      metaAtingida: false
+    });
   } catch (err) {
     console.error('Erro no cadastro:', err.message);
     res.status(500).json({ error: 'Erro no cadastro' });
