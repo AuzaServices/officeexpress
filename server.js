@@ -694,9 +694,17 @@ app.post('/api/indicar', async (req, res) => {
     }
 
     const usuario = rows[0];
-    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [codigo]);
 
-    res.json({ message: 'Indicação registrada', indicacoes: usuario.indicacoes + 1 });
+    // Atualiza com trava no máximo 10
+    await pool.query(
+      'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
+      [codigo]
+    );
+
+    // Busca novamente o valor atualizado para garantir resposta correta
+    const [updated] = await pool.query('SELECT indicacoes FROM usuarios WHERE codigo = ?', [codigo]);
+
+    res.json({ message: 'Indicação registrada', indicacoes: updated[0].indicacoes });
   } catch (err) {
     console.error('Erro ao registrar indicação:', err.message);
     res.status(500).json({ error: 'Erro ao registrar indicação' });
@@ -738,12 +746,21 @@ app.post('/api/pdfs/:id/pago', async (req, res) => {
     // Atualiza status de pago
     await pool.query('UPDATE pdfs SET pago = 1 WHERE id = ?', [id]);
 
-    // Se veio com código de indicação, incrementa
+    // Se veio com código de indicação, incrementa com trava no máximo 10
     if (registro.codigo_indicador) {
-      await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [registro.codigo_indicador]);
+      await pool.query(
+        'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
+        [registro.codigo_indicador]
+      );
     }
 
-    res.json({ message: 'Pagamento confirmado e indicação registrada' });
+    // Busca valor atualizado para retornar corretamente
+    const [updated] = await pool.query(
+      'SELECT indicacoes FROM usuarios WHERE codigo = ?',
+      [registro.codigo_indicador]
+    );
+
+    res.json({ message: 'Pagamento confirmado e indicação registrada', indicacoes: updated[0].indicacoes });
   } catch (err) {
     console.error('Erro ao confirmar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao confirmar pagamento' });
@@ -766,10 +783,16 @@ app.post('/api/indicacoes', async (req, res) => {
       [usuario.id, indicado_nome, codigo, tipo]
     );
 
-    // Atualiza contador no usuário
-    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE id = ?', [usuario.id]);
+    // Atualiza contador no usuário com trava no máximo 10
+    await pool.query(
+      'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE id = ?',
+      [usuario.id]
+    );
 
-    res.json({ message: 'Indicação registrada com sucesso' });
+    // Busca valor atualizado para retornar corretamente
+    const [updated] = await pool.query('SELECT indicacoes FROM usuarios WHERE id = ?', [usuario.id]);
+
+    res.json({ message: 'Indicação registrada com sucesso', indicacoes: updated[0].indicacoes });
   } catch (err) {
     console.error('Erro ao registrar indicação:', err.message);
     res.status(500).json({ error: 'Erro ao registrar indicação' });
@@ -795,14 +818,25 @@ app.post('/api/pagamentos', async (req, res) => {
 app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
   const { id } = req.params;
   try {
+    // Atualiza status do pagamento
     await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
 
+    // Busca o código do pagamento
     const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Pagamento não encontrado' });
+
     const codigo = rows[0].codigo;
 
-    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [codigo]);
+    // Atualiza contador no usuário com trava no máximo 10
+    await pool.query(
+      'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
+      [codigo]
+    );
 
-    res.json({ message: 'Pagamento confirmado e indicação registrada' });
+    // Busca valor atualizado para retornar corretamente
+    const [updated] = await pool.query('SELECT indicacoes FROM usuarios WHERE codigo = ?', [codigo]);
+
+    res.json({ message: 'Pagamento confirmado e indicação registrada', indicacoes: updated[0].indicacoes });
   } catch (err) {
     console.error('Erro ao confirmar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao confirmar pagamento' });
@@ -867,17 +901,34 @@ app.delete('/api/indicacoes/:id', async (req, res) => {
 });
 
 // Registrar pagamento da análise
-app.post('/api/pagamentos-analise', async (req, res) => {
-  const { codigo, indicado_nome } = req.body;
+app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
+  const { id } = req.params;
   try {
+    // Atualiza status do pagamento da análise
+    await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
+
+    // Busca o código do pagamento
+    const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Pagamento não encontrado' });
+
+    const codigo = rows[0].codigo;
+
+    // Atualiza contador no usuário com trava no máximo 10
     await pool.query(
-      'INSERT INTO pagamentos (codigo, indicado_nome, tipo, status) VALUES (?, ?, ?, ?)',
-      [codigo, indicado_nome, 'analise', 'pendente']
+      'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
+      [codigo]
     );
-    res.json({ message: 'Pagamento da análise registrado como pendente' });
+
+    // Busca valor atualizado para retornar corretamente
+    const [updated] = await pool.query('SELECT indicacoes FROM usuarios WHERE codigo = ?', [codigo]);
+
+    res.json({
+      message: 'Pagamento da análise confirmado e indicação registrada',
+      indicacoes: updated[0].indicacoes
+    });
   } catch (err) {
-    console.error('Erro ao registrar pagamento da análise:', err.message);
-    res.status(500).json({ error: 'Erro ao registrar pagamento da análise' });
+    console.error('Erro ao confirmar pagamento da análise:', err.message);
+    res.status(500).json({ error: 'Erro ao confirmar pagamento da análise' });
   }
 });
 
