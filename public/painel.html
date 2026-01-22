@@ -372,35 +372,43 @@ async function carregarUsuarios() {
   const tbody = document.querySelector('#tabela-usuarios tbody');
   tbody.innerHTML = '';
 
-  usuarios.forEach(u => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${u.id}</td>
-        <td>${u.nome}</td>
-        <td>${u.codigo}</td>
-        <td>
-          <a href="https://wa.me/${u.whatsapp}" target="_blank" class="btn-whatsapp">
-            WhatsApp
-          </a>
-        </td>
-        <td>${u.indicacoes}</td>
-        <td>
-          <button class="btn btn-success btn-sm" onclick="alterarIndicacoes(${u.id}, 'mais')">+</button>
-          <button class="btn btn-warning btn-sm" onclick="alterarIndicacoes(${u.id}, 'menos')">-</button>
-          <button class="btn btn-danger btn-sm" onclick="apagarUsuario(${u.id})">Apagar</button>
-        </td>
-      </tr>
-    `;
-  });
-}
+usuarios.forEach(u => {
+  const numeroLimpo = u.whatsapp.replace(/\D/g, ''); // só dígitos
+  const numeroFinal = numeroLimpo.startsWith('55') ? numeroLimpo : '55' + numeroLimpo;
 
+  tbody.innerHTML += `
+    <tr>
+      <td>${u.id}</td>
+      <td>${u.nome}</td>
+      <td>${u.codigo}</td>
+      <td>
+        <a href="https://wa.me/${numeroFinal}" target="_blank" class="btn-whatsapp">
+          WhatsApp
+        </a>
+      </td>
+      <td id="indicacoes-${u.id}">${u.indicacoes}</td>
+      <td>
+        <button class="btn btn-success btn-sm" onclick="alterarIndicacoes(${u.id}, 'mais')">+</button>
+        <button class="btn btn-warning btn-sm" onclick="alterarIndicacoes(${u.id}, 'menos')">-</button>
+        <button class="btn btn-danger btn-sm" onclick="apagarUsuario(${u.id})">Apagar</button>
+      </td>
+    </tr>
+  `;
+});
+}
 async function alterarIndicacoes(id, acao) {
-  await fetch(`/api/usuarios/${id}/indicacoes`, {
+  const resp = await fetch(`/api/usuarios/${id}/indicacoes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ acao })
   });
-  carregarUsuarios();
+  const data = await resp.json();
+
+  if (data.success) {
+    // atualiza só a célula da tabela
+    const linha = document.querySelector(`#tabela-usuarios tr td:first-child:contains("${id}")`).parentNode;
+    linha.cells[4].innerText = data.indicacoes;
+  }
 }
 
 async function apagarUsuario(id) {
