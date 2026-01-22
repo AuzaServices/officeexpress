@@ -376,7 +376,11 @@ async function carregarUsuarios() {
         <td>${u.id}</td>
         <td>${u.nome}</td>
         <td>${u.codigo}</td>
-        <td>${u.whatsapp}</td>
+        <td>
+          <a href="https://wa.me/${u.whatsapp}" target="_blank" class="btn btn-success btn-sm">
+            WhatsApp
+          </a>
+        </td>
         <td>${u.indicacoes}</td>
         <td>
           <button class="btn btn-success btn-sm" onclick="alterarIndicacoes(${u.id}, 'mais')">+</button>
@@ -387,7 +391,17 @@ async function carregarUsuarios() {
   });
 }
 
-carregarUsuarios();
+
+async function alterarIndicacoes(id, acao) {
+  const resp = await fetch(`/api/usuarios/${id}/indicacoes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ acao })
+  });
+  if (resp.ok) {
+    carregarUsuarios(); // recarrega a tabela
+  }
+}
 
   </script>
 </body>
