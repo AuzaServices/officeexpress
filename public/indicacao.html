@@ -875,29 +875,24 @@ main a:hover {
 
 /* Modal */
 .modal {
-  display: none; /* escondido por padrão */
+  display: none; /* começa escondido */
   position: fixed;
   z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
+  inset: 0; /* equivale a top:0; right:0; bottom:0; left:0 */
   background-color: rgba(0,0,0,0.6);
 
-  /* Centralização com flexbox */
+  /* centralização */
   justify-content: center;
   align-items: center;
 }
 
 .modal-content {
-  background: #ffffff;
+  background: #fff;
   padding: 20px;
   border-radius: 8px;
   width: 80%;
   max-width: 500px;
   text-align: left;
-  position: relative;
-
-  /* remove o margin que empurra para baixo */
-  margin: 0;
 }
 
 /* Botão X moderno */
@@ -1399,6 +1394,14 @@ function copiarLink() {
   });
 }
 
+function abrirModal() {
+  document.querySelector('.modal').style.display = 'flex';
+}
+
+function fecharModal() {
+  document.querySelector('.modal').style.display = 'none';
+}
+
   </script>
 
 <div id="modalRegras" class="modal">
@@ -1406,8 +1409,11 @@ function copiarLink() {
     <span class="close" onclick="fecharModal()">&times;</span>
     <h2>Regras da Indicação</h2>
     <ul>
-      <li class="regra1">1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
-      <li class="regra3">2. O prêmio só é liberado quando você atingir 10/10 de indicações válidas.</li>
+<ul id="regras">
+  <li class="regra1">1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
+  <li class="regra3">2. O prêmio só é liberado quando você atingir 10/10 de indicações válidas.</li>
+  <li class="regra4">3. Caso você complete o desafio (10/10 indicações válidas) e queira participar novamente, será necessário criar uma nova conta.</li>
+</ul>
     </ul>
   </div>
 </div>
