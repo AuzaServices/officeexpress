@@ -966,7 +966,9 @@ async function cadastrar() {
 
     if (resp.ok) {
       alert("Cadastro realizado com sucesso!");
-      mostrarLogin();
+      // 🔑 Salva o usuário com nome no sessionStorage
+      sessionStorage.setItem("usuario", JSON.stringify(data));
+      mostrarPainel(data);
     } else {
       alert("Erro no cadastro: " + data.error);
     }
@@ -1064,13 +1066,17 @@ window.onload = async () => {
   const usuario = sessionStorage.getItem("usuario");
   if (usuario) {
     const dados = JSON.parse(usuario);
-    try {
-      const resp = await fetch(`/api/painel/${dados.nome}`);
-      const atualizado = await resp.json();
-      mostrarPainel(atualizado);
-    } catch (err) {
-      console.error("Erro ao atualizar painel:", err);
-      mostrarPainel(dados); // fallback
+    if (dados.nome) {
+      try {
+        const resp = await fetch(`/api/painel/${dados.nome}`);
+        const atualizado = await resp.json();
+        mostrarPainel(atualizado);
+      } catch (err) {
+        console.error("Erro ao atualizar painel:", err);
+        mostrarPainel(dados); // fallback
+      }
+    } else {
+      mostrarLogin();
     }
   } else {
     mostrarLogin();
