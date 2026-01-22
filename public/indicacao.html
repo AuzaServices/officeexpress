@@ -929,6 +929,23 @@ main a:hover {
   font-weight: bold;
 }
 
+#regrasSenha {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+#regrasSenha li {
+  color: rgb(86, 86, 86); /* vermelho padrão */
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+#regrasSenha li.ok {
+  color: green; /* verde quando regra atendida */
+}
+
   </style>
 </head>
 <body>
@@ -959,13 +976,22 @@ main a:hover {
 
 <section class="section-indicacao">
   <!-- Card de Cadastro -->
-  <div class="card" id="cadastro">
-    <h1>Cadastro</h1>
-    <input type="text" id="nome" placeholder="Seu nome">
-    <input type="password" id="senha" placeholder="Senha">
-    <button onclick="cadastrar()">Cadastrar</button>
-    <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
-  </div>
+<div class="card" id="cadastro">
+  <h1>Cadastro</h1>
+  <input type="text" id="nome" placeholder="Seu nome">
+  <input type="password" id="senha" placeholder="Senha" onkeyup="validarSenha()">
+
+  <!-- Regras de senha -->
+  <ul id="regrasSenha">
+    <li id="regra1">• Mínimo de 8 caracteres</li>
+    <li id="regra2">• Pelo menos 3 números</li>
+    <li id="regra3">• Pelo menos 3 letras (incluindo 1 maiúscula)</li>
+    <li id="regra4">• Pelo menos 1 caractere especial (!@#$%^&*)</li>
+  </ul>
+
+  <button onclick="cadastrar()">Cadastrar</button>
+  <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
+</div>
 
   <!-- Card de Login -->
   <div class="card" id="login" style="display:none;">
@@ -1262,6 +1288,42 @@ window.onclick = function(event) {
     modal.style.display = "none";
   }
 };
+
+function validarSenha() {
+  const senha = document.getElementById("senha").value;
+
+  // Regra 1: mínimo 8 caracteres
+  if (senha.length >= 8) {
+    document.getElementById("regra1").classList.add("ok");
+  } else {
+    document.getElementById("regra1").classList.remove("ok");
+  }
+
+  // Regra 2: pelo menos 3 números
+  const numeros = senha.replace(/[^0-9]/g, "").length;
+  if (numeros >= 3) {
+    document.getElementById("regra2").classList.add("ok");
+  } else {
+    document.getElementById("regra2").classList.remove("ok");
+  }
+
+  // Regra 3: pelo menos 3 letras incluindo 1 maiúscula
+  const letras = senha.replace(/[^a-zA-Z]/g, "").length;
+  const maiuscula = /[A-Z]/.test(senha);
+  if (letras >= 3 && maiuscula) {
+    document.getElementById("regra3").classList.add("ok");
+  } else {
+    document.getElementById("regra3").classList.remove("ok");
+  }
+
+  // Regra 4: pelo menos 1 caractere especial
+  const especial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
+  if (especial) {
+    document.getElementById("regra4").classList.add("ok");
+  } else {
+    document.getElementById("regra4").classList.remove("ok");
+  }
+}
 
   </script>
 </body>
