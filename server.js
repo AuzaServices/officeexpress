@@ -826,15 +826,24 @@ app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
     const codigo = rows[0].codigo;
 
     // Atualiza contador no usuário com trava no máximo 10
-    await pool.query(
-      'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
-      [codigo]
-    );
+    // e muda o tipo do link para 'comum' quando chegar em 10
+    await pool.query(`
+      UPDATE usuarios 
+      SET indicacoes = LEAST(indicacoes + 1, 10),
+          link_tipo = CASE 
+                        WHEN indicacoes + 1 >= 10 THEN 'comum' 
+                        ELSE 'indicacao' 
+                      END
+      WHERE codigo = ?`, [codigo]);
 
     // Busca valor atualizado para retornar corretamente
-    const [updated] = await pool.query('SELECT indicacoes FROM usuarios WHERE codigo = ?', [codigo]);
+    const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
 
-    res.json({ message: 'Pagamento confirmado e indicação registrada', indicacoes: updated[0].indicacoes });
+    res.json({
+      message: 'Pagamento confirmado e indicação registrada',
+      indicacoes: updated[0].indicacoes,
+      link_tipo: updated[0].link_tipo
+    });
   } catch (err) {
     console.error('Erro ao confirmar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao confirmar pagamento' });
