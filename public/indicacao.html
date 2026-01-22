@@ -1014,25 +1014,37 @@ function mostrarCadastro() {
 }
 
 function mostrarPainel(usuario) {
-console.log("Usuário recebido:", usuario);
-alert("Nome recebido: " + usuario.nome);
+  console.log("Usuário recebido:", usuario); // debug
+  alert("Nome recebido: " + usuario.nome);
 
+  // Esconde cadastro e login, mostra painel
   document.getElementById("login").style.display = "none";
   document.getElementById("cadastro").style.display = "none";
   document.getElementById("painel").style.display = "block";
 
-  // Bem-vindo com o nome do usuário
-  document.getElementById("bemvindo").innerText = "Bem-vindo, " + (usuario?.nome || "Usuário");
+  // Força estilo visível no Bem-vindo
+  const bemvindoEl = document.getElementById("bemvindo");
+  bemvindoEl.style.display = "block";
+  bemvindoEl.style.color = "#000"; // preto visível
+  bemvindoEl.style.fontSize = "22px";
+  bemvindoEl.style.fontWeight = "bold";
 
+  // Escreve o texto
+  bemvindoEl.innerText = "Bem-vindo, " + (usuario?.nome || "Usuário");
+  console.log("Texto escrito:", bemvindoEl.innerText);
+
+  // Link de indicação
   const link = usuario?.codigo 
     ? `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`
     : "Código não disponível";
   document.getElementById("link").innerText = link;
 
+  // Indicações concluídas com contador estilo 5/10
   const qtdIndicacoes = usuario?.indicacoes || 0;
   document.getElementById("indicacoes").innerText = "Indicações concluídas:";
   document.getElementById("progresso").innerHTML = `<span class="contador">${qtdIndicacoes}/10</span>`;
 
+  // Botão de prêmio quando atingir 10 indicações
   const premioEl = document.getElementById("premio");
   if (premioEl) premioEl.innerHTML = "";
 
