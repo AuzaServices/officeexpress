@@ -991,7 +991,7 @@ function mostrarPainel(usuario) {
   const link = usuario.codigo 
     ? `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`
     : "Código não disponível";
-  document.getElementById("link").innerText = "Seu link de indicação: " + link;
+  document.getElementById("link").innerText = link;
   document.getElementById("indicacoes").innerText = "Indicações concluídas: " + (usuario.indicacoes || 0);
 }
 
