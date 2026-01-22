@@ -836,48 +836,59 @@ main a:hover {
   margin-top: 8px;
 }
 
-.seta-container {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
+.logout-info {
+  display: flex;
+  gap: 20px; /* distância moderada entre ícones */
+  justify-content: flex-end;
+  margin-top: 15px;
 }
 
-.seta {
-  font-size: 32px;
-  color: #333;
+.logout-icon i, .info-icon i {
+  font-size: 24px;
   cursor: pointer;
-  transition: transform 0.3s, color 0.3s;
+  color: #333;
+  transition: color 0.3s, transform 0.3s;
 }
 
-.seta:hover {
-  transform: scale(1.2);
-  color: #ff8800;
+.logout-icon i:hover, .info-icon i:hover {
+  color: #000;
+  transform: scale(1.1);
 }
 
-.section-indicacao {
-  position: relative; /* necessário para a seta ficar dentro do container */
+/* Modal */
+.modal {
+  display: none; /* escondido por padrão */
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.6); /* escurece fundo */
 }
 
-.regras-section {
+.modal-content {
+  background: #fff;
+  margin: 10% auto;
   padding: 20px;
-  background: #f9f9f9;
-  border-top: 2px solid #ddd;
-  margin-top: 40px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 500px;
+  text-align: left;
+  position: relative;
 }
 
-.regras-section h2 {
-  font-size: 22px;
-  margin-bottom: 10px;
+/* Botão X moderno */
+.close {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+  transition: transform 0.3s;
 }
 
-.regras-section ul {
-  list-style: none;
-  padding: 0;
-}
-
-.regras-section li {
-  margin-bottom: 8px;
-  font-size: 16px;
+.close:hover {
+  transform: scale(1.2);
 }
 
   </style>
@@ -940,25 +951,32 @@ main a:hover {
 
   <div id="premio"></div>
 
+<div class="logout-info">
+  <!-- Ícone de sair -->
   <div class="logout-icon" onclick="logout()" title="Sair">
     <i class="fas fa-sign-out-alt"></i>
   </div>
 
-<!-- Ícone seta para regras -->
-<div class="seta-container">
-  <i class="fas fa-arrow-right seta" onclick="irParaRegras()" title="Ver regras"></i>
+  <!-- Ícone de informação -->
+  <div class="info-icon" onclick="abrirModal()" title="Regras">
+    <i class="fas fa-info-circle"></i>
+  </div>
+</div>
+
+<!-- Modal de regras -->
+<div id="modalRegras" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="fecharModal()">&times;</span>
+    <h2>Regras da Indicação</h2>
+    <ul>
+      <li>1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
+      <li>2. Cada indicação deve ser única e não pode ser repetida para o mesmo serviço.</li>
+      <li>3. O prêmio só é liberado quando você atingir o número mínimo de indicações válidas.</li>
+    </ul>
+  </div>
 </div>
 
 </div>
-</section>
-
-<section id="regras" class="regras-section">
-  <h2>Regras da Indicação</h2>
-  <ul>
-    <li>1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
-    <li>2. Cada indicação deve ser única e não pode ser repetida para o mesmo serviço.</li>
-    <li>3. O prêmio só é liberado quando você atingir o número mínimo de indicações válidas.</li>
-  </ul>
 </section>
 
   <!-- Section institucional -->
@@ -1192,10 +1210,21 @@ function atualizarIndicacoes(qtd) {
   }
 }
 
-function irParaRegras() {
-  const regrasEl = document.getElementById("regras");
-  regrasEl.scrollIntoView({ behavior: "smooth" });
+function abrirModal() {
+  document.getElementById("modalRegras").style.display = "block";
 }
+
+function fecharModal() {
+  document.getElementById("modalRegras").style.display = "none";
+}
+
+// Fecha modal ao clicar fora
+window.onclick = function(event) {
+  const modal = document.getElementById("modalRegras");
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
+};
 
   </script>
 </body>
