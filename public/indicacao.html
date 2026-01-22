@@ -838,11 +838,11 @@ main a:hover {
 
 .logout-info {
   display: flex;
-  justify-content: flex-end; /* joga para a direita */
-  align-items: center;       /* alinha verticalmente */
-  gap: 20px;                 /* distância moderada entre ícones */
-  margin-top: 20px;
+  justify-content: center;   /* centraliza horizontalmente */
+  gap: 30px;                 /* distância moderada entre ícones */
+  margin-top: 20px;          /* espaço em relação ao botão acima */
 }
+
 
 /* Ícone de sair */
 .logout-icon i {
@@ -881,7 +881,7 @@ main a:hover {
 }
 
 .modal-content {
-  background: #fff;
+  background: #111358;
   margin: 10% auto;
   padding: 20px;
   border-radius: 8px;
@@ -954,31 +954,31 @@ main a:hover {
   </div>
 
   <!-- Painel do Usuário -->
-  <div class="card" id="painel" style="display:none;">
-    <h1>Painel do Usuário</h1>
+<div class="card" id="painel" style="display:none;">
+  <h1>Painel do Usuário</h1>
 
-    <div id="bemvindo"></div>
+  <div id="bemvindo"></div>
 
-    <p class="titulo-link">Seu link de indicação:</p>
-    <div class="link" id="link"></div>
+  <p class="titulo-link">Seu link de indicação:</p>
+  <div class="link" id="link"></div>
 
-    <button onclick="copiarLink()">Copiar Link</button>
+  <button onclick="copiarLink()">Copiar Link</button>
 
-    <p id="indicacoes"></p>
-    <div id="progresso"></div>
+  <p id="indicacoes"></p>
+  <div id="progresso"></div>
 
-    <div id="premio"></div>
+  <div id="premio"></div>
 
-    <!-- Ícones de sair e informação -->
-    <div class="logout-info">
-      <div class="logout-icon" onclick="logout()" title="Sair">
-        <i class="fas fa-sign-out-alt"></i>
-      </div>
-      <div class="info-icon" onclick="abrirModal()" title="Regras">
-        <i class="fas fa-info-circle"></i>
-      </div>
+  <!-- Ícones logo abaixo do botão de prêmio -->
+  <div class="logout-info">
+    <div class="logout-icon" onclick="logout()" title="Sair">
+      <i class="fas fa-sign-out-alt"></i>
+    </div>
+    <div class="info-icon" onclick="abrirModal()" title="Regras">
+      <i class="fas fa-info-circle"></i>
     </div>
   </div>
+</div>
 </section>
 
 <!-- Modal de regras (fora da section para cobrir a tela inteira) -->
