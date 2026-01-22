@@ -948,9 +948,12 @@ app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
   }
 });
 
+// Listar usuários
 app.get('/api/usuarios', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, nome, codigo, whatsapp, indicacoes FROM usuarios');
+    const [rows] = await pool.query(
+      'SELECT id, nome, codigo, whatsapp, indicacoes FROM usuarios'
+    );
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -958,20 +961,51 @@ app.get('/api/usuarios', async (req, res) => {
   }
 });
 
+// Alterar indicações com limite de 0 a 10
 app.post('/api/usuarios/:id/indicacoes', async (req, res) => {
   const { id } = req.params;
   const { acao } = req.body; // "mais" ou "menos"
 
   try {
     if (acao === 'mais') {
-      await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE id = ?', [id]);
+      await pool.query(
+        'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE id = ?',
+        [id]
+      );
     } else if (acao === 'menos') {
-      await pool.query('UPDATE usuarios SET indicacoes = GREATEST(indicacoes - 1, 0) WHERE id = ?', [id]);
+      await pool.query(
+        'UPDATE usuarios SET indicacoes = GREATEST(indicacoes - 1, 0) WHERE id = ?',
+        [id]
+      );
     }
-    res.json({ success: true });
+
+    // Retorna o valor atualizado
+    const [rows] = await pool.query(
+      'SELECT indicacoes FROM usuarios WHERE id = ?',
+      [id]
+    );
+
+    res.json({ success: true, indicacoes: rows[0].indicacoes });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao atualizar indicações' });
+  }
+});
+
+// Apagar usuário
+app.delete('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT * FROM usuarios WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    await pool.query('DELETE FROM usuarios WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Usuário apagado com sucesso' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao apagar usuário' });
   }
 });
 

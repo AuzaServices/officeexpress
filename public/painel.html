@@ -376,29 +376,41 @@ async function carregarUsuarios() {
         <td>${u.id}</td>
         <td>${u.nome}</td>
         <td>${u.codigo}</td>
-        <td>${u.whatsapp}</td>
+        <td>
+          <a href="https://wa.me/${u.whatsapp}" target="_blank" class="btn-whatsapp">
+            WhatsApp
+          </a>
+        </td>
         <td>${u.indicacoes}</td>
         <td>
           <button class="btn btn-success btn-sm" onclick="alterarIndicacoes(${u.id}, 'mais')">+</button>
           <button class="btn btn-warning btn-sm" onclick="alterarIndicacoes(${u.id}, 'menos')">-</button>
+          <button class="btn btn-danger btn-sm" onclick="apagarUsuario(${u.id})">Apagar</button>
         </td>
       </tr>
     `;
   });
 }
 
-carregarUsuarios();
-
 async function alterarIndicacoes(id, acao) {
-  const resp = await fetch(`/api/usuarios/${id}/indicacoes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  await fetch(`/api/usuarios/${id}/indicacoes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ acao })
   });
-  if (resp.ok) {
-    carregarUsuarios(); // recarrega a tabela
+  carregarUsuarios();
+}
+
+async function apagarUsuario(id) {
+  if (confirm('Tem certeza que deseja apagar este usuário?')) {
+    await fetch(`/api/usuarios/${id}`, {
+      method: 'DELETE'
+    });
+    carregarUsuarios();
   }
 }
+
+window.onload = carregarUsuarios;
 
   </script>
 </body>
