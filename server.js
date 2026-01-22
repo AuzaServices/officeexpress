@@ -883,15 +883,13 @@ app.delete('/api/indicacoes/:id', async (req, res) => {
     const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Registro não encontrado' });
 
-    const codigo = rows[0].codigo;
-
     // Apaga da tabela pagamentos
     await pool.query('DELETE FROM pagamentos WHERE id = ?', [id]);
 
-    // Decrementa contador no usuário indicador
-    await pool.query('UPDATE usuarios SET indicacoes = indicacoes - 1 WHERE codigo = ?', [codigo]);
+    // ❌ Não mexe nos pontos do indicador
+    // await pool.query('UPDATE usuarios SET indicacoes = indicacoes - 1 WHERE codigo = ?', [codigo]);
 
-    res.json({ message: 'Indicação apagada com sucesso' });
+    res.json({ message: 'Indicação apagada com sucesso (sem alterar pontos)' });
   } catch (err) {
     console.error('Erro ao apagar indicação:', err.message);
     res.status(500).json({ error: 'Erro ao apagar indicação' });
