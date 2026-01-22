@@ -880,8 +880,14 @@ main a:hover {
   z-index: 1000;
   left: 0; top: 0;
   width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.6); /* escurece fundo */
+  background-color: rgba(0,0,0,0.6);
+
+  /* Centralização com flexbox */
+  display: flex;
+  justify-content: center;  /* centraliza na horizontal */
+  align-items: center;      /* centraliza na vertical */
 }
+
 
 .modal-content {
   background: #ffffff;
@@ -956,6 +962,12 @@ main a:hover {
 
 #regrasSenha li.ok {
   color: green; /* verde quando regra atendida */
+}
+
+#painel button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #ccc; /* cinza para mostrar bloqueio */
 }
 
   </style>
@@ -1361,6 +1373,45 @@ document.getElementById("nome").addEventListener("paste", function(e) {
   texto = texto.replace(/\s+/g, "").substring(0, 10);
   this.value = texto;
 });
+
+let contador = 0; // número atual de indicações
+const maxIndicacoes = 10;
+
+function atualizarIndicacoes() {
+  // Atualiza o contador na tela
+  const elementoIndicacoes = document.getElementById("indicacoes");
+  elementoIndicacoes.innerHTML = `Indicações concluídas: <span>${contador}/${maxIndicacoes}</span>`;
+
+  // Se chegou no máximo, trava
+  if (contador >= maxIndicacoes) {
+    contador = maxIndicacoes; // garante que não passe de 10
+
+    // Ofusca e desativa o botão copiar link
+    const botaoCopiar = document.querySelector("#painel button");
+    botaoCopiar.disabled = true;
+    botaoCopiar.style.opacity = "0.4";
+    botaoCopiar.style.cursor = "not-allowed";
+  }
+}
+
+// Função para simular uma nova indicação
+function novaIndicacao() {
+  if (contador < maxIndicacoes) {
+    contador++;
+    atualizarIndicacoes();
+  }
+}
+
+// Função copiar link (só funciona se não estiver desativado)
+function copiarLink() {
+  const botaoCopiar = document.querySelector("#painel button");
+  if (botaoCopiar.disabled) return; // impede clique se desativado
+
+  const link = document.getElementById("link").innerText;
+  navigator.clipboard.writeText(link).then(() => {
+    alert("Link copiado!");
+  });
+}
 
   </script>
 </body>
