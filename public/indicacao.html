@@ -7,8 +7,6 @@
   <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/inputmask.min.js"></script>
-
   
 
   <style>
@@ -1000,7 +998,7 @@ main a:hover {
   
   <input type="text" id="nome" placeholder="Seu primeiro nome" maxlength="10" oninput="validarNome(this)">
   
-  <input type="text" id="whatsapp" class="form-control">
+  <input type="text" id="whatsapp" placeholder="WhatsApp" maxlength="15">
   
   <input type="password" id="senha" placeholder="Senha" onkeyup="validarSenha()">
 
@@ -1410,7 +1408,27 @@ function fecharModal() {
   document.querySelector('.modal').style.display = 'none';
 }
 
-Inputmask({"mask": "(99) 99999-9999"}).mask("#whatsapp");
+    const input = document.getElementById('whatsapp');
+
+    input.addEventListener('input', function(e) {
+      // pega só os números
+      let value = e.target.value.replace(/\D/g, '');
+
+      // limita a 11 dígitos
+      if (value.length > 11) value = value.slice(0, 11);
+
+      // monta a máscara dinamicamente
+      let formatted = value;
+
+      if (value.length > 2) {
+        formatted = '(' + value.substring(0, 2) + ') ' + value.substring(2);
+      }
+      if (value.length > 7) {
+        formatted = '(' + value.substring(0, 2) + ') ' + value.substring(2, 7) + '-' + value.substring(7);
+      }
+
+      e.target.value = formatted;
+    });
 
 
   </script>
