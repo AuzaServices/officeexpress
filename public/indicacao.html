@@ -801,17 +801,26 @@ main a:hover {
 }
 
 #premio button {
-  margin-top: 20px;
-  padding: 14px 24px;
-  background: linear-gradient(135deg, #ffd700, #ffb700);
-  color: #333;
-  font-size: 16px;
+  background: gold;
+  color: #000;
   font-weight: bold;
+  padding: 10px 20px;
   border: none;
-  border-radius: 10px;
+  border-radius: 6px;
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+#premio button.desativado {
+  opacity: 0.4;        /* deixa apagado */
+  filter: brightness(0.6); /* escurece o dourado */
+  cursor: not-allowed; /* cursor bloqueado */
+}
+
+#premio button.ativo {
+  opacity: 1;
+  filter: brightness(1); /* dourado normal */
+  cursor: pointer;
 }
 
 #premio button:hover {
@@ -1043,20 +1052,30 @@ function mostrarPainel(usuario) {
   document.getElementById("indicacoes").innerText = "Indicações concluídas:";
   document.getElementById("progresso").innerHTML = `<span class="contador">${qtdIndicacoes}/10</span>`;
 
-  // Botão de prêmio quando atingir 10 indicações
+  // Botão de prêmio sempre visível
   const premioEl = document.getElementById("premio");
   if (premioEl) premioEl.innerHTML = "";
 
+  const btn = document.createElement("button");
+  btn.innerText = "Receber R$50,00";
+
   if (qtdIndicacoes >= 10) {
-    const btn = document.createElement("button");
-    btn.innerText = "Receber R$50,00";
+    // Ativo
+    btn.disabled = false;
+    btn.classList.add("ativo");
     btn.onclick = () => {
       const mensagem = "Consegui completar o desafio e indicar e quero receber meu prêmio de *R$50,00*";
       const url = `https://wa.me/5585991340658?text=${encodeURIComponent(mensagem)}`;
       window.open(url, "_blank");
     };
-    premioEl.appendChild(btn);
+  } else {
+    // Escurecido/ofuscado
+    btn.disabled = true;
+    btn.classList.add("desativado");
+    btn.title = "Complete 10 indicações para liberar o prêmio";
   }
+
+  premioEl.appendChild(btn);
 }
 
 function copiarLink() {
