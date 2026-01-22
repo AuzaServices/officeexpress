@@ -882,21 +882,22 @@ main a:hover {
   width: 100%; height: 100%;
   background-color: rgba(0,0,0,0.6);
 
-  /* flexbox só funciona quando o JS mudar para "flex" */
+  /* Centralização com flexbox */
   justify-content: center;
   align-items: center;
 }
 
-
 .modal-content {
   background: #ffffff;
-  margin: 10% auto;
   padding: 20px;
   border-radius: 8px;
   width: 80%;
   max-width: 500px;
   text-align: left;
   position: relative;
+
+  /* remove o margin que empurra para baixo */
+  margin: 0;
 }
 
 /* Botão X moderno */
@@ -999,22 +1000,22 @@ main a:hover {
 
 <section class="section-indicacao">
   <!-- Card de Cadastro -->
-<div class="card" id="cadastro">
-  <h1>Cadastro</h1>
-  <input type="text" id="nome" placeholder="Seu primeiro nome" maxlength="10" oninput="validarNome(this)">
-  <input type="password" id="senha" placeholder="Senha" onkeyup="validarSenha()">
+  <div class="card" id="cadastro" style="display:none;">
+    <h1>Cadastro</h1>
+    <input type="text" id="nome" placeholder="Seu primeiro nome" maxlength="10" oninput="validarNome(this)">
+    <input type="password" id="senha" placeholder="Senha" onkeyup="validarSenha()">
 
-  <!-- Regras de senha -->
-  <ul id="regrasSenha">
-    <li id="regra1">Mínimo de 8 caracteres</li>
-    <li id="regra2">Pelo menos 3 números</li>
-    <li id="regra3">Pelo menos 3 letras (incluindo 1 maiúscula)</li>
-    <li id="regra4">Pelo menos 1 caractere especial (!@#$%^&*)</li>
-  </ul>
+    <!-- Regras de senha -->
+    <ul id="regrasSenha">
+      <li id="regra1">Mínimo de 8 caracteres</li>
+      <li id="regra2">Pelo menos 3 números</li>
+      <li id="regra3">Pelo menos 3 letras (incluindo 1 maiúscula)</li>
+      <li id="regra4">Pelo menos 1 caractere especial (!@#$%^&*)</li>
+    </ul>
 
-  <button onclick="cadastrar()">Cadastrar</button>
-  <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
-</div>
+    <button onclick="cadastrar()">Cadastrar</button>
+    <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Login</a></p>
+  </div>
 
   <!-- Card de Login -->
   <div class="card" id="login" style="display:none;">
@@ -1026,29 +1027,27 @@ main a:hover {
   </div>
 
   <!-- Painel do Usuário -->
-<div class="card" id="painel" style="display:none;">
-  <h1>Painel do Usuário</h1>
+  <div class="card" id="painel" style="display:none;">
+    <h1>Painel do Usuário</h1>
 
-  <div id="bemvindo"></div>
+    <div id="bemvindo"></div>
 
-  <p class="titulo-link">Seu link de indicação:</p>
-  <div class="link" id="link"></div>
+    <p class="titulo-link">Seu link de indicação:</p>
+    <div class="link" id="link"></div>
 
-  <button onclick="copiarLink()">Copiar Link</button>
+    <button id="btnCopiar" onclick="copiarLink()">Copiar Link</button>
 
-  <p id="indicacoes"></p>
-  <div id="progresso"></div>
+    <p id="indicacoes"></p>
+    <div id="progresso"></div>
 
-  <div id="premio"></div>
+    <div id="premio"></div>
 
-  <!-- Ícones logo abaixo do botão de prêmio -->
-  <div class="logout-info">
-    <i class="fas fa-sign-out-alt logout-icon" onclick="logout()" title="Sair"></i>
-    <i class="fas fa-circle-info info-icon" onclick="abrirModal()" title="Regras"></i>
+    <!-- Ícones logo abaixo do botão de prêmio -->
+    <div class="logout-info">
+      <i class="fa-solid fa-sign-out-alt logout-icon" onclick="logout()" title="Sair"></i>
+      <i class="fa-solid fa-circle-info info-icon" onclick="abrirModal()" title="Regras"></i>
+    </div>
   </div>
-
-  </div>
-</div>
 </section>
 
   <!-- Section institucional -->
@@ -1398,6 +1397,39 @@ function copiarLink() {
   });
 }
 
+function esconderTodos() {
+  document.getElementById("cadastro").style.display = "none";
+  document.getElementById("login").style.display = "none";
+  document.getElementById("painel").style.display = "none";
+}
+
+function mostrarCadastro() {
+  esconderTodos();
+  document.getElementById("cadastro").style.display = "block";
+}
+
+function mostrarLogin() {
+  esconderTodos();
+  document.getElementById("login").style.display = "block";
+}
+
+function mostrarPainel() {
+  esconderTodos();
+  document.getElementById("painel").style.display = "block";
+}
+
+// Inicialização ao carregar a página
+window.onload = function() {
+  esconderTodos(); // garante que nada pisque
+
+  // Exemplo de lógica: se já existe usuário logado no localStorage
+  if (localStorage.getItem("usuarioLogado")) {
+    mostrarPainel();
+  } else {
+    mostrarLogin(); // login é a tela padrão
+  }
+};
+
   </script>
 
 <div id="modalRegras" class="modal">
@@ -1406,8 +1438,7 @@ function copiarLink() {
     <h2>Regras da Indicação</h2>
     <ul>
       <li class="regra1">1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
-      <li class="regra2">2. Cada indicação deve ser única e não pode ser repetida para o mesmo serviço.</li>
-      <li class="regra3">3. O prêmio só é liberado quando você atingir o número mínimo de indicações válidas.</li>
+      <li class="regra3">2. O prêmio só é liberado quando você atingir 10/10 de indicações válidas.</li>
     </ul>
   </div>
 </div>
