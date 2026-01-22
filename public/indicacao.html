@@ -819,6 +819,14 @@ main a:hover {
   box-shadow: 0 0 20px rgba(255, 215, 0, 1);
 }
 
+#progresso .contador {
+  display: block;
+  font-size: 32px;
+  font-weight: bold;
+  color: #ff8800; /* laranja bonito */
+  margin-top: 8px;
+}
+
   </style>
 </head>
 <body>
@@ -874,12 +882,11 @@ main a:hover {
 
   <button onclick="copiarLink()">Copiar Link</button>
 
-  <p id="indicacoes">Indicações concluídas: <span>0</span></p>
+  <p id="indicacoes"></p>
+  <div id="progresso"></div>
 
-  <!-- Aqui aparece o botão dourado quando atingir 10 -->
   <div id="premio"></div>
 
-  <!-- Ícone de saída abaixo das indicações -->
   <div class="logout-icon" onclick="logout()" title="Sair">
     <i class="fas fa-sign-out-alt"></i>
   </div>
@@ -1011,7 +1018,7 @@ function mostrarPainel(usuario) {
   document.getElementById("painel").style.display = "block";
 
   // Bem-vindo com o nome do usuário
-  document.getElementById("bemvindo").innerText = "Bem-vindo, " + usuario.nome;
+  document.getElementById("bemvindo").innerText = "Bem-vindo, " + (usuario.nome || "Usuário");
 
   // Link de indicação (apenas o link dentro da caixa)
   const link = usuario.codigo 
@@ -1019,10 +1026,10 @@ function mostrarPainel(usuario) {
     : "Código não disponível";
   document.getElementById("link").innerText = link;
 
-  // Indicações concluídas com número em laranja
+  // Indicações concluídas com contador estilo 5/10
   const qtdIndicacoes = usuario.indicacoes || 0;
-  document.getElementById("indicacoes").innerHTML = 
-    `Indicações concluídas: <span>${qtdIndicacoes}</span>`;
+  document.getElementById("indicacoes").innerText = "Indicações concluídas:";
+  document.getElementById("progresso").innerHTML = `<span class="contador">${qtdIndicacoes}/10</span>`;
 
   // Botão de prêmio quando atingir 10 indicações
   const premioEl = document.getElementById("premio");
@@ -1039,6 +1046,7 @@ function mostrarPainel(usuario) {
     if (premioEl) premioEl.appendChild(btn);
   }
 }
+
 function copiarLink() {
   const link = document.getElementById("link").innerText.replace("Seu link de indicação: ", "");
   console.log("Copiando:", link); // debug
