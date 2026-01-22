@@ -614,20 +614,20 @@ app.delete('/api/analises/:id', async (req, res) => {
 
 // Cadastro
 app.post('/api/cadastro', async (req, res) => {
-  const { nome, senha, whatsapp } = req.body; // agora também recebe whatsapp
+  const { nome, senha, whatsapp } = req.body;
 
   if (!nome || !senha || !whatsapp) {
     return res.status(400).json({ error: 'Preencha todos os campos' });
   }
 
   try {
-    // 1. Verifica se já existe usuário com esse nome
+    // Verifica se já existe usuário com esse nome
     const [rows] = await pool.query('SELECT id FROM usuarios WHERE nome = ?', [nome]);
     if (rows.length > 0) {
       return res.status(400).json({ error: 'Nome já cadastrado, escolha outro' });
     }
 
-    // 2. Valida força da senha
+    // Valida força da senha
     const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (!senhaForte.test(senha)) {
       return res.status(400).json({
@@ -635,13 +635,19 @@ app.post('/api/cadastro', async (req, res) => {
       });
     }
 
-    // 3. Insere no banco
+    // Gera hash da senha
+    const hash = await bcrypt.hash(senha, 10);
+
+    // Gera código randômico
+    const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // Insere no banco
     await pool.query(
-      'INSERT INTO usuarios (nome, senha, whatsapp, indicacoes) VALUES (?, ?, ?, 0)',
-      [nome, senha, whatsapp]
+      'INSERT INTO usuarios (nome, senha, whatsapp, indicacoes, codigo) VALUES (?, ?, ?, 0, ?)',
+      [nome, hash, whatsapp, codigo]
     );
 
-    res.json({ success: true });
+    res.json({ success: true, codigo });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro interno no servidor' });
