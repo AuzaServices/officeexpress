@@ -396,6 +396,7 @@ usuarios.forEach(u => {
   `;
 });
 }
+
 async function alterarIndicacoes(id, acao) {
   const resp = await fetch(`/api/usuarios/${id}/indicacoes`, {
     method: 'POST',
