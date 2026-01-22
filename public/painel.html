@@ -275,6 +275,7 @@ setInterval(() => {
   carregarLogs();
   carregarRelatorios();
   carregarIndicacoes(); // <--- adicionar aqui
+  carregarUsuarios
 }, 2000);
 
 // Carrega imediatamente ao abrir
@@ -282,6 +283,7 @@ carregarPDFs();
 carregarLogs();
 carregarRelatorios();
 carregarIndicacoes(); // <--- adicionar aqui
+carregarUsuarios
 
 function carregarIndicacoes() {
   fetch('/api/indicacoes')
