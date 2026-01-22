@@ -848,7 +848,7 @@ main a:hover {
 .logout-icon i {
   font-size: 24px;
   cursor: pointer;
-  color: darkred; /* vermelho */
+  color: rgb(177, 0, 0); /* vermelho */
   transition: transform 0.3s;
 }
 
@@ -861,13 +861,13 @@ main a:hover {
 .info-icon i {
   font-size: 24px;
   cursor: pointer;
-  color: #000080; /* azul marinho */
+  color: #000041; /* azul marinho */
   transition: transform 0.3s;
 }
 
 .info-icon i:hover {
   transform: scale(1.1);
-  color: #000080; /* azul marinho mais intenso no hover */
+  color: #000041; /* azul marinho mais intenso no hover */
 }
 
 /* Modal */
@@ -881,7 +881,7 @@ main a:hover {
 }
 
 .modal-content {
-  background: #111358;
+  background: #ffffff;
   margin: 10% auto;
   padding: 20px;
   border-radius: 8px;
@@ -904,6 +904,27 @@ main a:hover {
 
 .close:hover {
   transform: scale(1.2);
+}
+
+.regra1 {
+  color: darkblue;       /* vermelho escuro para destacar a regra principal */
+  font-weight: bold;
+}
+
+.regra2 {
+  color: darkblue;      /* azul escuro */
+}
+
+.regra3 {
+  color: darkblue;     /* verde escuro */
+}
+
+.modal-content h2 {
+  color: darkblue;   /* dourado elegante */
+  font-size: 24px;
+  margin-bottom: 15px;
+  text-align: center; /* centraliza o título */
+  font-weight: bold;
 }
 
   </style>
@@ -971,12 +992,10 @@ main a:hover {
 
   <!-- Ícones logo abaixo do botão de prêmio -->
   <div class="logout-info">
-    <div class="logout-icon" onclick="logout()" title="Sair">
-      <i class="fas fa-sign-out-alt"></i>
-    </div>
-    <div class="info-icon" onclick="abrirModal()" title="Regras">
-      <i class="fas fa-info-circle"></i>
-    </div>
+    <i class="fas fa-sign-out-alt logout-icon" onclick="logout()" title="Sair"></i>
+    <i class="fas fa-info-circle info-icon" onclick="abrirModal()" title="Regras"></i>
+  </div>
+
   </div>
 </div>
 </section>
@@ -987,9 +1006,10 @@ main a:hover {
     <span class="close" onclick="fecharModal()">&times;</span>
     <h2>Regras da Indicação</h2>
     <ul>
-      <li>1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
-      <li>2. Cada indicação deve ser única e não pode ser repetida para o mesmo serviço.</li>
-      <li>3. O prêmio só é liberado quando você atingir o número mínimo de indicações válidas.</li>
+<li class="regra1">1. Apenas indicações com pagamento concluído contam para o seu progresso.</li>
+      <li class="regra2">2. Cada indicação deve ser única e não pode ser repetida para o mesmo serviço.</li>
+      <li class="regra3">3. O prêmio só é liberado quando você atingir o número mínimo de indicações válidas.</li>
+
     </ul>
   </div>
 </div>
