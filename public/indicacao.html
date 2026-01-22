@@ -800,6 +800,25 @@ main a:hover {
   color: #b52b27;             /* tom mais escuro no hover */
 }
 
+#premio button {
+  margin-top: 20px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #ffd700, #ffb700);
+  color: #333;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+#premio button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 1);
+}
+
   </style>
 </head>
 <body>
@@ -856,6 +875,8 @@ main a:hover {
   <button onclick="copiarLink()">Copiar Link</button>
   
   <p id="indicacoes">Indicações concluídas: <span>0</span></p>
+
+  <div id="premio"></div>
   
   <!-- Ícone de saída abaixo das indicações -->
   <div class="logout-icon" onclick="logout()" title="Sair">
@@ -1026,6 +1047,25 @@ window.onload = async () => {
     mostrarLogin();
   }
 };
+
+function atualizarIndicacoes(qtd) {
+  const indicacoesEl = document.getElementById("indicacoes");
+  indicacoesEl.innerHTML = `Indicações concluídas: <span>${qtd}</span>`;
+
+  const premioEl = document.getElementById("premio");
+  premioEl.innerHTML = ""; // limpa antes
+
+  if (qtd >= 10) {
+    const btn = document.createElement("button");
+    btn.innerText = "Receber R$50,00";
+    btn.onclick = () => {
+      const mensagem = "Consegui completar o desafio e indicar e quero receber meu prêmio de *R$50,00*";
+      const url = `https://wa.me/5585991340658?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, "_blank");
+    };
+    premioEl.appendChild(btn);
+  }
+}
 
   </script>
 </body>
