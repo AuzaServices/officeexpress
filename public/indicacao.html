@@ -865,6 +865,7 @@ main a:hover {
   cursor: pointer;
   color: #000041; /* azul marinho */
   transition: transform 0.3s;
+  margin-top: 20px;
 }
 
 .info-icon:hover {
@@ -980,7 +981,7 @@ main a:hover {
   <!-- Card de Cadastro -->
 <div class="card" id="cadastro">
   <h1>Cadastro</h1>
-  <input type="text" id="nome" placeholder="Seu nome">
+  <input type="text" id="nome" placeholder="Seu primeiro nome" maxlength="10" oninput="validarNome(this)">
   <input type="password" id="senha" placeholder="Senha" onkeyup="validarSenha()">
 
   <!-- Regras de senha -->
@@ -1326,6 +1327,31 @@ function validarSenha() {
     document.getElementById("regra4").classList.remove("ok");
   }
 }
+
+function validarNome(campo) {
+  // Remove espaços em tempo real
+  campo.value = campo.value.replace(/\s+/g, "");
+
+  // Limita a 10 caracteres (já garantido pelo maxlength, mas reforçamos)
+  if (campo.value.length > 10) {
+    campo.value = campo.value.substring(0, 10);
+  }
+}
+
+// Bloqueia a tecla espaço no desktop
+document.getElementById("nome").addEventListener("keydown", function(e) {
+  if (e.key === " " || e.keyCode === 32) {
+    e.preventDefault();
+  }
+});
+
+// Bloqueia colar texto com espaço (desktop e mobile)
+document.getElementById("nome").addEventListener("paste", function(e) {
+  e.preventDefault();
+  let texto = (e.clipboardData || window.clipboardData).getData("text");
+  texto = texto.replace(/\s+/g, "").substring(0, 10);
+  this.value = texto;
+});
 
   </script>
 </body>
