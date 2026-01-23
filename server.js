@@ -813,6 +813,7 @@ app.post('/api/pagamentos', async (req, res) => {
   }
 });
 
+// Confirmar pagamento
 app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
   const { id } = req.params;
   try {
@@ -821,7 +822,9 @@ app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
 
     // Busca o código do pagamento
     const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Pagamento não encontrado' });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Pagamento não encontrado' });
+    }
 
     const codigo = rows[0].codigo;
 
@@ -831,13 +834,16 @@ app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
       UPDATE usuarios 
       SET indicacoes = LEAST(indicacoes + 1, 10),
           link_tipo = CASE 
-                        WHEN indicacoes + 1 >= 10 THEN 'comum' 
+                        WHEN LEAST(indicacoes + 1, 10) >= 10 THEN 'comum' 
                         ELSE 'indicacao' 
                       END
       WHERE codigo = ?`, [codigo]);
 
     // Busca valor atualizado para retornar corretamente
-    const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
+    const [updated] = await pool.query(
+      'SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?',
+      [codigo]
+    );
 
     res.json({
       message: 'Pagamento confirmado e indicação registrada',
