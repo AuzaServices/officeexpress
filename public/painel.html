@@ -33,7 +33,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Painel de Arquivos PDF</h1>
+    <h1>Currículos</h1>
     <div class="table-responsive">
       <table class="table table-bordered table-hover align-middle" id="tabela-arquivos">
         <thead class="table-light">
@@ -42,6 +42,7 @@
 <th>Arquivo</th>
 <th>Data</th>
 <th>Ação</th>
+<th>Pago</th>
 <th>Contato</th>
           </tr>
         </thead>
@@ -68,7 +69,7 @@
       </table>
     </div>
 
-    <h1 class="mt-5">Relatórios de Currículos</h1>
+    <h1 class="mt-5">Analises de Currículos</h1>
     <div class="table-responsive">
       <table class="table table-bordered table-hover align-middle" id="tabela-relatorios">
         <thead class="table-light">
@@ -77,6 +78,7 @@
             <th>Arquivo</th>
             <th>Data</th>
             <th>Ação</th>
+            <th>Pago</th>
             <th>Contato</th>
           </tr>
         </thead>
@@ -119,6 +121,96 @@
     <tbody>
     </tbody>
   </table>
+</div>
+
+<h1 class="mt-5">Relatórios por Estado</h1>
+<div class="row">
+  <div class="col-md-12">
+    <p>Selecione um Estado para emitir relatório de Currículos e Análises pagos:</p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AC')">Acre</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AL')">Alagoas</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AP')">Amapá</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AM')">Amazonas</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('BA')">Bahia</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('CE')">Ceará</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('DF')">Distrito Federal</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('ES')">Espírito Santo</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('GO')">Goiás</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MA')">Maranhão</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MT')">Mato Grosso</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MS')">Mato Grosso do Sul</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MG')">Minas Gerais</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PA')">Pará</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PB')">Paraíba</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PR')">Paraná</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PE')">Pernambuco</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PI')">Piauí</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RJ')">Rio de Janeiro</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RN')">Rio Grande do Norte</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RS')">Rio Grande do Sul</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RO')">Rondônia</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RR')">Roraima</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('SC')">Santa Catarina</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('SP')">São Paulo</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('SE')">Sergipe</button>
+  </div>
+  <div class="col-md-3 mb-2">
+    <button class="btn btn-primary w-100" onclick="emitirRelatorio('TO')">Tocantins</button>
+  </div>
 </div>
 
   <script>
@@ -422,6 +514,41 @@ async function apagarUsuario(id) {
 }
 
 window.onload = carregarUsuarios;
+
+function marcarPago(id, tipo) {
+  // Aqui você coleta os dados do documento (nome, estado, cidade, etc.)
+  // e envia via AJAX/Fetch para o backend salvar na tabela registros_pagos
+  fetch('/salvar-pago', {
+    method: 'POST',
+    body: JSON.stringify({ id, tipo }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+function emitirRelatorio(estado) {
+  fetch(`/relatorio/${estado}`)
+    .then(res => res.json())
+    .then(data => {
+      const doc = new jsPDF();
+      doc.text(`Relatório de ${estado}`, 10, 10);
+
+      let total = 0;
+      data.forEach((item, i) => {
+        doc.text(`${i+1} - ${item.tipo}: ${item.nome_doc} - R$${item.valor}`, 10, 20 + i*10);
+        total += item.valor;
+      });
+
+      // Cálculo da porcentagem
+      const minhaParte = (total * 0.60).toFixed(2);
+      const socioParte = (total * 0.40).toFixed(2);
+
+      doc.text(`Total: R$${total}`, 10, 200);
+      doc.text(`Minha parte: R$${minhaParte}`, 10, 210);
+      doc.text(`Sócio: R$${socioParte}`, 10, 220);
+
+      doc.save(`relatorio_${estado}.pdf`);
+    });
+}
 
   </script>
 </body>

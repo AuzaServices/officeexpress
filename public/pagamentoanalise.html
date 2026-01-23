@@ -116,9 +116,6 @@ async function copiarPix() {
   try {
     await navigator.clipboard.writeText(chave);
 
-    // Mostra um toast de confirmação
-    mostrarToast("Chave Pix copiada!");
-
     // 🔎 Captura dados da indicação (se você estiver guardando no sessionStorage)
     const codigo = sessionStorage.getItem("codigoIndicacao"); // código do indicador
     const indicadoNome = sessionStorage.getItem("primeiroNome") || "Cliente"; // nome do indicado
@@ -142,7 +139,6 @@ async function copiarPix() {
 
   try {
     await navigator.clipboard.writeText(chave);
-    mostrarToast("Chave Pix copiada!");
 
     const codigo = sessionStorage.getItem("codigoIndicacao");
     const indicadoNome = sessionStorage.getItem("primeiroNome") || "Cliente";

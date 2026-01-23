@@ -1009,6 +1009,59 @@ app.delete('/api/usuarios/:id', async (req, res) => {
   }
 });
 
+
+// 1. Rota para salvar pagamento
+app.post('/salvar-pago', (req, res) => {
+  const { id, tipo, nome_doc, valor, data, hora, estado, cidade } = req.body;
+
+  const sql = `INSERT INTO registros_pagos 
+    (id, tipo, nome_doc, valor, data, hora, estado, cidade, pago) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, true)`;
+
+  db.query(sql, [id, tipo, nome_doc, valor, data, hora, estado, cidade], (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ message: 'Registro salvo com sucesso!' });
+  });
+});
+
+// 2. Rota para listar registros pagos por Estado
+app.get('/relatorio/:estado', (req, res) => {
+  const estado = req.params.estado;
+
+  const sql = `SELECT * FROM registros_pagos WHERE estado = ? AND pago = true`;
+  db.query(sql, [estado], (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+});
+
+// 3. Rota para listar todos os registros pagos
+app.get('/pagos', (req, res) => {
+  const sql = `SELECT * FROM registros_pagos WHERE pago = true`;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+});
+
+// 4. Rota para apagar todos os logs (acessos)
+app.delete('/apagar-logs', (req, res) => {
+  const sql = `DELETE FROM registros_acessos`;
+  db.query(sql, (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ message: 'Todos os logs foram apagados!' });
+  });
+});
+
+// 5. Rota para usuários cadastrados
+app.get('/usuarios', (req, res) => {
+  const sql = `SELECT * FROM usuarios`;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
