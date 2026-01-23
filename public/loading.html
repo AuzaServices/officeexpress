@@ -253,6 +253,10 @@ if (Array.isArray(dados.empresa)) {
     const formData = new FormData();
     formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
     formData.append("telefone", dados.telefone || "");
+    formData.append("valor", "5.99"); // ou calculado dinamicamente
+    formData.append("estado", dados.estado || "");
+    formData.append("cidade", dados.cidade || "");
+
 
     try {
       await fetch("https://officeexpress.onrender.com/api/upload", {
