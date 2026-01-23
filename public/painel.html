@@ -270,20 +270,20 @@ function carregarPDFs() {
 
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${pdf.id}</td>
-          <td>${pdf.filename || '—'}</td>
-          <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
-          <td>
-            <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-            <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-          </td>
-          <td>
-            ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
-          </td>
-        `;
-        tabela.appendChild(linha);
+const linha = document.createElement('tr');
+linha.innerHTML = `
+  <td>${pdf.id}</td>
+  <td>${pdf.filename || '—'}</td>
+  <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
+  <td>
+    <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+    <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+  <td>
+    <button onclick="marcarPago(${pdf.id}, 'pdfs')" class="btn btn-success btn-sm">Pago</button>
+  </td>
+`;
+tabela.appendChild(linha);
       });
     });
 }
@@ -339,20 +339,20 @@ function carregarPDFs() {
 
   const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
-  const linha = document.createElement('tr');
-  linha.innerHTML = `
-    <td>${rel.id}</td>
-    <td>${rel.filename || '—'}</td>
-    <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
-    <td>
-      <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-      <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-    </td>
-    <td>
-      ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : '—'}
-    </td>
-  `;
-  tabela.appendChild(linha);
+const linha = document.createElement('tr');
+linha.innerHTML = `
+  <td>${rel.id}</td>
+  <td>${rel.filename || '—'}</td>
+  <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+  <td>
+    <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+    <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+  <td>
+    <button onclick="marcarPago(${rel.id}, 'analises')" class="btn btn-success btn-sm">Pago</button>
+  </td>
+`;
+tabela.appendChild(linha);
 });
     })
     .catch(err => {
