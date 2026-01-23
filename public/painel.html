@@ -534,6 +534,8 @@ function marcarPago(id, tipo, nome_doc, valor, estado, cidade) {
       alert("Pagamento registrado com sucesso!");
       carregarPDFs();
       carregarRelatorios();
+    } else {
+      alert("Erro ao registrar pagamento.");
     }
   })
   .catch(err => {

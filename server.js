@@ -1015,16 +1015,14 @@ app.post('/salvar-pago', async (req, res) => {
   try {
     const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
 
-    // monta data/hora atuais
-    const data = new Date();
-    const hoje = data.toISOString().split('T')[0]; // YYYY-MM-DD
-    const hora = data.toTimeString().split(' ')[0]; // HH:MM:SS
+    const agora = new Date();
+    const data = agora.toISOString().split('T')[0]; // YYYY-MM-DD
+    const hora = agora.toTimeString().split(' ')[0]; // HH:MM:SS
 
-    // insere no banco
     await db.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, data, hora, estado, cidade, pago)
       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-    `, [tipo, nome_doc, valor, hoje, hora, estado, cidade]);
+    `, [tipo, nome_doc, valor, data, hora, estado, cidade]);
 
     res.json({ success: true });
   } catch (err) {
