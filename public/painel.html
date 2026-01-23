@@ -5,6 +5,7 @@
   <title>Painel de Registros</title>
   <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       background-color: #f8f9fa;
@@ -563,24 +564,35 @@ function emitirRelatorio(estado) {
   fetch(`/relatorio/${estado}`)
     .then(res => res.json())
     .then(data => {
+      // ✅ Ajuste para versão UMD da jsPDF
+      const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
+
       doc.text(`Relatório de ${estado}`, 10, 10);
 
       let total = 0;
       data.forEach((item, i) => {
-        doc.text(`${i+1} - ${item.tipo}: ${item.nome_doc} - R$${item.valor}`, 10, 20 + i*10);
-        total += item.valor;
+        doc.text(
+          `${i + 1} - ${item.tipo}: ${item.nome_doc} - R$${item.valor}`,
+          10,
+          20 + i * 10
+        );
+        total += parseFloat(item.valor) || 0;
       });
 
       // Cálculo da porcentagem
       const minhaParte = (total * 0.60).toFixed(2);
       const socioParte = (total * 0.40).toFixed(2);
 
-      doc.text(`Total: R$${total}`, 10, 200);
+      doc.text(`Total: R$${total.toFixed(2)}`, 10, 200);
       doc.text(`Minha parte: R$${minhaParte}`, 10, 210);
       doc.text(`Sócio: R$${socioParte}`, 10, 220);
 
       doc.save(`relatorio_${estado}.pdf`);
+    })
+    .catch(err => {
+      console.error("Erro ao emitir relatório:", err);
+      alert("Erro ao gerar relatório. Verifique o backend.");
     });
 }
 
