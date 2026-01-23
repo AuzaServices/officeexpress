@@ -687,27 +687,26 @@ app.post('/api/indicar', async (req, res) => {
   const { codigo } = req.body;
   try {
     const [rows] = await pool.query('SELECT * FROM usuarios WHERE codigo = ?', [codigo]);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Código não encontrado' });
-    }
+    if (rows.length === 0) return res.status(404).json({ error: 'Código não encontrado' });
 
-    const usuario = rows[0];
+    await pool.query(`
+      UPDATE usuarios 
+      SET indicacoes = LEAST(indicacoes + 1, 10),
+          link_tipo = CASE 
+                        WHEN LEAST(indicacoes + 1, 10) >= 10 THEN 'comum' 
+                        ELSE 'indicacao' 
+                      END
+      WHERE codigo = ?`, [codigo]);
 
-    // Atualiza com trava no máximo 10
-    await pool.query(
-      'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
-      [codigo]
-    );
+    const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
 
-    // Busca novamente o valor atualizado para garantir resposta correta
-    const [updated] = await pool.query('SELECT indicacoes FROM usuarios WHERE codigo = ?', [codigo]);
-
-    res.json({ message: 'Indicação registrada', indicacoes: updated[0].indicacoes });
+    res.json({ message: 'Indicação registrada', indicacoes: updated[0].indicacoes, link_tipo: updated[0].link_tipo });
   } catch (err) {
     console.error('Erro ao registrar indicação:', err.message);
     res.status(500).json({ error: 'Erro ao registrar indicação' });
   }
 });
+
 
 app.get('/api/painel/:nome', async (req, res) => {
   const { nome } = req.params;
@@ -817,19 +816,13 @@ app.post('/api/pagamentos', async (req, res) => {
 app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
   const { id } = req.params;
   try {
-    // Atualiza status do pagamento
     await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
 
-    // Busca o código do pagamento
     const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Pagamento não encontrado' });
-    }
+    if (rows.length === 0) return res.status(404).json({ error: 'Pagamento não encontrado' });
 
     const codigo = rows[0].codigo;
 
-    // Atualiza contador no usuário com trava no máximo 10
-    // e muda o tipo do link para 'comum' quando chegar em 10
     await pool.query(`
       UPDATE usuarios 
       SET indicacoes = LEAST(indicacoes + 1, 10),
@@ -839,11 +832,7 @@ app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
                       END
       WHERE codigo = ?`, [codigo]);
 
-    // Busca valor atualizado para retornar corretamente
-    const [updated] = await pool.query(
-      'SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?',
-      [codigo]
-    );
+    const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
 
     res.json({
       message: 'Pagamento confirmado e indicação registrada',
@@ -855,6 +844,7 @@ app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
     res.status(500).json({ error: 'Erro ao confirmar pagamento' });
   }
 });
+
 
 // Listar todas as indicações/pagamentos
 // Listar indicações com nome do indicador
@@ -894,15 +884,10 @@ app.get('/api/pagamentos', async (req, res) => {
 app.delete('/api/indicacoes/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    // Busca o registro
     const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Registro não encontrado' });
 
-    // Apaga da tabela pagamentos
     await pool.query('DELETE FROM pagamentos WHERE id = ?', [id]);
-
-    // ❌ Não mexe nos pontos do indicador
-    // await pool.query('UPDATE usuarios SET indicacoes = indicacoes - 1 WHERE codigo = ?', [codigo]);
 
     res.json({ message: 'Indicação apagada com sucesso (sem alterar pontos)' });
   } catch (err) {
@@ -911,37 +896,40 @@ app.delete('/api/indicacoes/:id', async (req, res) => {
   }
 });
 
+
 // Registrar pagamento da análise
 app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
   const { id } = req.params;
   try {
-    // Atualiza status do pagamento da análise
     await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
 
-    // Busca o código do pagamento
     const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Pagamento não encontrado' });
 
     const codigo = rows[0].codigo;
 
-    // Atualiza contador no usuário com trava no máximo 10
-    await pool.query(
-      'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
-      [codigo]
-    );
+    await pool.query(`
+      UPDATE usuarios 
+      SET indicacoes = LEAST(indicacoes + 1, 10),
+          link_tipo = CASE 
+                        WHEN LEAST(indicacoes + 1, 10) >= 10 THEN 'comum' 
+                        ELSE 'indicacao' 
+                      END
+      WHERE codigo = ?`, [codigo]);
 
-    // Busca valor atualizado para retornar corretamente
-    const [updated] = await pool.query('SELECT indicacoes FROM usuarios WHERE codigo = ?', [codigo]);
+    const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
 
     res.json({
       message: 'Pagamento da análise confirmado e indicação registrada',
-      indicacoes: updated[0].indicacoes
+      indicacoes: updated[0].indicacoes,
+      link_tipo: updated[0].link_tipo
     });
   } catch (err) {
     console.error('Erro ao confirmar pagamento da análise:', err.message);
     res.status(500).json({ error: 'Erro ao confirmar pagamento da análise' });
   }
 });
+
 
 // Confirmar pagamento da análise
 app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
@@ -977,33 +965,38 @@ app.get('/api/usuarios', async (req, res) => {
 // Alterar indicações com limite de 0 a 10
 app.post('/api/usuarios/:id/indicacoes', async (req, res) => {
   const { id } = req.params;
-  const { acao } = req.body; // "mais" ou "menos"
+  const { acao } = req.body;
 
   try {
     if (acao === 'mais') {
-      await pool.query(
-        'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE id = ?',
-        [id]
-      );
+      await pool.query(`
+        UPDATE usuarios 
+        SET indicacoes = LEAST(indicacoes + 1, 10),
+            link_tipo = CASE 
+                          WHEN LEAST(indicacoes + 1, 10) >= 10 THEN 'comum' 
+                          ELSE 'indicacao' 
+                        END
+        WHERE id = ?`, [id]);
     } else if (acao === 'menos') {
-      await pool.query(
-        'UPDATE usuarios SET indicacoes = GREATEST(indicacoes - 1, 0) WHERE id = ?',
-        [id]
-      );
+      await pool.query(`
+        UPDATE usuarios 
+        SET indicacoes = GREATEST(indicacoes - 1, 0),
+            link_tipo = CASE 
+                          WHEN indicacoes < 10 THEN 'indicacao' 
+                          ELSE link_tipo 
+                        END
+        WHERE id = ?`, [id]);
     }
 
-    // Retorna o valor atualizado
-    const [rows] = await pool.query(
-      'SELECT indicacoes FROM usuarios WHERE id = ?',
-      [id]
-    );
+    const [rows] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE id = ?', [id]);
 
-    res.json({ success: true, indicacoes: rows[0].indicacoes });
+    res.json({ success: true, indicacoes: rows[0].indicacoes, link_tipo: rows[0].link_tipo });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao atualizar indicações' });
   }
 });
+
 
 // Apagar usuário
 app.delete('/api/usuarios/:id', async (req, res) => {
