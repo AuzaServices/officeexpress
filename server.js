@@ -1013,20 +1013,20 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 // 1. Rota para salvar pagamento
 app.post('/salvar-pago', async (req, res) => {
   try {
-    const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
+    const { tipo, nome_doc, valor, estado, cidade } = req.body;
 
     const agora = new Date();
     const data = agora.toISOString().split('T')[0]; // YYYY-MM-DD
     const hora = agora.toTimeString().split(' ')[0]; // HH:MM:SS
 
-    await db.query(`
+    await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, data, hora, estado, cidade, pago)
       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
     `, [tipo, nome_doc, valor, data, hora, estado, cidade]);
 
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error('Erro ao salvar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao salvar pagamento' });
   }
 });
