@@ -801,10 +801,23 @@ app.post('/api/pagamentos', async (req, res) => {
   console.log('Dados recebidos:', req.body);
 
   try {
+    // Verifica se o código existe e qual o tipo do link
+    const [rows] = await pool.query('SELECT link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Código inválido' });
+    }
+
+    // Se o link já for comum, não registra pagamento como indicação
+    if (rows[0].link_tipo === 'comum') {
+      return res.json({ message: 'Este link é comum e não gera mais indicações' });
+    }
+
+    // Caso contrário, registra normalmente
     await pool.query(
       'INSERT INTO pagamentos (codigo, indicado_nome, tipo, status) VALUES (?, ?, ?, ?)',
       [codigo, indicado_nome, tipo, 'pendente']
     );
+
     res.json({ message: 'Pagamento registrado como pendente' });
   } catch (err) {
     console.error('Erro ao registrar pagamento:', err);
