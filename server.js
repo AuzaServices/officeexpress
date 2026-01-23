@@ -229,7 +229,7 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
 
   const { originalname, mimetype, buffer } = req.file;
-  const { telefone } = req.body;
+  const { telefone, valor, estado, cidade } = req.body; // ➕ captura os novos campos
 
   try {
     // 1. Verifica quantos PDFs existem
@@ -242,9 +242,20 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
       await pool.query(`DELETE FROM pdfs WHERE id IN (${placeholders})`, idsParaApagar);
     }
 
-    // 3. Salva o novo PDF
-    const query = 'INSERT INTO pdfs (filename, mimetype, data, telefone) VALUES (?, ?, ?, ?)';
-    const [result] = await pool.query(query, [originalname, mimetype, buffer, telefone]);
+    // 3. Salva o novo PDF com os campos extras
+    const query = `
+      INSERT INTO pdfs (filename, mimetype, data, telefone, valor, estado, cidade)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    const [result] = await pool.query(query, [
+      originalname,
+      mimetype,
+      buffer,
+      telefone,
+      valor || 5.99,   // ➕ valor padrão do currículo
+      estado || null,
+      cidade || null
+    ]);
 
     res.status(200).json({ message: 'PDF salvo com sucesso', id: result.insertId });
   } catch (err) {
