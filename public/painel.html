@@ -563,31 +563,62 @@ function marcarPago(id, tipo, nome_doc, valor, estado, cidade) {
 function emitirRelatorio(estado) {
   fetch(`/relatorio/${estado}`)
     .then(res => res.json())
-    .then(data => {
-      // ✅ Ajuste para versão UMD da jsPDF
+    .then(async data => {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      doc.text(`Relatório de ${estado}`, 10, 10);
+      // Marca d'água (logo da empresa)
+      const img = new Image();
+      img.src = "marca.png"; // caminho do logo
+      await img.decode();
+      doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST"); 
+      doc.setTextColor(150); // texto mais claro sobre a marca d'água
 
+      // Cabeçalho
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text(`Relatório de ${estado}`, 10, 15);
+      doc.setFontSize(9);
+      doc.text(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, 10, 22);
+
+      // Cabeçalho da tabela
+      doc.setFontSize(9);
+      let startY = 35;
+      doc.text("ID", 10, startY);
+      doc.text("Tipo", 25, startY);
+      doc.text("Documento", 70, startY);
+      doc.text("Valor (R$)", 160, startY);
+
+      // Linha separadora
+      doc.line(10, startY + 2, 200, startY + 2);
+
+      // Dados
+      let y = startY + 10;
       let total = 0;
-      data.forEach((item, i) => {
-        doc.text(
-          `${i + 1} - ${item.tipo}: ${item.nome_doc} - R$${item.valor}`,
-          10,
-          20 + i * 10
-        );
+      data.forEach(item => {
+        doc.text(String(item.id), 10, y);
+        doc.text(item.tipo, 25, y);
+        doc.text(item.nome_doc, 70, y);
+        doc.text(parseFloat(item.valor).toFixed(2), 160, y);
+        // linhas horizontais
+        doc.line(10, y + 2, 200, y + 2);
+        y += 8;
         total += parseFloat(item.valor) || 0;
       });
 
-      // Cálculo da porcentagem
-      const minhaParte = (total * 0.60).toFixed(2);
+      // Totais
+      y += 15;
+      const officeExpressParte = (total * 0.60).toFixed(2);
       const socioParte = (total * 0.40).toFixed(2);
 
-      doc.text(`Total: R$${total.toFixed(2)}`, 10, 200);
-      doc.text(`Minha parte: R$${minhaParte}`, 10, 210);
-      doc.text(`Sócio: R$${socioParte}`, 10, 220);
+      doc.setFontSize(10);
+      doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
+      y += 8;
+      doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
+      y += 8;
+      doc.text(`Sócio: R$ ${socioParte}`, 10, y);
 
+      // Salvar PDF
       doc.save(`relatorio_${estado}.pdf`);
     })
     .catch(err => {
