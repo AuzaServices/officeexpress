@@ -281,7 +281,7 @@ app.get('/api/pdfs/:id/download', async (req, res) => {
 //////////////////////////
 app.get('/api/pdfs', async (req, res) => {
   try {
-    const query = 'SELECT id, filename, telefone, created_at FROM pdfs ORDER BY id DESC';
+    const query = 'SELECT id, filename, telefone, created_at, valor, estado, cidade FROM pdfs ORDER BY id DESC';
     const [results] = await pool.query(query);
     res.json(results);
   } catch (err) {
@@ -289,6 +289,7 @@ app.get('/api/pdfs', async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar arquivos' });
   }
 });
+
 
 //////////////////////////
 // 📝 Salvar log de acesso com localização
@@ -521,33 +522,18 @@ doc.on('end', async () => {
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `
-      SELECT 
-        id, 
-        nome, 
-        telefone, 
-        filename, 
-        mimetype, 
-        criado_em
+      SELECT id, nome, telefone, filename, mimetype, criado_em, valor, estado, cidade
       FROM analises
       ORDER BY id DESC
     `;
-    
     const [results] = await pool.query(query);
-
-    if (!Array.isArray(results)) {
-      return res.status(500).json({ error: 'Formato inválido de resposta' });
-    }
-
     res.json(results);
   } catch (err) {
-    console.error('❌ Erro ao buscar análises:', {
-      mensagem: err.message,
-      codigo: err.code,
-      sql: err.sql
-    });
+    console.error('Erro ao buscar análises:', err.message);
     res.status(500).json({ error: 'Erro ao buscar análises' });
   }
 });
+
 
 app.get('/api/analises/:id/download', async (req, res) => {
   const { id } = req.params;
