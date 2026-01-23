@@ -330,7 +330,7 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
 <!-- Etapa 2B — Endereço -->
  
 <div class="etapa">
-    <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
     <label for="cep">CEP</label>
     <input type="text" name="cep" id="cep" />
     <small style="display:block; margin-top:6px;">
@@ -339,6 +339,7 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
       </a>
     </small>
   </div>
+
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
     <label for="endereco">Rua/Avenida</label>
     <div style="display: flex; align-items: center; gap: 10px;">
@@ -350,8 +351,8 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
   </div>
 
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-<label for="numero">Número <span style="font-weight: normal; color: #666;">(opcional)</span></label>
-<input type="text" id="numero" name="numero">
+    <label for="numero">Número <span style="font-weight: normal; color: #666;">(opcional)</span></label>
+    <input type="text" id="numero" name="numero">
   </div>
 
   <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
@@ -374,16 +375,52 @@ document.querySelectorAll(".telefone-bloco").forEach(bloco => {
     </div>
   </div>
 
-  <div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-    <label for="cidade">Cidade</label>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <input type="text" name="cidade" id="cidade" />
-      <button type="button" onclick="reconhecerCampo('cidade')" style="background: none; border: none; cursor: pointer;">
-        <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-      </button>
-    </div>
+  <!-- Cidade + Estado lado a lado -->
+<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
+  <label for="cidade">Cidade e Estado</label>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <!-- Campo Cidade -->
+    <input type="text" name="cidade" id="cidade" placeholder="Cidade" required />
+    <button type="button" onclick="reconhecerCampo('cidade')" style="background: none; border: none; cursor: pointer;">
+      <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
+    </button>
+
+    <!-- Campo Estado como select -->
+    <select name="estado" id="estado" required>
+      <option value="">Selecione o Estado</option>
+      <option value="AC">AC</option>
+      <option value="AL">AL</option>
+      <option value="AP">AP</option>
+      <option value="AM">AM</option>
+      <option value="BA">BA</option>
+      <option value="CE">CE</option>
+      <option value="DF">DF</option>
+      <option value="ES">ES</option>
+      <option value="GO">GO</option>
+      <option value="MA">MA</option>
+      <option value="MT">MT</option>
+      <option value="MS">MS</option>
+      <option value="MG">MG</option>
+      <option value="PA">PA</option>
+      <option value="PB">PB</option>
+      <option value="PR">PR</option>
+      <option value="PE">PE</option>
+      <option value="PI">PI</option>
+      <option value="RJ">RJ</option>
+      <option value="RN">RN</option>
+      <option value="RS">RS</option>
+      <option value="RO">RO</option>
+      <option value="RR">RR</option>
+      <option value="SC">SC</option>
+      <option value="SP">SP</option>
+      <option value="SE">SE</option>
+      <option value="TO">TO</option>
+    </select>
   </div>
 </div>
+
+</div>
+
 <script>
   document.getElementById("cep").addEventListener("blur", async function () {
     const cep = this.value.replace(/\D/g, "");
@@ -1260,6 +1297,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (dadosSalvos.complemento) document.getElementById("complemento").value = dadosSalvos.complemento;
   if (dadosSalvos.bairro) document.getElementById("bairro").value = dadosSalvos.bairro;
   if (dadosSalvos.cidade) document.getElementById("cidade").value = dadosSalvos.cidade;
+  if (dadosSalvos.estado) document.getElementById("estado").value = dadosSalvos.estado; // ✅ Estado implementado
   if (dadosSalvos.cep) document.getElementById("cep").value = dadosSalvos.cep;
   if (dadosSalvos.objetivo) document.getElementById("objetivo").value = dadosSalvos.objetivo;
   if (dadosSalvos.formacao) document.getElementById("formacao").value = dadosSalvos.formacao;

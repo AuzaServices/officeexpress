@@ -54,7 +54,7 @@ function adicionarTelefone() {
 
 const dados = {
   nome: form.nome?.value.trim() || "",
-  idade: form.idade?.value.trim() || "", // ✅ Adiciona a idade aqui
+  idade: form.idade?.value.trim() || "", // ✅ já está implementado
   email: form.email?.value.trim() || "",
   telefone: valores("telefone").filter(t => t).join(" "),
   endereco: form.endereco?.value.trim() || "",
@@ -62,6 +62,7 @@ const dados = {
   complemento: form.complemento?.value.trim() || "",
   bairro: form.bairro?.value.trim() || "",
   cidade: form.cidade?.value.trim() || "",
+  estado: form.estado?.value.trim() || "", // ✅ adiciona o Estado aqui
   cep: form.cep?.value.trim() || "",
   infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
   objetivo: form.objetivo?.value.trim() || "",
@@ -311,22 +312,35 @@ function mostrarEtapa(index) {
   // Apenas muda o texto, sem mexer em classe
   btnAvancar.textContent = index === etapas.length - 1 ? 'Finalizar' : 'Avançar';
 
-if (index === etapas.length - 1) {
-  btnAvancar.classList.add("finalizar");
-  btnAvancar.textContent = "Finalizar";
-} else {
-  btnAvancar.classList.remove("finalizar");
-  btnAvancar.textContent = "Avançar";
-}
+  if (index === etapas.length - 1) {
+    btnAvancar.classList.add("finalizar");
+    btnAvancar.textContent = "Finalizar";
+  } else {
+    btnAvancar.classList.remove("finalizar");
+    btnAvancar.textContent = "Avançar";
+  }
 }
 
 btnAvancar.addEventListener('click', () => {
+  // validação apenas na terceira etapa (índice 2)
+  const indiceEtapaCidadeEstado = 2; 
+
+  if (etapaAtual === indiceEtapaCidadeEstado) {
+    const campoEstado = document.getElementById("estado");
+    if (campoEstado && !campoEstado.value) {
+      alert("Selecione um Estado válido antes de avançar.");
+      return; // impede avanço
+    }
+  }
+
   if (etapaAtual < etapas.length - 1) {
     etapaAtual++;
     mostrarEtapa(etapaAtual);
   } else {
     // Simula o submit manualmente
-    document.getElementById("formulario").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    document.getElementById("formulario").dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true })
+    );
   }
 });
 
@@ -338,7 +352,6 @@ btnVoltar.addEventListener('click', () => {
 });
 
 mostrarEtapa(etapaAtual);
-
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".mesAno").forEach(input => {
     if (!input._flatpickr) {

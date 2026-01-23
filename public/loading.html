@@ -122,13 +122,14 @@ p, li {
   const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
   const container = document.getElementById("curriculo");
 
-  let enderecoCompleto = "";
-  if (dados.endereco) enderecoCompleto += dados.endereco;
-  if (dados.numero) enderecoCompleto += ", " + dados.numero;
-  if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
-  if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-  if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
-  if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
+let enderecoCompleto = "";
+if (dados.endereco) enderecoCompleto += dados.endereco;
+if (dados.numero) enderecoCompleto += ", " + dados.numero;
+if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
+if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
+if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
+if (dados.estado) enderecoCompleto += " - " + dados.estado; // ✅ adiciona o Estado
+if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
 
   container.innerHTML = `
     <div class="info-topo">
