@@ -943,25 +943,6 @@ app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
   }
 });
 
-
-// Confirmar pagamento da análise
-app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
-
-    const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
-    const codigo = rows[0].codigo;
-
-    await pool.query('UPDATE usuarios SET indicacoes = indicacoes + 1 WHERE codigo = ?', [codigo]);
-
-    res.json({ message: 'Pagamento da análise confirmado e indicação registrada' });
-  } catch (err) {
-    console.error('Erro ao confirmar pagamento da análise:', err.message);
-    res.status(500).json({ error: 'Erro ao confirmar pagamento da análise' });
-  }
-});
-
 // Listar usuários
 app.get('/api/usuarios', async (req, res) => {
   try {
@@ -1041,5 +1022,14 @@ cron.schedule('0 3 * * *', async () => {
     console.log(`🧹 Logs limpos automaticamente às 03:00 — ${result.affectedRows} registros apagados`);
   } catch (err) {
     console.error('❌ Erro ao limpar logs automaticamente:', err.message);
+  }
+});
+
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    await pool.query('SELECT 1');
+    console.log('🔄 Ping ao banco OK');
+  } catch (err) {
+    console.error('❌ Erro no ping ao banco:', err.message);
   }
 });
