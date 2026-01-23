@@ -1036,7 +1036,7 @@ app.get('/relatorio/:estado', async (req, res) => {
       'SELECT id, tipo, nome_doc, valor, cidade, data_pagamento FROM registros_pagos WHERE estado = ? AND pago = 1',
       [estado]
     );
-    res.json(results);
+    res.json(results); // ✅ sempre retorna array
   } catch (err) {
     console.error('Erro ao gerar relatório:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório' });

@@ -602,13 +602,13 @@ function emitirRelatorio(estado) {
         doc.text(item.nome_doc, 70, y);
         doc.text(parseFloat(item.valor).toFixed(2), 120, y);
         doc.text(item.cidade || "—", 150, y);
-        doc.text(
-          item.data_pagamento
-            ? new Date(item.data_pagamento).toLocaleDateString("pt-BR")
-            : "—",
-          170,
-          y
-        );
+doc.text(
+  item.data_pagamento
+    ? new Date(item.data_pagamento).toLocaleDateString("pt-BR")
+    : "—",
+  170,
+  y
+);
 
         // linhas horizontais
         doc.line(10, y + 2, 200, y + 2);
