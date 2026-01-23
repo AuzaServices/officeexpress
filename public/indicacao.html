@@ -1185,18 +1185,22 @@ function mostrarPainel(usuario) {
   // Força estilo visível no Bem-vindo
   const bemvindoEl = document.getElementById("bemvindo");
   bemvindoEl.style.display = "block";
-  bemvindoEl.style.color = "#000"; // preto visível
+  bemvindoEl.style.color = "#000";
   bemvindoEl.style.fontSize = "22px";
   bemvindoEl.style.fontWeight = "bold";
 
-  // Escreve o texto
+  // Texto de boas-vindas
   bemvindoEl.innerText = "Bem vindo(a), " + (usuario?.nome || "Usuário");
-  console.log("Texto escrito:", bemvindoEl.innerText);
 
-  // Link de indicação
-  const link = usuario?.codigo 
-    ? `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`
-    : "Código não disponível";
+  // Link de indicação ou comum
+  let link;
+  if (usuario?.link_tipo === "comum") {
+    link = "https://officeexpress.onrender.com/splash.html";
+  } else {
+    link = usuario?.codigo
+      ? `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`
+      : "Código não disponível";
+  }
   document.getElementById("link").innerText = link;
 
   // Indicações concluídas com contador estilo 5/10
@@ -1204,15 +1208,14 @@ function mostrarPainel(usuario) {
   document.getElementById("indicacoes").innerText = "Indicações concluídas:";
   document.getElementById("progresso").innerHTML = `<span class="contador">${qtdIndicacoes}/10</span>`;
 
-  // Botão de prêmio sempre visível
+  // Botão de prêmio
   const premioEl = document.getElementById("premio");
-  if (premioEl) premioEl.innerHTML = "";
+  premioEl.innerHTML = "";
 
   const btn = document.createElement("button");
   btn.innerText = "Receber R$50,00";
 
   if (qtdIndicacoes >= 10) {
-    // Ativo
     btn.disabled = false;
     btn.classList.add("ativo");
     btn.onclick = () => {
@@ -1221,7 +1224,6 @@ function mostrarPainel(usuario) {
       window.open(url, "_blank");
     };
   } else {
-    // Escurecido/ofuscado
     btn.disabled = true;
     btn.classList.add("desativado");
     btn.title = "Complete 10 indicações para liberar o prêmio";
