@@ -567,27 +567,27 @@ function emitirRelatorio(estado) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      // Marca d'água (logo da empresa)
+      // Marca d'água (logo da empresa mais transparente)
       const img = new Image();
       img.src = "marca.png"; // caminho do logo
       await img.decode();
-      doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST"); 
-      doc.setTextColor(150); // texto mais claro sobre a marca d'água
+      doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
+      doc.setTextColor(0); // texto normal
 
       // Cabeçalho
       doc.setFontSize(14);
-      doc.setTextColor(0);
       doc.text(`Relatório de ${estado}`, 10, 15);
       doc.setFontSize(9);
       doc.text(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, 10, 22);
 
       // Cabeçalho da tabela
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       let startY = 35;
       doc.text("ID", 10, startY);
       doc.text("Tipo", 25, startY);
       doc.text("Documento", 70, startY);
-      doc.text("Valor (R$)", 160, startY);
+      doc.text("Valor (R$)", 140, startY);
+      doc.text("Data Pagamento", 170, startY);
 
       // Linha separadora
       doc.line(10, startY + 2, 200, startY + 2);
@@ -599,7 +599,15 @@ function emitirRelatorio(estado) {
         doc.text(String(item.id), 10, y);
         doc.text(item.tipo, 25, y);
         doc.text(item.nome_doc, 70, y);
-        doc.text(parseFloat(item.valor).toFixed(2), 160, y);
+        doc.text(parseFloat(item.valor).toFixed(2), 140, y);
+        doc.text(
+          item.data_pagamento
+            ? new Date(item.data_pagamento).toLocaleDateString("pt-BR")
+            : "—",
+          170,
+          y
+        );
+
         // linhas horizontais
         doc.line(10, y + 2, 200, y + 2);
         y += 8;
