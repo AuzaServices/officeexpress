@@ -1016,7 +1016,7 @@ app.post('/salvar-pago', async (req, res) => {
     const data = agora.toISOString().split('T')[0]; // YYYY-MM-DD
 
     await pool.query(`
-      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data_pagamento, pago)
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, pago)
       VALUES (?, ?, ?, ?, ?, ?, 1)
     `, [tipo, nome_doc, valor, estado, cidade, data]);
 
@@ -1033,10 +1033,10 @@ app.get('/relatorio/:estado', async (req, res) => {
 
   try {
     const [results] = await pool.query(
-      'SELECT id, tipo, nome_doc, valor, cidade, data_pagamento FROM registros_pagos WHERE estado = ? AND pago = 1',
+      'SELECT id, tipo, nome_doc, valor, cidade, data FROM registros_pagos WHERE estado = ? AND pago = 1',
       [estado]
     );
-    res.json(results); // ✅ sempre retorna array
+    res.json(results); // ✅ retorna array com "data"
   } catch (err) {
     console.error('Erro ao gerar relatório:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório' });

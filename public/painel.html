@@ -603,8 +603,8 @@ function emitirRelatorio(estado) {
         doc.text(parseFloat(item.valor).toFixed(2), 120, y);
         doc.text(item.cidade || "—", 150, y);
 doc.text(
-  item.data_pagamento
-    ? new Date(item.data_pagamento).toLocaleDateString("pt-BR")
+  item.data
+    ? new Date(item.data).toLocaleDateString("pt-BR")
     : "—",
   170,
   y
