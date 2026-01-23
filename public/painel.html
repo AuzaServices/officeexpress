@@ -586,8 +586,8 @@ function emitirRelatorio(estado) {
         let startY = 35;
         doc.text("ID", 10, startY);
         doc.text("Tipo", 25, startY);
-        doc.text("Documento", 55, startY);   // Documento mais próximo do Tipo
-        doc.text("Valor (R$)", 110, startY); // deslocado para dar espaço
+        doc.text("Documento", 55, startY);
+        doc.text("Valor (R$)", 110, startY);
         doc.text("Cidade", 140, startY);
         doc.text("Data Pagamento", 170, startY);
 
@@ -600,7 +600,6 @@ function emitirRelatorio(estado) {
       const pageHeight = doc.internal.pageSize.height;
 
       data.forEach(item => {
-        // Quebra automática de página
         if (y > pageHeight - 30) {
           doc.addPage();
           y = desenharCabecalho();
@@ -609,14 +608,20 @@ function emitirRelatorio(estado) {
         doc.text(String(item.id), 10, y);
         doc.text(item.tipo, 25, y);
 
-        // Documento com largura máxima (corta se for muito longo)
+        // Documento resumido se muito longo
         let docNome = item.nome_doc.length > 40 
           ? item.nome_doc.substring(0, 40) + "..." 
           : item.nome_doc;
         doc.text(docNome, 55, y);
 
         doc.text(parseFloat(item.valor).toFixed(2), 110, y);
-        doc.text(item.cidade || "—", 140, y);
+
+        // Cidade resumida se muito longa
+        let cidadeNome = item.cidade && item.cidade.length > 20
+          ? item.cidade.substring(0, 20) + "..."
+          : (item.cidade || "—");
+        doc.text(cidadeNome, 140, y);
+
         doc.text(
           item.data
             ? new Date(item.data).toLocaleDateString("pt-BR")
@@ -630,7 +635,6 @@ function emitirRelatorio(estado) {
         total += parseFloat(item.valor) || 0;
       });
 
-      // Totais
       if (y > pageHeight - 40) {
         doc.addPage();
         y = desenharCabecalho();
