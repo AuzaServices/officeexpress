@@ -1014,12 +1014,11 @@ app.post('/salvar-pago', async (req, res) => {
 
     const agora = new Date();
     const data = agora.toISOString().split('T')[0]; // YYYY-MM-DD
-    const hora = agora.toTimeString().split(' ')[0]; // HH:MM:SS
 
     await pool.query(`
-      INSERT INTO registros_pagos (tipo, nome_doc, valor, data, hora, estado, cidade, pago)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-    `, [tipo, nome_doc, valor, data, hora, estado, cidade]);
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data_pagamento, pago)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
+    `, [tipo, nome_doc, valor, estado, cidade, data]);
 
     res.json({ success: true });
   } catch (err) {
@@ -1034,7 +1033,7 @@ app.get('/relatorio/:estado', async (req, res) => {
 
   try {
     const [results] = await pool.query(
-      'SELECT * FROM registros_pagos WHERE estado = ? AND pago = 1',
+      'SELECT id, tipo, nome_doc, valor, cidade, data_pagamento FROM registros_pagos WHERE estado = ? AND pago = 1',
       [estado]
     );
     res.json(results);
