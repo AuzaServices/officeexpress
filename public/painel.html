@@ -572,7 +572,7 @@ function emitirRelatorio(estado) {
       img.src = "marca.png"; // caminho do logo
       await img.decode();
       doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
-      doc.setTextColor(0); // texto normal
+      doc.setTextColor(0);
 
       // Cabeçalho
       doc.setFontSize(14);
@@ -586,7 +586,8 @@ function emitirRelatorio(estado) {
       doc.text("ID", 10, startY);
       doc.text("Tipo", 25, startY);
       doc.text("Documento", 70, startY);
-      doc.text("Valor (R$)", 140, startY);
+      doc.text("Valor (R$)", 120, startY);
+      doc.text("Cidade", 150, startY);
       doc.text("Data Pagamento", 170, startY);
 
       // Linha separadora
@@ -599,7 +600,8 @@ function emitirRelatorio(estado) {
         doc.text(String(item.id), 10, y);
         doc.text(item.tipo, 25, y);
         doc.text(item.nome_doc, 70, y);
-        doc.text(parseFloat(item.valor).toFixed(2), 140, y);
+        doc.text(parseFloat(item.valor).toFixed(2), 120, y);
+        doc.text(item.cidade || "—", 150, y);
         doc.text(
           item.data_pagamento
             ? new Date(item.data_pagamento).toLocaleDateString("pt-BR")
