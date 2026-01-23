@@ -1029,14 +1029,19 @@ app.post('/salvar-pago', async (req, res) => {
 });
 
 // 2. Rota para listar registros pagos por Estado
-app.get('/relatorio/:estado', (req, res) => {
+app.get('/relatorio/:estado', async (req, res) => {
   const estado = req.params.estado;
 
-  const sql = `SELECT * FROM registros_pagos WHERE estado = ? AND pago = true`;
-  db.query(sql, [estado], (err, results) => {
-    if (err) return res.status(500).json({ error: err });
+  try {
+    const [results] = await pool.query(
+      'SELECT * FROM registros_pagos WHERE estado = ? AND pago = 1',
+      [estado]
+    );
     res.json(results);
-  });
+  } catch (err) {
+    console.error('Erro ao gerar relatório:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar relatório' });
+  }
 });
 
 // 3. Rota para listar todos os registros pagos
