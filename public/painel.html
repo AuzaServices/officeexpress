@@ -567,13 +567,12 @@ function emitirRelatorio(estado) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      // Marca d'água discreta (logo quase transparente)
       const img = new Image();
-      img.src = "marca.png"; // caminho do logo
+      img.src = "marca.png"; // logo da empresa
       await img.decode();
 
-      // Função para aplicar marca d'água e cabeçalho em cada página
-      function desenharCabecalho(pagina) {
+      // Função para cabeçalho e marca d'água
+      function desenharCabecalho() {
         doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
         doc.setTextColor(0);
 
@@ -587,32 +586,37 @@ function emitirRelatorio(estado) {
         let startY = 35;
         doc.text("ID", 10, startY);
         doc.text("Tipo", 25, startY);
-        doc.text("Documento", 70, startY);
-        doc.text("Valor (R$)", 120, startY);
-        doc.text("Cidade", 150, startY);
+        doc.text("Documento", 55, startY);   // Documento mais próximo do Tipo
+        doc.text("Valor (R$)", 110, startY); // deslocado para dar espaço
+        doc.text("Cidade", 140, startY);
         doc.text("Data Pagamento", 170, startY);
 
         doc.line(10, startY + 2, 200, startY + 2);
-
         return startY + 10;
       }
 
-      let y = desenharCabecalho(1);
+      let y = desenharCabecalho();
       let total = 0;
       const pageHeight = doc.internal.pageSize.height;
 
       data.forEach(item => {
-        // Se passar do limite da página, cria nova
-        if (y > pageHeight - 20) {
+        // Quebra automática de página
+        if (y > pageHeight - 30) {
           doc.addPage();
           y = desenharCabecalho();
         }
 
         doc.text(String(item.id), 10, y);
         doc.text(item.tipo, 25, y);
-        doc.text(item.nome_doc, 70, y);
-        doc.text(parseFloat(item.valor).toFixed(2), 120, y);
-        doc.text(item.cidade || "—", 150, y);
+
+        // Documento com largura máxima (corta se for muito longo)
+        let docNome = item.nome_doc.length > 40 
+          ? item.nome_doc.substring(0, 40) + "..." 
+          : item.nome_doc;
+        doc.text(docNome, 55, y);
+
+        doc.text(parseFloat(item.valor).toFixed(2), 110, y);
+        doc.text(item.cidade || "—", 140, y);
         doc.text(
           item.data
             ? new Date(item.data).toLocaleDateString("pt-BR")
@@ -626,7 +630,7 @@ function emitirRelatorio(estado) {
         total += parseFloat(item.valor) || 0;
       });
 
-      // Totais (se não couber, joga para nova página)
+      // Totais
       if (y > pageHeight - 40) {
         doc.addPage();
         y = desenharCabecalho();
@@ -642,6 +646,14 @@ function emitirRelatorio(estado) {
       doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
       y += 8;
       doc.text(`Sócio: R$ ${socioParte}`, 10, y);
+
+      // Contador de páginas
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
+      }
 
       doc.save(`relatorio_${estado}.pdf`);
     })
