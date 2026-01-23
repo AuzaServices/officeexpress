@@ -1011,17 +1011,26 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 
 
 // 1. Rota para salvar pagamento
-app.post('/salvar-pago', (req, res) => {
-  const { id, tipo, nome_doc, valor, data, hora, estado, cidade } = req.body;
+app.post('/salvar-pago', async (req, res) => {
+  try {
+    const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
 
-  const sql = `INSERT INTO registros_pagos 
-    (id, tipo, nome_doc, valor, data, hora, estado, cidade, pago) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, true)`;
+    // monta data/hora atuais
+    const data = new Date();
+    const hoje = data.toISOString().split('T')[0]; // YYYY-MM-DD
+    const hora = data.toTimeString().split(' ')[0]; // HH:MM:SS
 
-  db.query(sql, [id, tipo, nome_doc, valor, data, hora, estado, cidade], (err) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json({ message: 'Registro salvo com sucesso!' });
-  });
+    // insere no banco
+    await db.query(`
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, data, hora, estado, cidade, pago)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+    `, [tipo, nome_doc, valor, hoje, hora, estado, cidade]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao salvar pagamento' });
+  }
 });
 
 // 2. Rota para listar registros pagos por Estado

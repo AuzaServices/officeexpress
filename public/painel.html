@@ -515,13 +515,30 @@ async function apagarUsuario(id) {
 
 window.onload = carregarUsuarios;
 
-function marcarPago(id, tipo) {
-  // Aqui você coleta os dados do documento (nome, estado, cidade, etc.)
-  // e envia via AJAX/Fetch para o backend salvar na tabela registros_pagos
+function marcarPago(id, tipo, nome_doc, valor, estado, cidade) {
   fetch('/salvar-pago', {
     method: 'POST',
-    body: JSON.stringify({ id, tipo }),
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id,
+      tipo,
+      nome_doc,
+      valor,
+      estado,
+      cidade
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("Pagamento registrado com sucesso!");
+      carregarPDFs();
+      carregarRelatorios();
+    }
+  })
+  .catch(err => {
+    console.error("Erro ao registrar pagamento:", err);
+    alert("Erro ao registrar pagamento.");
   });
 }
 
