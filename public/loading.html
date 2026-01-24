@@ -129,7 +129,7 @@ if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
 if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
 if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
 if (dados.estado) enderecoCompleto += " - " + dados.estado; // ✅ adiciona o Estado
-if (dados.cep) enderecoCompleto += " - CEP: " + dados.cep;
+if (dados.cep) enderecoCompleto += " | CEP: " + dados.cep;
 
   container.innerHTML = `
     <div class="info-topo">
