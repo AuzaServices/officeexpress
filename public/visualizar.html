@@ -182,10 +182,9 @@ curriculo.innerHTML = `
       ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
       ${(dados.endereco || dados.numero || dados.complemento || dados.bairro || dados.cidade || dados.estado || dados.cep) ? `
 <p><strong>Endereço:</strong>
-  ${dados.endereco || ""}
-  ${dados.numero ? `, ${dados.numero}` : ""}
+  ${dados.endereco || ""}${dados.numero ? `, ${dados.numero}` : ""}
   ${dados.complemento ? ` (${dados.complemento})` : ""}
-  ${dados.bairro ? ` - ${dados.bairro}` : ""}${dados.cidade ? `, ${dados.cidade}` : ""}
+  ${dados.bairro ? ` - ${dados.bairro}` : ""}${dados.cidade ? `,${dados.cidade}` : ""}
   ${dados.estado ? ` - ${dados.estado}` : ""}
   ${dados.cep ? ` | CEP: ${dados.cep}` : ""}
 </p>` : ""}
