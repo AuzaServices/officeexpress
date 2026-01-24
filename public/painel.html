@@ -622,13 +622,13 @@ function emitirRelatorio(estado) {
           : (item.cidade || "—");
         doc.text(cidadeNome, 140, y);
 
-        doc.text(
-          item.data
-            ? new Date(item.data).toLocaleDateString("pt-BR")
-            : "—",
-          170,
-          y
-        );
+doc.text(
+  item.data
+    ? item.data.split("T")[0].split("-").reverse().join("/")
+    : "—",
+  170,
+  y
+);
 
         doc.line(10, y + 2, 200, y + 2);
         y += 8;
