@@ -291,7 +291,7 @@ linha.innerHTML = `
     )" class="btn btn-success btn-sm">Pago</button>
   </td>
   <td>
-    <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>
+    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
   </td>
 `;
 tabela.appendChild(linha);
@@ -371,7 +371,7 @@ linha.innerHTML = `
     )" class="btn btn-success btn-sm">Pago</button>
   </td>
   <td>
-    <a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>
+    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
   </td>
 `;
 tabela.appendChild(linha);
