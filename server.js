@@ -565,20 +565,17 @@ app.get('/api/analises', async (req, res) => {
       SELECT 
         id,
         'Análise' AS tipo,
-        filename AS nome_doc,
+        filename AS nome_doc,   -- painel espera nome_doc
         valor,
         cidade,
         estado,
-        criado_em AS data,
-        pago,
-        telefone AS contato
+        criado_em AS data,      -- painel espera data
+        telefone AS contato     -- painel espera contato
       FROM analises
       ORDER BY id DESC
     `;
     const [rows] = await pool.query(query);
-
-    // garante que sempre devolve um array
-    res.json(rows);
+    res.json(rows); // garante que devolve array
   } catch (err) {
     console.error('Erro ao buscar análises:', err.message);
     res.status(500).json({ error: 'Erro ao buscar análises' });
