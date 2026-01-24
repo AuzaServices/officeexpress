@@ -1222,10 +1222,10 @@ app.post('/api/verificar-senha', (req, res) => {
     return res.status(400).json({ autorizado: false, error: 'Senha não enviada' });
   }
 
-  if (senha === process.env.EXCLUSAO_SENHA) {
-    res.json({ autorizado: true });
+  if (String(senha).trim() === String(process.env.EXCLUSAO_SENHA)) {
+    return res.json({ autorizado: true });
   } else {
-    res.status(401).json({ autorizado: false, error: 'Senha incorreta' });
+    return res.status(401).json({ autorizado: false, error: 'Senha incorreta' });
   }
 });
 
