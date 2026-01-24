@@ -610,7 +610,7 @@ function emitirRelatorio(estado) {
 
         // Documento resumido se muito longo
         let docNome = item.nome_doc.length > 40 
-          ? item.nome_doc.substring(0, 40) + "..." 
+          ? item.nome_doc.substring(0, 30) + "..." 
           : item.nome_doc;
         doc.text(docNome, 55, y);
 
@@ -618,7 +618,7 @@ function emitirRelatorio(estado) {
 
         // Cidade resumida se muito longa
         let cidadeNome = item.cidade && item.cidade.length > 20
-          ? item.cidade.substring(0, 20) + "..."
+          ? item.cidade.substring(0, 15) + "..."
           : (item.cidade || "—");
         doc.text(cidadeNome, 140, y);
 
