@@ -718,54 +718,71 @@ function nomeEstado(sigla) {
 
 function abrirExclusao() {
   const senha = prompt("Digite a senha para acessar exclusão:");
-  if (senha === "753159") {
-    const escolha = prompt(
-      "Digite o estado (sigla, ex: CE) para excluir registros.\n" +
-      "Ou digite 'TODOS' para excluir todos os registros."
-    );
+  if (!senha) return;
 
-    if (escolha) {
-      if (escolha.toUpperCase() === "TODOS") {
-        excluirTodosRegistros();
-      } else {
-        excluirPorEstado(escolha.toUpperCase());
+  // 🔑 Valida a senha no backend
+  fetch('/api/verificar-senha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ senha })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.autorizado) {
+      const escolha = prompt(
+        "Digite a sigla do estado (ex: CE) para excluir registros.\n" +
+        "Ou digite 'TODOS' para excluir todos os registros."
+      );
+
+      if (escolha) {
+        if (escolha.toUpperCase() === "TODOS") {
+          excluirTodosRegistros();
+        } else {
+          excluirPorEstado(escolha.toUpperCase());
+        }
       }
+    } else {
+      alert("Senha incorreta!");
     }
-  } else {
-    alert("Senha incorreta!");
-  }
+  })
+  .catch(err => {
+    console.error("Erro ao verificar senha:", err);
+    alert("Erro na verificação da senha.");
+  });
 }
 
 function excluirPorEstado(estado) {
   if (!confirm(`Tem certeza que deseja excluir todos os registros do estado ${estado}?`)) return;
 
   fetch(`/api/registros/${estado}`, { method: "DELETE" })
-    .then(res => {
-      if (!res.ok) throw new Error("Erro ao excluir registros");
-      alert(`Registros do estado ${estado} foram excluídos.`);
-      carregarPDFs();
-      carregarRelatorios();
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert(`Registros do estado ${estado} foram excluídos.`);
+        carregarPDFs();
+        carregarRelatorios();
+      } else {
+        alert("Erro ao excluir registros por estado.");
+      }
     })
-    .catch(err => {
-      console.error("Erro ao excluir por estado:", err);
-      alert("Erro ao excluir registros por estado.");
-    });
+    .catch(err => console.error("Erro ao excluir por estado:", err));
 }
 
 function excluirTodosRegistros() {
   if (!confirm("Tem certeza que deseja excluir TODOS os registros?")) return;
 
   fetch(`/api/registros`, { method: "DELETE" })
-    .then(res => {
-      if (!res.ok) throw new Error("Erro ao excluir todos os registros");
-      alert("Todos os registros foram excluídos.");
-      carregarPDFs();
-      carregarRelatorios();
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("Todos os registros foram excluídos.");
+        carregarPDFs();
+        carregarRelatorios();
+      } else {
+        alert("Erro ao excluir todos os registros.");
+      }
     })
-    .catch(err => {
-      console.error("Erro ao excluir todos os registros:", err);
-      alert("Erro ao excluir todos os registros.");
-    });
+    .catch(err => console.error("Erro ao excluir todos os registros:", err));
 }
 
   </script>

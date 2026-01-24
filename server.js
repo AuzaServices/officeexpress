@@ -8,6 +8,8 @@ const pdfParse = require('pdf-parse'); // 📥 Novo
 const cron = require('node-cron');
 const bcrypt = require('bcrypt'); // para hash seguro da senha
 
+require('dotenv').config();
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -1198,6 +1200,15 @@ app.delete('/api/registros/:estado', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: 'Erro ao excluir registros por estado.' });
+  }
+});
+
+app.post('/api/verificar-senha', (req, res) => {
+  const { senha } = req.body;
+  if (senha === SENHA_EXCLUSAO) {
+    res.json({ autorizado: true });
+  } else {
+    res.status(401).json({ autorizado: false, error: 'Senha incorreta' });
   }
 });
 
