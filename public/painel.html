@@ -754,7 +754,14 @@ function abrirExclusao() {
 function excluirPorEstado(estado) {
   if (!confirm(`Tem certeza que deseja excluir todos os registros do estado ${estado}?`)) return;
 
-  fetch(`/api/registros/${estado}`, { method: "DELETE" })
+  const senha = prompt("Digite novamente a senha para confirmar exclusão:");
+  if (!senha) return;
+
+  fetch(`/api/registros/${estado}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ senha })
+  })
     .then(res => res.json())
     .then(data => {
       if (data.success) {
@@ -771,7 +778,14 @@ function excluirPorEstado(estado) {
 function excluirTodosRegistros() {
   if (!confirm("Tem certeza que deseja excluir TODOS os registros?")) return;
 
-  fetch(`/api/registros`, { method: "DELETE" })
+  const senha = prompt("Digite novamente a senha para confirmar exclusão:");
+  if (!senha) return;
+
+  fetch(`/api/registros`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ senha })
+  })
     .then(res => res.json())
     .then(data => {
       if (data.success) {

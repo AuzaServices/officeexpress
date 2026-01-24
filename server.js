@@ -1185,7 +1185,6 @@ app.get('/relatorio-geral', async (req, res) => {
 app.delete('/api/registros', async (req, res) => {
   const { senha } = req.body;
 
-  // 🔑 Verifica a senha do .env
   if (senha !== process.env.EXCLUSAO_SENHA) {
     return res.status(401).json({ success: false, error: 'Não autorizado' });
   }
