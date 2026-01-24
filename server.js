@@ -1085,13 +1085,14 @@ app.get('/usuarios', (req, res) => {
   });
 });
 
+// Confirmar pagamento da análise
 app.post('/api/analises/:id/pago', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Buscar dados da análise, incluindo o valor
+    // Buscar dados da análise
     const [rows] = await pool.query(
-      "SELECT nome, cidade, estado, filename, valor FROM analises WHERE id = ?",
+      "SELECT filename, valor, estado, cidade FROM analises WHERE id = ?",
       [id]
     );
 
@@ -1101,22 +1102,25 @@ app.post('/api/analises/:id/pago', async (req, res) => {
 
     const analise = rows[0];
 
-    // Inserir em registros_pagos usando o valor da análise
+    // Atualizar status pago na tabela analises
+    await pool.query("UPDATE analises SET pago = 1 WHERE id = ?", [id]);
+
+    // Inserir em registros_pagos
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
       VALUES (?, ?, ?, ?, ?, CURDATE(), CURTIME(), 1)
     `, [
-      "Análise",          // tipo
-      analise.filename,   // nome_doc
-      analise.valor,      // valor vindo da tabela analises (já 5.99)
-      analise.estado,     // estado
-      analise.cidade      // cidade
+      "Análise",        // tipo
+      analise.filename, // nome_doc
+      analise.valor,    // valor vindo da tabela analises (já 5.99)
+      analise.estado,   // estado
+      analise.cidade    // cidade
     ]);
 
     res.json({ sucesso: true });
   } catch (err) {
-    console.error("❌ Erro ao registrar pagamento:", err);
-    res.status(500).json({ erro: "Erro ao registrar pagamento" });
+    console.error("❌ Erro ao registrar pagamento da análise:", err);
+    res.status(500).json({ erro: "Erro ao registrar pagamento da análise" });
   }
 });
 
