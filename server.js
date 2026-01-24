@@ -449,7 +449,6 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
         const telefoneLimpo = telefone.slice(0, 20);
 
-        // ✅ Agora inclui o valor fixo de 5.99
         const query = `
           INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -462,7 +461,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
           filename,
           'application/pdf',
           pdfBuffer,
-          5.99 // valor fixo da análise
+          5.99
         ]);
 
         res.json({ sucesso: true });
@@ -538,25 +537,24 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       doc.addPage();
     }
 
+    // Marca d'água central (imagem marca.png)
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const imgWidth = 300; // ajuste conforme necessário
+    const imgHeight = 300; // ajuste conforme necessário
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+
+    doc.image('marca.png', x, y, {
+      width: imgWidth,
+      height: imgHeight,
+      opacity: 0.2 // translúcido
+    });
+
     doc.end();
   } catch (err) {
     console.error('Erro na análise e salvamento:', err);
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
-  }
-});
-
-app.get('/api/analises', async (req, res) => {
-  try {
-    const query = `
-      SELECT id, nome, telefone, cidade, estado, filename, mimetype, criado_em
-      FROM analises
-      ORDER BY id DESC
-    `;
-    const [results] = await pool.query(query);
-    res.json(results);
-  } catch (err) {
-    console.error('Erro ao buscar análises:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar análises' });
   }
 });
 
