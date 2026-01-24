@@ -1086,6 +1086,7 @@ app.get('/usuarios', (req, res) => {
 });
 
 // Confirmar pagamento da análise
+// Confirmar pagamento da análise e registrar em registros_pagos
 app.post('/api/analises/:id/pago', async (req, res) => {
   const { id } = req.params;
 
@@ -1101,6 +1102,8 @@ app.post('/api/analises/:id/pago', async (req, res) => {
     }
 
     const analise = rows[0];
+    // Se valor vier nulo ou 0, força 5.99
+    const valorFinal = analise.valor && analise.valor > 0 ? analise.valor : 5.99;
 
     // Atualizar status pago na tabela analises
     await pool.query("UPDATE analises SET pago = 1 WHERE id = ?", [id]);
@@ -1112,7 +1115,7 @@ app.post('/api/analises/:id/pago', async (req, res) => {
     `, [
       "Análise",        // tipo
       analise.filename, // nome_doc
-      analise.valor,    // valor vindo da tabela analises (já 5.99)
+      valorFinal,       // valor garantido (nunca 0.00)
       analise.estado,   // estado
       analise.cidade    // cidade
     ]);
