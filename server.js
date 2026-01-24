@@ -1027,13 +1027,10 @@ app.post('/salvar-pago', async (req, res) => {
   try {
     const { tipo, nome_doc, valor, estado, cidade } = req.body;
 
-    const agora = new Date();
-    const data = agora.toLocaleDateString("pt-BR"); // formato DD/MM/YYYY
-
     await pool.query(`
-      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, pago)
-      VALUES (?, ?, ?, ?, ?, ?, 1)
-    `, [tipo, nome_doc, valor, estado, cidade, data]);
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
+      VALUES (?, ?, ?, ?, ?, CURDATE(), CURTIME(), 1)
+    `, [tipo, nome_doc, valor, estado, cidade]);
 
     res.json({ success: true });
   } catch (err) {
