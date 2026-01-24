@@ -1217,12 +1217,14 @@ app.delete('/api/registros/:estado', async (req, res) => {
 
 app.post('/api/verificar-senha', (req, res) => {
   const { senha } = req.body;
+  console.log("Senha recebida:", senha);
+  console.log("Senha do .env:", process.env.EXCLUSAO_SENHA);
 
   if (!senha) {
     return res.status(400).json({ autorizado: false, error: 'Senha não enviada' });
   }
 
-  if (String(senha).trim() === String(process.env.EXCLUSAO_SENHA)) {
+  if (String(senha).trim() === String(process.env.EXCLUSAO_SENHA).trim()) {
     return res.json({ autorizado: true });
   } else {
     return res.status(401).json({ autorizado: false, error: 'Senha incorreta' });
