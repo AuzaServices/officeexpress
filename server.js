@@ -771,9 +771,16 @@ app.post('/api/pdfs/:id/pago', async (req, res) => {
   try {
     // Busca o registro do PDF
     const [rows] = await pool.query('SELECT * FROM pdfs WHERE id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Registro não encontrado' });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Currículo não encontrado' });
+    }
 
     const registro = rows[0];
+
+    // Se já está pago, não deixa registrar de novo
+    if (registro.pago === 1) {
+      return res.status(400).json({ error: 'Este currículo já foi marcado como pago.' });
+    }
 
     // Atualiza status de pago
     await pool.query('UPDATE pdfs SET pago = 1 WHERE id = ?', [id]);
@@ -786,16 +793,10 @@ app.post('/api/pdfs/:id/pago', async (req, res) => {
       );
     }
 
-    // Busca valor atualizado para retornar corretamente
-    const [updated] = await pool.query(
-      'SELECT indicacoes FROM usuarios WHERE codigo = ?',
-      [registro.codigo_indicador]
-    );
-
-    res.json({ message: 'Pagamento confirmado e indicação registrada', indicacoes: updated[0].indicacoes });
+    res.json({ sucesso: true });
   } catch (err) {
-    console.error('Erro ao confirmar pagamento:', err.message);
-    res.status(500).json({ error: 'Erro ao confirmar pagamento' });
+    console.error('❌ Erro ao registrar pagamento do currículo:', err);
+    res.status(500).json({ error: 'Erro ao registrar pagamento do currículo' });
   }
 });
 
@@ -1124,7 +1125,7 @@ app.post('/api/analises/:id/pago', async (req, res) => {
   try {
     // Buscar dados da análise
     const [rows] = await pool.query(
-      "SELECT filename, valor, estado, cidade FROM analises WHERE id = ?",
+      "SELECT filename, valor, estado, cidade, pago FROM analises WHERE id = ?",
       [id]
     );
 
@@ -1133,12 +1134,18 @@ app.post('/api/analises/:id/pago', async (req, res) => {
     }
 
     const analise = rows[0];
+
+    // Se já está pago, não deixa registrar de novo
+    if (analise.pago === 1) {
+      return res.status(400).json({ erro: "Esta análise já foi marcada como paga." });
+    }
+
     const valorFinal = analise.valor && analise.valor > 0 ? analise.valor : 5.99;
 
     // Atualizar status pago na tabela analises
     await pool.query("UPDATE analises SET pago = 1 WHERE id = ?", [id]);
 
-    // Inserir em registros_pagos
+    // Inserir em registros_pagos (só uma vez)
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
       VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
