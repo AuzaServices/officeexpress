@@ -386,6 +386,8 @@ app.get('/api/logs', async (req, res) => {
 //////////////////////////
 // 📥 Analisar e salvar relatório em PDF
 //////////////////////////
+const path = require('path');
+
 app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) => {
   const { nome, telefone, cidade, estado } = req.body;
 
@@ -449,11 +451,10 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
         const telefoneLimpo = telefone.slice(0, 20);
 
-        const query = `
+        await pool.query(`
           INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        await pool.query(query, [
+        `, [
           nome,
           telefoneLimpo,
           cidade,
@@ -471,7 +472,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       }
     });
 
-    // === Marca d'água central (logo no início da página) ===
+    // === Marca d'água central (imagem) ===
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
     const imgWidth = 300;
@@ -479,7 +480,8 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     const x = (pageWidth - imgWidth) / 2;
     const y = (pageHeight - imgHeight) / 2;
 
-    doc.image('marca.png', x, y, { width: imgWidth, height: imgHeight });
+    const marcaPath = path.join(__dirname, 'public', 'marca.png');
+    doc.image(marcaPath, x, y, { width: imgWidth, height: imgHeight });
 
     // Cabeçalho do PDF
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
@@ -547,7 +549,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       doc.addPage();
 
       // Marca d'água também na nova página
-      doc.image('marca.png', x, y, { width: imgWidth, height: imgHeight });
+      doc.image(marcaPath, x, y, { width: imgWidth, height: imgHeight });
     }
 
     doc.end();
