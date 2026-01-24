@@ -472,7 +472,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       }
     });
 
-    // Cabeçalho
+    // Cabeçalho do PDF
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
        .text('Relatório de Análise do Currículo', { align: 'center' });
     doc.moveDown();
@@ -544,6 +544,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
+
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `

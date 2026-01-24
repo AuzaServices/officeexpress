@@ -237,6 +237,7 @@
   formData.append("curriculo", arquivo);
   formData.append("estado", estado);   // obrigatório
   formData.append("cidade", cidade);   // obrigatório
+  formData.append("valor", 5.99);
 
   try {
     const res = await fetch("/api/analisar-e-salvar", {
