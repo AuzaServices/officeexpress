@@ -672,6 +672,40 @@ doc.text(
       alert("Erro ao gerar relatório. Verifique o backend.");
     });
 }
+
+async function atualizarBotoesRelatorio() {
+  const res = await fetch('/relatorio-geral');
+  const dados = await res.json();
+
+  dados.forEach(item => {
+    const total = (item.curriculos || 0) + (item.analises || 0);
+    const botao = document.querySelector(`button[onclick="emitirRelatorio('${item.estado}')"]`);
+    if (botao) {
+      if (total > 0) {
+        // Exemplo: Ceará (15)
+        botao.textContent = `${nomeEstado(item.estado)} (${total})`;
+      } else {
+        // Só o nome do estado
+        botao.textContent = nomeEstado(item.estado);
+      }
+    }
+  });
+}
+
+// Função auxiliar para mapear sigla -> nome completo
+function nomeEstado(sigla) {
+  const estados = {
+    AC: "Acre", AL: "Alagoas", AM: "Amazonas", AP: "Amapá", BA: "Bahia",
+    CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás",
+    MA: "Maranhão", MG: "Minas Gerais", MS: "Mato Grosso do Sul", MT: "Mato Grosso",
+    PA: "Pará", PB: "Paraíba", PE: "Pernambuco", PI: "Piauí", PR: "Paraná",
+    RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RO: "Rondônia", RR: "Roraima",
+    RS: "Rio Grande do Sul", SC: "Santa Catarina", SE: "Sergipe", SP: "São Paulo",
+    TO: "Tocantins"
+  };
+  return estados[sigla] || sigla;
+}
+
   </script>
 </body>
 </html>
