@@ -575,8 +575,10 @@ app.get('/api/analises', async (req, res) => {
       FROM analises
       ORDER BY id DESC
     `;
-    const [results] = await pool.query(query);
-    res.json(results);
+    const [rows] = await pool.query(query);
+
+    // garante que sempre devolve um array
+    res.json(rows);
   } catch (err) {
     console.error('Erro ao buscar análises:', err.message);
     res.status(500).json({ error: 'Erro ao buscar análises' });
