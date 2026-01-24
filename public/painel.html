@@ -383,22 +383,25 @@ tabela.appendChild(linha);
     });
 }
 
-    // Atualiza a cada 2 segundos
-// Atualiza a cada 2 segundos
 setInterval(() => {
   carregarPDFs();
   carregarLogs();
   carregarRelatorios();
-  carregarIndicacoes(); // <--- adicionar aqui
+  carregarIndicacoes();
   carregarUsuarios();
+  atualizarBotoesRelatorio(); // <-- aqui
 }, 2000);
 
 // Carrega imediatamente ao abrir
-carregarPDFs();
-carregarLogs();
-carregarRelatorios();
-carregarIndicacoes(); // <--- adicionar aqui
-carregarUsuarios();
+window.onload = () => {
+  carregarPDFs();
+  carregarLogs();
+  carregarRelatorios();
+  carregarIndicacoes();
+  carregarUsuarios();
+  atualizarBotoesRelatorio(); // <-- aqui
+};
+
 
 function carregarIndicacoes() {
   fetch('/api/indicacoes')
