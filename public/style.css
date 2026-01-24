@@ -589,3 +589,37 @@ input.mesAno[type="date"] {
   0% { left: -100%; }
   100% { left: 100%; }
 }
+
+/* Estilo geral para inputs e selects */
+input[type="text"],
+select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease-in-out;
+}
+
+/* Foco */
+input[type="text"]:focus,
+select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.4);
+}
+
+/* Ajuste do select para ficar alinhado */
+select {
+  background-color: #fff;
+  cursor: pointer;
+  min-width: 120px; /* largura mínima */
+}
+
+#estado {
+  display: block;
+  margin-top: 15px; /* espaço pequeno entre cidade e estado */
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}

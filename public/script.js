@@ -328,7 +328,7 @@ btnAvancar.addEventListener('click', () => {
   if (etapaAtual === indiceEtapaCidadeEstado) {
     const campoEstado = document.getElementById("estado");
     if (campoEstado && !campoEstado.value) {
-      alert("Selecione um Estado válido antes de avançar.");
+      alert("Selecione seu Estado antes de Avançar.");
       return; // impede avanço
     }
   }
