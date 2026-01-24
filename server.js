@@ -1180,6 +1180,27 @@ app.get('/relatorio-geral', async (req, res) => {
   }
 });
 
+app.delete('/api/registros', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM registros_pagos');
+    res.json({ success: true, message: 'Todos os registros foram excluídos.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Erro ao excluir todos os registros.' });
+  }
+});
+
+app.delete('/api/registros/:estado', async (req, res) => {
+  const { estado } = req.params;
+  try {
+    await pool.query('DELETE FROM registros_pagos WHERE estado = ?', [estado]);
+    res.json({ success: true, message: `Registros do estado ${estado} foram excluídos.` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Erro ao excluir registros por estado.' });
+  }
+});
+
 
 //////////////////////////
 // 🚀 Iniciar servidor

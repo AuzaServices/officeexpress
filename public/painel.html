@@ -124,12 +124,19 @@
   </table>
 </div>
 
-<h1 class="mt-5">Relatórios por Estado</h1>
+<h1 class="mt-5 d-flex justify-content-between align-items-center">
+  Relatórios por Estado
+  <button onclick="abrirExclusao()" class="btn btn-outline-danger btn-sm" title="Excluir registros">
+    🗑️
+  </button>
+</h1>
+
 <div class="row">
   <div class="col-md-12">
     <p>Selecione um Estado para emitir relatório de Currículos e Análises pagos:</p>
   </div>
 </div>
+
 <div class="row">
   <div class="col-md-3 mb-2">
     <button class="btn btn-primary w-100" onclick="emitirRelatorio('AC')">Acre</button>
@@ -707,6 +714,58 @@ function nomeEstado(sigla) {
     TO: "Tocantins"
   };
   return estados[sigla] || sigla;
+}
+
+function abrirExclusao() {
+  const senha = prompt("Digite a senha para acessar exclusão:");
+  if (senha === "753159") {
+    const escolha = prompt(
+      "Digite o estado (sigla, ex: CE) para excluir registros.\n" +
+      "Ou digite 'TODOS' para excluir todos os registros."
+    );
+
+    if (escolha) {
+      if (escolha.toUpperCase() === "TODOS") {
+        excluirTodosRegistros();
+      } else {
+        excluirPorEstado(escolha.toUpperCase());
+      }
+    }
+  } else {
+    alert("Senha incorreta!");
+  }
+}
+
+function excluirPorEstado(estado) {
+  if (!confirm(`Tem certeza que deseja excluir todos os registros do estado ${estado}?`)) return;
+
+  fetch(`/api/registros/${estado}`, { method: "DELETE" })
+    .then(res => {
+      if (!res.ok) throw new Error("Erro ao excluir registros");
+      alert(`Registros do estado ${estado} foram excluídos.`);
+      carregarPDFs();
+      carregarRelatorios();
+    })
+    .catch(err => {
+      console.error("Erro ao excluir por estado:", err);
+      alert("Erro ao excluir registros por estado.");
+    });
+}
+
+function excluirTodosRegistros() {
+  if (!confirm("Tem certeza que deseja excluir TODOS os registros?")) return;
+
+  fetch(`/api/registros`, { method: "DELETE" })
+    .then(res => {
+      if (!res.ok) throw new Error("Erro ao excluir todos os registros");
+      alert("Todos os registros foram excluídos.");
+      carregarPDFs();
+      carregarRelatorios();
+    })
+    .catch(err => {
+      console.error("Erro ao excluir todos os registros:", err);
+      alert("Erro ao excluir todos os registros.");
+    });
 }
 
   </script>
