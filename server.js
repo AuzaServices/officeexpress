@@ -1029,7 +1029,7 @@ app.post('/salvar-pago', async (req, res) => {
 
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      VALUES (?, ?, ?, ?, ?, CURDATE(), CURTIME(), 1)
+      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
     `, [tipo, nome_doc, valor, estado, cidade]);
 
     res.json({ success: true });
@@ -1038,6 +1038,7 @@ app.post('/salvar-pago', async (req, res) => {
     res.status(500).json({ error: 'Erro ao salvar pagamento' });
   }
 });
+
 
 // 2. Rota para listar registros pagos por Estado
 app.get('/relatorio/:estado', async (req, res) => {
@@ -1048,42 +1049,52 @@ app.get('/relatorio/:estado', async (req, res) => {
       'SELECT id, tipo, nome_doc, valor, cidade, data FROM registros_pagos WHERE estado = ? AND pago = 1',
       [estado]
     );
-    res.json(results); // ✅ retorna array com "data"
+    res.json(results);
   } catch (err) {
     console.error('Erro ao gerar relatório:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório' });
   }
 });
 
+
 // 3. Rota para listar todos os registros pagos
-app.get('/pagos', (req, res) => {
-  const sql = `SELECT * FROM registros_pagos WHERE pago = true`;
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: err });
+app.get('/pagos', async (req, res) => {
+  try {
+    const [results] = await pool.query(
+      'SELECT * FROM registros_pagos WHERE pago = 1'
+    );
     res.json(results);
-  });
+  } catch (err) {
+    console.error('Erro ao listar pagos:', err.message);
+    res.status(500).json({ error: 'Erro ao listar pagos' });
+  }
 });
+
 
 // 4. Rota para apagar todos os logs (acessos)
-app.delete('/apagar-logs', (req, res) => {
-  const sql = `DELETE FROM registros_acessos`;
-  db.query(sql, (err) => {
-    if (err) return res.status(500).json({ error: err });
+app.delete('/apagar-logs', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM registros_acessos');
     res.json({ message: 'Todos os logs foram apagados!' });
-  });
+  } catch (err) {
+    console.error('Erro ao apagar logs:', err.message);
+    res.status(500).json({ error: 'Erro ao apagar logs' });
+  }
 });
+
 
 // 5. Rota para usuários cadastrados
-app.get('/usuarios', (req, res) => {
-  const sql = `SELECT * FROM usuarios`;
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: err });
+app.get('/usuarios', async (req, res) => {
+  try {
+    const [results] = await pool.query('SELECT * FROM usuarios');
     res.json(results);
-  });
+  } catch (err) {
+    console.error('Erro ao buscar usuários:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar usuários' });
+  }
 });
 
-// Confirmar pagamento da análise
-// Confirmar pagamento da análise e registrar em registros_pagos
+
 app.post('/api/analises/:id/pago', async (req, res) => {
   const { id } = req.params;
 
@@ -1099,7 +1110,6 @@ app.post('/api/analises/:id/pago', async (req, res) => {
     }
 
     const analise = rows[0];
-    // Se valor vier nulo ou 0, força 5.99
     const valorFinal = analise.valor && analise.valor > 0 ? analise.valor : 5.99;
 
     // Atualizar status pago na tabela analises
@@ -1108,13 +1118,13 @@ app.post('/api/analises/:id/pago', async (req, res) => {
     // Inserir em registros_pagos
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      VALUES (?, ?, ?, ?, ?, CURDATE(), CURTIME(), 1)
+      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
     `, [
-      "Análise",        // tipo
-      analise.filename, // nome_doc
-      valorFinal,       // valor garantido (nunca 0.00)
-      analise.estado,   // estado
-      analise.cidade    // cidade
+      "Análise",
+      analise.filename,
+      valorFinal,
+      analise.estado,
+      analise.cidade
     ]);
 
     res.json({ sucesso: true });
@@ -1123,6 +1133,7 @@ app.post('/api/analises/:id/pago', async (req, res) => {
     res.status(500).json({ erro: "Erro ao registrar pagamento da análise" });
   }
 });
+
 
 //////////////////////////
 // 🚀 Iniciar servidor
