@@ -449,11 +449,11 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
         const telefoneLimpo = telefone.slice(0, 20);
 
-        const query = `
-          INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, data)
-          VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())
-        `;
-        await pool.query(query, [nome, telefoneLimpo, cidade, estado, filename, 'application/pdf', pdfBuffer]);
+const query = `
+  INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`;
+await pool.query(query, [nome, telefoneLimpo, cidade, estado, filename, 'application/pdf', pdfBuffer]);
 
         res.json({ sucesso: true });
       } catch (err) {
