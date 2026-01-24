@@ -181,14 +181,14 @@ curriculo.innerHTML = `
       ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
       ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
       ${(dados.endereco || dados.numero || dados.complemento || dados.bairro || dados.cidade || dados.estado || dados.cep) ? `
-        <p><strong>Endereço:</strong> 
-          ${dados.endereco || ""}${dados.numero ? `, ${dados.numero}` : ""}
-          ${dados.complemento ? ` (${dados.complemento})` : ""}
-          ${dados.bairro ? ` - ${dados.bairro}` : ""}
-          ${dados.cidade ? `, ${dados.cidade}` : ""}
-          ${dados.estado ? ` - ${dados.estado}` : ""}   <!-- ✅ Estado incluído -->
-          ${dados.cep ? ` | CEP: ${dados.cep}` : ""}
-        </p>` : ""}
+<p><strong>Endereço:</strong>
+  ${dados.endereco || ""}
+  ${dados.numero ? `, ${dados.numero}` : ""}
+  ${dados.complemento ? ` (${dados.complemento})` : ""}
+  ${dados.bairro ? ` - ${dados.bairro}` : ""}${dados.cidade ? `, ${dados.cidade}` : ""}
+  ${dados.estado ? ` - ${dados.estado}` : ""}
+  ${dados.cep ? ` | CEP: ${dados.cep}` : ""}
+</p>` : ""}
       ${dados.infoAdicional ? `<p style="margin-top:6px;">${dados.infoAdicional}</p>` : ""}
     </div>
     ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
