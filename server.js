@@ -1094,12 +1094,18 @@ app.post('/api/analises/:id/pago', async (req, res) => {
     // Inserir em registros_pagos
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, pago)
-      VALUES (?, ?, ?, ?, ?, CURDATE(), 1)
-    `, ["Análise", analise.filename, 5.99, analise.estado, analise.cidade]);
+      VALUES (?, ?, ?, ?, ?, NOW(), 1)
+    `, [
+      "Análise",          // tipo
+      analise.filename,   // nome_doc
+      5.99,               // valor fixo da análise
+      analise.estado,     // estado
+      analise.cidade      // cidade
+    ]);
 
     res.json({ sucesso: true });
   } catch (err) {
-    console.error("Erro ao registrar pagamento:", err.message);
+    console.error("❌ Erro ao registrar pagamento:", err);
     res.status(500).json({ erro: "Erro ao registrar pagamento" });
   }
 });
