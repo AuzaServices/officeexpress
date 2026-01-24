@@ -1183,6 +1183,13 @@ app.get('/relatorio-geral', async (req, res) => {
 });
 
 app.delete('/api/registros', async (req, res) => {
+  const { senha } = req.body;
+
+  // 🔑 Verifica a senha do .env
+  if (senha !== process.env.EXCLUSAO_SENHA) {
+    return res.status(401).json({ success: false, error: 'Não autorizado' });
+  }
+
   try {
     await pool.query('DELETE FROM registros_pagos');
     res.json({ success: true, message: 'Todos os registros foram excluídos.' });
@@ -1194,6 +1201,12 @@ app.delete('/api/registros', async (req, res) => {
 
 app.delete('/api/registros/:estado', async (req, res) => {
   const { estado } = req.params;
+  const { senha } = req.body;
+
+  if (senha !== process.env.EXCLUSAO_SENHA) {
+    return res.status(401).json({ success: false, error: 'Não autorizado' });
+  }
+
   try {
     await pool.query('DELETE FROM registros_pagos WHERE estado = ?', [estado]);
     res.json({ success: true, message: `Registros do estado ${estado} foram excluídos.` });
