@@ -1089,9 +1089,9 @@ app.post('/api/analises/:id/pago', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Buscar dados da análise
+    // Buscar dados da análise, incluindo o valor
     const [rows] = await pool.query(
-      "SELECT nome, cidade, estado, filename FROM analises WHERE id = ?",
+      "SELECT nome, cidade, estado, filename, valor FROM analises WHERE id = ?",
       [id]
     );
 
@@ -1101,14 +1101,14 @@ app.post('/api/analises/:id/pago', async (req, res) => {
 
     const analise = rows[0];
 
-    // Inserir em registros_pagos
+    // Inserir em registros_pagos usando o valor da análise
     await pool.query(`
-      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, pago)
-      VALUES (?, ?, ?, ?, ?, NOW(), 1)
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
+      VALUES (?, ?, ?, ?, ?, CURDATE(), CURTIME(), 1)
     `, [
       "Análise",          // tipo
       analise.filename,   // nome_doc
-      5.99,               // valor fixo da análise
+      analise.valor,      // valor vindo da tabela analises (já 5.99)
       analise.estado,     // estado
       analise.cidade      // cidade
     ]);
