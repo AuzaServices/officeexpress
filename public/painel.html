@@ -466,14 +466,30 @@ function carregarPagamentos() {
     });
 }
 
-function confirmarPago(id, codigo) {
+// Confirmar pagamento (sem mexer em indicações)
+function confirmarPagamento(id) {
   fetch(`/api/pagamentos/${id}/confirmar`, { method: "POST" })
     .then(res => res.json())
     .then(data => {
       alert("Pagamento confirmado!");
-      carregarIndicacoes(); // atualiza a tabela de indicações
+      carregarPagamentos(); // atualiza tabela de pagamentos
     })
     .catch(err => console.error("Erro ao confirmar pagamento:", err));
+}
+
+// Registrar indicação (rota separada)
+function registrarIndicacao(codigo) {
+  fetch(`/api/indicar`, { 
+    method: "POST", 
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ codigo })
+  })
+    .then(res => res.json())
+    .then(data => {
+      alert("Indicação registrada!");
+      carregarUsuarios(); // atualiza contador de indicações
+    })
+    .catch(err => console.error("Erro ao registrar indicação:", err));
 }
 
 function apagarIndicacao(id) {

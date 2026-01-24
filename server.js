@@ -736,7 +736,6 @@ app.post('/api/indicar', async (req, res) => {
       WHERE codigo = ?`, [codigo]);
 
     const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
-
     res.json({ message: 'Indicação registrada', indicacoes: updated[0].indicacoes, link_tipo: updated[0].link_tipo });
   } catch (err) {
     console.error('Erro ao registrar indicação:', err.message);
@@ -771,7 +770,6 @@ app.post('/api/pdfs/:id/pago', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Busca o registro do PDF
     const [rows] = await pool.query('SELECT * FROM pdfs WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Currículo não encontrado' });
@@ -779,21 +777,24 @@ app.post('/api/pdfs/:id/pago', async (req, res) => {
 
     const registro = rows[0];
 
-    // Se já está pago, não deixa registrar de novo
     if (registro.pago === 1) {
       return res.status(400).json({ error: 'Este currículo já foi marcado como pago.' });
     }
 
-    // Atualiza status de pago
     await pool.query('UPDATE pdfs SET pago = 1 WHERE id = ?', [id]);
 
-    // Se veio com código de indicação, incrementa com trava no máximo 10
-    if (registro.codigo_indicador) {
-      await pool.query(
-        'UPDATE usuarios SET indicacoes = LEAST(indicacoes + 1, 10) WHERE codigo = ?',
-        [registro.codigo_indicador]
-      );
-    }
+    // 👉 Agora só insere em registros_pagos
+    const valorFinal = registro.valor && registro.valor > 0 ? registro.valor : 5.99;
+    await pool.query(`
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
+      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
+    `, [
+      "Currículo",
+      registro.filename,
+      valorFinal,
+      registro.estado,
+      registro.cidade
+    ]);
 
     res.json({ sucesso: true });
   } catch (err) {
@@ -864,32 +865,12 @@ app.post('/api/pagamentos', async (req, res) => {
 });
 
 // Confirmar pagamento
+// Confirmar pagamento (sem mexer em indicações)
 app.post('/api/pagamentos/:id/confirmar', async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
-
-    const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Pagamento não encontrado' });
-
-    const codigo = rows[0].codigo;
-
-    await pool.query(`
-      UPDATE usuarios 
-      SET indicacoes = LEAST(indicacoes + 1, 10),
-          link_tipo = CASE 
-                        WHEN LEAST(indicacoes + 1, 10) >= 10 THEN 'comum' 
-                        ELSE 'indicacao' 
-                      END
-      WHERE codigo = ?`, [codigo]);
-
-    const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
-
-    res.json({
-      message: 'Pagamento confirmado e indicação registrada',
-      indicacoes: updated[0].indicacoes,
-      link_tipo: updated[0].link_tipo
-    });
+    res.json({ message: 'Pagamento confirmado' });
   } catch (err) {
     console.error('Erro ao confirmar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao confirmar pagamento' });
@@ -1067,31 +1048,71 @@ app.post('/salvar-pago', async (req, res) => {
 
 
 // 2. Rota para listar registros pagos por Estado
-app.get('/relatorio/:estado', async (req, res) => {
-  const estado = req.params.estado;
+// Relatório por estado, com filtros opcionais
+app.get('/api/relatorio/:estado', async (req, res) => {
+  const { estado } = req.params;
+  const { cidade, tipo } = req.query;
 
   try {
-    const [results] = await pool.query(
-      'SELECT id, tipo, nome_doc, valor, cidade, data FROM registros_pagos WHERE estado = ? AND pago = 1',
-      [estado]
-    );
+    let sql = `
+      SELECT id, tipo, nome_doc, valor, cidade, data, hora
+      FROM registros_pagos
+      WHERE estado = ? AND pago = 1
+    `;
+    const params = [estado];
+
+    if (cidade) {
+      sql += ' AND cidade = ?';
+      params.push(cidade);
+    }
+
+    if (tipo) {
+      sql += ' AND tipo = ?';
+      params.push(tipo);
+    }
+
+    sql += ' ORDER BY data DESC, hora DESC';
+
+    const [results] = await pool.query(sql, params);
     res.json(results);
   } catch (err) {
-    console.error('Erro ao gerar relatório:', err.message);
+    console.error('❌ Erro ao gerar relatório:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório' });
   }
 });
 
 
 // 3. Rota para listar todos os registros pagos
-app.get('/pagos', async (req, res) => {
+// Listar registros pagos com filtros opcionais
+app.get('/api/pagos', async (req, res) => {
   try {
-    const [results] = await pool.query(
-      'SELECT * FROM registros_pagos WHERE pago = 1'
-    );
+    const { tipo, estado, cidade } = req.query;
+
+    // Base da query
+    let sql = 'SELECT * FROM registros_pagos WHERE pago = 1';
+    const params = [];
+
+    // Filtros opcionais
+    if (tipo) {
+      sql += ' AND tipo = ?';
+      params.push(tipo);
+    }
+    if (estado) {
+      sql += ' AND estado = ?';
+      params.push(estado);
+    }
+    if (cidade) {
+      sql += ' AND cidade = ?';
+      params.push(cidade);
+    }
+
+    // Ordenar por data/hora mais recentes
+    sql += ' ORDER BY data DESC, hora DESC';
+
+    const [results] = await pool.query(sql, params);
     res.json(results);
   } catch (err) {
-    console.error('Erro ao listar pagos:', err.message);
+    console.error('❌ Erro ao listar pagos:', err.message);
     res.status(500).json({ error: 'Erro ao listar pagos' });
   }
 });
@@ -1125,7 +1146,6 @@ app.post('/api/analises/:id/pago', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Buscar dados da análise
     const [rows] = await pool.query(
       "SELECT filename, valor, estado, cidade, pago FROM analises WHERE id = ?",
       [id]
@@ -1137,17 +1157,16 @@ app.post('/api/analises/:id/pago', async (req, res) => {
 
     const analise = rows[0];
 
-    // Se já está pago, não deixa registrar de novo
     if (analise.pago === 1) {
       return res.status(400).json({ erro: "Esta análise já foi marcada como paga." });
     }
 
     const valorFinal = analise.valor && analise.valor > 0 ? analise.valor : 5.99;
 
-    // Atualizar status pago na tabela analises
+    // 👉 Atualiza apenas o status pago
     await pool.query("UPDATE analises SET pago = 1 WHERE id = ?", [id]);
 
-    // Inserir em registros_pagos (só uma vez)
+    // 👉 Insere em registros_pagos
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
       VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
@@ -1166,18 +1185,37 @@ app.post('/api/analises/:id/pago', async (req, res) => {
   }
 });
 
-app.get('/relatorio-geral', async (req, res) => {
+// Relatório geral com opção de detalhar por cidade
+app.get('/api/relatorio-geral', async (req, res) => {
+  const { detalhar } = req.query; // se detalhar=city, agrupa por cidade também
+
   try {
-    const [rows] = await pool.query(`
+    let sql = `
       SELECT estado,
              SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
              SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
       FROM registros_pagos
-      GROUP BY estado
-    `);
+      WHERE pago = 1
+    `;
+
+    if (detalhar === 'city') {
+      sql = `
+        SELECT estado, cidade,
+               SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
+               SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
+        FROM registros_pagos
+        WHERE pago = 1
+        GROUP BY estado, cidade
+        ORDER BY estado, cidade
+      `;
+    } else {
+      sql += ' GROUP BY estado ORDER BY estado';
+    }
+
+    const [rows] = await pool.query(sql);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error('❌ Erro ao gerar relatório geral:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório geral' });
   }
 });
