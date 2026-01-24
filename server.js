@@ -1164,6 +1164,22 @@ app.post('/api/analises/:id/pago', async (req, res) => {
   }
 });
 
+app.get('/relatorio-geral', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT estado,
+             SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
+             SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
+      FROM registros_pagos
+      GROUP BY estado
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao gerar relatório geral' });
+  }
+});
+
 
 //////////////////////////
 // 🚀 Iniciar servidor
