@@ -1217,7 +1217,12 @@ app.delete('/api/registros/:estado', async (req, res) => {
 
 app.post('/api/verificar-senha', (req, res) => {
   const { senha } = req.body;
-  if (senha === SENHA_EXCLUSAO) {
+
+  if (!senha) {
+    return res.status(400).json({ autorizado: false, error: 'Senha não enviada' });
+  }
+
+  if (senha === process.env.EXCLUSAO_SENHA) {
     res.json({ autorizado: true });
   } else {
     res.status(401).json({ autorizado: false, error: 'Senha incorreta' });
