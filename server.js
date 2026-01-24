@@ -471,6 +471,16 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       }
     });
 
+    // === Marca d'água central (logo no início da página) ===
+    const pageWidth = doc.page.width;
+    const pageHeight = doc.page.height;
+    const imgWidth = 300;
+    const imgHeight = 300;
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+
+    doc.image('marca.png', x, y, { width: imgWidth, height: imgHeight });
+
     // Cabeçalho do PDF
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
        .text('Relatório de Análise do Currículo', { align: 'center' });
@@ -535,21 +545,10 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
     if (doc.y > doc.page.height - 100) {
       doc.addPage();
+
+      // Marca d'água também na nova página
+      doc.image('marca.png', x, y, { width: imgWidth, height: imgHeight });
     }
-
-    // Marca d'água central (imagem marca.png)
-    const pageWidth = doc.page.width;
-    const pageHeight = doc.page.height;
-    const imgWidth = 300; // ajuste conforme necessário
-    const imgHeight = 300; // ajuste conforme necessário
-    const x = (pageWidth - imgWidth) / 2;
-    const y = (pageHeight - imgHeight) / 2;
-
-    doc.image('marca.png', x, y, {
-      width: imgWidth,
-      height: imgHeight,
-      opacity: 0.2 // translúcido
-    });
 
     doc.end();
   } catch (err) {
