@@ -387,9 +387,11 @@ app.get('/api/logs', async (req, res) => {
 // 📥 Analisar e salvar relatório em PDF
 //////////////////////////
 app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) => {
-  const { nome, telefone } = req.body;
-  if (!req.file || !nome || !telefone) {
-    return res.status(400).json({ erro: 'Dados incompletos. Envie nome, telefone e o arquivo.' });
+  const { nome, telefone, cidade, estado } = req.body;
+
+  // validação obrigatória
+  if (!req.file || !nome || !telefone || !cidade || !estado) {
+    return res.status(400).json({ erro: 'Dados incompletos. Envie nome, telefone, cidade, estado e o arquivo.' });
   }
 
   try {
@@ -433,32 +435,32 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     const buffers = [];
 
     doc.on('data', buffers.push.bind(buffers));
-doc.on('end', async () => {
-  try {
-    const pdfBuffer = Buffer.concat(buffers);
+    doc.on('end', async () => {
+      try {
+        const pdfBuffer = Buffer.concat(buffers);
 
-    // ⬇️ Aqui você coloca o código de sanitização
-    let nomeSanitizado = nome.trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, ' ')
-      .replace(/[\/\\?%*:|"<>]/g, '');
-    const filename = `Relatorio - ${nomeSanitizado}.pdf`.slice(0, 255);
+        // sanitização
+        let nomeSanitizado = nome.trim()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, ' ')
+          .replace(/[\/\\?%*:|"<>]/g, '');
+        const filename = `Relatorio - ${nomeSanitizado}.pdf`.slice(0, 255);
 
-    const telefoneLimpo = telefone.slice(0, 20);
+        const telefoneLimpo = telefone.slice(0, 20);
 
-    const query = `
-      INSERT INTO analises (nome, telefone, filename, mimetype, pdf_data)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    await pool.query(query, [nome, telefoneLimpo, filename, 'application/pdf', pdfBuffer]);
+        const query = `
+          INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, data)
+          VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())
+        `;
+        await pool.query(query, [nome, telefoneLimpo, cidade, estado, filename, 'application/pdf', pdfBuffer]);
 
-    res.json({ sucesso: true });
-  } catch (err) {
-    console.error('❌ Erro ao salvar no banco:', err);
-    res.status(500).json({ erro: 'Erro ao salvar no banco' });
-  }
-});
+        res.json({ sucesso: true });
+      } catch (err) {
+        console.error('❌ Erro ao salvar no banco:', err);
+        res.status(500).json({ erro: 'Erro ao salvar no banco' });
+      }
+    });
 
     // Cabeçalho
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
@@ -468,6 +470,9 @@ doc.on('end', async () => {
     // Dados do usuário
     doc.font('Helvetica').fontSize(12).fillColor('#333333')
        .text(`Nome: ${nome}`);
+    doc.text(`Telefone: ${telefone}`);
+    doc.text(`Cidade: ${cidade}`);
+    doc.text(`Estado: ${estado}`);
     doc.moveDown();
 
     // Corpo do relatório textual
@@ -481,7 +486,7 @@ doc.on('end', async () => {
 
     doc.moveDown().moveDown();
 
-    // Indicadores Visuais com porcentagem e cor nos números
+    // Indicadores Visuais
     doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
        .text('Indicadores Visuais');
     doc.moveDown();
@@ -519,9 +524,8 @@ doc.on('end', async () => {
       underline: true
     });
 
-    // Rodapé fixo no final da página atual
     if (doc.y > doc.page.height - 100) {
-      doc.addPage(); // se o conteúdo já ocupou demais, cria nova página
+      doc.addPage();
     }
 
     doc.end();
@@ -530,10 +534,11 @@ doc.on('end', async () => {
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
+
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `
-      SELECT id, nome, telefone, filename, mimetype, criado_em, valor, estado, cidade
+      SELECT id, nome, telefone, cidade, estado, filename, mimetype, criado_em
       FROM analises
       ORDER BY id DESC
     `;
@@ -1013,7 +1018,7 @@ app.post('/salvar-pago', async (req, res) => {
     const { tipo, nome_doc, valor, estado, cidade } = req.body;
 
     const agora = new Date();
-    const data = agora.toISOString().split('T')[0]; // YYYY-MM-DD
+    const data = agora.toLocaleDateString("pt-BR"); // formato DD/MM/YYYY
 
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, pago)

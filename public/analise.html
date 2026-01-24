@@ -62,6 +62,41 @@
 </label>
 <input type="text" id="telefone" name="telefone" required placeholder="(DDD)9XXXX-XXXX" />
 
+<label for="estado">Estado:</label>
+<select id="estado" name="estado" required>
+  <option value="">Selecione...</option>
+  <option value="AC">Acre</option>
+  <option value="AL">Alagoas</option>
+  <option value="AM">Amazonas</option>
+  <option value="AP">Amapá</option>
+  <option value="BA">Bahia</option>
+  <option value="CE">Ceará</option>
+  <option value="DF">Distrito Federal</option>
+  <option value="ES">Espírito Santo</option>
+  <option value="GO">Goiás</option>
+  <option value="MA">Maranhão</option>
+  <option value="MG">Minas Gerais</option>
+  <option value="MS">Mato Grosso do Sul</option>
+  <option value="MT">Mato Grosso</option>
+  <option value="PA">Pará</option>
+  <option value="PB">Paraíba</option>
+  <option value="PE">Pernambuco</option>
+  <option value="PI">Piauí</option>
+  <option value="PR">Paraná</option>
+  <option value="RJ">Rio de Janeiro</option>
+  <option value="RN">Rio Grande do Norte</option>
+  <option value="RO">Rondônia</option>
+  <option value="RR">Roraima</option>
+  <option value="RS">Rio Grande do Sul</option>
+  <option value="SC">Santa Catarina</option>
+  <option value="SE">Sergipe</option>
+  <option value="SP">São Paulo</option>
+  <option value="TO">Tocantins</option>
+</select>
+
+<label for="cidade">Cidade:</label>
+<input type="text" id="cidade" name="cidade" required placeholder="Ex: São Paulo" />
+
       <label for="curriculo">Selecione seu currículo:</label>
       <input type="file" id="curriculo" name="curriculo" accept=".pdf,.doc,.docx" required />
 
@@ -149,73 +184,78 @@
     });
 
     document.getElementById("botao-ia").addEventListener("click", async () => {
-      const nome = document.getElementById("nome").value.trim();
-      const telefone = document.getElementById("telefone").value.trim();
-      const arquivo = document.getElementById("curriculo").files[0];
+  const nome = document.getElementById("nome").value.trim();
+  const telefone = document.getElementById("telefone").value.trim();
+  const arquivo = document.getElementById("curriculo").files[0];
+  const estado = document.getElementById("estado").value.trim(); // vem do <select>
+  const cidade = document.getElementById("cidade").value.trim();
 
-      if (!nome || !telefone || !arquivo) {
-        alert("Preencha todos os campos e selecione um arquivo.");
-        return;
-      }
+  // validação obrigatória
+  if (!nome || !telefone || !arquivo || !estado || !cidade) {
+    alert("Preencha todos os campos e selecione um arquivo.");
+    return;
+  }
 
-       const primeiroNome = nome.split(" ")[0];
+  const primeiroNome = nome.split(" ")[0];
   sessionStorage.setItem("primeiroNome", primeiroNome);
 
+  const botao = document.getElementById("botao-ia");
+  botao.classList.add("derretendo");
 
-      const botao = document.getElementById("botao-ia");
-      botao.classList.add("derretendo");
+  setTimeout(() => {
+    document.getElementById("area-botao").style.display = "none";
 
-      setTimeout(() => {
-        document.getElementById("area-botao").style.display = "none";
+    const painel = document.getElementById("painel-carregamento");
+    const barra1 = document.getElementById("barra1");
+    const barra2 = document.getElementById("barra2");
+    const pct1 = document.getElementById("porcentagem1");
+    const pct2 = document.getElementById("porcentagem2");
 
-        const painel = document.getElementById("painel-carregamento");
-        const barra1 = document.getElementById("barra1");
-        const barra2 = document.getElementById("barra2");
-        const pct1 = document.getElementById("porcentagem1");
-        const pct2 = document.getElementById("porcentagem2");
+    painel.style.visibility = "hidden";
 
-        painel.style.visibility = "hidden";
+    barra1.style.transition = "none";
+    barra2.style.transition = "none";
+    barra1.style.transform = "scaleX(0)";
+    barra2.style.transform = "scaleX(0)";
+    pct1.innerText = "0%";
+    pct2.innerText = "0%";
 
-        barra1.style.transition = "none";
-        barra2.style.transition = "none";
-        barra1.style.transform = "scaleX(0)";
-        barra2.style.transform = "scaleX(0)";
-        pct1.innerText = "0%";
-        pct2.innerText = "0%";
+    barra1.offsetWidth;
+    barra2.offsetWidth;
 
-        barra1.offsetWidth;
-        barra2.offsetWidth;
+    barra1.style.transition = "transform 0.3s ease-in-out";
+    barra2.style.transition = "transform 0.3s ease-in-out";
+    painel.style.visibility = "visible";
 
-        barra1.style.transition = "transform 0.3s ease-in-out";
-        barra2.style.transition = "transform 0.3s ease-in-out";
-        painel.style.visibility = "visible";
+    iniciarCarregamento();
+  }, 800);
 
-        iniciarCarregamento();
-      }, 800);
+  // monta o FormData com todos os campos
+  const formData = new FormData();
+  formData.append("nome", nome);
+  formData.append("telefone", telefone);
+  formData.append("curriculo", arquivo);
+  formData.append("estado", estado);   // obrigatório
+  formData.append("cidade", cidade);   // obrigatório
 
-      const formData = new FormData();
-      formData.append("nome", nome);
-      formData.append("telefone", telefone);
-      formData.append("curriculo", arquivo);
-
-      try {
-        const res = await fetch("/api/analisar-e-salvar", {
-          method: "POST",
-          body: formData
-        });
-
-        const resultado = await res.json();
-        if (!resultado.sucesso) {
-          alert("Erro: " + resultado.erro);
-          return;
-        }
-
-        window.processoPronto = true;
-      } catch (err) {
-        console.error(err);
-        alert("Falha ao enviar arquivo.");
-      }
+  try {
+    const res = await fetch("/api/analisar-e-salvar", {
+      method: "POST",
+      body: formData
     });
+
+    const resultado = await res.json();
+    if (!resultado.sucesso) {
+      alert("Erro: " + resultado.erro);
+      return;
+    }
+
+    window.processoPronto = true;
+  } catch (err) {
+    console.error(err);
+    alert("Falha ao enviar arquivo.");
+  }
+});
 
 function iniciarCarregamento() {
   const barra1 = document.getElementById("barra1");
