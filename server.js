@@ -1075,6 +1075,35 @@ app.get('/usuarios', (req, res) => {
   });
 });
 
+app.post('/api/analises/:id/pago', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Buscar dados da análise
+    const [rows] = await pool.query(
+      "SELECT nome, cidade, estado, filename FROM analises WHERE id = ?",
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ erro: "Análise não encontrada" });
+    }
+
+    const analise = rows[0];
+
+    // Inserir em registros_pagos
+    await pool.query(`
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, pago)
+      VALUES (?, ?, ?, ?, ?, CURDATE(), 1)
+    `, ["Análise", analise.filename, 5.99, analise.estado, analise.cidade]);
+
+    res.json({ sucesso: true });
+  } catch (err) {
+    console.error("Erro ao registrar pagamento:", err.message);
+    res.status(500).json({ erro: "Erro ao registrar pagamento" });
+  }
+});
+
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
