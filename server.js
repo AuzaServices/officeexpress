@@ -449,11 +449,21 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
         const telefoneLimpo = telefone.slice(0, 20);
 
-const query = `
-  INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`;
-await pool.query(query, [nome, telefoneLimpo, cidade, estado, filename, 'application/pdf', pdfBuffer]);
+        // ✅ Agora inclui o valor fixo de 5.99
+        const query = `
+          INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        await pool.query(query, [
+          nome,
+          telefoneLimpo,
+          cidade,
+          estado,
+          filename,
+          'application/pdf',
+          pdfBuffer,
+          5.99 // valor fixo da análise
+        ]);
 
         res.json({ sucesso: true });
       } catch (err) {
@@ -534,7 +544,6 @@ await pool.query(query, [nome, telefoneLimpo, cidade, estado, filename, 'applica
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
-
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `
