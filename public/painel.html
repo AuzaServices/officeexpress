@@ -281,12 +281,12 @@ linha.innerHTML = `
     <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
   </td>
   <td>
-    <button onclick="marcarPago(
-      ${pdf.id},
-      'Currículo',
-      '${pdf.filename}',
-      ${pdf.valor || 0},
-      '${pdf.estado || ""}',
+    <button onclick="marcarPago(this, 
+      ${pdf.id}, 
+      'Currículo', 
+      '${pdf.filename}', 
+      ${pdf.valor || 0}, 
+      '${pdf.estado || ""}', 
       '${pdf.cidade || ""}'
     )" class="btn btn-success btn-sm">Pago</button>
   </td>
@@ -347,27 +347,27 @@ tabela.appendChild(linha);
 
   const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${rel.id}</td>
-          <td>${rel.filename || '—'}</td>
-          <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
-          <td>
-            <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-            <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-          </td>
-          <td>
-            <button onclick="marcarPago(
-              ${rel.id},
-              'Análise',
-              '${rel.filename}',
-                ${rel.valor || 5.99},
-              '${rel.estado || ""}',
-              '${rel.cidade || ""}'
-            )" class="btn btn-success btn-sm">Pago</button>
-          </td>
-        `;
-        tabela.appendChild(linha);
+const linha = document.createElement('tr');
+linha.innerHTML = `
+  <td>${rel.id}</td>
+  <td>${rel.filename || '—'}</td>
+  <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+  <td>
+    <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+    <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+  <td>
+    <button onclick="marcarPago(this,
+      ${rel.id},
+      'Análise',
+      '${rel.filename}',
+      ${rel.valor || 5.99},
+      '${rel.estado || ""}',
+      '${rel.cidade || ""}'
+    )" class="btn btn-success btn-sm">Pago</button>
+  </td>
+`;
+tabela.appendChild(linha);
 
 });
     })
@@ -665,6 +665,17 @@ doc.text(
       console.error("Erro ao emitir relatório:", err);
       alert("Erro ao gerar relatório. Verifique o backend.");
     });
+}
+
+function marcarPago(button, id, tipo, filename, valor, estado, cidade) {
+  // Aqui você pode chamar o backend futuramente se quiser
+  // mas mesmo sem isso já trava no front
+
+  // Desabilita o botão e muda estilo
+  button.disabled = true;
+  button.classList.remove('btn-success');
+  button.classList.add('btn-secondary');
+  button.textContent = 'Pago registrado';
 }
 
   </script>
