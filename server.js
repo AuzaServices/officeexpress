@@ -562,7 +562,16 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 app.get('/api/analises', async (req, res) => {
   try {
     const query = `
-      SELECT id, 'Análise' AS tipo, filename AS nome_doc, valor, cidade, estado, criado_em AS data
+      SELECT 
+        id,
+        'Análise' AS tipo,
+        filename AS nome_doc,
+        valor,
+        cidade,
+        estado,
+        criado_em AS data,
+        pago,
+        telefone AS contato
       FROM analises
       ORDER BY id DESC
     `;
