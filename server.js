@@ -1031,7 +1031,7 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 
 // 1. Rota para salvar pagamento
 app.post('/salvar-pago', async (req, res) => {
-  const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
+  const { tipo, nome_doc, valor, estado, cidade } = req.body;
   try {
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
@@ -1041,7 +1041,7 @@ app.post('/salvar-pago', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Erro ao salvar pagamento:', err.message);
-    res.status(500).json({ success: false, error: 'Erro ao salvar pagamento' });
+    res.status(500).json({ success: false });
   }
 });
 
