@@ -1069,35 +1069,17 @@ app.post('/salvar-pago', async (req, res) => {
 
 
 // 2. Rota para listar registros pagos por Estado
-// Relatório por estado, com filtros opcionais
-app.get('/api/relatorio/:estado', async (req, res) => {
-  const { estado } = req.params;
-  const { cidade, tipo } = req.query;
+app.get('/relatorio/:estado', async (req, res) => {
+  const estado = req.params.estado;
 
   try {
-    let sql = `
-      SELECT id, tipo, nome_doc, valor, cidade, data, hora
-      FROM registros_pagos
-      WHERE estado = ? AND pago = 1
-    `;
-    const params = [estado];
-
-    if (cidade) {
-      sql += ' AND cidade = ?';
-      params.push(cidade);
-    }
-
-    if (tipo) {
-      sql += ' AND tipo = ?';
-      params.push(tipo);
-    }
-
-    sql += ' ORDER BY data DESC, hora DESC';
-
-    const [results] = await pool.query(sql, params);
+    const [results] = await pool.query(
+      'SELECT id, tipo, nome_doc, valor, cidade, data FROM registros_pagos WHERE estado = ? AND pago = 1',
+      [estado]
+    );
     res.json(results);
   } catch (err) {
-    console.error('❌ Erro ao gerar relatório:', err.message);
+    console.error('Erro ao gerar relatório:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório' });
   }
 });
