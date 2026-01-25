@@ -1053,30 +1053,20 @@ app.post('/salvar-pago', async (req, res) => {
 app.get('/api/relatorio/:estado', async (req, res) => {
   const { estado } = req.params;
   try {
-    // Conta currículos pagos
-    const [curriculos] = await pool.query(`
-      SELECT COUNT(*) AS total_curriculos
+    const [rows] = await pool.query(`
+      SELECT id, tipo, nome_doc, valor, cidade, data
       FROM registros_pagos
-      WHERE tipo = 'Currículo' AND estado = ?
+      WHERE estado = ?
+      ORDER BY data DESC
     `, [estado]);
 
-    // Conta análises pagas
-    const [analises] = await pool.query(`
-      SELECT COUNT(*) AS total_analises
-      FROM registros_pagos
-      WHERE tipo = 'Análise' AND estado = ?
-    `, [estado]);
-
-    res.json({
-      estado,
-      curriculos: curriculos[0].total_curriculos,
-      analises: analises[0].total_analises
-    });
+    res.json(rows); // retorna array de registros pagos
   } catch (err) {
     console.error('Erro ao gerar relatório por estado:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório por estado' });
   }
 });
+
 
 
 // 3. Rota para listar todos os registros pagos
@@ -1186,51 +1176,21 @@ app.post('/api/analises/:id/pago', async (req, res) => {
 // Relatório geral (todos os estados)
 app.get('/api/relatorio-geral', async (req, res) => {
   try {
-    // Currículos pagos por estado
-    const [curriculos] = await pool.query(`
-      SELECT estado, COUNT(*) AS total_curriculos
+    const [rows] = await pool.query(`
+      SELECT estado,
+             SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
+             SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
       FROM registros_pagos
-      WHERE tipo = 'Currículo'
       GROUP BY estado
     `);
 
-    // Análises pagas por estado
-    const [analises] = await pool.query(`
-      SELECT estado, COUNT(*) AS total_analises
-      FROM registros_pagos
-      WHERE tipo = 'Análise'
-      GROUP BY estado
-    `);
-
-    // Junta os resultados em um único objeto por estado
-    const relatorio = {};
-
-    curriculos.forEach(c => {
-      relatorio[c.estado] = {
-        estado: c.estado,
-        curriculos: c.total_curriculos,
-        analises: 0
-      };
-    });
-
-    analises.forEach(a => {
-      if (!relatorio[a.estado]) {
-        relatorio[a.estado] = {
-          estado: a.estado,
-          curriculos: 0,
-          analises: a.total_analises
-        };
-      } else {
-        relatorio[a.estado].analises = a.total_analises;
-      }
-    });
-
-    res.json(Object.values(relatorio));
+    res.json(rows); // retorna array [{estado, curriculos, analises}, ...]
   } catch (err) {
     console.error('Erro ao gerar relatório geral:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório geral' });
   }
 });
+
 
 app.delete('/api/registros', async (req, res) => {
   const { senha } = req.body;
@@ -1278,6 +1238,22 @@ app.post('/api/verificar-senha', (req, res) => {
     return res.json({ autorizado: true });
   } else {
     return res.status(401).json({ autorizado: false, error: 'Senha incorreta' });
+  }
+});
+
+// Relatório completo (todos os registros pagos detalhados)
+app.get('/api/relatorio-completo', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT id, tipo, nome_doc, valor, estado, cidade, data
+      FROM registros_pagos
+      ORDER BY estado, data DESC
+    `);
+
+    res.json(rows); // retorna array detalhado de todos os pagamentos
+  } catch (err) {
+    console.error('Erro ao gerar relatório completo:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar relatório completo' });
   }
 });
 
