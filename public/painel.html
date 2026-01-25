@@ -418,22 +418,22 @@ function carregarIndicacoes() {
       tabela.innerHTML = '';
 
       data.forEach(ind => {
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${ind.id}</td>
-          <td>${ind.indicador_nome || '—'}</td>
-          <td>${ind.indicado_nome}</td>
-          <td>${ind.codigo}</td>
-          <td>${ind.tipo}</td>
-          <td>${new Date(ind.created_at).toLocaleString('pt-BR')}</td>
-          <td>
-            ${ind.status === 'pendente'
-              ? `<button onclick="confirmarPago(${ind.id}, '${ind.codigo}')" class="btn btn-success btn-sm">Pago</button>`
-              : '<span class="badge bg-success">Pago</span>'}
-            <button onclick="apagarIndicacao(${ind.id})" class="btn btn-danger btn-sm ms-2">Apagar</button>
-          </td>
-        `;
-        tabela.appendChild(linha);
+const linha = document.createElement('tr');
+linha.innerHTML = `
+  <td>${ind.id}</td>
+  <td>${ind.indicador_nome || '—'}</td>
+  <td>${ind.indicado_nome}</td>
+  <td>${ind.codigo}</td>
+  <td>${ind.tipo}</td>
+  <td>${new Date(ind.created_at).toLocaleString('pt-BR')}</td>
+  <td>
+    ${ind.status === 'pendente'
+      ? `<button onclick="confirmarPagamento(${ind.id})" class="btn btn-success btn-sm">Pago</button>`
+      : '<span class="badge bg-success">Pago</span>'}
+    <button onclick="apagarIndicacao(${ind.id})" class="btn btn-danger btn-sm ms-2">Apagar</button>
+  </td>
+`;
+tabela.appendChild(linha);
       });
     })
     .catch(err => console.error('Erro ao carregar indicações:', err));
@@ -447,21 +447,21 @@ function carregarPagamentos() {
       tabela.innerHTML = '';
 
       data.forEach(p => {
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${p.id}</td>
-          <td>${p.codigo}</td>
-          <td>${p.indicado_nome}</td>
-          <td>${p.tipo}</td>
-          <td>${p.status}</td>
-          <td>${new Date(p.created_at).toLocaleString('pt-BR')}</td>
-          <td>
-            ${p.status === 'pendente' ? 
-              `<button onclick="confirmarPago(${p.id}, '${p.codigo}')" class="btn btn-success btn-sm">Pago</button>` 
-              : '—'}
-          </td>
-        `;
-        tabela.appendChild(linha);
+const linha = document.createElement('tr');
+linha.innerHTML = `
+  <td>${p.id}</td>
+  <td>${p.codigo}</td>
+  <td>${p.indicado_nome}</td>
+  <td>${p.tipo}</td>
+  <td>${p.status}</td>
+  <td>${new Date(p.created_at).toLocaleString('pt-BR')}</td>
+  <td>
+    ${p.status === 'pendente' ? 
+      `<button onclick="confirmarPagamento(${p.id})" class="btn btn-success btn-sm">Pago</button>` 
+      : '—'}
+  </td>
+`;
+tabela.appendChild(linha);
       });
     });
 }
@@ -700,7 +700,7 @@ doc.text(
 }
 
 async function atualizarBotoesRelatorio() {
-  const res = await fetch('/relatorio-geral');
+  const res = await fetch('/api/relatorio-geral');
   const dados = await res.json();
 
   dados.forEach(item => {
