@@ -1031,7 +1031,7 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 
 // 1. Rota para salvar pagamento
 app.post('/salvar-pago', async (req, res) => {
-  const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
+  const { tipo, nome_doc, valor, estado, cidade } = req.body;
   try {
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
@@ -1041,7 +1041,7 @@ app.post('/salvar-pago', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Erro ao salvar pagamento:', err.message);
-    res.status(500).json({ success: false, error: 'Erro ao salvar pagamento' });
+    res.status(500).json({ success: false });
   }
 });
 
@@ -1183,7 +1183,7 @@ app.get('/api/relatorio-geral', async (req, res) => {
       GROUP BY estado
     `);
 
-    res.json(rows); // [{estado, curriculos, analises}, ...]
+    res.json(rows);
   } catch (err) {
     console.error('Erro ao gerar relatório geral:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório geral' });
@@ -1237,6 +1237,22 @@ app.post('/api/verificar-senha', (req, res) => {
     return res.json({ autorizado: true });
   } else {
     return res.status(401).json({ autorizado: false, error: 'Senha incorreta' });
+  }
+});
+
+// Relatório completo (todos os registros pagos detalhados)
+app.get('/api/relatorio-completo', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT id, tipo, nome_doc, valor, estado, cidade, data
+      FROM registros_pagos
+      ORDER BY estado, data DESC
+    `);
+
+    res.json(rows); // retorna array detalhado de todos os pagamentos
+  } catch (err) {
+    console.error('Erro ao gerar relatório completo:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar relatório completo' });
   }
 });
 
