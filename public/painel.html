@@ -57,15 +57,16 @@ table th {
 
 /* Cabeçalho usando variáveis */
 .cabecalho {
-  background: linear-gradient(90deg, var(--bg-1), var(--bg-2));
+  background: linear-gradient(90deg, var(--bg-1), var(--bg-2)); /* usa suas cores */
   padding: 8px 0;
   width: 100%;
-  position: fixed;
+  position: fixed;   /* fixa no topo */
   top: 0;
   left: 0;
-  z-index: 1000;
-  box-shadow: 0 2px 6px var(--shadow);
+  z-index: 1000;     /* garante que fique acima do conteúdo */
+  box-shadow: 0 2px 6px var(--shadow); /* sombra para destacar */
 }
+
 
 /* Container centralizado dentro do cabeçalho */
 .cabecalho .container {

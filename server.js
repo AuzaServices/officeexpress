@@ -4,9 +4,18 @@ const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const axios = require('axios');
-const pdfParse = require('pdf-parse'); // 📥 Novo
+const pdfParse = require('pdf-parse');
 const cron = require('node-cron');
-const bcrypt = require('bcrypt'); // para hash seguro da senha
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const session = require('express-session'); // 🔑 para armazenar challenge do WebAuthn
+const {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
+} = require('@simplewebauthn/server');
 
 require('dotenv').config();
 
@@ -21,7 +30,15 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
+app.use(cookieParser());
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'chave_super_secreta',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // se usar HTTPS, pode ser true
+}));
 
+// Pool MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -31,7 +48,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  charset: 'utf8mb4'   // ⬅️ importante
+  charset: 'utf8mb4'
 });
 
 (async () => {
@@ -43,6 +60,157 @@ const pool = mysql.createPool({
     console.error('❌ Falha ao conectar ao MySQL:', err.code, err.message);
   }
 })();
+
+// ----------------------
+// ROTAS DE AUTENTICAÇÃO
+// ----------------------
+
+// Registro de usuário
+app.post('/auth/register', async (req, res) => {
+  const { username, password } = req.body;
+  const hashed = await bcrypt.hash(password, 10);
+  try {
+    await pool.query('INSERT INTO usuarios (username, password) VALUES (?, ?)', [username, hashed]);
+    res.json({ message: 'Usuário registrado com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao registrar usuário' });
+  }
+});
+
+// Login com usuário + senha
+app.post('/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+  const [rows] = await pool.query('SELECT * FROM usuarios WHERE username = ?', [username]);
+  if (rows.length === 0) return res.status(401).json({ error: 'Usuário não encontrado' });
+
+  const user = rows[0];
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return res.status(401).json({ error: 'Senha inválida' });
+
+  const token = jwt.sign({ username }, process.env.JWT_SECRET || 'segredo_super_forte', { expiresIn: '1h' });
+  res.cookie('token', token, { httpOnly: true, secure: true });
+  res.json({ message: 'Login realizado com sucesso' });
+});
+
+// Proteção do painel
+app.get('/painel', (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).send('Não autorizado');
+  try {
+    jwt.verify(token, process.env.JWT_SECRET || 'segredo_super_forte');
+    res.sendFile(__dirname + '/painel.html');
+  } catch {
+    res.status(401).send('Token inválido');
+  }
+});
+
+// ----------------------
+// ROTAS BIOMETRIA (WebAuthn)
+// ----------------------
+
+// Inicia o registro biométrico
+app.get('/auth/webauthn/register', async (req, res) => {
+  const { userID, username } = req.query;
+  const options = generateRegistrationOptions({
+    rpName: 'Painel Seguro',
+    userID: userID.toString(),
+    userName: username,
+  });
+
+  req.session.challenge = options.challenge;
+  res.json(options);
+});
+
+// Verifica e grava biometria
+app.post('/auth/webauthn/register/verify', async (req, res) => {
+  try {
+    const verification = await verifyRegistrationResponse({
+      response: req.body,
+      expectedChallenge: req.session.challenge,
+      expectedOrigin: 'http://localhost:3000',
+      expectedRPID: 'localhost',
+    });
+
+    if (verification.verified) {
+      const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+
+      await pool.query(
+        'INSERT INTO autenticadores (usuario_id, credencial_id, chave_publica, contador, tipo, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
+        [
+          req.body.userID,
+          credentialID.toString('base64'),
+          credentialPublicKey.toString('base64'),
+          counter,
+          'plataforma'
+        ]
+      );
+
+      res.json({ message: 'Biometria registrada com sucesso' });
+    } else {
+      res.status(400).json({ error: 'Falha ao registrar biometria' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno na verificação biométrica' });
+  }
+});
+
+// Inicia login biométrico
+app.get('/auth/webauthn/login', async (req, res) => {
+  const { userID } = req.query;
+  const [rows] = await pool.query('SELECT * FROM autenticadores WHERE usuario_id = ?', [userID]);
+
+  const options = generateAuthenticationOptions({
+    allowCredentials: rows.map(r => ({
+      id: Buffer.from(r.credencial_id, 'base64'),
+      type: 'public-key',
+    })),
+    userVerification: 'required',
+  });
+
+  req.session.challenge = options.challenge;
+  res.json(options);
+});
+
+// Verifica login biométrico
+app.post('/auth/webauthn/login/verify', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM autenticadores WHERE usuario_id = ? AND credencial_id = ?',
+      [req.body.userID, req.body.credencial_id]
+    );
+
+    if (rows.length === 0) return res.status(404).json({ error: 'Credencial não encontrada' });
+
+    const auth = rows[0];
+
+    const verification = await verifyAuthenticationResponse({
+      response: req.body,
+      expectedChallenge: req.session.challenge,
+      expectedOrigin: 'http://localhost:3000',
+      expectedRPID: 'localhost',
+      authenticator: {
+        credentialID: Buffer.from(auth.credencial_id, 'base64'),
+        credentialPublicKey: Buffer.from(auth.chave_publica, 'base64'),
+        counter: auth.contador,
+      },
+    });
+
+    if (verification.verified) {
+      await pool.query(
+        'UPDATE autenticadores SET contador = ?, atualizado_em = NOW() WHERE id = ?',
+        [verification.authenticationInfo.newCounter, auth.id]
+      );
+
+      const token = jwt.sign({ username: req.body.username }, process.env.JWT_SECRET || 'segredo_super_forte', { expiresIn: '1h' });
+      res.cookie('token', token, { httpOnly: true, secure: true });
+      res.json({ message: 'Login biométrico realizado com sucesso' });
+    } else {
+      res.status(401).json({ error: 'Falha na autenticação biométrica' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno na verificação biométrica' });
+  }
+});
 
 // 🔍 Função para extrair IP público
 function getPublicIP(req) {
