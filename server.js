@@ -570,20 +570,23 @@ app.get('/api/analises', async (req, res) => {
   try {
     const query = `
       SELECT 
-        id,
-        nome,
-        telefone,
-        filename,
-        mimetype,
-        cidade,
-        estado,
-        criado_em,
-        valor
-      FROM analises
-      ORDER BY id DESC
+        a.id,
+        a.nome,
+        a.telefone,
+        a.filename,
+        a.mimetype,
+        a.cidade,
+        a.estado,
+        a.criado_em,
+        a.valor,
+        EXISTS(
+          SELECT 1 FROM registros_pagos r WHERE r.pdf_id = a.id
+        ) AS jaPago
+      FROM analises a
+      ORDER BY a.id DESC
     `;
     const [rows] = await pool.query(query);
-    res.json(rows); // devolve array direto
+    res.json(rows); // devolve array com jaPago junto
   } catch (err) {
     console.error('❌ Erro ao buscar análises:', err);
     res.status(500).json({ error: 'Erro ao buscar análises' });
