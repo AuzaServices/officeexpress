@@ -1278,15 +1278,27 @@ app.get('/api/relatorio-completo', async (req, res) => {
 app.post('/auth/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.LOGIN_USER && password === process.env.LOGIN_PASS) {
+    // marca cookie de login
+    res.cookie('logado', 'true', { httpOnly: true });
     return res.json({ message: 'Login realizado com sucesso' });
   }
   res.status(401).json({ error: 'Usuário ou senha inválidos' });
 });
 
-// painel protegido (sem JWT, só exemplo)
-app.get('/painel', (req, res) => {
-  res.sendFile(__dirname + '/painel.html');
+// middleware de proteção
+function proteger(req, res, next) {
+  if (req.cookies.logado === 'true') {
+    next();
+  } else {
+    res.redirect('/login.html');
+  }
+}
+
+// rota painel protegida
+app.get('/painel', proteger, (req, res) => {
+  res.sendFile(__dirname + '/public/painel.html');
 });
+
 
 
 
