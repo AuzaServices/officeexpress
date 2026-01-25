@@ -1177,8 +1177,8 @@ app.get('/api/relatorio-geral', async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT estado,
-             SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
-             SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
+             COUNT(CASE WHEN tipo = 'Currículo' THEN 1 END) AS curriculos,
+             COUNT(CASE WHEN tipo = 'Análise' THEN 1 END) AS analises
       FROM registros_pagos
       WHERE pago = 1
       GROUP BY estado
