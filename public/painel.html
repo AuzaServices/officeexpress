@@ -288,15 +288,14 @@ linha.innerHTML = `
     <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
   </td>
 <td>
-  <button onclick="marcarPago(this,
-    ${pdf.id},
-    'Currículo',
-    '${pdf.filename}',
-    ${pdf.valor || 0},
-    '${pdf.estado || ""}',
-    '${pdf.cidade || ""}'
-  ); registrarIndicacao('${pdf.codigo}')" 
-  class="btn btn-success btn-sm">Pago</button>
+<button onclick="marcarPago(this,
+  ${pdf.id},
+  'Currículo',
+  '${pdf.filename}',
+  ${pdf.valor || 0},
+  '${pdf.estado || ""}',
+  '${pdf.cidade || ""}'
+)" class="btn btn-success btn-sm">Pago</button>
 </td>
   <td>
     ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
@@ -369,15 +368,14 @@ linha.innerHTML = `
     <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
   </td>
 <td>
-  <button onclick="marcarPago(this,
-    ${rel.id},
-    'Análise',
-    '${rel.filename}',
-    ${rel.valor || 5.99},
-    '${rel.estado || ""}',
-    '${rel.cidade || ""}'
-  ); registrarIndicacao('${rel.codigo}')" 
-  class="btn btn-success btn-sm">Pago</button>
+<button onclick="marcarPago(this,
+  ${rel.id},
+  'Análise',
+  '${rel.filename}',
+  ${rel.valor || 5.99},
+  '${rel.estado || ""}',
+  '${rel.cidade || ""}'
+)" class="btn btn-success btn-sm">Pago</button>
 </td>
   <td>
     ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
@@ -429,9 +427,9 @@ linha.innerHTML = `
   <td>${ind.tipo}</td>
   <td>${new Date(ind.created_at).toLocaleString('pt-BR')}</td>
   <td>
-    ${ind.status === 'pendente'
-      ? `<button onclick="confirmarPagamento(${ind.id})" class="btn btn-success btn-sm">Pago</button>`
-      : '<span class="badge bg-success">Pago</span>'}
+ ${ind.status === 'pendente'
+  ? `<button onclick="confirmarPagamento(${ind.id}); registrarIndicacao('${ind.codigo}')" class="btn btn-success btn-sm">Pago</button>`
+  : '<span class="badge bg-success">Pago</span>'}
     <button onclick="apagarIndicacao(${ind.id})" class="btn btn-danger btn-sm ms-2">Apagar</button>
   </td>
 `;
