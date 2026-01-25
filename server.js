@@ -935,18 +935,27 @@ app.post('/api/pagamentos-analise/:id/confirmar', async (req, res) => {
   try {
     await pool.query('UPDATE pagamentos SET status = "pago" WHERE id = ?', [id]);
 
-    const [rows] = await pool.query('SELECT codigo, indicado_nome FROM pagamentos WHERE id = ?', [id]);
+    const [rows] = await pool.query('SELECT codigo FROM pagamentos WHERE id = ?', [id]);
     if (rows.length === 0) return res.status(404).json({ error: 'Pagamento não encontrado' });
 
-    const { codigo, indicado_nome } = rows[0];
+    const codigo = rows[0].codigo;
 
-    // Insere em registros_pagos
     await pool.query(`
-      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
-    `, ['Análise', indicado_nome, 5.99, '', '',]);
+      UPDATE usuarios 
+      SET indicacoes = LEAST(indicacoes + 1, 10),
+          link_tipo = CASE 
+                        WHEN LEAST(indicacoes + 1, 10) >= 10 THEN 'comum' 
+                        ELSE 'indicacao' 
+                      END
+      WHERE codigo = ?`, [codigo]);
 
-    res.json({ message: 'Pagamento da análise confirmado e registrado em registros_pagos' });
+    const [updated] = await pool.query('SELECT indicacoes, link_tipo FROM usuarios WHERE codigo = ?', [codigo]);
+
+    res.json({
+      message: 'Pagamento da análise confirmado e indicação registrada',
+      indicacoes: updated[0].indicacoes,
+      link_tipo: updated[0].link_tipo
+    });
   } catch (err) {
     console.error('Erro ao confirmar pagamento da análise:', err.message);
     res.status(500).json({ error: 'Erro ao confirmar pagamento da análise' });
@@ -1046,11 +1055,11 @@ app.get('/api/relatorio/:estado', async (req, res) => {
     const [rows] = await pool.query(`
       SELECT id, tipo, nome_doc, valor, cidade, data
       FROM registros_pagos
-      WHERE estado = ? AND tipo = 'Currículo'
+      WHERE estado = ?
       ORDER BY data DESC
     `, [estado]);
 
-    res.json(rows); // cada linha = 1 currículo pago
+    res.json(rows); // cada linha = 1 pagamento (currículo ou análise)
   } catch (err) {
     console.error('Erro ao gerar relatório por estado:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório por estado' });
@@ -1171,6 +1180,7 @@ app.get('/api/relatorio-geral', async (req, res) => {
              SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
              SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
       FROM registros_pagos
+      WHERE pago = 1
       GROUP BY estado
     `);
 
