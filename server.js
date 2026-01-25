@@ -1206,37 +1206,18 @@ app.post('/api/analises/:id/pago', async (req, res) => {
   }
 });
 
-// Relatório geral com opção de detalhar por cidade
-app.get('/api/relatorio-geral', async (req, res) => {
-  const { detalhar } = req.query; // se detalhar=city, agrupa por cidade também
-
+app.get('/relatorio-geral', async (req, res) => {
   try {
-    let sql = `
+    const [rows] = await pool.query(`
       SELECT estado,
              SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
              SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
       FROM registros_pagos
-      WHERE pago = 1
-    `;
-
-    if (detalhar === 'city') {
-      sql = `
-        SELECT estado, cidade,
-               SUM(CASE WHEN tipo = 'Currículo' THEN 1 ELSE 0 END) AS curriculos,
-               SUM(CASE WHEN tipo = 'Análise' THEN 1 ELSE 0 END) AS analises
-        FROM registros_pagos
-        WHERE pago = 1
-        GROUP BY estado, cidade
-        ORDER BY estado, cidade
-      `;
-    } else {
-      sql += ' GROUP BY estado ORDER BY estado';
-    }
-
-    const [rows] = await pool.query(sql);
+      GROUP BY estado
+    `);
     res.json(rows);
   } catch (err) {
-    console.error('❌ Erro ao gerar relatório geral:', err.message);
+    console.error(err);
     res.status(500).json({ error: 'Erro ao gerar relatório geral' });
   }
 });
