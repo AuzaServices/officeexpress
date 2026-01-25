@@ -287,16 +287,17 @@ linha.innerHTML = `
     <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
     <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
   </td>
-  <td>
-    <button onclick="marcarPago(this,
-      ${pdf.id},
-      'Currículo',
-      '${pdf.filename}',
-      ${pdf.valor || 0},
-      '${pdf.estado || ""}',
-      '${pdf.cidade || ""}'
-    )" class="btn btn-success btn-sm">Pago</button>
-  </td>
+<td>
+  <button onclick="marcarPago(this,
+    ${pdf.id},
+    'Currículo',
+    '${pdf.filename}',
+    ${pdf.valor || 0},
+    '${pdf.estado || ""}',
+    '${pdf.cidade || ""}'
+  ); registrarIndicacao('${pdf.codigo}')" 
+  class="btn btn-success btn-sm">Pago</button>
+</td>
   <td>
     ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
   </td>
@@ -367,16 +368,17 @@ linha.innerHTML = `
     <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
     <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
   </td>
-  <td>
-    <button onclick="marcarPago(this,
-      ${rel.id},
-      'Análise',
-      '${rel.filename}',
-      ${rel.valor || 5.99},
-      '${rel.estado || ""}',
-      '${rel.cidade || ""}'
-    )" class="btn btn-success btn-sm">Pago</button>
-  </td>
+<td>
+  <button onclick="marcarPago(this,
+    ${rel.id},
+    'Análise',
+    '${rel.filename}',
+    ${rel.valor || 5.99},
+    '${rel.estado || ""}',
+    '${rel.cidade || ""}'
+  ); registrarIndicacao('${rel.codigo}')" 
+  class="btn btn-success btn-sm">Pago</button>
+</td>
   <td>
     ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
   </td>
@@ -593,7 +595,7 @@ function marcarPago(button, id, tipo, nome_doc, valor, estado, cidade) {
 }
 
 function emitirRelatorio(estado) {
-  fetch(`/relatorio/${estado}`)
+  fetch(`/api/relatorio/${estado}`)
     .then(res => res.json())
     .then(async data => {
       const { jsPDF } = window.jspdf;
