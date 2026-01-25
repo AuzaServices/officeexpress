@@ -577,7 +577,7 @@ function marcarPago(button, id, tipo, nome_doc, valor, estado, cidade) {
       button.disabled = true;
       button.classList.remove('btn-success');
       button.classList.add('btn-secondary');
-      button.textContent = 'Pago'; // mantém o texto igual
+      button.textContent = 'Pago';
 
       alert("Pagamento registrado com sucesso!");
       carregarPDFs();

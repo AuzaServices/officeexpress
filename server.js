@@ -1031,13 +1031,16 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 
 // 1. Rota para salvar pagamento
 app.post('/salvar-pago', async (req, res) => {
-  const { tipo, nome_doc, valor, estado, cidade } = req.body;
+  const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
   try {
     await pool.query(`
-      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
-      ON DUPLICATE KEY UPDATE pago = VALUES(pago)
-    `, [tipo, nome_doc, valor, estado, cidade]);
+      INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago)
+      SELECT ?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1
+      FROM DUAL
+      WHERE NOT EXISTS (
+        SELECT 1 FROM registros_pagos WHERE pdf_id = ?
+      )
+    `, [id, tipo, nome_doc, valor, estado, cidade, id]);
 
     res.json({ success: true });
   } catch (err) {
