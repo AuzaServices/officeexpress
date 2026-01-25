@@ -1056,11 +1056,11 @@ app.get('/api/relatorio/:estado', async (req, res) => {
     const [rows] = await pool.query(`
       SELECT id, tipo, nome_doc, valor, cidade, data
       FROM registros_pagos
-      WHERE estado = ?
+      WHERE estado = ? AND tipo = 'Currículo'
       ORDER BY data DESC
     `, [estado]);
 
-    res.json(rows); // retorna array de registros pagos
+    res.json(rows); // cada linha = 1 currículo pago
   } catch (err) {
     console.error('Erro ao gerar relatório por estado:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório por estado' });
@@ -1184,7 +1184,7 @@ app.get('/api/relatorio-geral', async (req, res) => {
       GROUP BY estado
     `);
 
-    res.json(rows); // retorna array [{estado, curriculos, analises}, ...]
+    res.json(rows); // [{estado, curriculos, analises}, ...]
   } catch (err) {
     console.error('Erro ao gerar relatório geral:', err.message);
     res.status(500).json({ error: 'Erro ao gerar relatório geral' });
