@@ -84,12 +84,11 @@
         return;
       }
 
-      if (res.ok) {
-        alert("Login realizado com sucesso!");
-        window.location.href = "/painel.html";
-      } else {
-        alert(data.error);
-      }
+if (res.ok) {
+  window.location.href = "/painel"; // ✅ rota protegida
+} else {
+  alert(data.error);
+}
     });
   </script>
 </body>

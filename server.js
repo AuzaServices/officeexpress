@@ -55,6 +55,7 @@ app.post('/auth/login', (req, res) => {
   res.status(401).json({ error: 'Usuário ou senha inválidos' });
 });
 
+
 // middleware de proteção
 function proteger(req, res, next) {
   if (req.cookies.logado === 'true') {
@@ -66,8 +67,9 @@ function proteger(req, res, next) {
 
 // rota painel protegida
 app.get('/painel', proteger, (req, res) => {
-  res.sendFile(__dirname + '/painel.html'); // painel.html fora da pasta public
+  res.sendFile(__dirname + '/painel.html'); // painel fora da pasta public
 });
+
 
 // logout
 app.get('/logout', (req, res) => {
