@@ -294,7 +294,12 @@ app.get('/api/pdfs/:id/download', async (req, res) => {
 //////////////////////////
 app.get('/api/pdfs', async (req, res) => {
   try {
-    const query = 'SELECT id, filename, telefone, created_at, valor, estado, cidade FROM pdfs ORDER BY id DESC';
+    const query = `
+      SELECT p.id, p.filename, p.telefone, p.created_at, p.valor, p.estado, p.cidade,
+             EXISTS(SELECT 1 FROM registros_pagos r WHERE r.pdf_id = p.id) AS jaPago
+      FROM pdfs p
+      ORDER BY p.id DESC
+    `;
     const [results] = await pool.query(query);
     res.json(results);
   } catch (err) {
@@ -1033,14 +1038,20 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 app.post('/salvar-pago', async (req, res) => {
   const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
   try {
+    const [rows] = await pool.query(
+      'SELECT 1 FROM registros_pagos WHERE pdf_id = ?',
+      [id]
+    );
+
+    if (rows.length > 0) {
+      // já existe
+      return res.json({ success: false, alreadyPaid: true });
+    }
+
     await pool.query(`
       INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      SELECT ?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1
-      FROM DUAL
-      WHERE NOT EXISTS (
-        SELECT 1 FROM registros_pagos WHERE pdf_id = ?
-      )
-    `, [id, tipo, nome_doc, valor, estado, cidade, id]);
+      VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
+    `, [id, tipo, nome_doc, valor, estado, cidade]);
 
     res.json({ success: true });
   } catch (err) {

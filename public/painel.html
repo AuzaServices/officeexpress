@@ -278,32 +278,45 @@ function carregarPDFs() {
 
         const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
-const linha = document.createElement('tr');
-linha.innerHTML = `
-  <td>${pdf.id}</td>
-  <td>${pdf.filename || '—'}</td>
-  <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
-  <td>
-    <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-    <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-  </td>
-<td>
-<button onclick="marcarPago(this,
-  ${pdf.id},
-  'Currículo',
-  '${pdf.filename}',
-  ${pdf.valor || 0},
-  '${pdf.estado || ""}',
-  '${pdf.cidade || ""}'
-)" class="btn btn-success btn-sm">Pago</button>
-</td>
-  <td>
-    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
-  </td>
-`;
-tabela.appendChild(linha);
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+          <td>${pdf.id}</td>
+          <td>${pdf.filename || '—'}</td>
+          <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
+          <td>
+            <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+            <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+          </td>
+          <td>
+            <button onclick="marcarPago(this,
+              ${pdf.id},
+              'Currículo',
+              '${pdf.filename}',
+              ${pdf.valor || 0},
+              '${pdf.estado || ""}',
+              '${pdf.cidade || ""}'
+            )" class="btn btn-success btn-sm">Pago</button>
+          </td>
+          <td>
+            ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
+          </td>
+        `;
+        tabela.appendChild(linha);
 
+        // 👉 trava o botão se já estiver pago
+        if (pdf.jaPago) {
+          const botao = linha.querySelector("button.btn-success");
+          if (botao) {
+            botao.disabled = true;
+            botao.classList.remove("btn-success");
+            botao.classList.add("btn-secondary");
+            botao.textContent = "Pago";
+          }
+        }
       });
+    })
+    .catch(err => {
+      console.error("Erro ao carregar PDFs:", err);
     });
 }
 
@@ -338,52 +351,62 @@ tabela.appendChild(linha);
       const tabela = document.querySelector('#tabela-relatorios tbody');
       tabela.innerHTML = '';
 
-     data.forEach(rel => {
-  const telefone = rel.telefone?.replace(/\D/g, '');
-  const filename = rel.filename || '';
-  const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
-  const nomeLimpo = nomeSemExtensao.replace(/^(curriculo-|relatorio-)/i, '');
-  const primeiroNome = nomeLimpo.split(' ')[0] || 'Cliente';
+      data.forEach(rel => {
+        const telefone = rel.telefone?.replace(/\D/g, '');
+        const filename = rel.filename || '';
+        const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
+        const nomeLimpo = nomeSemExtensao.replace(/^(curriculo-|relatorio-)/i, '');
+        const primeiroNome = nomeLimpo.split(' ')[0] || 'Cliente';
 
-  const mensagem = encodeURIComponent(
-    `📊 Sua *Análise de Currículo* está pronta!\n\n` +
-    `_Essa Análise mostra exatamente o que trava suas chances e os ajustes que liberam entrevistas._\n\n` +
-    `⏰ Atenção: como a demanda está muito grande só conseguimos manter sua análise disponível por *1 hora*. ` +
-    `Depois disso ela é apagada automaticamente do sistema e será preciso solicitar novamente.\n\n` +
-    `🚀 Não perca: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
-    `💳 Link:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n` +
-    `🔹 Pix disponível lá!\n\n` +
-    `✅ Avance hoje mesmo rumo às entrevistas!`
-  );
+        const mensagem = encodeURIComponent(
+          `📊 Sua *Análise de Currículo* está pronta!\n\n` +
+          `_Essa Análise mostra exatamente o que trava suas chances e os ajustes que liberam entrevistas._\n\n` +
+          `⏰ Atenção: como a demanda está muito grande só conseguimos manter sua análise disponível por *1 hora*. ` +
+          `Depois disso ela é apagada automaticamente do sistema e será preciso solicitar novamente.\n\n` +
+          `🚀 Não perca: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
+          `💳 Link:\nhttps://officeexpress.onrender.com/pagamentoanalise.html\n` +
+          `🔹 Pix disponível lá!\n\n` +
+          `✅ Avance hoje mesmo rumo às entrevistas!`
+        );
 
-  const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+        const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
 
-const linha = document.createElement('tr');
-linha.innerHTML = `
-  <td>${rel.id}</td>
-  <td>${rel.filename || '—'}</td>
-  <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
-  <td>
-    <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
-    <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
-  </td>
-<td>
-<button onclick="marcarPago(this,
-  ${rel.id},
-  'Análise',
-  '${rel.filename}',
-  ${rel.valor || 5.99},
-  '${rel.estado || ""}',
-  '${rel.cidade || ""}'
-)" class="btn btn-success btn-sm">Pago</button>
-</td>
-  <td>
-    ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
-  </td>
-`;
-tabela.appendChild(linha);
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+          <td>${rel.id}</td>
+          <td>${rel.filename || '—'}</td>
+          <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+          <td>
+            <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
+            <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
+          </td>
+          <td>
+            <button onclick="marcarPago(this,
+              ${rel.id},
+              'Análise',
+              '${rel.filename}',
+              ${rel.valor || 5.99},
+              '${rel.estado || ""}',
+              '${rel.cidade || ""}'
+            )" class="btn btn-success btn-sm">Pago</button>
+          </td>
+          <td>
+            ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
+          </td>
+        `;
+        tabela.appendChild(linha);
 
-});
+        // 👉 trava o botão se já estiver pago
+        if (rel.jaPago) {
+          const botao = linha.querySelector("button.btn-success");
+          if (botao) {
+            botao.disabled = true;
+            botao.classList.remove("btn-success");
+            botao.classList.add("btn-secondary");
+            botao.textContent = "Pago";
+          }
+        }
+      });
     })
     .catch(err => {
       console.error('Erro ao buscar análises:', err);
@@ -573,18 +596,22 @@ function marcarPago(button, id, tipo, nome_doc, valor, estado, cidade) {
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      // trava o botão no front
       button.disabled = true;
       button.classList.remove('btn-success');
       button.classList.add('btn-secondary');
       button.textContent = 'Pago';
-
       alert("Pagamento registrado com sucesso!");
-      carregarPDFs();
-      carregarRelatorios();
+    } else if (data.alreadyPaid) {
+      button.disabled = true;
+      button.classList.remove('btn-success');
+      button.classList.add('btn-secondary');
+      button.textContent = 'Pago';
+      alert("Esse pagamento já estava registrado.");
     } else {
       alert("Erro ao registrar pagamento.");
     }
+    carregarPDFs();
+    carregarRelatorios();
   })
   .catch(err => {
     console.error("Erro ao registrar pagamento:", err);
