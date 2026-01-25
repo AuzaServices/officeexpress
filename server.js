@@ -1086,36 +1086,14 @@ app.get('/relatorio/:estado', async (req, res) => {
 
 
 // 3. Rota para listar todos os registros pagos
-// Listar registros pagos com filtros opcionais
-app.get('/api/pagos', async (req, res) => {
+app.get('/pagos', async (req, res) => {
   try {
-    const { tipo, estado, cidade } = req.query;
-
-    // Base da query
-    let sql = 'SELECT * FROM registros_pagos WHERE pago = 1';
-    const params = [];
-
-    // Filtros opcionais
-    if (tipo) {
-      sql += ' AND tipo = ?';
-      params.push(tipo);
-    }
-    if (estado) {
-      sql += ' AND estado = ?';
-      params.push(estado);
-    }
-    if (cidade) {
-      sql += ' AND cidade = ?';
-      params.push(cidade);
-    }
-
-    // Ordenar por data/hora mais recentes
-    sql += ' ORDER BY data DESC, hora DESC';
-
-    const [results] = await pool.query(sql, params);
+    const [results] = await pool.query(
+      'SELECT * FROM registros_pagos WHERE pago = 1'
+    );
     res.json(results);
   } catch (err) {
-    console.error('❌ Erro ao listar pagos:', err.message);
+    console.error('Erro ao listar pagos:', err.message);
     res.status(500).json({ error: 'Erro ao listar pagos' });
   }
 });
