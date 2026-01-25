@@ -1031,12 +1031,16 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 
 // 1. Rota para salvar pagamento
 app.post('/salvar-pago', async (req, res) => {
-  const { tipo, nome_doc, valor, estado, cidade } = req.body;
+  const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
   try {
+    // só insere se não existir já um registro com esse id/nome_doc
     await pool.query(`
       INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
-    `, [tipo, nome_doc, valor, estado, cidade]);
+      SELECT ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1
+      WHERE NOT EXISTS (
+        SELECT 1 FROM registros_pagos WHERE nome_doc = ? AND tipo = ?
+      )
+    `, [tipo, nome_doc, valor, estado, cidade, nome_doc, tipo]);
 
     res.json({ success: true });
   } catch (err) {
