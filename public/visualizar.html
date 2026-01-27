@@ -306,7 +306,7 @@ curriculo.innerHTML = `
     });
 
     function voltarParaCurriculo() {
-      window.location.href = "curriculo.html";
+      window.location.href = "/curriculo";
     }
 
     async function redirecionarParaLoading() {
@@ -326,7 +326,7 @@ curriculo.innerHTML = `
         window.removeEventListener("unload", enviarLogAbandono);
         document.removeEventListener("visibilitychange", handleVisibilityChange);
 
-        window.location.href = "loading.html";
+        window.location.href = "/loading";
       } catch (error) {
         console.error("Erro ao enviar telefone:", error);
         alert("Falha ao conectar com o servidor.");
