@@ -1309,17 +1309,17 @@ app.get('/api/relatorio-completo', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public.html', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
 });
 
 // Rota dinâmica para todas as outras páginas
 app.get('/:page', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public.html', `${req.params.page}.html`));
+  res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
 });
 
 // Página 404 personalizada
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, 'public.html', '404.html'));
+  res.status(404).sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
 });
 
 
