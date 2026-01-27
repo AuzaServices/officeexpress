@@ -1308,8 +1308,14 @@ app.get('/api/relatorio-completo', async (req, res) => {
   }
 });
 
+// Página inicial
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// rota painel protegida (fora da pasta public)
+app.get('/painel', proteger, (req, res) => {
+  res.sendFile(path.join(__dirname, 'painel.html'));
 });
 
 // Rota dinâmica para todas as outras páginas
@@ -1320,10 +1326,6 @@ app.get('/:page', (req, res) => {
 // Página 404 personalizada
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
-});
-
-app.get('/painel', proteger, (req, res) => {
-  res.sendFile(path.join(__dirname, 'painel.html'));
 });
 
 
