@@ -186,6 +186,15 @@ li { margin-bottom: 8px; }
   z-index: 1;
 }
 
+.botoes-flutuantes .btn-pdf {
+  background-color: red;
+  color: white;
+}
+
+.botoes-flutuantes .btn-pdf:hover {
+  background-color: darkred;
+}
+
   </style>
 </head>
 <body style="position: relative; overflow-x: hidden; background: white; font-family: 'Segoe UI', sans-serif;">
@@ -204,7 +213,7 @@ li { margin-bottom: 8px; }
 <div class="botoes-flutuantes">
   <div class="linha-botoes">
     <button onclick="voltarParaCurriculo()">Voltar</button>
-    <button onclick="redirecionarParaLoading()">Gerar PDF</button>
+    <button class="btn-pdf" onclick="redirecionarParaLoading()">Gerar PDF</button>
   </div>
   <div class="obs">
     OBS: a marca d’água serve para não tirar print.<br>
@@ -255,7 +264,7 @@ curriculo.innerHTML = `
 <p><strong>Endereço:</strong>
   ${dados.endereco || ""}${dados.numero ? `, ${dados.numero}` : ""}
   ${dados.complemento ? ` (${dados.complemento})` : ""}
-  ${dados.bairro ? ` - ${dados.bairro}` : ""}${dados.cidade ? `,${dados.cidade}` : ""}
+  ${dados.bairro ? ` - ${dados.bairro}` : ""}${dados.cidade ? `, ${dados.cidade}` : ""}
   ${dados.estado ? ` - ${dados.estado}` : ""}
   ${dados.cep ? ` | CEP: ${dados.cep}` : ""}
 </p>` : ""}
