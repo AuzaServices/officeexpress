@@ -1308,8 +1308,64 @@ app.get('/api/relatorio-completo', async (req, res) => {
   }
 });
 
+// Rota para página inicial (index.html)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'index.html'));
+});
 
+// Rota sem .html para curriculo
+app.get('/curriculo', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'curriculo.html'));
+});
 
+// Exemplo para outras páginas
+app.get('/analise', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'analise.html'));
+});
+
+app.get('/contato', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'contato.html'));
+});
+
+app.get('/indicacao', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'indicacao.html'));
+});
+
+app.get('/loading', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'loading.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'login.html'));
+});
+
+app.get('/pagamento', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'pagamento.html'));
+});
+
+app.get('/pagamentoanalise', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'pagamentoanalise.html'));
+});
+
+app.get('/pagamentototal', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'pagamentototal.html'));
+});
+
+app.get('/pagamentototalanalise', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'pagamentototalanalise.html'));
+});
+
+app.get('/sobre', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'sobre.html'));
+});
+
+app.get('/termos', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'termos.html'));
+});
+
+app.get('/visualizar', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public_html', 'visualizar.html'));
+});
 
 //////////////////////////
 // 🚀 Iniciar servidor
