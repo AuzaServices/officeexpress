@@ -857,8 +857,8 @@ section.visible {
       <div class="wrap">
         <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
 <nav class="menu">
-  <a href="contato.html" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
-  <a href="sobre.html" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
+  <a href="/contato" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
+  <a href="/sobre" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
 
   <!-- Botão dourado reluzente 
   <a href="indicacao.html" 
@@ -886,8 +886,8 @@ section.visible {
   <!-- Mobile quick CTA bar (when menu hidden) -->
 <div class="container" id="mobileMenu">
   <div style="display:flex; flex-direction:column; gap:12px; justify-content:center; padding:14px; background:rgba(0,31,51,0.92); border-bottom:1px solid #444; text-align:center;">
-    <a href="contato.html" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
-    <a href="sobre.html" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
+    <a href="/contato" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
+    <a href="/sobre" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
   </div>
 
   <!-- Área do Indicador em ouro reluzente -->
@@ -1502,11 +1502,11 @@ mapaObserver.observe(document.querySelector('.mapa-brasil'));
     <div class="institucional-col">
       <h4>Menu rápido</h4>
       <ul>
-        <li><a href="index.html">Início</a></li>
-        <li><a href="cadastro.html">Cadastro</a></li>
-        <li><a href="servicos.html">Serviços</a></li>
-        <li><a href="faq.html">FAQ</a></li>
-        <li><a href="contato.html">Contato</a></li>
+        <li><a href="/">Início</a></li>
+        <li><a href="/cadastro">Cadastro</a></li>
+        <li><a href="/servicos">Serviços</a></li>
+        <li><a href="/faq">FAQ</a></li>
+        <li><a href="/contato">Contato</a></li>
       </ul>
     </div>
 
@@ -1514,8 +1514,8 @@ mapaObserver.observe(document.querySelector('.mapa-brasil'));
     <div class="institucional-col">
       <h4>Institucional</h4>
       <ul>
-        <li><a href="/politica.html" target="_blank">Política de Privacidade</a></li>
-        <li><a href="/termos.html" target="_blank">Termos de Uso</a></li>
+        <li><a href="/politica" target="_blank">Política de Privacidade</a></li>
+        <li><a href="/termos" target="_blank">Termos de Uso</a></li>
       </ul>
     </div>
   </div>
@@ -1561,7 +1561,7 @@ mapaObserver.observe(document.querySelector('.mapa-brasil'));
 
     // Navigation / CTAs
     function analisar() {
-      window.location.href = "analise.html";
+      window.location.href = "/analise";
     }
     function abrirModalNome() {
       const modal = document.getElementById('modalNome');
@@ -1593,7 +1593,7 @@ mapaObserver.observe(document.querySelector('.mapa-brasil'));
 
       localStorage.setItem("nomeUsuario", nome);
       localStorage.setItem("entradaViaSplash", "true");
-      window.location.href = "curriculo.html";
+      window.location.href = "/curriculo";
     }
 
     // Accessibility: close modal on ESC
@@ -1763,7 +1763,7 @@ function fecharSplash() {
 
 // Redirecionar ao clicar na imagem
 function irParaIndicacao() {
-  window.location.href = "indicacao.html";
+  window.location.href = "/indicacao";
 }
 </script>
 
