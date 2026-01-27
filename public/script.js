@@ -107,7 +107,7 @@ function salvar(dados) {
   }
 
   setTimeout(() => {
-    window.location.href = "visualizar.html";
+    window.location.href = "/visualizar";
   }, 300);
 }
 
