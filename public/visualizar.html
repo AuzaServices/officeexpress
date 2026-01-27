@@ -323,36 +323,42 @@ curriculo.innerHTML = `
     clone.style.boxSizing = "border-box";
     document.body.appendChild(clone);
 
-    (async () => {
-      const canvas = await html2canvas(clone, { scale: 1 });
-      document.body.removeChild(clone);
-      const pageHeightPx = 1123;
-      const totalPages = Math.ceil(canvas.height / pageHeightPx);
+(async () => {
+  const canvas = await html2canvas(clone, { scale: 1 });
+  document.body.removeChild(clone);
+  const pageHeightPx = 1123;
+  const totalPages = Math.ceil(canvas.height / pageHeightPx);
 
-      for (let i = 0; i < totalPages; i++) {
-        const pageCanvas = document.createElement("canvas");
-        pageCanvas.width = 794;
-        pageCanvas.height = 1123;
-        const ctx = pageCanvas.getContext("2d");
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        ctx.drawImage(canvas, 0, -i * pageHeightPx);
-        const img = document.createElement("img");
-        img.src = pageCanvas.toDataURL("image/png");
-        img.style.width = "100%";
-        img.style.height = "100%";
-        const pagina = document.createElement("div");
-        const marca = document.createElement("div");
-marca.className = "marca-dagua";
-pagina.appendChild(marca);
+  for (let i = 0; i < totalPages; i++) {
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = 794;
+    pageCanvas.height = 1123;
+    const ctx = pageCanvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+    ctx.drawImage(canvas, 0, -i * pageHeightPx);
 
-        pagina.className = "pagina";
-        pagina.appendChild(img);
-        document.getElementById("curriculo-viewer").appendChild(pagina);
-      }
+    // cria a div da página
+    const pagina = document.createElement("div");
+    pagina.className = "pagina";
 
-      atualizarVisualizacao();
-    })();
+    // aplica a imagem como background
+    pagina.style.backgroundImage = `url('${pageCanvas.toDataURL("image/png")}')`;
+    pagina.style.backgroundSize = "cover";
+    pagina.style.backgroundPosition = "center";
+    pagina.style.width = "794px";
+    pagina.style.height = "1123px";
+
+    // adiciona a marca d’água dentro da página
+    const marca = document.createElement("div");
+    marca.className = "marca-dagua";
+    pagina.appendChild(marca);
+
+    document.getElementById("curriculo-viewer").appendChild(pagina);
+  }
+
+  atualizarVisualizacao();
+})();
 
     let paginaAtual = 0;
     function atualizarVisualizacao() {
