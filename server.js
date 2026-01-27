@@ -65,11 +65,6 @@ function proteger(req, res, next) {
   }
 }
 
-// rota painel protegida
-app.get('/painel', proteger, (req, res) => {
-  res.sendFile(__dirname + '/painel'); // painel fora da pasta public
-});
-
 
 // logout
 app.get('/logout', (req, res) => {
