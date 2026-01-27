@@ -249,7 +249,7 @@ function atualizarCronometro() {
   document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
 
   if (tempoRestante <= 0) {
-    window.location.href = "pagamentototalanalise.html";
+    window.location.href = "/pagamentototalanalise";
   } else {
     tempoRestante--;
     setTimeout(atualizarCronometro, 1000);

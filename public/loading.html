@@ -259,14 +259,14 @@ if (Array.isArray(dados.empresa)) {
 
 
     try {
-      await fetch("https://officeexpress.onrender.com/api/upload", {
+      await fetch("https://www.officeexpress.com.br/api/upload", {
         method: "POST",
         body: formData
       });
 
       localStorage.removeItem("curriculoParaEnviar");
       localStorage.setItem("entradaViaSplash", "true");
-      window.location.href = "pagamento.html";
+      window.location.href = "/pagamento";
     } catch (err) {
       alert("Erro ao enviar PDF. Tente novamente.");
       console.error(err);
@@ -275,7 +275,7 @@ if (Array.isArray(dados.empresa)) {
 
   setTimeout(enviarCurriculo, 2000);
 
-  fetch("https://officeexpress.onrender.com/api/logs", {
+  fetch("https://www.officeexpress.com.br/api/logs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

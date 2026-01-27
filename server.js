@@ -61,20 +61,20 @@ function proteger(req, res, next) {
   if (req.cookies.logado === 'true') {
     next();
   } else {
-    res.redirect('/login.html');
+    res.redirect('/login');
   }
 }
 
 // rota painel protegida
 app.get('/painel', proteger, (req, res) => {
-  res.sendFile(__dirname + '/painel.html'); // painel fora da pasta public
+  res.sendFile(__dirname + '/painel'); // painel fora da pasta public
 });
 
 
 // logout
 app.get('/logout', (req, res) => {
   res.clearCookie('logado');
-  res.redirect('/login.html');
+  res.redirect('/login');
 });
 
 // 🔍 Função para extrair IP público
@@ -581,7 +581,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     doc.moveDown();
 
     doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
-      link: 'https://officeexpress.onrender.com/index.html',
+      link: 'https://www.officeexpress.com.br/',
       underline: true
     });
 

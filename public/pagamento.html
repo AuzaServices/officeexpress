@@ -164,7 +164,7 @@ function copiarPix() {
     const segundos = String(tempoRestante % 60).padStart(2, '0');
     document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
     if (tempoRestante <= 0) {
-      window.location.href = "pagamentototal.html";
+      window.location.href = "/pagamentototal";
     } else {
       tempoRestante--;
       setTimeout(atualizarCronometro, 1000);

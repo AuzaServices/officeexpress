@@ -375,11 +375,11 @@ curriculo.innerHTML = `
 
       try {
         const blob = new Blob([payload], { type: "application/json" });
-        const ok = navigator.sendBeacon("https://officeexpress.onrender.com/api/logs", blob);
+        const ok = navigator.sendBeacon("https://www.officeexpress.com.br/api/logs", blob);
         if (!ok) throw new Error("sendBeacon falhou");
       } catch (err) {
         console.warn("⚠️ sendBeacon falhou, tentando fetch como fallback");
-        fetch("https://officeexpress.onrender.com/api/logs", {
+        fetch("https://www.officeexpress.com.br/api/logs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: payload,
