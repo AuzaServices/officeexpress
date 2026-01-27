@@ -581,7 +581,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     doc.moveDown();
 
     doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
-      link: 'https://officeexpress.onrender.com/splash.html',
+      link: 'https://officeexpress.onrender.com/index.html',
       underline: true
     });
 

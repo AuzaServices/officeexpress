@@ -1061,7 +1061,7 @@ main a:hover {
       <div class="institucional-col">
         <h4>Menu rápido</h4>
         <ul>
-        <li><a href="splash.html">Início</a></li>
+        <li><a href="index.html">Início</a></li>
         <li><a href="cadastro.html">Cadastro</a></li>
         <li><a href="servicos.html">Serviços</a></li>
         <li><a href="faq.html">FAQ</a></li>
@@ -1195,10 +1195,10 @@ function mostrarPainel(usuario) {
   // Link de indicação ou comum
   let link;
   if (usuario?.link_tipo === "comum") {
-    link = "https://officeexpress.onrender.com/splash.html";
+    link = "https://officeexpress.onrender.com/index.html";
   } else {
     link = usuario?.codigo
-      ? `https://officeexpress.onrender.com/splash.html?codigo=${usuario.codigo}`
+      ? `https://officeexpress.onrender.com/index.html?codigo=${usuario.codigo}`
       : "Código não disponível";
   }
   document.getElementById("link").innerText = link;
