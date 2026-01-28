@@ -1306,39 +1306,43 @@ app.get('/api/relatorio-completo', async (req, res) => {
 app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
-  // acessos
-  const [acessos] = await pool.query(
-    'SELECT COUNT(*) AS total FROM acessos WHERE estado = ?',
-    [estado]
-  );
+  try {
+    // Currículos emitidos (pdfs)
+    const [curriculosEmitidos] = await pool.query(
+      'SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?',
+      [estado]
+    );
 
-  // currículos emitidos (pdfs)
-  const [curriculosEmitidos] = await pool.query(
-    'SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?',
-    [estado]
-  );
+    // Análises emitidas (analises)
+    const [analisesEmitidas] = await pool.query(
+      'SELECT COUNT(*) AS total FROM analises WHERE estado = ?',
+      [estado]
+    );
 
-  // análises emitidas (se você guarda em outra tabela, ajuste aqui)
-  const [analisesEmitidas] = await pool.query(
-    'SELECT COUNT(*) AS total FROM analises WHERE estado = ?',
-    [estado]
-  );
+    // Currículos pagos (registros_pagos com tipo = Currículo)
+    const [curriculosPagos] = await pool.query(
+      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo" AND pago = 1',
+      [estado]
+    );
 
-  // pagos (currículos + análises) → todos estão em registros_pagos
-  const [pagos] = await pool.query(
-    'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND pago = 1',
-    [estado]
-  );
+    // Análises pagas (registros_pagos com tipo = Análise)
+    const [analisesPagas] = await pool.query(
+      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise" AND pago = 1',
+      [estado]
+    );
 
-  res.json({
-    acessos: acessos[0].total,
-    curriculosEmitidos: curriculosEmitidos[0].total,
-    analisesEmitidas: analisesEmitidas[0].total,
-    curriculosPagos: pagos[0].total,   // total de registros pagos
-    analisesPagas: pagos[0].total,     // se quiser separar, precisa de um campo "tipo"
-    parceiro: pagos[0].soma || 0,
-    empresa: pagos[0].soma || 0
-  });
+    res.json({
+      curriculosEmitidos: curriculosEmitidos[0].total,
+      analisesEmitidas: analisesEmitidas[0].total,
+      curriculosPagos: curriculosPagos[0].total,
+      analisesPagas: analisesPagas[0].total,
+      parceiro: curriculosPagos[0].soma || 0,
+      empresa: analisesPagas[0].soma || 0
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
+  }
 });
 
 app.post('/api/parceiros', async (req, res) => {
