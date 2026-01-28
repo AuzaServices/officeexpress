@@ -1473,6 +1473,19 @@ cron.schedule('5 0 1 * *', async () => {
   }
 });
 
+app.delete('/api/parceiros/:id', async (req, res) => {
+  const { id } = req.params;
+  await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
+
+  // Se o parceiro excluído é o mesmo da sessão, avisa o front
+  if (req.session && req.session.parceiroId == id) {
+    req.session.destroy(); // encerra sessão
+    return res.json({ success: true, forceLogout: true });
+  }
+
+  res.json({ success: true });
+});
+
 
 // Página 404 personalizada
 app.use((req, res) => {

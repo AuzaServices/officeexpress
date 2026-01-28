@@ -1189,8 +1189,19 @@ async function carregarParceiros() {
 
 async function apagarParceiro(id) {
   if (!confirm("Tem certeza que deseja apagar este parceiro?")) return;
-  await fetch(`/api/parceiros/${id}`, { method: "DELETE" });
-  carregarParceiros();
+
+  const res = await fetch(`/api/parceiros/${id}`, { method: "DELETE" });
+  const data = await res.json();
+
+  if (data.success) {
+    if (data.forceLogout) {
+      // 👇 Se o parceiro logado foi excluído, redireciona imediatamente
+      alert("Seu acesso foi removido. Faça login novamente.");
+      window.location.href = "/login"; 
+    } else {
+      carregarParceiros(); // atualiza tabela normalmente
+    }
+  }
 }
   </script>
 
