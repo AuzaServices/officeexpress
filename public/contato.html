@@ -2,17 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fale Conosco - Achei Instrutor</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/png" href="logo.png" />
-  <!-- Font Awesome -->
+  <title>Office Express | Sobre Nós</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
-
-/* Header */
-
- :root {
+    :root {
       --bg-1: #001f33;
       --bg-2: #00324a;
       --text-primary: #ffffff;
@@ -476,17 +473,140 @@ main a:hover {
   text-decoration: underline;
 }
 
+.sobre-nos {
+  width: 100%;
+  padding: 80px 20px; /* espaçamento interno */
+}
+
+.sobre-nos-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+  flex-wrap: wrap; /* quebra no mobile */
+}
+
+.sobre-nos-imagem img {
+  max-width: 600px;
+    flex: 0 0 500px; /* define largura fixa para o bloco da imagem */
+  width: 100%;
+  border-radius: 12px;
+}
+
+.sobre-nos-texto {
+  flex: 1;
+  min-width: 280px;
+  color: #00324a;
+}
+
+.sobre-nos-texto h1 {
+  font-size: 2rem;
+  color: var(--brand);
+  margin-bottom: 16px;
+}
+
+.sobre-nos-texto p {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  color: #444;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .sobre-nos-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .sobre-nos-texto {
+    margin-top: 20px;
+  }
+
+  .sobre-nos-imagem img {
+    max-width: 100%;   /* ocupa toda a largura disponível */
+    width: 100%;
+    height: auto;      /* mantém proporção */
+  }
+
+}
+
+
+.sobre-nos-texto p {
+  font-size: 1.1rem;   /* aumenta o tamanho da fonte */
+  line-height: 1.8;    /* mais espaçamento entre linhas */
+  margin-bottom: 16px; /* mais espaço entre parágrafos */
+  color: #333;
+}
+
+.bg-img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1; /* joga a imagem para trás do conteúdo */
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;     /* permite quebrar linha no mobile */
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.social-icons a {
+  width: 60px;
+  height: 60px;
+  background: #00293F;       /* círculo preto */
+  color: #F98D2E;            /* ícone branco */
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  transition: transform 0.3s ease, background 0.3s ease;
+  border: none;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.social-icons a:hover {
+  transform: scale(1.1);
+  background: #222;       /* preto mais claro no hover */
+}
+
+/* Footer */
+
+/* Responsivo para mobile */
+@media (max-width: 768px) {
+
+  /* Ícones sociais no mobile */
+  .social-icons {
+    gap: 0.8rem;
+  }
+  .social-icons a {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+}
+
   </style>
 </head>
 <body>
- <header class="cabecalho">
+
+  <!-- Header -->
+  <header class="cabecalho">
     <div class="container">
       <div class="wrap">
         <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-<nav class="menu">
-  <a href="/contato">Contato</a>
-  <a href="/sobre">Sobre nós</a>
-</nav>
+        <nav class="menu">
+          <a href="/contato">Contato</a>
+          <a href="/sobre">Sobre nós</a>
+        </nav>
         <button class="hamburguer" id="btnMenu" aria-label="Abrir menu">
           ☰
         </button>
@@ -495,33 +615,44 @@ main a:hover {
   </header>
 
   <!-- Mobile quick CTA bar (when menu hidden) -->
-<div class="container" id="mobileMenu">
-  <div style="display:flex; flex-direction:column; gap:12px; justify-content:center; padding:14px; background:rgba(0,31,51,0.92); border-bottom:1px solid var(--border); text-align:center;">
-    <a href="/contato" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
-    <a href="/sobre" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
+  <div class="container" id="mobileMenu">
+    <div style="display:flex; flex-direction:column; gap:12px; justify-content:center; padding:14px; background:rgba(0,31,51,0.92); border-bottom:1px solid var(--border); text-align:center;">
+      <a href="/contato" style="color:#fff; font-weight:600; text-decoration:none;">Contato</a>
+      <a href="/sobre" style="color:#fff; font-weight:600; text-decoration:none;">Sobre nós</a>
+    </div>
   </div>
-</div>
-</div>
-<main class="contato-main">
-  <h1>Fale Conosco</h1>
-  <p>
-    No Achei Instrutor, acreditamos que a comunicação é essencial para construir confiança e oferecer
-    a melhor experiência possível. Por isso, disponibilizamos diversos canais para que você possa
-    falar conosco de forma rápida e prática.
-  </p>
-  <p>
-    Seja para tirar dúvidas, enviar sugestões, relatar problemas ou simplesmente compartilhar sua
-    experiência, nossa equipe está pronta para ouvir você. Valorizamos cada mensagem recebida e
-    trabalhamos constantemente para melhorar nossos serviços.
-  </p>
-  <p>
-    Você pode entrar em contato diretamente pelas nossas redes sociais, enviar um e-mail ou nos
-    chamar pelo WhatsApp. Estamos sempre disponíveis para ajudar!
-  </p>
-</main>
 
-  <!-- Ícones sociais -->
-  <div class="redes-sociais">
+  <!-- Sobre Nós -->
+<section class="sobre-nos">
+  <div class="sobre-nos-container">
+    
+    <!-- Imagem -->
+    <div class="sobre-nos-imagem">
+      <img src="sobre.png" alt="Equipe Office Express">
+    </div>
+
+    <!-- Texto lateral -->
+    <div class="sobre-nos-texto">
+<h1>Fale Conosco</h1>
+<p>
+  Na Office Express, acreditamos que a comunicação é essencial para oferecer a melhor experiência 
+  na criação e análise de currículos online. Por isso, disponibilizamos diferentes canais para que 
+  você possa falar conosco de forma prática e rápida.
+</p>
+<p>
+  Seja para esclarecer dúvidas, enviar sugestões, relatar algum problema ou compartilhar sua experiência, 
+  nossa equipe está pronta para ouvir você com atenção e agilidade. Valorizamos cada mensagem recebida 
+  e trabalhamos constantemente para aprimorar nossos serviços.
+</p>
+<p>
+  Você pode entrar em contato pelas nossas redes sociais, enviar um e-mail ou nos chamar pelo WhatsApp. 
+  Estamos sempre disponíveis para apoiar sua jornada profissional!
+</p>
+
+  </div>
+</section>
+
+  <div class="social-icons">
     <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp">
       <i class="fa-brands fa-whatsapp"></i>
     </a>
@@ -539,73 +670,62 @@ main a:hover {
     </a>
   </div>
 
-<section id="contato" class="institucional-section scroll-reveal">
-  <div class="institucional-grid">
-    
-    <!-- Coluna 1: Logo e informações -->
-    <div class="institucional-col">
-      <img src="logo.png" alt="Logo Achei Instrutor" class="institucional-logo" />
-      <p>Achei Instrutor é a plataforma que conecta alunos a instrutores credenciados de forma prática, segura e transparente.</p>
+  <!-- Section institucional -->
+  <section id="contato" class="institucional-section scroll-reveal">
+    <div class="institucional-grid">
+      <!-- Coluna 1 -->
+      <div class="institucional-col">
+        <img src="icon.png" alt="Logo Office Express" class="institucional-logo" />
+        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+      </div>
+      <!-- Coluna 2 -->
+      <div class="institucional-col">
+        <h4>Menu rápido</h4>
+        <ul>
+        <li><a href="/">Início</a></li>
+        <li><a href="/cadastro">Cadastro</a></li>
+        <li><a href="/servicos">Serviços</a></li>
+        <li><a href="/faq">FAQ</a></li>
+        <li><a href="/contato">Contato</a></li>
+        </ul>
+      </div>
+      <!-- Coluna 3 -->
+      <div class="institucional-col">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="/politica" target="_blank">Política de Privacidade</a></li>
+          <li><a href="/termos" target="_blank">Termos de Uso</a></li>
+        </ul>
+      </div>
     </div>
 
-    <!-- Coluna 2: Menu rápido -->
-    <div class="institucional-col">
-      <h4>Menu rápido</h4>
-      <ul>
-        <li><a href="#inicio">Início</a></li>
-        <li><a href="#cadastro">Cadastro</a></li>
-        <li><a href="#servicos">Serviços</a></li>
-        <li><a href="#faq">FAQ</a></li>
-        <li><a href="#contato">Contato</a></li>
-      </ul>
+    <!-- Ícones sociais -->
+    <div class="redes-sociais">
+      <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+      <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+      <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
     </div>
+  </section>
 
-    <!-- Coluna 3: Institucional -->
-    <div class="institucional-col">
-      <h4>Institucional</h4>
-      <ul>
-        <li><a href="/politica" target="_blank">Política de Privacidade</a></li>
-        <li><a href="/termos" target="_blank">Termos de Uso</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- Ícones sociais -->
-<div class="redes-sociais">
-  <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp">
-    <i class="fa-brands fa-whatsapp"></i>
-  </a>
-  <a href="https://www.instagram.com/acheiinstrutor/" target="_blank" aria-label="Instagram">
-    <i class="fa-brands fa-instagram"></i>
-  </a>
-  <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X">
-    <i class="fa-brands fa-x-twitter"></i>
-  </a>
-  <a href="https://facebook.com/instrutorpro" target="_blank" aria-label="Facebook">
-    <i class="fa-brands fa-facebook"></i>
-  </a>
-</div>
-</section>
-
-  <footer>
-    © 2025 Achei Instrutor - Todos os direitos reservados
+  <!-- Footer -->
+  <footer class="rodape">
+    Office Express <span class="marca"></span> 2026. Todos os Direitos Reservados.
   </footer>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const toggle = document.querySelector(".menu-toggle");
-      const menu = document.querySelector("nav.menu");
+    const btnMenu = document.getElementById('btnMenu');
+    const mobileMenu = document.getElementById('mobileMenu');
 
-      toggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        menu.classList.toggle("active");
-      });
+    btnMenu?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mobileMenu.classList.toggle('open');
+    });
 
-      document.addEventListener("click", (e) => {
-        if (menu.classList.contains("active") && !menu.contains(e.target) && !toggle.contains(e.target)) {
-          menu.classList.remove("active");
-        }
-      });
+    document.addEventListener('click', (e) => {
+      if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && e.target !== btnMenu) {
+        mobileMenu.classList.remove('open');
+      }
     });
   </script>
 </body>
