@@ -287,6 +287,12 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
       cidade || null
     ]);
 
+    // 4. Também insere no resumo_emitidos para manter histórico leve
+    await pool.query(
+      'INSERT INTO resumo_emitidos (estado, tipo, pago, valor) VALUES (?, "Currículo", 0, ?)',
+      [estado || 'Desconhecido', valor || 5.99]
+    );
+
     res.status(200).json({ message: 'PDF salvo com sucesso', id: result.insertId });
   } catch (err) {
     console.error('Erro ao salvar PDF:', err.message);
@@ -382,11 +388,19 @@ app.post('/api/logs', async (req, res) => {
   const localizacao = `${cidade} - ${estado}`;
 
   try {
+    // 1. Salva log detalhado
     const query = `
       INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico, etapa)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico, etapa]);
+
+    // 2. ➕ Atualiza resumo_acessos (mantém acumulado por estado)
+    await pool.query(`
+      INSERT INTO resumo_acessos (estado, total)
+      VALUES (?, 1)
+      ON DUPLICATE KEY UPDATE total = total + 1, ultima_atualizacao = CURRENT_TIMESTAMP
+    `, [estado]);
 
     res.status(200).json({ mensagem: 'Log salvo com sucesso', localizacao });
   } catch (err) {
@@ -486,19 +500,26 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
         const telefoneLimpo = telefone.slice(0, 20);
 
-        await pool.query(`
-          INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-          nome,
-          telefoneLimpo,
-          cidade,
-          estado,
-          filename,
-          'application/pdf',
-          pdfBuffer,
-          5.99
-        ]);
+// 1. Salva em analises
+await pool.query(`
+  INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`, [
+  nome,
+  telefoneLimpo,
+  cidade,
+  estado,
+  filename,
+  'application/pdf',
+  pdfBuffer,
+  5.99
+]);
+
+// 2. ➕ Também insere no resumo_emitidos
+await pool.query(
+  'INSERT INTO resumo_emitidos (estado, tipo, pago, valor) VALUES (?, "Análise", 0, ?)',
+  [estado || 'Desconhecido', 5.99]
+);
 
         res.json({ sucesso: true });
       } catch (err) {
@@ -1307,47 +1328,56 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // acessos (logs)
-const [acessos] = await pool.query(
-  'SELECT COUNT(*) AS total FROM logs WHERE localizacao LIKE ?',
-  [`%${estado}%`]
-);
+    // acessos acumulados (vem de resumo_acessos)
+    const [acessos] = await pool.query(
+      'SELECT total FROM resumo_acessos WHERE estado = ?',
+      [estado]
+    );
 
-    // currículos emitidos (pdfs)
+    // currículos emitidos
     const [curriculosEmitidos] = await pool.query(
-      'SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?',
+      'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
-    // análises emitidas (analises)
+    // análises emitidas
     const [analisesEmitidas] = await pool.query(
-      'SELECT COUNT(*) AS total FROM analises WHERE estado = ?',
+      'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise"',
       [estado]
     );
 
-    // currículos pagos (registros_pagos com tipo = Currículo)
+    // currículos pagos
     const [curriculosPagos] = await pool.query(
-      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo" AND pago = 1',
+      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo" AND pago = 1',
       [estado]
     );
 
-    // análises pagas (registros_pagos com tipo = Análise)
+    // análises pagas
     const [analisesPagas] = await pool.query(
-      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise" AND pago = 1',
+      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise" AND pago = 1',
       [estado]
     );
+
+    // cálculo financeiro
+    const somaCurriculos = curriculosPagos[0].soma || 0;
+    const somaAnalises = analisesPagas[0].soma || 0;
+    const total = somaCurriculos + somaAnalises;
+
+    const parceiro = (total * 0.40).toFixed(2);
+    const empresa = (total * 0.60).toFixed(2);
 
     res.json({
-      acessos: acessos[0].total,
+      acessos: acessos.length > 0 ? acessos[0].total : 0,
       curriculosEmitidos: curriculosEmitidos[0].total,
       analisesEmitidas: analisesEmitidas[0].total,
       curriculosPagos: curriculosPagos[0].total,
       analisesPagas: analisesPagas[0].total,
-      parceiro: curriculosPagos[0].soma || 0,
-      empresa: analisesPagas[0].soma || 0
+      total: total.toFixed(2),
+      parceiro,
+      empresa
     });
   } catch (err) {
-    console.error(err);
+    console.error("Erro na rota painel-parceiro:", err);
     res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
   }
 });
