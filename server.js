@@ -1441,6 +1441,22 @@ app.delete('/api/parceiros/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+const session = require('express-session');
+app.use(session({
+  secret: 'segredo-super-seguro',
+  resave: false,
+  saveUninitialized: false
+}));
+
+// Middleware proteger
+function proteger(req, res, next) {
+  if (!req.session || !req.session.parceiroId) {
+    return res.redirect('/login');
+  }
+  next();
+}
+
+
 
 // Página inicial
 app.get('/', (req, res) => {
@@ -1477,15 +1493,29 @@ app.delete('/api/parceiros/:id', async (req, res) => {
   const { id } = req.params;
   await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
 
-  // Se o parceiro excluído é o mesmo da sessão, avisa o front
   if (req.session && req.session.parceiroId == id) {
-    req.session.destroy(); // encerra sessão
+    req.session.destroy();
     return res.json({ success: true, forceLogout: true });
   }
 
   res.json({ success: true });
 });
 
+app.post('/api/parceiros/login', async (req, res) => {
+  const { nome, senha } = req.body;
+  const [rows] = await pool.query('SELECT * FROM parceiros WHERE nome = ?', [nome]);
+  if (rows.length === 0) return res.status(401).json({ error: 'Parceiro não encontrado' });
+
+  const parceiro = rows[0];
+  const match = await bcrypt.compare(senha, parceiro.senha);
+  if (!match) return res.status(401).json({ error: 'Senha incorreta' });
+
+  // guarda na sessão
+  req.session.parceiroId = parceiro.id;
+  req.session.estado = parceiro.estado;
+
+  res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
+});
 
 // Página 404 personalizada
 app.use((req, res) => {

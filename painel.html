@@ -1195,11 +1195,10 @@ async function apagarParceiro(id) {
 
   if (data.success) {
     if (data.forceLogout) {
-      // 👇 Se o parceiro logado foi excluído, redireciona imediatamente
       alert("Seu acesso foi removido. Faça login novamente.");
-      window.location.href = "/login"; 
+      window.location.href = "/login"; // redireciona imediatamente
     } else {
-      carregarParceiros(); // atualiza tabela normalmente
+      carregarParceiros();
     }
   }
 }
