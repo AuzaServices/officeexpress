@@ -1308,9 +1308,9 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
 
   try {
     // acessos (logs)
- const [acessos] = await pool.query(
-  'SELECT COUNT(*) AS total FROM logs WHERE localizacao = ?',
-  [estado]
+const [acessos] = await pool.query(
+  'SELECT COUNT(*) AS total FROM logs WHERE localizacao LIKE ?',
+  [`%${estado}%`]
 );
 
     // currículos emitidos (pdfs)
