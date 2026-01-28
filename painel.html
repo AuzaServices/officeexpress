@@ -415,6 +415,91 @@ table th {
   </div>
 </div>
 
+<h1 class="mt-5 d-flex justify-content-between align-items-center">
+  Parceiros
+  <button onclick="abrirCadastroParceiro()" class="btn btn-warning btn-sm">
+    Cadastrar Parceiro
+  </button>
+</h1>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover align-middle" id="tabela-parceiros">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>WhatsApp</th>
+        <th>Estado</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="modal fade" id="modalCadastroParceiro" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formCadastroParceiro">
+        <div class="modal-header">
+          <h5 class="modal-title">Cadastrar Parceiro</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="nomeParceiro" class="form-label">Nome</label>
+            <input type="text" id="nomeParceiro" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="senhaParceiro" class="form-label">Senha</label>
+            <input type="password" id="senhaParceiro" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="whatsappParceiro" class="form-label">WhatsApp</label>
+            <input type="text" id="whatsappParceiro" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="estadoParceiro" class="form-label">Estado</label>
+<select id="estadoParceiro" class="form-select" required>
+  <option value="">Selecione o Estado</option>
+  <option value="AC">AC - Acre</option>
+  <option value="AL">AL - Alagoas</option>
+  <option value="AP">AP - Amapá</option>
+  <option value="AM">AM - Amazonas</option>
+  <option value="BA">BA - Bahia</option>
+  <option value="CE">CE - Ceará</option>
+  <option value="DF">DF - Distrito Federal</option>
+  <option value="ES">ES - Espírito Santo</option>
+  <option value="GO">GO - Goiás</option>
+  <option value="MA">MA - Maranhão</option>
+  <option value="MT">MT - Mato Grosso</option>
+  <option value="MS">MS - Mato Grosso do Sul</option>
+  <option value="MG">MG - Minas Gerais</option>
+  <option value="PA">PA - Pará</option>
+  <option value="PB">PB - Paraíba</option>
+  <option value="PR">PR - Paraná</option>
+  <option value="PE">PE - Pernambuco</option>
+  <option value="PI">PI - Piauí</option>
+  <option value="RJ">RJ - Rio de Janeiro</option>
+  <option value="RN">RN - Rio Grande do Norte</option>
+  <option value="RS">RS - Rio Grande do Sul</option>
+  <option value="RO">RO - Rondônia</option>
+  <option value="RR">RR - Roraima</option>
+  <option value="SC">SC - Santa Catarina</option>
+  <option value="SP">SP - São Paulo</option>
+  <option value="SE">SE - Sergipe</option>
+  <option value="TO">TO - Tocantins</option>
+</select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning">Cadastrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
   <script>
     function apagarRegistro(id, tipo) {
       if (!confirm("Tem certeza que deseja apagar este registro?")) return;
@@ -1044,6 +1129,69 @@ function excluirTodosRegistros() {
     .catch(err => console.error("Erro ao excluir todos os registros:", err));
 }
 
+function abrirCadastroParceiro() {
+  const modal = new bootstrap.Modal(document.getElementById('modalCadastroParceiro'));
+  modal.show();
+}
+
+document.getElementById("formCadastroParceiro").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nome = document.getElementById("nomeParceiro").value;
+  const senha = document.getElementById("senhaParceiro").value;
+  const whatsapp = document.getElementById("whatsappParceiro").value;
+  const estado = document.getElementById("estadoParceiro").value;
+
+  try {
+    const res = await fetch("/api/parceiros", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, senha, whatsapp, estado })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert("Parceiro cadastrado com sucesso!");
+      carregarParceiros();
+      bootstrap.Modal.getInstance(document.getElementById('modalCadastroParceiro')).hide();
+    } else {
+      alert(data.error || "Erro ao cadastrar parceiro.");
+    }
+  } catch (err) {
+    console.error("Erro no cadastro:", err);
+    alert("Erro no cadastro.");
+  }
+});
+
+async function carregarParceiros() {
+  const res = await fetch("/api/parceiros");
+  const parceiros = await res.json();
+  const tbody = document.querySelector("#tabela-parceiros tbody");
+  tbody.innerHTML = "";
+  parceiros.forEach(p => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.nome}</td>
+        <td><a href="https://wa.me/${p.whatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a></td>
+        <td>${p.estado}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="apagarParceiro(${p.id})">Apagar</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function apagarParceiro(id) {
+  if (!confirm("Tem certeza que deseja apagar este parceiro?")) return;
+  await fetch(`/api/parceiros/${id}`, { method: "DELETE" });
+  carregarParceiros();
+}
+
+window.onload = carregarParceiros;
+
   </script>
+
+<!-- Modal Cadastro Parceiro -->
+
 </body>
 </html>

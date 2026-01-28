@@ -1323,6 +1323,64 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
 
+app.get('/api/painel-parceiro/:estado', async (req, res) => {
+  const { estado } = req.params;
+  try {
+    const [acessos] = await pool.query('SELECT COUNT(*) AS total FROM logs WHERE localizacao LIKE ?', [`%${estado}%`]);
+    const [curriculosEmitidos] = await pool.query('SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?', [estado]);
+    const [analisesEmitidas] = await pool.query('SELECT COUNT(*) AS total FROM analises WHERE estado = ?', [estado]);
+    const [curriculosPagos] = await pool.query('SELECT COUNT(*) AS total, SUM(valor) AS soma FROM pdfs WHERE estado = ? AND pago = 1', [estado]);
+    const [analisesPagas] = await pool.query('SELECT COUNT(*) AS total, SUM(valor) AS soma FROM analises WHERE estado = ? AND pago = 1', [estado]);
+
+    const totalValor = (curriculosPagos[0].soma || 0) + (analisesPagas[0].soma || 0);
+
+    res.json({
+      acessos: acessos[0].total,
+      curriculosEmitidos: curriculosEmitidos[0].total,
+      analisesEmitidas: analisesEmitidas[0].total,
+      curriculosPagos: curriculosPagos[0].total,
+      analisesPagas: analisesPagas[0].total,
+      parceiro: (totalValor * 0.40).toFixed(2),
+      empresa: (totalValor * 0.60).toFixed(2)
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao gerar painel do parceiro' });
+  }
+});
+
+app.post('/api/parceiros', async (req, res) => {
+  const { nome, senha, whatsapp, estado } = req.body;
+  if (!nome || !senha || !estado) {
+    return res.status(400).json({ error: 'Preencha todos os campos' });
+  }
+  const hash = await bcrypt.hash(senha, 10);
+  await pool.query(
+    'INSERT INTO parceiros (nome, senha, whatsapp, estado) VALUES (?, ?, ?, ?)',
+    [nome, hash, whatsapp, estado]
+  );
+  res.json({ success: true });
+});
+
+app.post('/api/parceiros/login', async (req, res) => {
+  const { nome, senha } = req.body;
+  const [rows] = await pool.query('SELECT * FROM parceiros WHERE nome = ?', [nome]);
+  if (rows.length === 0) return res.status(401).json({ error: 'Parceiro não encontrado' });
+  const parceiro = rows[0];
+  const match = await bcrypt.compare(senha, parceiro.senha);
+  if (!match) return res.status(401).json({ error: 'Senha incorreta' });
+  res.json({ success: true, estado: parceiro.estado });
+});
+
+app.get('/api/parceiros', async (req, res) => {
+  const [rows] = await pool.query('SELECT id, nome, whatsapp, estado FROM parceiros');
+  res.json(rows);
+});
+
+app.delete('/api/parceiros/:id', async (req, res) => {
+  const { id } = req.params;
+  await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
+  res.json({ success: true });
+});
 
 //////////////////////////
 // 🚀 Iniciar servidor
