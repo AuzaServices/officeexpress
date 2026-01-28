@@ -1321,24 +1321,25 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // currículos emitidos (conta todos os PDFs/analises emitidos)
+    // currículos emitidos
     const [curriculosEmitidos] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
+    // análises emitidas
     const [analisesEmitidas] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise"',
       [estado]
     );
 
-    // currículos pagos (agora lendo de registros_pagos)
+    // currículos pagos (lendo de registros_pagos)
     const [curriculosPagos] = await pool.query(
       'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
-    // análises pagas (agora lendo de registros_pagos)
+    // análises pagas (lendo de registros_pagos)
     const [analisesPagas] = await pool.query(
       'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise"',
       [estado]
@@ -1362,7 +1363,7 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
       empresa
     });
   } catch (err) {
-    console.error("Erro na rota painel-parceiro:", err);
+    console.error("Erro na rota painel-parceiro:", err.message);
     res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
   }
 });
