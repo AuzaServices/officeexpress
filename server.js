@@ -1101,18 +1101,22 @@ app.post('/salvar-pago', async (req, res) => {
     `, [id, tipo, nome_doc, valor, estado, cidade]);
 
     // 3. Atualiza resumo_emitidos para refletir no painel
-    // ⚠️ Se o id não bater com resumo_emitidos, use nome_doc + estado como chave
-    const [update] = await pool.query(
+    let [update] = await pool.query(
       'UPDATE resumo_emitidos SET pago = 1, valor = ? WHERE id = ?',
       [valor, id]
     );
 
     // Se não atualizou nada pelo id, tenta pelo nome_doc + estado
     if (update.affectedRows === 0) {
-      await pool.query(
+      [update] = await pool.query(
         'UPDATE resumo_emitidos SET pago = 1, valor = ? WHERE nome_doc = ? AND estado = ?',
         [valor, nome_doc, estado]
       );
+    }
+
+    if (update.affectedRows === 0) {
+      console.warn(`⚠️ Nenhum registro atualizado em resumo_emitidos para ${nome_doc} - ${estado}`);
+      return res.json({ success: false, message: 'Registro não encontrado em resumo_emitidos' });
     }
 
     res.json({ success: true });
