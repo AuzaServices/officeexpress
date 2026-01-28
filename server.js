@@ -1308,34 +1308,42 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
 
   try {
     // acessos (logs)
-const [acessos] = await pool.query(
-  'SELECT COUNT(*) AS total FROM logs WHERE localizacao LIKE ?',
-  [`%${estado}%`]
-);
+    const [acessos] = await pool.query(
+      'SELECT COUNT(*) AS total FROM logs WHERE localizacao LIKE ?',
+      [`%${estado}%`]
+    );
 
-    // currículos emitidos (pdfs)
+    // currículos emitidos (registros_pagos com tipo = Currículo)
     const [curriculosEmitidos] = await pool.query(
-      'SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?',
+      'SELECT COUNT(*) AS total FROM registros_pagos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
-    // análises emitidas (analises)
+    // análises emitidas (registros_pagos com tipo = Análise)
     const [analisesEmitidas] = await pool.query(
-      'SELECT COUNT(*) AS total FROM analises WHERE estado = ?',
+      'SELECT COUNT(*) AS total FROM registros_pagos WHERE estado = ? AND tipo = "Análise"',
       [estado]
     );
 
-    // currículos pagos (registros_pagos com tipo = Currículo)
+    // currículos pagos
     const [curriculosPagos] = await pool.query(
       'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo" AND pago = 1',
       [estado]
     );
 
-    // análises pagas (registros_pagos com tipo = Análise)
+    // análises pagas
     const [analisesPagas] = await pool.query(
       'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise" AND pago = 1',
       [estado]
     );
+
+    // cálculo financeiro
+    const somaCurriculos = curriculosPagos[0].soma || 0;
+    const somaAnalises = analisesPagas[0].soma || 0;
+    const total = somaCurriculos + somaAnalises;
+
+    const parceiro = (total * 0.40).toFixed(2);
+    const empresa = (total * 0.60).toFixed(2);
 
     res.json({
       acessos: acessos[0].total,
@@ -1343,26 +1351,14 @@ const [acessos] = await pool.query(
       analisesEmitidas: analisesEmitidas[0].total,
       curriculosPagos: curriculosPagos[0].total,
       analisesPagas: analisesPagas[0].total,
-      parceiro: curriculosPagos[0].soma || 0,
-      empresa: analisesPagas[0].soma || 0
+      total: total.toFixed(2),
+      parceiro,
+      empresa
     });
   } catch (err) {
-    console.error(err);
+    console.error("Erro na rota painel-parceiro:", err);
     res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
   }
-});
-
-app.post('/api/parceiros', async (req, res) => {
-  const { nome, senha, whatsapp, estado } = req.body;
-  if (!nome || !senha || !estado) {
-    return res.status(400).json({ error: 'Preencha todos os campos' });
-  }
-  const hash = await bcrypt.hash(senha, 10);
-  await pool.query(
-    'INSERT INTO parceiros (nome, senha, whatsapp, estado) VALUES (?, ?, ?, ?)',
-    [nome, hash, whatsapp, estado]
-  );
-  res.json({ success: true });
 });
 
 app.post('/api/parceiros/login', async (req, res) => {
