@@ -1321,27 +1321,26 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // currículos emitidos
+    // currículos emitidos (conta todos os PDFs/analises emitidos)
     const [curriculosEmitidos] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
-    // análises emitidas
     const [analisesEmitidas] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise"',
       [estado]
     );
 
-    // currículos pagos
+    // currículos pagos (agora lendo de registros_pagos)
     const [curriculosPagos] = await pool.query(
-      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo" AND pago = 1',
+      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
-    // análises pagas
+    // análises pagas (agora lendo de registros_pagos)
     const [analisesPagas] = await pool.query(
-      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise" AND pago = 1',
+      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise"',
       [estado]
     );
 
