@@ -86,7 +86,7 @@
     document.getElementById("estado").textContent = estadoParceiro;
 
     async function carregarPainel() {
-      const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
+      const res = await fetch(`/api/parceiros/${estadoParceiro}`);
       const dados = await res.json();
 
       document.getElementById("acessos").textContent = dados.acessos;
