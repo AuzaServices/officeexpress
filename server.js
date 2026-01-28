@@ -388,19 +388,12 @@ app.post('/api/logs', async (req, res) => {
   const localizacao = `${cidade} - ${estado}`;
 
   try {
-    // 1. Salva log detalhado
+    // Apenas salva log detalhado na tabela logs
     const query = `
       INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico, etapa)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     await pool.query(query, [acao, nome, timestamp, localizacao, ipRaw, ipPublico, etapa]);
-
-    // 2. ➕ Atualiza resumo_acessos (mantém acumulado por estado)
-    await pool.query(`
-      INSERT INTO resumo_acessos (estado, total)
-      VALUES (?, 1)
-      ON DUPLICATE KEY UPDATE total = total + 1, ultima_atualizacao = CURRENT_TIMESTAMP
-    `, [estado]);
 
     res.status(200).json({ mensagem: 'Log salvo com sucesso', localizacao });
   } catch (err) {
@@ -1328,12 +1321,6 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // acessos acumulados (vem de resumo_acessos)
-    const [acessos] = await pool.query(
-      'SELECT total FROM resumo_acessos WHERE estado = ?',
-      [estado]
-    );
-
     // currículos emitidos
     const [curriculosEmitidos] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"',
@@ -1367,7 +1354,6 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
     const empresa = (total * 0.60).toFixed(2);
 
     res.json({
-      acessos: acessos.length > 0 ? acessos[0].total : 0,
       curriculosEmitidos: curriculosEmitidos[0].total,
       analisesEmitidas: analisesEmitidas[0].total,
       curriculosPagos: curriculosPagos[0].total,
