@@ -8,6 +8,7 @@ const pdfParse = require('pdf-parse');
 const cron = require('node-cron');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser'); // ⬅️ novo
+const cron = require('node-cron');
 
 require('dotenv').config();
 
@@ -1415,6 +1416,23 @@ app.get('/painel', proteger, (req, res) => {
 app.get('/:page', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
 });
+
+cron.schedule('5 0 1 * *', async () => {
+  console.log("🗑️ Limpando resumo_emitidos e registros_pagos...");
+
+  try {
+    // Apaga todos os registros da tabela resumo_emitidos
+    await pool.query('DELETE FROM resumo_emitidos');
+
+    // Apaga todos os registros da tabela registros_pagos
+    await pool.query('DELETE FROM registros_pagos');
+
+    console.log("✅ Tabelas resumo_emitidos e registros_pagos apagadas com sucesso.");
+  } catch (err) {
+    console.error("❌ Erro ao apagar registros:", err.message);
+  }
+});
+
 
 // Página 404 personalizada
 app.use((req, res) => {
