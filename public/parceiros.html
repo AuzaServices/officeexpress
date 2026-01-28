@@ -137,7 +137,7 @@ async function carregarPainel() {
     if (dados.mensagem === "Nenhum parceiro cadastrado nesse estado") {
       alert("Seu acesso foi removido. Faça login novamente.");
       localStorage.removeItem("estadoParceiro"); // limpa cache
-      window.location.href = "/login"; // 👈 redireciona imediatamente
+      window.location.href = "/login-parceiro"; // 👈 redireciona imediatamente
       return;
     }
 
