@@ -1082,42 +1082,21 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 // 1. Rota para salvar pagamento
 app.post('/salvar-pago', async (req, res) => {
   const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
-
   try {
-    // 1. Verifica se já existe registro de pagamento no histórico
     const [rows] = await pool.query(
       'SELECT 1 FROM registros_pagos WHERE pdf_id = ?',
       [id]
     );
 
     if (rows.length > 0) {
+      // já existe
       return res.json({ success: false, alreadyPaid: true });
     }
 
-    // 2. Salva no histórico de pagamentos
     await pool.query(`
       INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago)
       VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
     `, [id, tipo, nome_doc, valor, estado, cidade]);
-
-    // 3. Atualiza resumo_emitidos para refletir no painel
-    let [update] = await pool.query(
-      'UPDATE resumo_emitidos SET pago = 1, valor = ? WHERE id = ?',
-      [valor, id]
-    );
-
-    // Se não atualizou nada pelo id, tenta pelo nome_doc + estado
-    if (update.affectedRows === 0) {
-      [update] = await pool.query(
-        'UPDATE resumo_emitidos SET pago = 1, valor = ? WHERE nome_doc = ? AND estado = ?',
-        [valor, nome_doc, estado]
-      );
-    }
-
-    if (update.affectedRows === 0) {
-      console.warn(`⚠️ Nenhum registro atualizado em resumo_emitidos para ${nome_doc} - ${estado}`);
-      return res.json({ success: false, message: 'Registro não encontrado em resumo_emitidos' });
-    }
 
     res.json({ success: true });
   } catch (err) {
