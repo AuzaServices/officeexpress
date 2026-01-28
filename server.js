@@ -8,7 +8,6 @@ const pdfParse = require('pdf-parse');
 const cron = require('node-cron');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser'); // ⬅️ novo
-const cron = require('node-cron');
 
 require('dotenv').config();
 
