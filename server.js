@@ -1321,33 +1321,31 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // currículos emitidos
+    // Emitidos
     const [curriculosEmitidos] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
-    // análises emitidas
     const [analisesEmitidas] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise"',
       [estado]
     );
 
-    // currículos pagos (lendo de registros_pagos)
+    // Pagos
     const [curriculosPagos] = await pool.query(
-      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo"',
+      'SELECT COUNT(*) AS total, COALESCE(SUM(valor),0) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo"',
       [estado]
     );
 
-    // análises pagas (lendo de registros_pagos)
     const [analisesPagas] = await pool.query(
-      'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise"',
+      'SELECT COUNT(*) AS total, COALESCE(SUM(valor),0) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise"',
       [estado]
     );
 
-    // cálculo financeiro
-    const somaCurriculos = curriculosPagos[0].soma || 0;
-    const somaAnalises = analisesPagas[0].soma || 0;
+    // Financeiro
+    const somaCurriculos = curriculosPagos[0].soma;
+    const somaAnalises = analisesPagas[0].soma;
     const total = somaCurriculos + somaAnalises;
 
     const parceiro = (total * 0.40).toFixed(2);
@@ -1363,7 +1361,7 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
       empresa
     });
   } catch (err) {
-    console.error("Erro na rota painel-parceiro:", err.message);
+    console.error("Erro na rota painel-parceiro:", err);
     res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
   }
 });
