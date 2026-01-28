@@ -1089,14 +1089,20 @@ app.post('/salvar-pago', async (req, res) => {
     );
 
     if (rows.length > 0) {
-      // já existe
       return res.json({ success: false, alreadyPaid: true });
     }
 
+    // 1. Salva no histórico
     await pool.query(`
       INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago)
       VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
     `, [id, tipo, nome_doc, valor, estado, cidade]);
+
+    // 2. Atualiza resumo_emitidos para refletir no painel
+    await pool.query(
+      'UPDATE resumo_emitidos SET pago = 1, valor = ? WHERE id = ?',
+      [valor, id]
+    );
 
     res.json({ success: true });
   } catch (err) {
