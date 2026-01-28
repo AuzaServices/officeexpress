@@ -1303,26 +1303,6 @@ app.get('/api/relatorio-completo', async (req, res) => {
   }
 });
 
-// Página inicial
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// rota painel protegida (fora da pasta public)
-app.get('/painel', proteger, (req, res) => {
-  res.sendFile(path.join(__dirname, 'painel.html'));
-});
-
-// Rota dinâmica para todas as outras páginas
-app.get('/:page', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
-});
-
-// Página 404 personalizada
-app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
-});
-
 app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
   try {
@@ -1381,6 +1361,28 @@ app.delete('/api/parceiros/:id', async (req, res) => {
   await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
   res.json({ success: true });
 });
+
+
+// Página inicial
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// rota painel protegida (fora da pasta public)
+app.get('/painel', proteger, (req, res) => {
+  res.sendFile(path.join(__dirname, 'painel.html'));
+});
+
+// Rota dinâmica para todas as outras páginas
+app.get('/:page', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
+});
+
+// Página 404 personalizada
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
 
 //////////////////////////
 // 🚀 Iniciar servidor

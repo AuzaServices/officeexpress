@@ -1188,9 +1188,6 @@ async function apagarParceiro(id) {
   await fetch(`/api/parceiros/${id}`, { method: "DELETE" });
   carregarParceiros();
 }
-
-window.onload = carregarParceiros;
-
   </script>
 
 <!-- Modal Cadastro Parceiro -->
