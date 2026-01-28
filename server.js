@@ -1389,9 +1389,15 @@ app.post('/api/parceiros/login', async (req, res) => {
   res.json({ success: true, estado: parceiro.estado });
 });
 
+// Listar todos os parceiros
 app.get('/api/parceiros', async (req, res) => {
-  const [rows] = await pool.query('SELECT id, nome, whatsapp, estado FROM parceiros');
-  res.json(rows);
+  try {
+    const [rows] = await pool.query('SELECT id, nome, whatsapp, estado FROM parceiros');
+    res.json(rows);
+  } catch (err) {
+    console.error("Erro ao listar parceiros:", err.message);
+    res.status(500).json({ error: "Erro ao carregar parceiros" });
+  }
 });
 
 app.delete('/api/parceiros/:id', async (req, res) => {
