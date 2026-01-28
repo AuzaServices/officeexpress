@@ -1307,31 +1307,38 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // Currículos emitidos (pdfs)
+    // acessos (logs)
+    const [acessos] = await pool.query(
+      'SELECT COUNT(*) AS total FROM logs WHERE estado = ?',
+      [estado]
+    );
+
+    // currículos emitidos (pdfs)
     const [curriculosEmitidos] = await pool.query(
       'SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?',
       [estado]
     );
 
-    // Análises emitidas (analises)
+    // análises emitidas (analises)
     const [analisesEmitidas] = await pool.query(
       'SELECT COUNT(*) AS total FROM analises WHERE estado = ?',
       [estado]
     );
 
-    // Currículos pagos (registros_pagos com tipo = Currículo)
+    // currículos pagos (registros_pagos com tipo = Currículo)
     const [curriculosPagos] = await pool.query(
       'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo" AND pago = 1',
       [estado]
     );
 
-    // Análises pagas (registros_pagos com tipo = Análise)
+    // análises pagas (registros_pagos com tipo = Análise)
     const [analisesPagas] = await pool.query(
       'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise" AND pago = 1',
       [estado]
     );
 
     res.json({
+      acessos: acessos[0].total,
       curriculosEmitidos: curriculosEmitidos[0].total,
       analisesEmitidas: analisesEmitidas[0].total,
       curriculosPagos: curriculosPagos[0].total,

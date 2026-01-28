@@ -71,41 +71,63 @@
       </div>
     </div>
 
-    <div class="card bg-info text-white text-center">
-      <div class="card-body">
-        <h5 class="card-title">Financeiro</h5>
-        <p>Parceiro: R$ <span id="parceiro">0.00</span></p>
-        <p>Empresa: R$ <span id="empresa">0.00</span></p>
-      </div>
-    </div>
+<div class="card bg-info text-white text-center">
+  <div class="card-body">
+    <h5 class="card-title">Financeiro</h5>
+    <p>Total: R$ <span id="total">0.00</span></p>
+    <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
+    <p>Office Express: R$ <span id="empresa">0.00</span></p>
   </div>
+</div> </div>
 
   <script>
-    // Estado do parceiro (pode vir do backend ou cookie)
-const estadoParceiro = localStorage.getItem("estadoParceiro");
-document.getElementById("estado").textContent = estadoParceiro || "—";
+  // Estado do parceiro (pode vir do backend ou cookie)
+  const estadoParceiro = localStorage.getItem("estadoParceiro");
+  document.getElementById("estado").textContent = estadoParceiro || "—";
 
-async function carregarPainel() {
-  if (!estadoParceiro) {
-    alert("Estado do parceiro não encontrado. Faça login novamente.");
-    return;
+  async function carregarPainel() {
+    if (!estadoParceiro) {
+      alert("Estado do parceiro não encontrado. Faça login novamente.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
+      if (!res.ok) {
+        throw new Error("Erro HTTP " + res.status);
+      }
+      const dados = await res.json();
+
+      // Atualiza os números básicos
+      document.getElementById("acessos").textContent = dados.acessos;
+      document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
+      document.getElementById("analises").textContent = dados.analisesEmitidas;
+      document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
+      document.getElementById("analisesPagos").textContent = dados.analisesPagas;
+
+      // 🔄 cálculo financeiro fixo
+      // Somamos os valores pagos (parceiro + empresa) para obter o total
+      const valorParceiro = parseFloat(dados.parceiro) || 0;
+      const valorEmpresa = parseFloat(dados.empresa) || 0;
+      const total = valorParceiro + valorEmpresa;
+
+      // Divisão fixa: 40% parceiro, 60% Office Express
+      const parceiroFinal = (total * 0.40).toFixed(2);
+      const empresaFinal = (total * 0.60).toFixed(2);
+
+      document.getElementById("total").textContent = total.toFixed(2);
+      document.getElementById("parceiro").textContent = parceiroFinal;
+      document.getElementById("empresa").textContent = empresaFinal;
+
+    } catch (err) {
+      console.error("Erro ao carregar painel:", err);
+      alert("Não foi possível carregar os dados do parceiro.");
+    }
   }
 
-  const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
-  const dados = await res.json();
-
-  document.getElementById("acessos").textContent = dados.acessos;
-  document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
-  document.getElementById("analises").textContent = dados.analisesEmitidas;
-  document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
-  document.getElementById("analisesPagos").textContent = dados.analisesPagas;
-  document.getElementById("parceiro").textContent = dados.parceiro;
-  document.getElementById("empresa").textContent = dados.empresa;
-}
-
-setInterval(carregarPainel, 5000);
-window.onload = carregarPainel;
-
-  </script>
+  // Atualiza a cada 5 segundos
+  setInterval(carregarPainel, 5000);
+  window.onload = carregarPainel;
+</script>
 </body>
 </html>
