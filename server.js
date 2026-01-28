@@ -1344,22 +1344,22 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
     );
 
     // Financeiro
-    const somaCurriculos = curriculosPagos[0].soma;
-    const somaAnalises = analisesPagas[0].soma;
-    const total = somaCurriculos + somaAnalises;
+const somaCurriculos = Number(curriculosPagos[0].soma) || 0;
+const somaAnalises = Number(analisesPagas[0].soma) || 0;
+const total = somaCurriculos + somaAnalises;
 
-    const parceiro = (total * 0.40).toFixed(2);
-    const empresa = (total * 0.60).toFixed(2);
+const parceiro = (total * 0.40).toFixed(2);
+const empresa = (total * 0.60).toFixed(2);
 
-    res.json({
-      curriculosEmitidos: curriculosEmitidos[0].total,
-      analisesEmitidas: analisesEmitidas[0].total,
-      curriculosPagos: curriculosPagos[0].total,
-      analisesPagas: analisesPagas[0].total,
-      total: total.toFixed(2),
-      parceiro,
-      empresa
-    });
+res.json({
+  curriculosEmitidos: curriculosEmitidos[0].total,
+  analisesEmitidas: analisesEmitidas[0].total,
+  curriculosPagos: curriculosPagos[0].total,
+  analisesPagas: analisesPagas[0].total,
+  total: total.toFixed(2),
+  parceiro,
+  empresa
+});
   } catch (err) {
     console.error("Erro na rota painel-parceiro:", err);
     res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
