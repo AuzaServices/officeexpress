@@ -1083,20 +1083,35 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 app.post('/salvar-pago', async (req, res) => {
   const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
   try {
+    // Verifica se já existe registro pago
     const [rows] = await pool.query(
       'SELECT 1 FROM registros_pagos WHERE pdf_id = ?',
       [id]
     );
 
     if (rows.length > 0) {
-      // já existe
       return res.json({ success: false, alreadyPaid: true });
     }
 
+    // Insere em registros_pagos
     await pool.query(`
       INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago)
       VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
     `, [id, tipo, nome_doc, valor, estado, cidade]);
+
+    // 🔎 Verifica se existe parceiro no mesmo estado
+    const [parceiros] = await pool.query(
+      'SELECT id FROM parceiros WHERE estado = ? LIMIT 1',
+      [estado]
+    );
+
+    if (parceiros.length > 0) {
+      // Só insere no resumo_emitidos se houver parceiro
+      await pool.query(`
+        INSERT INTO resumo_emitidos (id_registro, tipo, nome_doc, valor, estado, cidade, data)
+        VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()))
+      `, [id, tipo, nome_doc, valor, estado, cidade]);
+    }
 
     res.json({ success: true });
   } catch (err) {
