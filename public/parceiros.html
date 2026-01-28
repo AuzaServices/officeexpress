@@ -3,11 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>Painel do Parceiro</title>
+  <link rel="icon" href="icon.png" type="image/png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
       background-color: #f8f9fa;
       font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding-top: 80px; /* espaço para o cabeçalho fixo */
     }
     .card {
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -19,146 +23,220 @@
     .display-6 {
       font-weight: bold;
     }
+
+    /* Cabeçalho fixo */
+    .cabecalho {
+      background: linear-gradient(90deg, #001f33, #00324a);
+      padding: 10px 0;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .cabecalho .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cabecalho .logo {
+      height: 40px;
+      width: auto;
+      transition: transform 0.3s ease;
+    }
+    .cabecalho .logo:hover {
+      transform: scale(1.05);
+    }
+    .logout-icon {
+      color: #dc3545;
+      font-size: 1.5rem;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .logout-icon:hover {
+      color: #b02a37;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      .display-6 {
+        font-size: 1.3rem;
+      }
+      .cabecalho .logo {
+        height: 30px;
+      }
+      .logout-icon {
+        font-size: 1.2rem;
+      }
+    }
+
+    .financeiro-card {
+      background: linear-gradient(135deg, #ff8c00, #ff6600);
+      color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      padding: 25px;
+      margin-top: 20px;
+    }
+    .financeiro-card h5 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .financeiro-card p {
+      font-size: 1.2rem;
+      margin: 8px 0;
+    }
+    .financeiro-card span {
+      font-weight: bold;
+      font-size: 1.3rem;
+    }
+    .financeiro-icon {
+      font-size: 2rem;
+      margin-right: 10px;
+      color: #fff;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      .display-6 {
+        font-size: 1.3rem;
+      }
+      .cabecalho .logo {
+        height: 30px;
+      }
+      .logout-icon {
+        font-size: 1.2rem;
+      }
+      .financeiro-card h5 {
+        font-size: 1.3rem;
+      }
+      .financeiro-card p {
+        font-size: 1rem;
+      }
+    }
+
+
   </style>
 </head>
 <body>
-  <div class="container my-5">
-    <h1 class="mb-4 text-center">Painel do Parceiro - <span id="estado"></span></h1>
 
-    <div class="row text-center">
-      <div class="col-md-6 mb-3">
-        <div class="card bg-light">
-          <div class="card-body">
-            <h5 class="card-title">Currículos Emitidos</h5>
-            <p id="curriculos" class="display-6">0</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6 mb-3">
-        <div class="card bg-light">
-          <div class="card-body">
-            <h5 class="card-title">Análises Emitidas</h5>
-            <p id="analises" class="display-6">0</p>
-          </div>
+<header class="cabecalho">
+  <div class="container">
+    <!-- Logo -->
+    <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+    <!-- Logout -->
+    <a href="/logout" class="logout-icon" title="Sair">
+      <i class="fas fa-sign-out-alt"></i>
+    </a>
+  </div>
+</header>
+
+<div class="container my-4">
+  <h1 class="mb-4 text-center">Painel do Parceiro - <span id="estado"></span></h1>
+
+  <div class="row text-center">
+    <div class="col-md-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h5 class="card-title">Currículos Emitidos</h5>
+          <p id="curriculos" class="display-6">0</p>
         </div>
       </div>
     </div>
-
-    <div class="row text-center">
-      <div class="col-md-6 mb-3">
-        <div class="card bg-success text-white">
-          <div class="card-body">
-            <h5 class="card-title">Currículos Pagos</h5>
-            <p id="curriculosPagos" class="display-6">0</p>
-          </div>
+    <div class="col-md-6 mb-3">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h5 class="card-title">Análises Emitidas</h5>
+          <p id="analises" class="display-6">0</p>
         </div>
-      </div>
-      <div class="col-md-6 mb-3">
-        <div class="card bg-success text-white">
-          <div class="card-body">
-            <h5 class="card-title">Análises Pagas</h5>
-            <p id="analisesPagos" class="display-6">0</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card bg-info text-white text-center">
-      <div class="card-body">
-        <h5 class="card-title">Financeiro</h5>
-        <p>Total: R$ <span id="total">0.00</span></p>
-        <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
-        <p>Office Express: R$ <span id="empresa">0.00</span></p>
       </div>
     </div>
   </div>
 
-  <script>
-  // Estado do parceiro (pode vir do backend ou cookie)
+  <div class="row text-center">
+    <div class="col-md-6 mb-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">Currículos Pagos</h5>
+          <p id="curriculosPagos" class="display-6">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">Análises Pagas</h5>
+          <p id="analisesPagos" class="display-6">0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="financeiro-card text-center">
+    <h5><i class="fas fa-coins financeiro-icon"></i> Financeiro</h5>
+    <p>Total: R$ <span id="total">0.00</span></p>
+    <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
+    <p>Office Express: R$ <span id="empresa">0.00</span></p>
+  </div>
+</div>
+
+</div>
+
+<script>
   const estadoParceiro = localStorage.getItem("estadoParceiro");
   document.getElementById("estado").textContent = estadoParceiro || "—";
 
   async function carregarPainel() {
     if (!estadoParceiro) {
       alert("Estado do parceiro não encontrado. Faça login novamente.");
+      window.location.href = "/login-parceiro";
       return;
     }
 
     try {
       const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
-      if (!res.ok) {
-        throw new Error("Erro HTTP " + res.status);
-      }
+      if (!res.ok) throw new Error("Erro HTTP " + res.status);
+
       const dados = await res.json();
 
-      // Atualiza os números básicos
+      // 🚨 Se não existe parceiro nesse estado, força logout
+      if (dados.mensagem === "Nenhum parceiro cadastrado nesse estado") {
+        alert("Seu acesso foi removido. Faça login novamente.");
+        localStorage.removeItem("estadoParceiro");
+        window.location.href = "/login-parceiro";
+        return;
+      }
+
+      // Atualiza os números
       document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
       document.getElementById("analises").textContent = dados.analisesEmitidas;
       document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
       document.getElementById("analisesPagos").textContent = dados.analisesPagas;
-
-      // 🔄 cálculo financeiro fixo
-      const valorParceiro = parseFloat(dados.parceiro) || 0;
-      const valorEmpresa = parseFloat(dados.empresa) || 0;
-      const total = valorParceiro + valorEmpresa;
-
-      const parceiroFinal = (total * 0.40).toFixed(2);
-      const empresaFinal = (total * 0.60).toFixed(2);
-
-document.getElementById("total").textContent = dados.total;
-document.getElementById("parceiro").textContent = dados.parceiro;
-document.getElementById("empresa").textContent = dados.empresa;
+      document.getElementById("total").textContent = dados.total;
+      document.getElementById("parceiro").textContent = dados.parceiro;
+      document.getElementById("empresa").textContent = dados.empresa;
 
     } catch (err) {
       console.error("Erro ao carregar painel:", err);
       alert("Não foi possível carregar os dados do parceiro.");
+      window.location.href = "/login-parceiro";
     }
   }
 
   // Atualiza a cada 5 segundos
   setInterval(carregarPainel, 5000);
   window.onload = carregarPainel;
+</script>
 
-async function carregarPainel() {
-  if (!estadoParceiro) {
-    alert("Estado do parceiro não encontrado. Faça login novamente.");
-    window.location.href = "/login-parceiro"; // 👈 redireciona
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
-    if (!res.ok) {
-      throw new Error("Erro HTTP " + res.status);
-    }
-    const dados = await res.json();
-
-    // 🚨 Se não existe parceiro nesse estado, força logout
-    if (dados.mensagem === "Nenhum parceiro cadastrado nesse estado") {
-      alert("Seu acesso foi removido. Faça login novamente.");
-      localStorage.removeItem("estadoParceiro"); // limpa cache
-      window.location.href = "/login-parceiro"; // 👈 redireciona imediatamente
-      return;
-    }
-
-    // Atualiza os números básicos
-    document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
-    document.getElementById("analises").textContent = dados.analisesEmitidas;
-    document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
-    document.getElementById("analisesPagos").textContent = dados.analisesPagas;
-
-    // Financeiro
-    document.getElementById("total").textContent = dados.total;
-    document.getElementById("parceiro").textContent = dados.parceiro;
-    document.getElementById("empresa").textContent = dados.empresa;
-
-  } catch (err) {
-    console.error("Erro ao carregar painel:", err);
-    alert("Não foi possível carregar os dados do parceiro.");
-    window.location.href = "/login"; // 👈 fallback: manda pra login
-  }
-}
-
-  </script>
 </body>
 </html>
