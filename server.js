@@ -1336,6 +1336,26 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
+    // Verifica se existe parceiro nesse estado
+    const [parceiros] = await pool.query(
+      'SELECT id FROM parceiros WHERE estado = ? LIMIT 1',
+      [estado]
+    );
+
+    if (parceiros.length === 0) {
+      // Se não houver parceiro, retorna zerado
+      return res.json({
+        curriculosEmitidos: 0,
+        analisesEmitidas: 0,
+        curriculosPagos: 0,
+        analisesPagas: 0,
+        total: "0.00",
+        parceiro: "0.00",
+        empresa: "0.00",
+        mensagem: "Nenhum parceiro cadastrado nesse estado"
+      });
+    }
+
     // Emitidos
     const [curriculosEmitidos] = await pool.query(
       'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"',
@@ -1359,22 +1379,22 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
     );
 
     // Financeiro
-const somaCurriculos = Number(curriculosPagos[0].soma) || 0;
-const somaAnalises = Number(analisesPagas[0].soma) || 0;
-const total = somaCurriculos + somaAnalises;
+    const somaCurriculos = Number(curriculosPagos[0].soma) || 0;
+    const somaAnalises = Number(analisesPagas[0].soma) || 0;
+    const total = somaCurriculos + somaAnalises;
 
-const parceiro = (total * 0.40).toFixed(2);
-const empresa = (total * 0.60).toFixed(2);
+    const parceiro = (total * 0.40).toFixed(2);
+    const empresa = (total * 0.60).toFixed(2);
 
-res.json({
-  curriculosEmitidos: curriculosEmitidos[0].total,
-  analisesEmitidas: analisesEmitidas[0].total,
-  curriculosPagos: curriculosPagos[0].total,
-  analisesPagas: analisesPagas[0].total,
-  total: total.toFixed(2),
-  parceiro,
-  empresa
-});
+    res.json({
+      curriculosEmitidos: curriculosEmitidos[0].total,
+      analisesEmitidas: analisesEmitidas[0].total,
+      curriculosPagos: curriculosPagos[0].total,
+      analisesPagas: analisesPagas[0].total,
+      total: total.toFixed(2),
+      parceiro,
+      empresa
+    });
   } catch (err) {
     console.error("Erro na rota painel-parceiro:", err);
     res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
