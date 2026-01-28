@@ -1082,7 +1082,9 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 // 1. Rota para salvar pagamento
 app.post('/salvar-pago', async (req, res) => {
   const { id, tipo, nome_doc, valor, estado, cidade } = req.body;
+
   try {
+    // 1. Verifica se já existe registro de pagamento no histórico
     const [rows] = await pool.query(
       'SELECT 1 FROM registros_pagos WHERE pdf_id = ?',
       [id]
@@ -1092,17 +1094,26 @@ app.post('/salvar-pago', async (req, res) => {
       return res.json({ success: false, alreadyPaid: true });
     }
 
-    // 1. Salva no histórico
+    // 2. Salva no histórico de pagamentos
     await pool.query(`
       INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago)
       VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
     `, [id, tipo, nome_doc, valor, estado, cidade]);
 
-    // 2. Atualiza resumo_emitidos para refletir no painel
-    await pool.query(
+    // 3. Atualiza resumo_emitidos para refletir no painel
+    // ⚠️ Se o id não bater com resumo_emitidos, use nome_doc + estado como chave
+    const [update] = await pool.query(
       'UPDATE resumo_emitidos SET pago = 1, valor = ? WHERE id = ?',
       [valor, id]
     );
+
+    // Se não atualizou nada pelo id, tenta pelo nome_doc + estado
+    if (update.affectedRows === 0) {
+      await pool.query(
+        'UPDATE resumo_emitidos SET pago = 1, valor = ? WHERE nome_doc = ? AND estado = ?',
+        [valor, nome_doc, estado]
+      );
+    }
 
     res.json({ success: true });
   } catch (err) {

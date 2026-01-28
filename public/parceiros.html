@@ -105,9 +105,9 @@
       const parceiroFinal = (total * 0.40).toFixed(2);
       const empresaFinal = (total * 0.60).toFixed(2);
 
-      document.getElementById("total").textContent = total.toFixed(2);
-      document.getElementById("parceiro").textContent = parceiroFinal;
-      document.getElementById("empresa").textContent = empresaFinal;
+document.getElementById("total").textContent = dados.total;
+document.getElementById("parceiro").textContent = dados.parceiro;
+document.getElementById("empresa").textContent = dados.empresa;
 
     } catch (err) {
       console.error("Erro ao carregar painel:", err);
