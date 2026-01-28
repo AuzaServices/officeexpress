@@ -1305,27 +1305,40 @@ app.get('/api/relatorio-completo', async (req, res) => {
 
 app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
-  try {
-    const [acessos] = await pool.query('SELECT COUNT(*) AS total FROM logs WHERE localizacao LIKE ?', [`%${estado}%`]);
-    const [curriculosEmitidos] = await pool.query('SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?', [estado]);
-    const [analisesEmitidas] = await pool.query('SELECT COUNT(*) AS total FROM analises WHERE estado = ?', [estado]);
-    const [curriculosPagos] = await pool.query('SELECT COUNT(*) AS total, SUM(valor) AS soma FROM pdfs WHERE estado = ? AND pago = 1', [estado]);
-    const [analisesPagas] = await pool.query('SELECT COUNT(*) AS total, SUM(valor) AS soma FROM analises WHERE estado = ? AND pago = 1', [estado]);
 
-    const totalValor = (curriculosPagos[0].soma || 0) + (analisesPagas[0].soma || 0);
+  // acessos
+  const [acessos] = await pool.query(
+    'SELECT COUNT(*) AS total FROM acessos WHERE estado = ?',
+    [estado]
+  );
 
-    res.json({
-      acessos: acessos[0].total,
-      curriculosEmitidos: curriculosEmitidos[0].total,
-      analisesEmitidas: analisesEmitidas[0].total,
-      curriculosPagos: curriculosPagos[0].total,
-      analisesPagas: analisesPagas[0].total,
-      parceiro: (totalValor * 0.40).toFixed(2),
-      empresa: (totalValor * 0.60).toFixed(2)
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao gerar painel do parceiro' });
-  }
+  // currículos emitidos (pdfs)
+  const [curriculosEmitidos] = await pool.query(
+    'SELECT COUNT(*) AS total FROM pdfs WHERE estado = ?',
+    [estado]
+  );
+
+  // análises emitidas (se você guarda em outra tabela, ajuste aqui)
+  const [analisesEmitidas] = await pool.query(
+    'SELECT COUNT(*) AS total FROM analises WHERE estado = ?',
+    [estado]
+  );
+
+  // pagos (currículos + análises) → todos estão em registros_pagos
+  const [pagos] = await pool.query(
+    'SELECT COUNT(*) AS total, SUM(valor) AS soma FROM registros_pagos WHERE estado = ? AND pago = 1',
+    [estado]
+  );
+
+  res.json({
+    acessos: acessos[0].total,
+    curriculosEmitidos: curriculosEmitidos[0].total,
+    analisesEmitidas: analisesEmitidas[0].total,
+    curriculosPagos: pagos[0].total,   // total de registros pagos
+    analisesPagas: pagos[0].total,     // se quiser separar, precisa de um campo "tipo"
+    parceiro: pagos[0].soma || 0,
+    empresa: pagos[0].soma || 0
+  });
 });
 
 app.post('/api/parceiros', async (req, res) => {
