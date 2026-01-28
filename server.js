@@ -1308,10 +1308,10 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
 
   try {
     // acessos (logs)
-    const [acessos] = await pool.query(
-      'SELECT COUNT(*) AS total FROM logs WHERE estado = ?',
-      [estado]
-    );
+ const [acessos] = await pool.query(
+  'SELECT COUNT(*) AS total FROM logs WHERE localizacao = ?',
+  [estado]
+);
 
     // currículos emitidos (pdfs)
     const [curriculosEmitidos] = await pool.query(
