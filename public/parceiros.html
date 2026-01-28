@@ -82,25 +82,30 @@
 
   <script>
     // Estado do parceiro (pode vir do backend ou cookie)
-    const estadoParceiro = "CE"; 
-    document.getElementById("estado").textContent = estadoParceiro;
+const estadoParceiro = localStorage.getItem("estadoParceiro");
+document.getElementById("estado").textContent = estadoParceiro || "—";
 
-    async function carregarPainel() {
-      const res = await fetch(`/api/parceiros/${estadoParceiro}`);
-      const dados = await res.json();
+async function carregarPainel() {
+  if (!estadoParceiro) {
+    alert("Estado do parceiro não encontrado. Faça login novamente.");
+    return;
+  }
 
-      document.getElementById("acessos").textContent = dados.acessos;
-      document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
-      document.getElementById("analises").textContent = dados.analisesEmitidas;
-      document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
-      document.getElementById("analisesPagos").textContent = dados.analisesPagas;
-      document.getElementById("parceiro").textContent = dados.parceiro;
-      document.getElementById("empresa").textContent = dados.empresa;
-    }
+  const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
+  const dados = await res.json();
 
-    // Atualiza a cada 5 segundos
-    setInterval(carregarPainel, 5000);
-    window.onload = carregarPainel;
+  document.getElementById("acessos").textContent = dados.acessos;
+  document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
+  document.getElementById("analises").textContent = dados.analisesEmitidas;
+  document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
+  document.getElementById("analisesPagos").textContent = dados.analisesPagas;
+  document.getElementById("parceiro").textContent = dados.parceiro;
+  document.getElementById("empresa").textContent = dados.empresa;
+}
+
+setInterval(carregarPainel, 5000);
+window.onload = carregarPainel;
+
   </script>
 </body>
 </html>
