@@ -1,4 +1,5 @@
 const express = require('express');
+const session = require('express-session');
 const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
