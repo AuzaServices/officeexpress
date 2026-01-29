@@ -70,11 +70,8 @@ app.post('/auth/login', (req, res) => {
   }
 });
 
-
-
-
 function protegerAdmin(req, res, next) {
-  if (!req.session.adminId) return res.redirect('/login');
+  if (!req.session.adminId) return res.redirect('/login.html');
   next();
 }
 
@@ -1447,12 +1444,12 @@ app.post('/api/parceiros/login', async (req, res) => {
   const match = await bcrypt.compare(senha, parceiro.senha);
   if (!match) return res.status(401).json({ error: 'Senha incorreta' });
 
-  req.session.regenerate(err => {
-    if (err) return res.status(500).json({ error: 'Erro na sessão' });
-    req.session.parceiroId = parceiro.id;
-    req.session.estado = parceiro.estado;
-    res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
-  });
+req.session.regenerate(err => {
+  if (err) return res.status(500).json({ error: 'Erro na sessão' });
+  req.session.parceiroId = parceiro.id;
+  req.session.estado = parceiro.estado;
+  res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
+});
 });
 
 
