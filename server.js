@@ -73,7 +73,7 @@ app.post('/auth/login', (req, res) => {
 
 
 function protegerAdmin(req, res, next) {
-  if (!req.session.adminId) return res.redirect('/login.html');
+  if (!req.session.adminId) return res.redirect('/login');
   next();
 }
 
@@ -1471,7 +1471,7 @@ app.delete('/api/parceiros/:id', async (req, res) => {
 
 
 function protegerParceiro(req, res, next) {
-  if (!req.session.parceiroId) return res.redirect('/login-parceiro.html');
+  if (!req.session.parceiroId) return res.redirect('/login-parceiro');
   next();
 }
 
