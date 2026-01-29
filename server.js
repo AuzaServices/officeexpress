@@ -49,20 +49,16 @@ const pool = mysql.createPool({
 app.post('/auth/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.LOGIN_USER && password === process.env.LOGIN_PASS) {
-    res.cookie('logado', 'true', { httpOnly: true });
-    return res.json({ message: 'Login realizado com sucesso' });
+    req.session.adminId = 1;
+    return res.json({ success: true });
   }
   res.status(401).json({ error: 'Usuário ou senha inválidos' });
 });
 
 
-// middleware de proteção
-function proteger(req, res, next) {
-  if (req.cookies.logado === 'true') {
-    next();
-  } else {
-    res.redirect('/login');
-  }
+function protegerAdmin(req, res, next) {
+  if (!req.session.adminId) return res.redirect('/login.html');
+  next();
 }
 
 
@@ -1448,11 +1444,8 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Middleware proteger
-function proteger(req, res, next) {
-  if (!req.session || !req.session.parceiroId) {
-    return res.redirect('/login-parceiro');
-  }
+function protegerParceiro(req, res, next) {
+  if (!req.session.parceiroId) return res.redirect('/login-parceiro.html');
   next();
 }
 
@@ -1464,9 +1457,15 @@ app.get('/', (req, res) => {
 });
 
 // rota painel protegida (fora da pasta public)
-app.get('/painel', proteger, (req, res) => {
+app.get('/painel', protegerAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'painel.html'));
 });
+
+app.get('/parceiros', protegerParceiro, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'parceiros.html'));
+});
+
+
 
 // Rota dinâmica para todas as outras páginas
 app.get('/:page', (req, res) => {
