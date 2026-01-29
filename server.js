@@ -1451,7 +1451,7 @@ app.use(session({
 // Middleware proteger
 function proteger(req, res, next) {
   if (!req.session || !req.session.parceiroId) {
-    return res.redirect('/login');
+    return res.redirect('/login-parceiro');
   }
   next();
 }

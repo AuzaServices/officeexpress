@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Login - Painel Seguro</title>
+  <title>Login - Painel Administrativo</title>
+  <link rel="icon" href="icon.png" type="image/png" />
   <style>
     body {
       background: linear-gradient(135deg, #001f33, #00324a);
@@ -52,15 +53,22 @@
     .btn-login:hover {
       background-color: #e67300;
     }
+    .error-msg {
+      color: red;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="login-card">
-    <h2>Login no Painel</h2>
+    <h2>Login Administrativo</h2>
     <form id="loginForm">
       <input type="text" id="usuario" placeholder="Usuário" required>
       <input type="password" id="senha" placeholder="Senha" required>
       <button type="submit" class="btn-login">Entrar</button>
+      <div id="error" class="error-msg"></div>
     </form>
   </div>
 
@@ -69,26 +77,28 @@
       e.preventDefault();
       const usuario = document.getElementById("usuario").value;
       const senha = document.getElementById("senha").value;
+      const errorBox = document.getElementById("error");
+      errorBox.textContent = "";
 
-      const res = await fetch("/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: usuario, password: senha })
-      });
-
-      let data;
       try {
-        data = await res.json();
-      } catch {
-        alert("Erro no servidor");
-        return;
-      }
+        const res = await fetch("/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: usuario, password: senha }),
+          credentials: "include" // 👈 garante que o cookie da sessão seja salvo
+        });
 
-if (res.ok) {
-  window.location.href = "/painel"; // ✅ rota protegida
-} else {
-  alert(data.error);
-}
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          window.location.href = "/painel"; // ✅ painel administrativo
+        } else {
+          errorBox.textContent = data.error || "Usuário ou senha incorretos";
+        }
+      } catch (err) {
+        console.error("Erro no login:", err);
+        errorBox.textContent = "Erro no servidor. Tente novamente.";
+      }
     });
   </script>
 </body>
