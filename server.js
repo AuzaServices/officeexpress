@@ -72,6 +72,7 @@ app.post('/auth/login', (req, res) => {
 
 
 
+
 function protegerAdmin(req, res, next) {
   if (!req.session.adminId) return res.redirect('/login');
   next();
@@ -80,16 +81,20 @@ function protegerAdmin(req, res, next) {
 
 // logout
 app.get('/logout', (req, res) => {
-  res.clearCookie('logado');
-  res.redirect('/login');
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.redirect('/login.html');
+  });
 });
+
 
 app.get('/logout-parceiro', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
-    res.redirect('/login-parceiro');
+    res.redirect('/login-parceiro.html');
   });
 });
+
 
 // 🔍 Função para extrair IP público
 function getPublicIP(req) {
