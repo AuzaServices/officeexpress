@@ -44,6 +44,7 @@
         <input type="password" id="senha" class="form-control" required>
       </div>
       <button type="submit" class="btn btn-primary w-100">Entrar</button>
+      <div id="error" class="text-danger mt-2"></div>
     </form>
   </div>
 
@@ -52,27 +53,28 @@
       e.preventDefault();
       const nome = document.getElementById("nome").value;
       const senha = document.getElementById("senha").value;
+      const errorBox = document.getElementById("error");
+      errorBox.textContent = "";
 
       try {
 const res = await fetch("/api/parceiros/login", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ nome, senha }),
-  credentials: "include" // 👈 garante que o cookie da sessão seja salvo
+  credentials: "include" // 👈 obrigatório
 });
+
         const data = await res.json();
 
-        if (data.success) {
-          // guarda o estado do parceiro
+        if (res.ok && data.success) {
           localStorage.setItem("estadoParceiro", data.estado);
-          // redireciona para o painel
-          window.location.href = "/parceiros";
+          window.location.href = "/parceiros"; // 👈 redireciona para painel
         } else {
-          alert(data.error || "Erro no login");
+          errorBox.textContent = data.error || "Usuário ou senha incorretos";
         }
       } catch (err) {
         console.error("Erro no login:", err);
-        alert("Erro de conexão com o servidor.");
+        errorBox.textContent = "Erro de conexão com o servidor.";
       }
     });
   </script>

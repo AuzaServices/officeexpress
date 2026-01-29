@@ -30,11 +30,10 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false,        // 👈 importante se estiver rodando em HTTP (não HTTPS)
-    sameSite: 'lax'       // 👈 permite que o cookie seja enviado em redirecionamentos
+    secure: process.env.NODE_ENV === 'production', // true em produção (HTTPS)
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
-
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -1426,11 +1425,17 @@ app.post('/api/parceiros/login', async (req, res) => {
   const { nome, senha } = req.body;
   const [rows] = await pool.query('SELECT * FROM parceiros WHERE nome = ?', [nome]);
   if (rows.length === 0) return res.status(401).json({ error: 'Parceiro não encontrado' });
+
   const parceiro = rows[0];
   const match = await bcrypt.compare(senha, parceiro.senha);
   if (!match) return res.status(401).json({ error: 'Senha incorreta' });
-  res.json({ success: true, estado: parceiro.estado });
+
+  req.session.parceiroId = parceiro.id;
+  req.session.estado = parceiro.estado;
+
+  res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
 });
+
 
 // Listar todos os parceiros
 app.get('/api/parceiros', async (req, res) => {
@@ -1520,6 +1525,13 @@ app.post('/api/parceiros/login', async (req, res) => {
   req.session.estado = parceiro.estado;
 
   res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
+});
+
+app.get('/logout-parceiro', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.redirect('/login-parceiro.html');
+  });
 });
 
 // Página 404 personalizada
