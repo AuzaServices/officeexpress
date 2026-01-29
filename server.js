@@ -27,8 +27,14 @@ app.use(cookieParser()); // ⬅️ novo
 app.use(session({
   secret: 'segredo-super-seguro',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,        // 👈 importante se estiver rodando em HTTP (não HTTPS)
+    sameSite: 'lax'       // 👈 permite que o cookie seja enviado em redirecionamentos
+  }
 }));
+
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
