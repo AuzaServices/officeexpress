@@ -60,11 +60,16 @@ const pool = mysql.createPool({
 app.post('/auth/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.LOGIN_USER && password === process.env.LOGIN_PASS) {
-    req.session.adminId = 1;
-    return res.json({ success: true });
+    req.session.regenerate(err => {
+      if (err) return res.status(500).json({ error: 'Erro na sessão' });
+      req.session.adminId = 1;
+      res.json({ success: true });
+    });
+  } else {
+    res.status(401).json({ error: 'Usuário ou senha inválidos' });
   }
-  res.status(401).json({ error: 'Usuário ou senha inválidos' });
 });
+
 
 
 function protegerAdmin(req, res, next) {
@@ -77,6 +82,13 @@ function protegerAdmin(req, res, next) {
 app.get('/logout', (req, res) => {
   res.clearCookie('logado');
   res.redirect('/login');
+});
+
+app.get('/logout-parceiro', (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie('connect.sid');
+    res.redirect('/login-parceiro');
+  });
 });
 
 // 🔍 Função para extrair IP público
@@ -1430,11 +1442,14 @@ app.post('/api/parceiros/login', async (req, res) => {
   const match = await bcrypt.compare(senha, parceiro.senha);
   if (!match) return res.status(401).json({ error: 'Senha incorreta' });
 
-  req.session.parceiroId = parceiro.id;
-  req.session.estado = parceiro.estado;
-
-  res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
+  req.session.regenerate(err => {
+    if (err) return res.status(500).json({ error: 'Erro na sessão' });
+    req.session.parceiroId = parceiro.id;
+    req.session.estado = parceiro.estado;
+    res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
+  });
 });
+
 
 
 // Listar todos os parceiros
@@ -1525,13 +1540,6 @@ app.post('/api/parceiros/login', async (req, res) => {
   req.session.estado = parceiro.estado;
 
   res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
-});
-
-app.get('/logout-parceiro', (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie('connect.sid');
-    res.redirect('/login-parceiro.html');
-  });
 });
 
 // Página 404 personalizada
