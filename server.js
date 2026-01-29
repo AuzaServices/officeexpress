@@ -1473,7 +1473,7 @@ app.delete('/api/parceiros/:id', async (req, res) => {
 
 
 function protegerParceiro(req, res, next) {
-  if (!req.session.parceiroId) return res.redirect('/login-parceiro');
+  if (!req.session.parceiroId) return res.redirect('/login-parceiro.html');
   next();
 }
 
