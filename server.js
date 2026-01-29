@@ -23,6 +23,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
 app.use(cookieParser()); // ⬅️ novo
+app.use(session({
+  secret: 'segredo-super-seguro',
+  resave: false,
+  saveUninitialized: false
+}));
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -1437,12 +1442,6 @@ app.delete('/api/parceiros/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-const session = require('express-session');
-app.use(session({
-  secret: 'segredo-super-seguro',
-  resave: false,
-  saveUninitialized: false
-}));
 
 function protegerParceiro(req, res, next) {
   if (!req.session.parceiroId) return res.redirect('/login-parceiro.html');
