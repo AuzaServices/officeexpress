@@ -1444,44 +1444,20 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
 });
 
 // 👉 Rota para enviar relatório ao parceiro de um estado
-// 👉 Rota para enviar relatório ao parceiro de um estado
 app.post('/api/enviar-relatorio/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // Verifica se existe parceiro cadastrado nesse estado
-    const [parceiros] = await pool.query(
-      'SELECT id, nome, whatsapp FROM parceiros WHERE estado = ? LIMIT 1',
+    // Atualiza registros pagos desse estado para "enviado"
+    await pool.query(
+      'UPDATE registros_pagos SET enviado = 1 WHERE estado = ? AND pago = 1',
       [estado]
     );
 
-    if (parceiros.length === 0) {
-      return res.status(404).json({ success: false, error: "Nenhum parceiro encontrado nesse estado." });
-    }
-
-    const parceiro = parceiros[0];
-
-    // Registra o envio
-    await pool.query(
-      'INSERT INTO relatorios_enviados (estado, parceiro_id, data_envio) VALUES (?, ?, NOW())',
-      [estado, parceiro.id]
-    );
-
-    // Aqui você pode integrar com WhatsApp ou e-mail futuramente
-    // Exemplo: enviar mensagem para parceiro.whatsapp
-
-    return res.json({
-      success: true,
-      message: `Relatório do estado ${estado} enviado para o parceiro ${parceiro.nome}.`,
-      parceiro: {
-        id: parceiro.id,
-        nome: parceiro.nome,
-        whatsapp: parceiro.whatsapp
-      }
-    });
+    res.json({ success: true, message: `Relatório do estado ${estado} enviado ao parceiro.` });
   } catch (err) {
     console.error("❌ Erro ao enviar relatório:", err.message);
-    return res.status(500).json({ success: false, error: "Erro interno ao enviar relatório." });
+    res.status(500).json({ success: false, error: "Erro interno ao enviar relatório." });
   }
 });
 

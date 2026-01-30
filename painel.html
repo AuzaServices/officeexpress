@@ -945,13 +945,10 @@ async function enviarRelatorioParceiro(estado) {
     const res = await fetch(`/api/enviar-relatorio/${estado}`, { method: "POST" });
     const data = await res.json();
     if (data.success) {
-      alert(`Relatório de ${nomeEstado(estado)} enviado ao parceiro com sucesso!`);
-    } else {
-      alert("Erro ao enviar relatório ao parceiro.");
+      alert(`Relatório de ${estado} enviado ao parceiro.`);
     }
   } catch (err) {
     console.error("Erro ao enviar relatório:", err);
-    alert("Erro ao enviar relatório.");
   }
 }
 
