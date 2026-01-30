@@ -75,17 +75,6 @@ function protegerAdmin(req, res, next) {
   next();
 }
 
-
-// Login do admin
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Login do parceiro
-app.get('/login-parceiro', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login-parceiro.html'));
-});
-
 // logout
 // Logout admin
 app.get('/logout', (req, res) => {
