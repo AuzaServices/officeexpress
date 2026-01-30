@@ -70,6 +70,9 @@
 <!-- Barra de botões -->
 <nav class="barra-botoes bg-white shadow-sm py-2">
   <div class="container d-flex justify-content-center flex-wrap gap-3">
+    <a href="?aba=dashboard" class="btn btn-outline-dark">
+  <i class="fas fa-tachometer-alt"></i> Dashboard
+</a>
     <a href="?aba=relatorios" class="btn btn-outline-primary">
       <i class="fas fa-chart-line"></i> Relatórios Mensais
     </a>
@@ -85,68 +88,73 @@
 <div class="container my-4">
   <h1 class="mb-4 text-center">Painel do Parceiro - <span id="estado"></span></h1>
 
-  <!-- Painel principal -->
-  <div id="painel-principal">
-    <div class="row text-center">
-      <div class="col-md-6 mb-3">
-        <div class="card bg-light">
-          <div class="card-body">
-            <h5 class="card-title">Currículos Emitidos</h5>
-            <p id="curriculos" class="display-6">0</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6 mb-3">
-        <div class="card bg-light">
-          <div class="card-body">
-            <h5 class="card-title">Análises Emitidas</h5>
-            <p id="analises" class="display-6">0</p>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Aba Dashboard -->
+  <div id="aba-dashboard" class="mt-4">
+    <h2 class="mb-4 text-center">Dashboard</h2>
 
-    <div class="row text-center">
-      <div class="col-md-6 mb-3">
-        <div class="card bg-success text-white">
-          <div class="card-body">
-            <h5 class="card-title">Currículos Pagos</h5>
-            <p id="curriculosPagos" class="display-6">0</p>
+    <!-- Painel principal -->
+    <div id="painel-principal">
+      <div class="row text-center">
+        <div class="col-md-6 mb-3">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h5 class="card-title">Currículos Emitidos</h5>
+              <p id="curriculos" class="display-6">0</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h5 class="card-title">Análises Emitidas</h5>
+              <p id="analises" class="display-6">0</p>
+            </div>
           </div>
         </div>
       </div>
-      <div class="col-md-6 mb-3">
-        <div class="card bg-success text-white">
-          <div class="card-body">
-            <h5 class="card-title">Análises Pagas</h5>
-            <p id="analisesPagos" class="display-6">0</p>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="financeiro-card text-center">
-      <h5><i class="fas fa-coins financeiro-icon"></i> Financeiro</h5>
-      <p>Total: R$ <span id="total">0.00</span></p>
-      <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
-      <p>Office Express: R$ <span id="empresa">0.00</span></p>
+      <div class="row text-center">
+        <div class="col-md-6 mb-3">
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <h5 class="card-title">Currículos Pagos</h5>
+              <p id="curriculosPagos" class="display-6">0</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <h5 class="card-title">Análises Pagas</h5>
+              <p id="analisesPagos" class="display-6">0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="financeiro-card text-center">
+        <h5><i class="fas fa-coins financeiro-icon"></i> Financeiro</h5>
+        <p>Total: R$ <span id="total">0.00</span></p>
+        <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
+        <p>Office Express: R$ <span id="empresa">0.00</span></p>
+      </div>
     </div>
   </div>
 
   <!-- Aba Relatórios -->
-  <div id="aba-relatorios" class="mt-5">
+  <div id="aba-relatorios" class="mt-5" style="display:none;">
     <h2 class="mb-4 text-center">Relatórios Mensais</h2>
     <div id="lista-relatorios" class="row"></div>
   </div>
 
   <!-- Aba Metas -->
-  <div id="aba-metas" class="mt-5">
+  <div id="aba-metas" class="mt-5" style="display:none;">
     <h2 class="mb-4 text-center">Metas</h2>
     <div id="conteudo-metas" class="row"></div>
   </div>
 
   <!-- Aba Suporte -->
-  <div id="aba-suporte" class="mt-5">
+  <div id="aba-suporte" class="mt-5" style="display:none;">
     <h2 class="mb-4 text-center">Suporte</h2>
     <div id="conteudo-suporte" class="row"></div>
   </div>
@@ -300,29 +308,30 @@
   }
 
   // Inicialização
-  window.onload = () => {
-    const aba = getParametro("aba");
-    if (aba === "relatorios") {
-      document.getElementById("painel-principal").style.display = "none";
-      document.getElementById("aba-relatorios").style.display = "block";
-      carregarRelatoriosMensais();
-    } else if (aba === "metas") {
-      document.getElementById("painel-principal").style.display = "none";
-      document.getElementById("aba-metas").style.display = "block";
-      // carregarMetas(); // implementar
-    } else if (aba === "suporte") {
-      document.getElementById("painel-principal").style.display = "none";
-      document.getElementById("aba-suporte").style.display = "block";
-      // carregarSuporte(); // implementar
-    } else {
-      document.getElementById("painel-principal").style.display = "block";
-      document.getElementById("aba-relatorios").style.display = "none";
-      document.getElementById("aba-metas").style.display = "none";
-      document.getElementById("aba-suporte").style.display = "none";
-      carregarPainel();
-      setInterval(carregarPainel, 5000);
-    }
-  };
+window.onload = () => {
+  const aba = getParametro("aba");
+  if (aba === "relatorios") {
+    document.getElementById("aba-dashboard").style.display = "none";
+    document.getElementById("aba-relatorios").style.display = "block";
+    carregarRelatoriosMensais();
+  } else if (aba === "metas") {
+    document.getElementById("aba-dashboard").style.display = "none";
+    document.getElementById("aba-metas").style.display = "block";
+    // carregarMetas();
+  } else if (aba === "suporte") {
+    document.getElementById("aba-dashboard").style.display = "none";
+    document.getElementById("aba-suporte").style.display = "block";
+    // carregarSuporte();
+  } else {
+    // padrão → dashboard
+    document.getElementById("aba-dashboard").style.display = "block";
+    document.getElementById("aba-relatorios").style.display = "none";
+    document.getElementById("aba-metas").style.display = "none";
+    document.getElementById("aba-suporte").style.display = "none";
+    carregarPainel();
+    setInterval(carregarPainel, 5000);
+  }
+};
 </script>
 </body>
 </html>
