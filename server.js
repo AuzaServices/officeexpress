@@ -1147,20 +1147,41 @@ app.post('/salvar-pago', async (req, res) => {
 // Relatório por estado (currículos e análises)
 app.get('/api/relatorio/:estado', async (req, res) => {
   const { estado } = req.params;
+  const { mes, ano } = req.query;
   try {
     const [rows] = await pool.query(`
       SELECT id, tipo, nome_doc, valor, cidade, data
       FROM registros_pagos
-      WHERE estado = ?
+      WHERE estado = ? AND MONTH(data) = ? AND YEAR(data) = ? AND pago = 1
       ORDER BY data DESC
-    `, [estado]);
-
-    res.json(rows); // cada linha = 1 pagamento (currículo ou análise)
+    `, [estado, mes, ano]);
+    res.json(rows);
   } catch (err) {
-    console.error('Erro ao gerar relatório por estado:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar relatório por estado' });
+    console.error("Erro ao gerar relatório mensal:", err.message);
+    res.status(500).json({ error: "Erro ao gerar relatório mensal" });
   }
 });
+
+app.get('/api/relatorios-mensais/:estado', async (req, res) => {
+  const { estado } = req.params;
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        MONTH(data) AS mes, 
+        YEAR(data) AS ano, 
+        SUM(valor) AS total
+      FROM registros_pagos
+      WHERE estado = ? AND pago = 1
+      GROUP BY ano, mes
+      ORDER BY ano DESC, mes DESC
+    `, [estado]);
+    res.json(rows);
+  } catch (err) {
+    console.error("Erro ao listar relatórios mensais:", err.message);
+    res.status(500).json({ error: "Erro ao listar relatórios mensais" });
+  }
+});
+
 
 
 
