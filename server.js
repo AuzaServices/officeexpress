@@ -56,7 +56,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   port: Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 5,   // 👈 ajustado para o limite do provedor
   queueLimit: 0,
   charset: 'utf8mb4'
 });
@@ -1415,69 +1415,53 @@ app.get('/api/relatorio-completo', async (req, res) => {
   }
 });
 
+let cachePainel = {};
+
 app.get('/api/painel-parceiro/:estado', async (req, res) => {
   const { estado } = req.params;
+  const agora = Date.now();
+
+  // se cache ainda é válido (30s) para este estado
+  if (cachePainel[estado] && (agora - cachePainel[estado].timestamp < 30000)) {
+    return res.json(cachePainel[estado].data);
+  }
 
   try {
-    // Verifica se existe parceiro nesse estado
-    const [parceiros] = await pool.query(
-      'SELECT id FROM parceiros WHERE estado = ? LIMIT 1',
-      [estado]
-    );
-
-    if (parceiros.length === 0) {
-      // Se não houver parceiro, retorna zerado
-      return res.json({
-        curriculosEmitidos: 0,
-        analisesEmitidas: 0,
-        curriculosPagos: 0,
-        analisesPagas: 0,
-        total: "0.00",
-        parceiro: "0.00",
-        empresa: "0.00",
-        mensagem: "Nenhum parceiro cadastrado nesse estado"
-      });
-    }
-
-    // Emitidos
+    // consulta normal
     const [curriculosEmitidos] = await pool.query(
-      'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"',
-      [estado]
+      'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Currículo"', [estado]
     );
-
     const [analisesEmitidas] = await pool.query(
-      'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise"',
-      [estado]
+      'SELECT COUNT(*) AS total FROM resumo_emitidos WHERE estado = ? AND tipo = "Análise"', [estado]
     );
-
-    // Pagos
     const [curriculosPagos] = await pool.query(
-      'SELECT COUNT(*) AS total, COALESCE(SUM(valor),0) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo"',
-      [estado]
+      'SELECT COUNT(*) AS total, COALESCE(SUM(valor),0) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Currículo"', [estado]
+    );
+    const [analisesPagos] = await pool.query(
+      'SELECT COUNT(*) AS total, COALESCE(SUM(valor),0) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise"', [estado]
     );
 
-    const [analisesPagas] = await pool.query(
-      'SELECT COUNT(*) AS total, COALESCE(SUM(valor),0) AS soma FROM registros_pagos WHERE estado = ? AND tipo = "Análise"',
-      [estado]
-    );
-
-    // Financeiro
     const somaCurriculos = Number(curriculosPagos[0].soma) || 0;
-    const somaAnalises = Number(analisesPagas[0].soma) || 0;
+    const somaAnalises = Number(analisesPagos[0].soma) || 0;
     const total = somaCurriculos + somaAnalises;
 
     const parceiro = (total * 0.40).toFixed(2);
     const empresa = (total * 0.60).toFixed(2);
 
-    res.json({
+    const resultado = {
       curriculosEmitidos: curriculosEmitidos[0].total,
       analisesEmitidas: analisesEmitidas[0].total,
       curriculosPagos: curriculosPagos[0].total,
-      analisesPagas: analisesPagas[0].total,
+      analisesPagas: analisesPagos[0].total,
       total: total.toFixed(2),
       parceiro,
       empresa
-    });
+    };
+
+    // salva no cache com timestamp por estado
+    cachePainel[estado] = { data: resultado, timestamp: agora };
+
+    res.json(resultado);
   } catch (err) {
     console.error("Erro na rota painel-parceiro:", err);
     res.status(500).json({ error: 'Erro ao carregar painel do parceiro' });
