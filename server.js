@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const mysql = require('mysql2/promise');
 const PDFDocument = require('pdfkit');
 const bodyParser = require('body-parser');
@@ -24,17 +25,32 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
 app.use(cookieParser()); // ⬅️ novo
+
+// 🔒 Configuração da sessão com MySQLStore
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME
+});
+
 app.use(session({
   secret: 'segredo-super-seguro',
   resave: false,
   saveUninitialized: false,
+  store: sessionStore,   // 👈 agora usa MySQL para guardar sessões
   cookie: {
     httpOnly: true,
-    secure: false,   // 👈 deixa false em HTTP local
+    secure: false,   // 👈 deixa false em HTTP local; true se usar HTTPS
     sameSite: 'lax'
+    // sem maxAge → dura até fechar o navegador
+    // se quiser que dure mais tempo, defina maxAge:
+    // maxAge: 24 * 60 * 60 * 1000 // 1 dia
   }
 }));
 
+// 🔌 Conexão pool MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -57,6 +73,7 @@ const pool = mysql.createPool({
   }
 })();
 
+// 🔑 Login admin
 app.post('/auth/login', (req, res) => {
   const { username, password } = req.body;
   if (username === process.env.LOGIN_USER && password === process.env.LOGIN_PASS) {
@@ -70,13 +87,13 @@ app.post('/auth/login', (req, res) => {
   }
 });
 
+// 🔒 Middleware para proteger rotas admin
 function protegerAdmin(req, res, next) {
   if (!req.session.adminId) return res.redirect('/login.html');
   next();
 }
 
-// logout
-// Logout admin
+// 🚪 Logout admin
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
@@ -84,7 +101,7 @@ app.get('/logout', (req, res) => {
   });
 });
 
-// Logout parceiro
+// 🚪 Logout parceiro
 app.get('/logout-parceiro', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
