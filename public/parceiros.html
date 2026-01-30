@@ -13,16 +13,12 @@
       background-color: #f8f9fa;
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding-top: 80px; /* espaço para o cabeçalho fixo */
+      padding-top: 80px;
     }
-    .card {
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      border-radius: 10px;
-    }
+    .card { box-shadow: 0 2px 6px rgba(0,0,0,0.15); border-radius: 10px; }
     .card h5 { font-weight: 600; }
     .display-6 { font-weight: bold; }
 
-    /* Cabeçalho fixo */
     .cabecalho {
       background: linear-gradient(90deg, #001f33, #00324a);
       padding: 10px 0;
@@ -40,61 +36,24 @@
       justify-content: space-between;
       align-items: center;
     }
-    .cabecalho .logo {
-      height: 40px;
-      width: auto;
-      transition: transform 0.3s ease;
-    }
+    .cabecalho .logo { height: 40px; transition: transform 0.3s ease; }
     .cabecalho .logo:hover { transform: scale(1.05); }
-    .logout-icon {
-      color: #dc3545;
-      font-size: 1.5rem;
-      text-decoration: none;
-      transition: color 0.3s ease;
-    }
+    .logout-icon { color: #dc3545; font-size: 1.5rem; text-decoration: none; }
     .logout-icon:hover { color: #b02a37; }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-      h1 { font-size: 1.5rem; }
-      .display-6 { font-size: 1.3rem; }
-      .cabecalho .logo { height: 30px; }
-      .logout-icon { font-size: 1.2rem; }
-    }
 
     .financeiro-card {
       background: linear-gradient(135deg, #ff8c00, #ff6600);
-      color: #fff;
-      border-radius: 15px;
+      color: #fff; border-radius: 15px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      padding: 25px;
-      margin-top: 20px;
-    }
-    .financeiro-card h5 {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-    .financeiro-card p { font-size: 1.2rem; margin: 8px 0; }
-    .financeiro-card span { font-weight: bold; font-size: 1.3rem; }
-    .financeiro-icon { font-size: 2rem; margin-right: 10px; color: #fff; }
-
-    @media (max-width: 768px) {
-      .financeiro-card h5 { font-size: 1.3rem; }
-      .financeiro-card p { font-size: 1rem; }
+      padding: 25px; margin-top: 20px;
     }
 
-    .barra-botoes {
-      position: sticky;
-      top: 60px; /* logo abaixo do cabeçalho fixo */
-      z-index: 999;
-    }
-    .barra-botoes .btn {
-      border-radius: 25px;
-      font-weight: 500;
-      transition: transform 0.2s ease;
-    }
+    .barra-botoes { position: sticky; top: 60px; z-index: 999; }
+    .barra-botoes .btn { border-radius: 25px; font-weight: 500; transition: transform 0.2s ease; }
     .barra-botoes .btn:hover { transform: scale(1.05); }
+
+    /* Esconde abas por padrão */
+    #aba-relatorios, #aba-metas, #aba-suporte { display: none; }
   </style>
 </head>
 <body>
@@ -111,13 +70,13 @@
 <!-- Barra de botões -->
 <nav class="barra-botoes bg-white shadow-sm py-2">
   <div class="container d-flex justify-content-center flex-wrap gap-3">
-    <a href="?aba=relatorios&estado=" class="btn btn-outline-primary">
+    <a href="?aba=relatorios" class="btn btn-outline-primary">
       <i class="fas fa-chart-line"></i> Relatórios Mensais
     </a>
-    <a href="/metas" class="btn btn-outline-warning">
+    <a href="?aba=metas" class="btn btn-outline-warning">
       <i class="fas fa-bullseye"></i> Metas
     </a>
-    <a href="/suporte" class="btn btn-outline-info">
+    <a href="?aba=suporte" class="btn btn-outline-info">
       <i class="fas fa-headset"></i> Suporte
     </a>
   </div>
@@ -126,51 +85,52 @@
 <div class="container my-4">
   <h1 class="mb-4 text-center">Painel do Parceiro - <span id="estado"></span></h1>
 
-  <!-- Cards principais -->
-  <div class="row text-center">
-    <div class="col-md-6 mb-3">
-      <div class="card bg-light">
-        <div class="card-body">
-          <h5 class="card-title">Currículos Emitidos</h5>
-          <p id="curriculos" class="display-6">0</p>
+  <!-- Painel principal -->
+  <div id="painel-principal">
+    <div class="row text-center">
+      <div class="col-md-6 mb-3">
+        <div class="card bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Currículos Emitidos</h5>
+            <p id="curriculos" class="display-6">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <div class="card bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Análises Emitidas</h5>
+            <p id="analises" class="display-6">0</p>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-6 mb-3">
-      <div class="card bg-light">
-        <div class="card-body">
-          <h5 class="card-title">Análises Emitidas</h5>
-          <p id="analises" class="display-6">0</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="row text-center">
-    <div class="col-md-6 mb-3">
-      <div class="card bg-success text-white">
-        <div class="card-body">
-          <h5 class="card-title">Currículos Pagos</h5>
-          <p id="curriculosPagos" class="display-6">0</p>
+    <div class="row text-center">
+      <div class="col-md-6 mb-3">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <h5 class="card-title">Currículos Pagos</h5>
+            <p id="curriculosPagos" class="display-6">0</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <h5 class="card-title">Análises Pagas</h5>
+            <p id="analisesPagos" class="display-6">0</p>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-6 mb-3">
-      <div class="card bg-success text-white">
-        <div class="card-body">
-          <h5 class="card-title">Análises Pagas</h5>
-          <p id="analisesPagos" class="display-6">0</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Financeiro -->
-  <div class="financeiro-card text-center">
-    <h5><i class="fas fa-coins financeiro-icon"></i> Financeiro</h5>
-    <p>Total: R$ <span id="total">0.00</span></p>
-    <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
-    <p>Office Express: R$ <span id="empresa">0.00</span></p>
+    <div class="financeiro-card text-center">
+      <h5><i class="fas fa-coins financeiro-icon"></i> Financeiro</h5>
+      <p>Total: R$ <span id="total">0.00</span></p>
+      <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
+      <p>Office Express: R$ <span id="empresa">0.00</span></p>
+    </div>
   </div>
 
   <!-- Aba Relatórios -->
@@ -178,9 +138,20 @@
     <h2 class="mb-4 text-center">Relatórios Mensais</h2>
     <div id="lista-relatorios" class="row"></div>
   </div>
+
+  <!-- Aba Metas -->
+  <div id="aba-metas" class="mt-5">
+    <h2 class="mb-4 text-center">Metas</h2>
+    <div id="conteudo-metas" class="row"></div>
+  </div>
+
+  <!-- Aba Suporte -->
+  <div id="aba-suporte" class="mt-5">
+    <h2 class="mb-4 text-center">Suporte</h2>
+    <div id="conteudo-suporte" class="row"></div>
+  </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
   const estadoParceiro = localStorage.getItem("estadoParceiro");
   document.getElementById("estado").textContent = estadoParceiro || "—";
@@ -191,50 +162,27 @@
   }
 
   async function carregarPainel() {
-    if (!estadoParceiro) {
-      alert("Estado do parceiro não encontrado. Faça login novamente.");
-      window.location.href = "/login-parceiro";
-      return;
-    }
-    try {
-      const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
-      if (!res.ok) throw new Error("Erro HTTP " + res.status);
-      const dados = await res.json();
-      if (dados.mensagem === "Nenhum parceiro cadastrado nesse estado") {
-        alert("Seu acesso foi removido. Faça login novamente.");
-        localStorage.removeItem("estadoParceiro");
-        window.location.href = "/login-parceiro";
-        return;
-      }
-            document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
-      document.getElementById("analises").textContent = dados.analisesEmitidas;
-      document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
-      document.getElementById("analisesPagos").textContent = dados.analisesPagas;
-      document.getElementById("total").textContent = dados.total;
-      document.getElementById("parceiro").textContent = dados.parceiro;
-      document.getElementById("empresa").textContent = dados.empresa;
-
-    } catch (err) {
-      console.error("Erro ao carregar painel:", err);
-      alert("Não foi possível carregar os dados do parceiro.");
-      window.location.href = "/login-parceiro";
-    }
+    const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
+    const dados = await res.json();
+    document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
+    document.getElementById("analises").textContent = dados.analisesEmitidas;
+    document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
+    document.getElementById("analisesPagos").textContent = dados.analisesPagas;
+    document.getElementById("total").textContent = dados.total;
+    document.getElementById("parceiro").textContent = dados.parceiro;
+    document.getElementById("empresa").textContent = dados.empresa;
   }
 
-  // Relatórios mensais
-  async function carregarRelatoriosMensais() {
-    try {
-      const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
-      if (!res.ok) throw new Error("Erro HTTP " + res.status);
-      const dados = await res.json();
+ async function carregarRelatoriosMensais() {
+  try {
+    const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
+    const dados = await res.json();
+    const lista = document.getElementById("lista-relatorios");
+    lista.innerHTML = "";
 
-      const lista = document.getElementById("lista-relatorios");
-      lista.innerHTML = "";
-
-      dados.forEach(rel => {
-        const card = document.createElement("div");
-        card.className = "col-md-4 mb-3";
-        card.innerHTML = `
+    dados.forEach(rel => {
+      lista.innerHTML += `
+        <div class="col-md-4 mb-3">
           <div class="card shadow-sm">
             <div class="card-body text-center">
               <h5 class="card-title">${rel.mes}/${rel.ano}</h5>
@@ -244,15 +192,14 @@
               </button>
             </div>
           </div>
-        `;
-        lista.appendChild(card);
-      });
-    } catch (err) {
-      console.error("Erro ao carregar relatórios mensais:", err);
-      alert("Erro ao carregar relatórios mensais.");
-    }
+        </div>
+      `;
+    });
+  } catch (err) {
+    console.error("Erro ao carregar relatórios mensais:", err);
+    alert("Erro ao carregar relatórios mensais.");
   }
-
+}
   // Função para baixar relatório em PDF
   async function baixarRelatorio(mes, ano) {
     try {
@@ -343,11 +290,23 @@
   // Inicialização
   window.onload = () => {
     const aba = getParametro("aba");
-    const estado = getParametro("estado");
-
     if (aba === "relatorios") {
+      document.getElementById("painel-principal").style.display = "none";
+      document.getElementById("aba-relatorios").style.display = "block";
       carregarRelatoriosMensais();
+    } else if (aba === "metas") {
+      document.getElementById("painel-principal").style.display = "none";
+      document.getElementById("aba-metas").style.display = "block";
+      // carregarMetas(); // implementar
+    } else if (aba === "suporte") {
+      document.getElementById("painel-principal").style.display = "none";
+      document.getElementById("aba-suporte").style.display = "block";
+      // carregarSuporte(); // implementar
     } else {
+      document.getElementById("painel-principal").style.display = "block";
+      document.getElementById("aba-relatorios").style.display = "none";
+      document.getElementById("aba-metas").style.display = "none";
+      document.getElementById("aba-suporte").style.display = "none";
       carregarPainel();
       setInterval(carregarPainel, 5000);
     }

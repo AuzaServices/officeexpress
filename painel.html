@@ -913,8 +913,13 @@ function marcarPago(button, id, tipo, nome_doc, valor, estado, cidade) {
 }
 
 function emitirRelatorio(estado) {
-  // Redireciona para o painel do parceiro na aba relatórios
-  window.location.href = `/parceiros?aba=relatorios&estado=${estado}`;
+  fetch(`/api/relatorio/${estado}`)
+    .then(res => res.json())
+    .then(data => {
+      // aqui você gera o PDF com jsPDF (como já fazia)
+      gerarPDF(data, estado);
+    })
+    .catch(err => console.error("Erro ao emitir relatório:", err));
 }
 
 async function atualizarBotoesRelatorio() {
