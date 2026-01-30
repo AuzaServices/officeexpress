@@ -1507,6 +1507,7 @@ app.get('/parceiros', protegerParceiro, (req, res) => {
 
 
 // Rota dinâmica para todas as outras páginas
+// Rota dinâmica (deve ficar no final do arquivo)
 app.get('/:page', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
 });
