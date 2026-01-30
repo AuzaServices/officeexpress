@@ -939,6 +939,89 @@ async function baixarRelatorioAdmin(estado) {
   }
 }
 
+function gerarPDF(dados, estado) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Logo
+  const img = new Image();
+  img.src = "marca.png"; // logo da empresa
+
+  // Espera carregar a imagem antes de desenhar
+  img.onload = () => {
+    doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
+
+    // Cabeçalho
+    doc.setTextColor(0);
+    doc.setFontSize(14);
+    doc.text(`Relatório - ${estado}`, 10, 15);
+    doc.setFontSize(9);
+    doc.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 10, 22);
+
+    // Colunas
+    doc.setFontSize(8);
+    let startY = 35;
+    doc.text("ID", 10, startY);
+    doc.text("Tipo", 25, startY);
+    doc.text("Documento", 55, startY);
+    doc.text("Valor (R$)", 110, startY);
+    doc.text("Cidade", 140, startY);
+    doc.text("Data Pagamento", 170, startY);
+    doc.line(10, startY + 2, 200, startY + 2);
+
+    let y = startY + 10;
+    let total = 0;
+    const pageHeight = doc.internal.pageSize.height;
+
+    dados.forEach(item => {
+      if (y > pageHeight - 30) {
+        doc.addPage();
+        y = startY + 10;
+      }
+
+      doc.text(String(item.id), 10, y);
+      doc.text(item.tipo, 25, y);
+
+      let docNome = item.nome_doc.length > 40 ? item.nome_doc.substring(0, 30) + "..." : item.nome_doc;
+      doc.text(docNome, 55, y);
+
+      doc.text(parseFloat(item.valor).toFixed(2), 110, y);
+
+      let cidadeNome = item.cidade && item.cidade.length > 20 ? item.cidade.substring(0, 15) + "..." : (item.cidade || "—");
+      doc.text(cidadeNome, 140, y);
+
+      doc.text(item.data ? item.data.split("T")[0].split("-").reverse().join("/") : "—", 170, y);
+
+      doc.line(10, y + 2, 200, y + 2);
+      y += 8;
+      total += parseFloat(item.valor) || 0;
+    });
+
+    // Totais
+    y += 15;
+    const officeExpressParte = (total * 0.60).toFixed(2);
+    const socioParte = (total * 0.40).toFixed(2);
+
+    doc.setFontSize(10);
+    doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
+    y += 8;
+    doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
+    y += 8;
+    doc.text(`Sócio: R$ ${socioParte}`, 10, y);
+
+    // Paginação
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
+    }
+
+    // Salvar
+    doc.save(`relatorio_${estado}.pdf`);
+  };
+}
+
 // Enviar relatório para o parceiro
 async function enviarRelatorioParceiro(estado) {
   try {
