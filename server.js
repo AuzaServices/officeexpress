@@ -1121,19 +1121,25 @@ app.post('/salvar-pago', async (req, res) => {
     `, [id, tipo, nome_doc, valor, estado, cidade]);
 
     // 🔎 Verifica se existe parceiro no mesmo estado
-    const [parceiros] = await pool.query(
-      'SELECT id FROM parceiros WHERE estado = ? LIMIT 1',
-      [estado]
-    );
+    try {
+      const [parceiros] = await pool.query(
+        'SELECT id FROM parceiros WHERE estado = ? LIMIT 1',
+        [estado]
+      );
 
-    if (parceiros.length > 0) {
-      // Continua inserindo no resumo_emitidos normalmente
-      await pool.query(`
-        INSERT INTO resumo_emitidos (id_registro, tipo, nome_doc, valor, estado, cidade, data)
-        VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()))
-      `, [id, tipo, nome_doc, valor, estado, cidade]);
+      if (parceiros.length > 0) {
+        // Só insere no resumo_emitidos se houver parceiro
+        await pool.query(`
+          INSERT INTO resumo_emitidos (id_registro, tipo, nome_doc, valor, estado, cidade, data)
+          VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()))
+        `, [id, tipo, nome_doc, valor, estado, cidade]);
+      }
+    } catch (errResumo) {
+      // Se der erro só no resumo_emitidos, não derruba a rota
+      console.warn("⚠️ Erro ao inserir no resumo_emitidos:", errResumo.message);
     }
 
+    // ✅ Resposta única e final
     res.json({ success: true });
   } catch (err) {
     console.error('Erro ao salvar pagamento:', err.message);
