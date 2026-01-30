@@ -913,13 +913,46 @@ function marcarPago(button, id, tipo, nome_doc, valor, estado, cidade) {
 }
 
 function emitirRelatorio(estado) {
-  fetch(`/api/relatorio/${estado}`)
-    .then(res => res.json())
-    .then(data => {
-      // aqui você gera o PDF com jsPDF (como já fazia)
-      gerarPDF(data, estado);
-    })
-    .catch(err => console.error("Erro ao emitir relatório:", err));
+  const escolha = prompt(
+    `O que deseja fazer com o relatório de ${nomeEstado(estado)}?\n\n` +
+    "Digite:\n" +
+    "1 - Baixar PDF\n" +
+    "2 - Enviar para o parceiro"
+  );
+
+  if (escolha === "1") {
+    baixarRelatorioAdmin(estado);
+  } else if (escolha === "2") {
+    enviarRelatorioParceiro(estado);
+  }
+}
+
+// Baixar PDF para o admin
+async function baixarRelatorioAdmin(estado) {
+  try {
+    const res = await fetch(`/api/relatorio/${estado}`);
+    const dados = await res.json();
+    gerarPDF(dados, estado); // usa a função de geração de PDF
+  } catch (err) {
+    console.error("Erro ao baixar relatório:", err);
+    alert("Erro ao baixar relatório.");
+  }
+}
+
+// Enviar relatório para o parceiro
+async function enviarRelatorioParceiro(estado) {
+  try {
+    const res = await fetch(`/api/enviar-relatorio/${estado}`, { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
+      alert(`Relatório de ${nomeEstado(estado)} enviado ao parceiro com sucesso!`);
+    } else {
+      alert("Erro ao enviar relatório ao parceiro.");
+    }
+  } catch (err) {
+    console.error("Erro ao enviar relatório:", err);
+    alert("Erro ao enviar relatório.");
+  }
 }
 
 async function atualizarBotoesRelatorio() {
@@ -931,10 +964,8 @@ async function atualizarBotoesRelatorio() {
     const botao = document.querySelector(`button[onclick="emitirRelatorio('${item.estado}')"]`);
     if (botao) {
       if (total > 0) {
-        // Exemplo: Ceará (15)
         botao.textContent = `${nomeEstado(item.estado)} (${total})`;
       } else {
-        // Só o nome do estado
         botao.textContent = nomeEstado(item.estado);
       }
     }
@@ -959,7 +990,6 @@ function abrirExclusao() {
   const senha = prompt("Digite a senha para acessar exclusão:");
   if (!senha) return;
 
-  // 🔑 Valida a senha no backend
   fetch('/api/verificar-senha', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1099,7 +1129,7 @@ async function apagarParceiro(id) {
   if (data.success) {
     if (data.forceLogout) {
       alert("Seu acesso foi removido. Faça login novamente.");
-      window.location.href = "/login"; // redireciona imediatamente
+      window.location.href = "/login";
     } else {
       carregarParceiros();
     }

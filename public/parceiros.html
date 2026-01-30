@@ -152,6 +152,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
   const estadoParceiro = localStorage.getItem("estadoParceiro");
   document.getElementById("estado").textContent = estadoParceiro || "—";
@@ -161,45 +162,56 @@
     return urlParams.get(nome);
   }
 
+  // Painel principal
   async function carregarPainel() {
-    const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
-    const dados = await res.json();
-    document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
-    document.getElementById("analises").textContent = dados.analisesEmitidas;
-    document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
-    document.getElementById("analisesPagos").textContent = dados.analisesPagas;
-    document.getElementById("total").textContent = dados.total;
-    document.getElementById("parceiro").textContent = dados.parceiro;
-    document.getElementById("empresa").textContent = dados.empresa;
+    try {
+      const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
+      if (!res.ok) throw new Error("Erro HTTP " + res.status);
+      const dados = await res.json();
+
+      document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
+      document.getElementById("analises").textContent = dados.analisesEmitidas;
+      document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
+      document.getElementById("analisesPagos").textContent = dados.analisesPagas;
+      document.getElementById("total").textContent = dados.total;
+      document.getElementById("parceiro").textContent = dados.parceiro;
+      document.getElementById("empresa").textContent = dados.empresa;
+    } catch (err) {
+      console.error("Erro ao carregar painel:", err);
+      alert("Não foi possível carregar os dados do parceiro.");
+    }
   }
 
- async function carregarRelatoriosMensais() {
-  try {
-    const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
-    const dados = await res.json();
-    const lista = document.getElementById("lista-relatorios");
-    lista.innerHTML = "";
+  // Relatórios mensais
+  async function carregarRelatoriosMensais() {
+    try {
+      const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
+      if (!res.ok) throw new Error("Erro HTTP " + res.status);
+      const dados = await res.json();
+      const lista = document.getElementById("lista-relatorios");
+      lista.innerHTML = "";
 
-    dados.forEach(rel => {
-      lista.innerHTML += `
-        <div class="col-md-4 mb-3">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <h5 class="card-title">${rel.mes}/${rel.ano}</h5>
-              <p>Total: R$ ${parseFloat(rel.total).toFixed(2)}</p>
-              <button class="btn btn-primary" onclick="baixarRelatorio('${rel.mes}', '${rel.ano}')">
-                Baixar PDF
-              </button>
+      dados.forEach(rel => {
+        lista.innerHTML += `
+          <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+              <div class="card-body text-center">
+                <h5 class="card-title">${rel.mes}/${rel.ano}</h5>
+                <p>Total: R$ ${parseFloat(rel.total).toFixed(2)}</p>
+                <button class="btn btn-primary" onclick="baixarRelatorio('${rel.mes}', '${rel.ano}')">
+                  Baixar PDF
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-    });
-  } catch (err) {
-    console.error("Erro ao carregar relatórios mensais:", err);
-    alert("Erro ao carregar relatórios mensais.");
+        `;
+      });
+    } catch (err) {
+      console.error("Erro ao carregar relatórios mensais:", err);
+      alert("Erro ao carregar relatórios mensais.");
+    }
   }
-}
+
   // Função para baixar relatório em PDF
   async function baixarRelatorio(mes, ano) {
     try {
@@ -311,12 +323,6 @@
       setInterval(carregarPainel, 5000);
     }
   };
-
-  function getParametro(nome) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(nome);
-  }
 </script>
-
 </body>
 </html>

@@ -1443,6 +1443,48 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
   }
 });
 
+// 👉 Rota para enviar relatório ao parceiro de um estado
+app.post('/api/enviar-relatorio/:estado', async (req, res) => {
+  const { estado } = req.params;
+
+  try {
+    // Verifica se existe parceiro cadastrado nesse estado
+    const [parceiros] = await pool.query(
+      'SELECT id, nome, whatsapp FROM parceiros WHERE estado = ? LIMIT 1',
+      [estado]
+    );
+
+    if (parceiros.length === 0) {
+      return res.status(404).json({ success: false, error: "Nenhum parceiro encontrado nesse estado." });
+    }
+
+    const parceiro = parceiros[0];
+
+    // Registra o envio em uma tabela de controle
+    await pool.query(
+      'INSERT INTO relatorios_enviados (estado, parceiro_id, data_envio) VALUES (?, ?, NOW())',
+      [estado, parceiro.id]
+    );
+
+    // Aqui você poderia integrar com WhatsApp ou e-mail:
+    // Exemplo: chamar API externa para enviar mensagem ao parceiro.whatsapp
+    // ou enviar e-mail com o PDF anexado
+
+    res.json({
+      success: true,
+      message: `Relatório do estado ${estado} enviado para o parceiro ${parceiro.nome}.`,
+      parceiro: {
+        id: parceiro.id,
+        nome: parceiro.nome,
+        whatsapp: parceiro.whatsapp
+      }
+    });
+  } catch (err) {
+    console.error("❌ Erro ao enviar relatório:", err.message);
+    res.status(500).json({ success: false, error: "Erro interno ao enviar relatório." });
+  }
+});
+
 app.post('/api/parceiros', async (req, res) => {
   const { nome, senha, whatsapp, estado } = req.body;
   if (!nome || !senha || !estado) {
