@@ -1505,13 +1505,6 @@ app.get('/parceiros', protegerParceiro, (req, res) => {
 });
 
 
-
-// Rota dinâmica para todas as outras páginas
-// Rota dinâmica (deve ficar no final do arquivo)
-app.get('/:page', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
-});
-
 cron.schedule('5 0 1 * *', async () => {
   console.log("🗑️ Limpando resumo_emitidos e registros_pagos...");
 
@@ -1554,6 +1547,10 @@ app.post('/api/parceiros/login', async (req, res) => {
   req.session.estado = parceiro.estado;
 
   res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
+});
+
+app.get('/:page', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
 });
 
 // Página 404 personalizada
