@@ -232,7 +232,9 @@
 
       const img = new Image();
       img.src = "marca.png"; // logo da empresa
-      await img.decode();
+      img.onload = () => {
+  // só gera PDF depois que a imagem carregar
+};
 
       function desenharCabecalho() {
         doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
@@ -309,29 +311,29 @@
 
   // Inicialização
 window.onload = () => {
-  const aba = getParametro("aba");
-  if (aba === "relatorios") {
-    document.getElementById("aba-dashboard").style.display = "none";
-    document.getElementById("aba-relatorios").style.display = "block";
-    carregarRelatoriosMensais();
-  } else if (aba === "metas") {
-    document.getElementById("aba-dashboard").style.display = "none";
-    document.getElementById("aba-metas").style.display = "block";
-    // carregarMetas();
-  } else if (aba === "suporte") {
-    document.getElementById("aba-dashboard").style.display = "none";
-    document.getElementById("aba-suporte").style.display = "block";
-    // carregarSuporte();
-  } else {
-    // padrão → dashboard
-    document.getElementById("aba-dashboard").style.display = "block";
-    document.getElementById("aba-relatorios").style.display = "none";
-    document.getElementById("aba-metas").style.display = "none";
-    document.getElementById("aba-suporte").style.display = "none";
-    carregarPainel();
-    setInterval(carregarPainel, 5000);
-  }
+const aba = getParametro("aba");
+if (aba === "relatorios") {
+  mostrarAba("aba-relatorios");
+  carregarRelatoriosMensais();
+} else if (aba === "metas") {
+  mostrarAba("aba-metas");
+  // carregarMetas();
+} else if (aba === "suporte") {
+  mostrarAba("aba-suporte");
+  // carregarSuporte();
+} else {
+  mostrarAba("aba-dashboard");
+  carregarPainel();
+  setInterval(carregarPainel, 30000);
+}
 };
+
+function mostrarAba(abaId) {
+  ["aba-dashboard", "aba-relatorios", "aba-metas", "aba-suporte"].forEach(id => {
+    document.getElementById(id).style.display = (id === abaId) ? "block" : "none";
+  });
+}
+
 </script>
 </body>
 </html>
