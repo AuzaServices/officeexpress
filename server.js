@@ -88,7 +88,7 @@ app.get('/logout', (req, res) => {
 app.get('/logout-parceiro', (req, res) => {
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
-    res.redirect('/login-parceiro.html');
+    res.redirect('/login-parceiro'); // 👈 sem .html
   });
 });
 
