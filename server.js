@@ -1114,10 +1114,10 @@ app.post('/salvar-pago', async (req, res) => {
       return res.json({ success: false, alreadyPaid: true });
     }
 
-    // Insere em registros_pagos
+    // Insere em registros_pagos com enviado = 0
     await pool.query(`
-      INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
+      INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago, enviado)
+      VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1, 0)
     `, [id, tipo, nome_doc, valor, estado, cidade]);
 
     // 🔎 Verifica se existe parceiro no mesmo estado
@@ -1127,7 +1127,7 @@ app.post('/salvar-pago', async (req, res) => {
     );
 
     if (parceiros.length > 0) {
-      // Só insere no resumo_emitidos se houver parceiro
+      // Continua inserindo no resumo_emitidos normalmente
       await pool.query(`
         INSERT INTO resumo_emitidos (id_registro, tipo, nome_doc, valor, estado, cidade, data)
         VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()))
@@ -1144,8 +1144,6 @@ app.post('/salvar-pago', async (req, res) => {
 
 // 2. Rota para listar registros pagos por Estado
 // Relatório por estado, com filtros opcionais
-// Relatório por estado (currículos e análises)
-// Relatório por estado (painel do parceiro) - só mostra enviados
 app.get('/api/relatorio/:estado', async (req, res) => {
   const { estado } = req.params;
   try {
@@ -1172,7 +1170,7 @@ app.get('/api/relatorios-mensais/:estado', async (req, res) => {
         YEAR(data) AS ano, 
         SUM(valor) AS total
       FROM registros_pagos
-      WHERE estado = ? AND pago = 1
+      WHERE estado = ? AND pago = 1 AND enviado = 1
       GROUP BY ano, mes
       ORDER BY ano DESC, mes DESC
     `, [estado]);
@@ -1267,13 +1265,11 @@ app.post('/api/analises/:id/pago', async (req, res) => {
 
     const valorFinal = analise.valor && analise.valor > 0 ? analise.valor : 5.99;
 
-    // 👉 Atualiza apenas o status pago
     await pool.query("UPDATE analises SET pago = 1 WHERE id = ?", [id]);
 
-    // 👉 Insere em registros_pagos
     await pool.query(`
-      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago)
-      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1)
+      INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago, enviado)
+      VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1, 0)
     `, [
       "Análise",
       analise.filename,
@@ -1449,7 +1445,6 @@ app.post('/api/enviar-relatorio/:estado', async (req, res) => {
   const { estado } = req.params;
 
   try {
-    // Atualiza registros pagos desse estado para "enviado"
     await pool.query(
       'UPDATE registros_pagos SET enviado = 1 WHERE estado = ? AND pago = 1',
       [estado]
