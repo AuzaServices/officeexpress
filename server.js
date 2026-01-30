@@ -1145,20 +1145,21 @@ app.post('/salvar-pago', async (req, res) => {
 // 2. Rota para listar registros pagos por Estado
 // Relatório por estado, com filtros opcionais
 // Relatório por estado (currículos e análises)
+// Relatório por estado (painel do parceiro) - só mostra enviados
 app.get('/api/relatorio/:estado', async (req, res) => {
   const { estado } = req.params;
-  const { mes, ano } = req.query;
   try {
     const [rows] = await pool.query(`
       SELECT id, tipo, nome_doc, valor, cidade, data
       FROM registros_pagos
-      WHERE estado = ? AND MONTH(data) = ? AND YEAR(data) = ? AND pago = 1
+      WHERE estado = ? AND pago = 1 AND enviado = 1
       ORDER BY data DESC
-    `, [estado, mes, ano]);
+    `, [estado]);
+
     res.json(rows);
   } catch (err) {
-    console.error("Erro ao gerar relatório mensal:", err.message);
-    res.status(500).json({ error: "Erro ao gerar relatório mensal" });
+    console.error('Erro ao gerar relatório por estado:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar relatório por estado' });
   }
 });
 
