@@ -1530,8 +1530,17 @@ app.get('/api/parceiros', async (req, res) => {
 
 app.delete('/api/parceiros/:id', async (req, res) => {
   const { id } = req.params;
-  await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
-  res.json({ success: true });
+  try {
+    await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
+
+    // invalida sessões desse parceiro
+    await pool.query('DELETE FROM sessions WHERE data LIKE ?', [`%"parceiroId":${id}%`]);
+
+    res.json({ success: true, forceLogout: true });
+  } catch (err) {
+    console.error('Erro ao apagar parceiro:', err.message);
+    res.status(500).json({ success: false, error: 'Erro interno ao apagar parceiro' });
+  }
 });
 
 

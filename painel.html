@@ -1207,12 +1207,9 @@ async function apagarParceiro(id) {
   const data = await res.json();
 
   if (data.success) {
-    if (data.forceLogout) {
-      alert("Seu acesso foi removido. Faça login novamente.");
-      window.location.href = "/login";
-    } else {
-      carregarParceiros();
-    }
+    carregarParceiros(); // apenas recarrega a lista
+  } else {
+    alert("Erro ao apagar parceiro: " + (data.error || "desconhecido"));
   }
 }
   </script>
