@@ -1444,6 +1444,7 @@ app.get('/api/painel-parceiro/:estado', async (req, res) => {
 });
 
 // 👉 Rota para enviar relatório ao parceiro de um estado
+// 👉 Rota para enviar relatório ao parceiro de um estado
 app.post('/api/enviar-relatorio/:estado', async (req, res) => {
   const { estado } = req.params;
 
@@ -1460,17 +1461,16 @@ app.post('/api/enviar-relatorio/:estado', async (req, res) => {
 
     const parceiro = parceiros[0];
 
-    // Registra o envio em uma tabela de controle
+    // Registra o envio
     await pool.query(
       'INSERT INTO relatorios_enviados (estado, parceiro_id, data_envio) VALUES (?, ?, NOW())',
       [estado, parceiro.id]
     );
 
-    // Aqui você poderia integrar com WhatsApp ou e-mail:
-    // Exemplo: chamar API externa para enviar mensagem ao parceiro.whatsapp
-    // ou enviar e-mail com o PDF anexado
+    // Aqui você pode integrar com WhatsApp ou e-mail futuramente
+    // Exemplo: enviar mensagem para parceiro.whatsapp
 
-    res.json({
+    return res.json({
       success: true,
       message: `Relatório do estado ${estado} enviado para o parceiro ${parceiro.nome}.`,
       parceiro: {
@@ -1481,7 +1481,7 @@ app.post('/api/enviar-relatorio/:estado', async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Erro ao enviar relatório:", err.message);
-    res.status(500).json({ success: false, error: "Erro interno ao enviar relatório." });
+    return res.status(500).json({ success: false, error: "Erro interno ao enviar relatório." });
   }
 });
 
