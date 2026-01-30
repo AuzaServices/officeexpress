@@ -9,7 +9,7 @@ const axios = require('axios');
 const pdfParse = require('pdf-parse');
 const cron = require('node-cron');
 const bcrypt = require('bcrypt');
-const cookieParser = require('cookie-parser'); // ⬅️ novo
+const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
 
@@ -24,7 +24,7 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
-app.use(cookieParser()); // ⬅️ novo
+app.use(cookieParser());
 
 // 🔒 Configuração da sessão com MySQLStore
 const sessionStore = new MySQLStore({
@@ -39,14 +39,12 @@ app.use(session({
   secret: 'segredo-super-seguro',
   resave: false,
   saveUninitialized: false,
-  store: sessionStore,   // 👈 agora usa MySQL para guardar sessões
+  store: sessionStore,
   cookie: {
     httpOnly: true,
-    secure: false,   // 👈 deixa false em HTTP local; true se usar HTTPS
-    sameSite: 'lax'
-    // sem maxAge → dura até fechar o navegador
-    // se quiser que dure mais tempo, defina maxAge:
-    // maxAge: 24 * 60 * 60 * 1000 // 1 dia
+    secure: false,   // true se usar HTTPS
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 1 dia
   }
 }));
 
@@ -80,11 +78,34 @@ app.post('/auth/login', (req, res) => {
     req.session.regenerate(err => {
       if (err) return res.status(500).json({ error: 'Erro na sessão' });
       req.session.adminId = 1;
-      res.json({ success: true });
+      req.session.save(err => {
+        if (err) return res.status(500).json({ error: 'Erro ao salvar sessão' });
+        res.json({ success: true });
+      });
     });
   } else {
     res.status(401).json({ error: 'Usuário ou senha inválidos' });
   }
+});
+
+// 🔑 Login parceiro
+app.post('/api/parceiros/login', async (req, res) => {
+  const { nome, senha } = req.body;
+  const [rows] = await pool.query('SELECT * FROM parceiros WHERE nome = ?', [nome]);
+  if (rows.length === 0) return res.status(401).json({ error: 'Parceiro não encontrado' });
+
+  const parceiro = rows[0];
+  const match = await bcrypt.compare(senha, parceiro.senha);
+  if (!match) return res.status(401).json({ error: 'Senha incorreta' });
+
+  // guarda na sessão
+  req.session.parceiroId = parceiro.id;
+  req.session.estado = parceiro.estado;
+
+  req.session.save(err => {
+    if (err) return res.status(500).json({ error: 'Erro ao salvar sessão' });
+    res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
+  });
 });
 
 // 🔒 Middleware para proteger rotas admin
@@ -1580,21 +1601,6 @@ app.delete('/api/parceiros/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/api/parceiros/login', async (req, res) => {
-  const { nome, senha } = req.body;
-  const [rows] = await pool.query('SELECT * FROM parceiros WHERE nome = ?', [nome]);
-  if (rows.length === 0) return res.status(401).json({ error: 'Parceiro não encontrado' });
-
-  const parceiro = rows[0];
-  const match = await bcrypt.compare(senha, parceiro.senha);
-  if (!match) return res.status(401).json({ error: 'Senha incorreta' });
-
-  // guarda na sessão
-  req.session.parceiroId = parceiro.id;
-  req.session.estado = parceiro.estado;
-
-  res.json({ success: true, estado: parceiro.estado, parceiroId: parceiro.id });
-});
 
 app.get('/:page', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', `${req.params.page}.html`));
