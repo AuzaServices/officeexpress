@@ -1543,9 +1543,25 @@ app.get('/api/parceiros', async (req, res) => {
 });
 
 
-function protegerParceiro(req, res, next) {
-  if (!req.session.parceiroId) return res.redirect('/login-parceiro.html');
-  next();
+async function protegerParceiro(req, res, next) {
+  if (!req.session.parceiroId) {
+    res.clearCookie('connect.sid');
+    return res.json({ forceLogout: true });
+  }
+
+  const [rows] = await pool.query(
+    'SELECT id FROM parceiros WHERE id = ?',
+    [req.session.parceiroId]
+  );
+
+  if (rows.length === 0) {
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid');
+      return res.json({ forceLogout: true });
+    });
+  } else {
+    next();
+  }
 }
 
 
