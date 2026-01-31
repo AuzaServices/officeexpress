@@ -199,123 +199,138 @@ if (dados.forceLogout) {
   }
 
   // Relatórios mensais
-  async function carregarRelatoriosMensais() {
-    try {
-      const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
-      if (!res.ok) throw new Error("Erro HTTP " + res.status);
-      const dados = await res.json();
-      const lista = document.getElementById("lista-relatorios");
-      lista.innerHTML = "";
+async function carregarRelatoriosMensais() {
+  try {
+    const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
+    if (!res.ok) throw new Error("Erro HTTP " + res.status);
+    const dados = await res.json();
 
-      dados.forEach(rel => {
-        lista.innerHTML += `
-          <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-              <div class="card-body text-center">
-                <h5 class="card-title">${rel.mes}/${rel.ano}</h5>
-                <p>Total: R$ ${parseFloat(rel.total).toFixed(2)}</p>
-                <button class="btn btn-primary" onclick="baixarRelatorio('${rel.mes}', '${rel.ano}')">
-                  Baixar PDF
-                </button>
-              </div>
+    // 👇 checagem imediata
+    if (dados.forceLogout) {
+      alert("Sua conta foi removida. Você será desconectado.");
+      window.location.href = "/login-parceiro.html";
+      return;
+    }
+
+    const lista = document.getElementById("lista-relatorios");
+    lista.innerHTML = "";
+
+    dados.forEach(rel => {
+      lista.innerHTML += `
+        <div class="col-md-4 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="card-title">${rel.mes}/${rel.ano}</h5>
+              <p>Total: R$ ${parseFloat(rel.total).toFixed(2)}</p>
+              <button class="btn btn-primary" onclick="baixarRelatorio('${rel.mes}', '${rel.ano}')">
+                Baixar PDF
+              </button>
             </div>
           </div>
-        `;
-      });
-    } catch (err) {
-      console.error("Erro ao carregar relatórios mensais:", err);
-      alert("Erro ao carregar relatórios mensais.");
-    }
+        </div>
+      `;
+    });
+  } catch (err) {
+    console.error("Erro ao carregar relatórios mensais:", err);
+    alert("Erro ao carregar relatórios mensais.");
   }
+}
 
   // Função para baixar relatório em PDF
   async function baixarRelatorio(mes, ano) {
-    try {
-      const res = await fetch(`/api/relatorio/${estadoParceiro}?mes=${mes}&ano=${ano}`);
-      if (!res.ok) throw new Error("Erro HTTP " + res.status);
-      const dados = await res.json();
+  try {
+    const res = await fetch(`/api/relatorio/${estadoParceiro}?mes=${mes}&ano=${ano}`);
+    if (!res.ok) throw new Error("Erro HTTP " + res.status);
+    const dados = await res.json();
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      const img = new Image();
-      img.src = "marca.png"; // logo da empresa
-      img.onload = () => {
-  // só gera PDF depois que a imagem carregar
-};
-
-      function desenharCabecalho() {
-        doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
-        doc.setTextColor(0);
-        doc.setFontSize(14);
-        doc.text(`Relatório ${mes}/${ano} - ${estadoParceiro}`, 10, 15);
-        doc.setFontSize(9);
-        doc.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 10, 22);
-
-        doc.setFontSize(8);
-        let startY = 35;
-        doc.text("ID", 10, startY);
-        doc.text("Tipo", 25, startY);
-        doc.text("Documento", 55, startY);
-        doc.text("Valor (R$)", 110, startY);
-        doc.text("Cidade", 140, startY);
-        doc.text("Data Pagamento", 170, startY);
-        doc.line(10, startY + 2, 200, startY + 2);
-        return startY + 10;
-      }
-
-      let y = desenharCabecalho();
-      let total = 0;
-      const pageHeight = doc.internal.pageSize.height;
-
-      dados.forEach(item => {
-        if (y > pageHeight - 30) {
-          doc.addPage();
-          y = desenharCabecalho();
-        }
-
-        doc.text(String(item.id), 10, y);
-        doc.text(item.tipo, 25, y);
-
-        let docNome = item.nome_doc.length > 40 ? item.nome_doc.substring(0, 30) + "..." : item.nome_doc;
-        doc.text(docNome, 55, y);
-
-        doc.text(parseFloat(item.valor).toFixed(2), 110, y);
-
-        let cidadeNome = item.cidade && item.cidade.length > 20 ? item.cidade.substring(0, 15) + "..." : (item.cidade || "—");
-        doc.text(cidadeNome, 140, y);
-
-        doc.text(item.data ? item.data.split("T")[0].split("-").reverse().join("/") : "—", 170, y);
-
-        doc.line(10, y + 2, 200, y + 2);
-        y += 8;
-        total += parseFloat(item.valor) || 0;
-      });
-
-      y += 15;
-      const officeExpressParte = (total * 0.60).toFixed(2);
-      const socioParte = (total * 0.40).toFixed(2);
-
-      doc.setFontSize(10);
-      doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
-      y += 8;
-      doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
-      y += 8;
-      doc.text(`Sócio: R$ ${socioParte}`, 10, y);
-
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
-      }
-
-      doc.save(`relatorio_${estadoParceiro}_${mes}_${ano}.pdf`);
-    } catch (err) {
-      console.error("Erro ao baixar relatório:", err);
-      alert("Erro ao gerar relatório.");
+    // 👇 checagem imediata
+    if (dados.forceLogout) {
+      alert("Sua conta foi removida. Você será desconectado.");
+      window.location.href = "/login-parceiro.html";
+      return;
     }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const img = new Image();
+    img.src = "marca.png"; // logo da empresa
+    img.onload = () => {
+      // só gera PDF depois que a imagem carregar
+    };
+
+    function desenharCabecalho() {
+      doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
+      doc.setTextColor(0);
+      doc.setFontSize(14);
+      doc.text(`Relatório ${mes}/${ano} - ${estadoParceiro}`, 10, 15);
+      doc.setFontSize(9);
+      doc.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 10, 22);
+
+      doc.setFontSize(8);
+      let startY = 35;
+      doc.text("ID", 10, startY);
+      doc.text("Tipo", 25, startY);
+      doc.text("Documento", 55, startY);
+      doc.text("Valor (R$)", 110, startY);
+      doc.text("Cidade", 140, startY);
+      doc.text("Data Pagamento", 170, startY);
+      doc.line(10, startY + 2, 200, startY + 2);
+      return startY + 10;
+    }
+
+    let y = desenharCabecalho();
+    let total = 0;
+    const pageHeight = doc.internal.pageSize.height;
+
+    dados.forEach(item => {
+      if (y > pageHeight - 30) {
+        doc.addPage();
+        y = desenharCabecalho();
+      }
+
+      doc.text(String(item.id), 10, y);
+      doc.text(item.tipo, 25, y);
+
+      let docNome = item.nome_doc.length > 40 ? item.nome_doc.substring(0, 30) + "..." : item.nome_doc;
+      doc.text(docNome, 55, y);
+
+      doc.text(parseFloat(item.valor).toFixed(2), 110, y);
+
+      let cidadeNome = item.cidade && item.cidade.length > 20 ? item.cidade.substring(0, 15) + "..." : (item.cidade || "—");
+      doc.text(cidadeNome, 140, y);
+
+      doc.text(item.data ? item.data.split("T")[0].split("-").reverse().join("/") : "—", 170, y);
+
+      doc.line(10, y + 2, 200, y + 2);
+      y += 8;
+      total += parseFloat(item.valor) || 0;
+    });
+
+    y += 15;
+    const officeExpressParte = (total * 0.60).toFixed(2);
+    const socioParte = (total * 0.40).toFixed(2);
+
+    doc.setFontSize(10);
+    doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
+    y += 8;
+    doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
+    y += 8;
+    doc.text(`Sócio: R$ ${socioParte}`, 10, y);
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
+    }
+
+    doc.save(`relatorio_${estadoParceiro}_${mes}_${ano}.pdf`);
+  } catch (err) {
+    console.error("Erro ao baixar relatório:", err);
+    alert("Erro ao gerar relatório.");
   }
+}
 
   // Inicialização
 window.onload = () => {
