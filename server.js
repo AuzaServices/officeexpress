@@ -66,14 +66,16 @@ app.use(session({
   }
 })();
 
-// 🔒 Middleware para proteger rotas do parceiro
 async function protegerParceiro(req, res, next) {
   if (!req.session.parceiroId) {
     return res.json({ forceLogout: true });
   }
 
-  // verifica se o parceiro ainda existe
-  const [rows] = await pool.query('SELECT id FROM parceiros WHERE id = ?', [req.session.parceiroId]);
+  const [rows] = await pool.query(
+    'SELECT id FROM parceiros WHERE id = ?',
+    [req.session.parceiroId]
+  );
+
   if (rows.length === 0) {
     req.session.destroy();
     return res.json({ forceLogout: true });
@@ -1427,30 +1429,6 @@ app.get('/api/relatorio-completo', async (req, res) => {
 });
 
 let cachePainel = {};
-
-// 🔒 Middleware para proteger rotas do parceiro
-async function protegerParceiro(req, res, next) {
-  if (!req.session.parceiroId) {
-    return res.json({ forceLogout: true });
-  }
-
-  try {
-    const [rows] = await pool.query(
-      'SELECT id FROM parceiros WHERE id = ?',
-      [req.session.parceiroId]
-    );
-
-    if (rows.length === 0) {
-      req.session.destroy();
-      return res.json({ forceLogout: true });
-    }
-
-    next();
-  } catch (err) {
-    console.error("Erro no protegerParceiro:", err.message);
-    return res.status(500).json({ error: "Erro interno na verificação de parceiro" });
-  }
-}
 
 // 👉 Rota painel-parceiro protegida
 app.get('/api/painel-parceiro/:estado', protegerParceiro, async (req, res) => {
