@@ -180,7 +180,7 @@
       // 👇 aqui
 if (dados.forceLogout) {
   alert("Sua conta foi removida. Você será desconectado.");
-  window.location.href = "/login-parceiro.html";
+  window.location.replace("/login-parceiro.html"); // força troca de página
   return;
 }
 
@@ -206,11 +206,11 @@ async function carregarRelatoriosMensais() {
     const dados = await res.json();
 
     // 👇 checagem imediata
-    if (dados.forceLogout) {
-      alert("Sua conta foi removida. Você será desconectado.");
-      window.location.href = "/login-parceiro.html";
-      return;
-    }
+if (dados.forceLogout) {
+  alert("Sua conta foi removida. Você será desconectado.");
+  window.location.replace("/login-parceiro.html"); // força troca de página
+  return;
+}
 
     const lista = document.getElementById("lista-relatorios");
     lista.innerHTML = "";
@@ -244,11 +244,11 @@ async function carregarRelatoriosMensais() {
     const dados = await res.json();
 
     // 👇 checagem imediata
-    if (dados.forceLogout) {
-      alert("Sua conta foi removida. Você será desconectado.");
-      window.location.href = "/login-parceiro.html";
-      return;
-    }
+if (dados.forceLogout) {
+  alert("Sua conta foi removida. Você será desconectado.");
+  window.location.replace("/login-parceiro.html"); // força troca de página
+  return;
+}
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
