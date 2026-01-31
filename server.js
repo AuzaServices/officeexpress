@@ -26,14 +26,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.text({ type: 'text/plain' }));
 app.use(cookieParser());
 
-// 🔒 Configuração da sessão com MySQLStore
-const sessionStore = new MySQLStore({
+// 🔌 Conexão pool MySQL (único pool para tudo)
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  database: process.env.DB_NAME
+  database: process.env.DB_NAME,
+  port: Number(process.env.DB_PORT) || 3306,
+  waitForConnections: true,
+  connectionLimit: 5,   // 👈 ajustado para o limite do provedor
+  queueLimit: 0,
+  charset: 'utf8mb4'
 });
+
+// 🔒 Configuração da sessão usando o mesmo pool
+const sessionStore = new MySQLStore({}, pool);
 
 app.use(session({
   secret: 'segredo-super-seguro',
@@ -48,19 +55,7 @@ app.use(session({
   }
 }));
 
-// 🔌 Conexão pool MySQL
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT) || 3306,
-  waitForConnections: true,
-  connectionLimit: 5,   // 👈 ajustado para o limite do provedor
-  queueLimit: 0,
-  charset: 'utf8mb4'
-});
-
+// Teste de conexão
 (async () => {
   try {
     const conn = await pool.getConnection();
