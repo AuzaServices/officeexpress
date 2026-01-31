@@ -1523,21 +1523,6 @@ app.get('/api/parceiros', async (req, res) => {
   }
 });
 
-app.delete('/api/parceiros/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
-
-    // invalida sessões desse parceiro
-    await pool.query('DELETE FROM sessions WHERE data LIKE ?', [`%"parceiroId":${id}%`]);
-
-    res.json({ success: true, forceLogout: true });
-  } catch (err) {
-    console.error('Erro ao apagar parceiro:', err.message);
-    res.status(500).json({ success: false, error: 'Erro interno ao apagar parceiro' });
-  }
-});
-
 
 function protegerParceiro(req, res, next) {
   if (!req.session.parceiroId) return res.redirect('/login-parceiro.html');
@@ -1579,14 +1564,24 @@ cron.schedule('5 0 1 * *', async () => {
 
 app.delete('/api/parceiros/:id', async (req, res) => {
   const { id } = req.params;
-  await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
+  try {
+    // Apaga o parceiro
+    await pool.query('DELETE FROM parceiros WHERE id = ?', [id]);
 
-  if (req.session && req.session.parceiroId == id) {
-    req.session.destroy();
-    return res.json({ success: true, forceLogout: true });
+    // Invalida todas as sessões desse parceiro na tabela sessions
+    await pool.query('DELETE FROM sessions WHERE data LIKE ?', [`%"parceiroId":${id}%`]);
+
+    // Se o parceiro atual for o mesmo, destrói a sessão dele também
+    if (req.session && req.session.parceiroId == id) {
+      req.session.destroy();
+      return res.json({ success: true, forceLogout: true });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao apagar parceiro:', err.message);
+    res.status(500).json({ success: false, error: 'Erro interno ao apagar parceiro' });
   }
-
-  res.json({ success: true });
 });
 
 

@@ -177,6 +177,14 @@
       if (!res.ok) throw new Error("Erro HTTP " + res.status);
       const dados = await res.json();
 
+      // 👇 aqui
+if (dados.forceLogout) {
+  alert("Sua conta foi removida. Você será desconectado.");
+  window.location.href = "/login-parceiro.html";
+  return;
+}
+
+
       document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
       document.getElementById("analises").textContent = dados.analisesEmitidas;
       document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
