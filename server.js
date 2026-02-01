@@ -327,6 +327,7 @@ app.post('/gerar-e-salvar-pdf', async (req, res) => {
 //////////////////////////
 // 📤 Upload de PDF + telefone
 //////////////////////////
+// 📤 Upload de PDF com normalização de estado
 app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
 
@@ -334,6 +335,9 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
   const { telefone, valor, estado, cidade } = req.body; // ➕ captura os novos campos
 
   try {
+    // 👉 força estado em maiúsculo e só 2 letras
+    const estadoNormalizado = estado ? estado.toString().trim().toUpperCase().slice(0, 2) : null;
+
     // 1. Verifica quantos PDFs existem
     const [pdfs] = await pool.query('SELECT id FROM pdfs ORDER BY created_at ASC');
 
@@ -355,14 +359,14 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
       buffer,
       telefone,
       valor || 5.99,   // ➕ valor padrão do currículo
-      estado || null,
+      estadoNormalizado,
       cidade || null
     ]);
 
     // 4. Também insere no resumo_emitidos para manter histórico leve
     await pool.query(
       'INSERT INTO resumo_emitidos (estado, tipo, pago, valor) VALUES (?, "Currículo", 0, ?)',
-      [estado || 'Desconhecido', valor || 5.99]
+      [estadoNormalizado || 'DESCONHECIDO', valor || 5.99]
     );
 
     res.status(200).json({ message: 'PDF salvo com sucesso', id: result.insertId });
@@ -371,30 +375,6 @@ app.post('/api/upload', upload.single('arquivo'), async (req, res) => {
     res.status(500).json({ error: 'Erro ao salvar PDF' });
   }
 });
-
-//////////////////////////
-// 📥 Baixar PDF por ID
-//////////////////////////
-app.get('/api/pdfs/:id/download', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const query = 'SELECT filename, mimetype, data FROM pdfs WHERE id = ?';
-    const [results] = await pool.query(query, [id]);
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'PDF não encontrado' });
-    }
-
-    const { filename, mimetype, data } = results[0];
-    res.setHeader('Content-Type', mimetype);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(data);
-  } catch (err) {
-    console.error('Erro ao baixar PDF:', err.message);
-    res.status(500).json({ error: 'Erro ao baixar PDF' });
-  }
-});
-
 //////////////////////////
 // 📋 Listar PDFs
 //////////////////////////
@@ -565,26 +545,29 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
 
         const telefoneLimpo = telefone.slice(0, 20);
 
-// 1. Salva em analises
-await pool.query(`
-  INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-`, [
-  nome,
-  telefoneLimpo,
-  cidade,
-  estado,
-  filename,
-  'application/pdf',
-  pdfBuffer,
-  5.99
-]);
+        // 👉 normaliza estado
+        const estadoNormalizado = estado ? estado.toString().trim().toUpperCase().slice(0, 2) : null;
 
-// 2. ➕ Também insere no resumo_emitidos
-await pool.query(
-  'INSERT INTO resumo_emitidos (estado, tipo, pago, valor) VALUES (?, "Análise", 0, ?)',
-  [estado || 'Desconhecido', 5.99]
-);
+        // 1. Salva em analises
+        await pool.query(`
+          INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          nome,
+          telefoneLimpo,
+          cidade,
+          estadoNormalizado,
+          filename,
+          'application/pdf',
+          pdfBuffer,
+          5.99
+        ]);
+
+        // 2. ➕ Também insere no resumo_emitidos
+        await pool.query(
+          'INSERT INTO resumo_emitidos (estado, tipo, pago, valor) VALUES (?, "Análise", 0, ?)',
+          [estadoNormalizado || 'DESCONHECIDO', 5.99]
+        );
 
         res.json({ sucesso: true });
       } catch (err) {
@@ -614,7 +597,7 @@ await pool.query(
        .text(`Nome: ${nome}`);
     doc.text(`Telefone: ${telefone}`);
     doc.text(`Cidade: ${cidade}`);
-    doc.text(`Estado: ${estado}`);
+    doc.text(`Estado: ${estadoNormalizado}`);
     doc.moveDown();
 
     // Corpo do relatório textual
@@ -668,8 +651,6 @@ await pool.query(
 
     if (doc.y > doc.page.height - 100) {
       doc.addPage();
-
-      // Marca d'água também na nova página
       doc.image(marcaPath, x, y, { width: imgWidth, height: imgHeight });
     }
 
