@@ -1628,9 +1628,11 @@ app.use((req, res) => {
 //////////////////////////
 // 🚀 Iniciar servidor
 //////////////////////////
+
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
+
 // 🧹 Tarefa agendada: limpar logs diariamente às 3h da manhã
 cron.schedule('0 3 * * *', async () => {
   try {
@@ -1641,11 +1643,47 @@ cron.schedule('0 3 * * *', async () => {
   }
 });
 
+// 🔄 Ping ao banco a cada 5 minutos
 cron.schedule('*/5 * * * *', async () => {
   try {
     await pool.query('SELECT 1');
     console.log('🔄 Ping ao banco OK');
   } catch (err) {
     console.error('❌ Erro no ping ao banco:', err.message);
+  }
+});
+
+// 📤 Enviar relatórios mensais todo dia 01 às 00:05
+cron.schedule('5 0 1 * *', async () => {
+  console.log("📤 Enviando relatórios mensais para parceiros...");
+
+  try {
+    // Buscar todos os estados que têm registros pagos não enviados
+    const [estados] = await pool.query(`
+      SELECT DISTINCT estado 
+      FROM registros_pagos 
+      WHERE pago = 1 AND enviado = 0
+    `);
+
+    for (const { estado } of estados) {
+      // Verificar se existe parceiro nesse estado
+      const [parceiros] = await pool.query(
+        'SELECT id FROM parceiros WHERE estado = ? LIMIT 1',
+        [estado]
+      );
+
+      if (parceiros.length > 0) {
+        // Se houver parceiro, marcar registros como enviados
+        await pool.query(
+          'UPDATE registros_pagos SET enviado = 1 WHERE estado = ? AND pago = 1',
+          [estado]
+        );
+        console.log(`✅ Relatório mensal do estado ${estado} enviado ao parceiro.`);
+      } else {
+        console.log(`⚠️ Nenhum parceiro registrado em ${estado}, relatório não enviado.`);
+      }
+    }
+  } catch (err) {
+    console.error("❌ Erro ao enviar relatórios mensais:", err.message);
   }
 });
