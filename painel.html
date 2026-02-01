@@ -610,6 +610,7 @@ async function carregarPDFs() {
       `;
       tabela.appendChild(linha);
 
+      // 👉 trava o botão se já estiver pago
       if (pdf.jaPago) {
         const botao = linha.querySelector("button.btn-success");
         if (botao) {
@@ -708,6 +709,7 @@ function carregarLogs() {
       `;
       tabela.appendChild(linha);
 
+      // 👉 trava o botão se já estiver pago
       if (rel.jaPago) {
         const botao = linha.querySelector("button.btn-success");
         if (botao) {
