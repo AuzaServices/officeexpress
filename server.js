@@ -1534,7 +1534,7 @@ req.session.regenerate(err => {
 // Listar todos os parceiros
 app.get('/api/parceiros', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, nome, whatsapp, estado FROM parceiros');
+    const [rows] = await pool.query('SELECT id, nome, whatsapp, UPPER(estado) AS estado FROM parceiros');
     res.json(rows);
   } catch (err) {
     console.error("Erro ao listar parceiros:", err.message);

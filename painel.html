@@ -515,7 +515,7 @@ async function atualizarParceirosCache() {
   try {
     const res = await fetch('/api/parceiros'); // retorna todos
     const parceiros = await res.json();
-    parceirosPorEstado = new Set(parceiros.map(p => p.estado));
+    parceirosPorEstado = new Set(parceiros.map(p => p.estado.toUpperCase()));
   } catch (err) {
     console.error("Erro ao atualizar cache de parceiros:", err);
   }
@@ -524,9 +524,10 @@ async function atualizarParceirosCache() {
 // 👉 Função auxiliar para exibir badge verde
 function estadoBadge(estado) {
   if (!estado) return "—";
-  return parceirosPorEstado.has(estado)
-    ? `<span class="badge bg-success">${estado}</span>`
-    : `<span>${estado}</span>`;
+  const sigla = estado.toUpperCase();
+  return parceirosPorEstado.has(sigla)
+    ? `<span class="badge bg-success">${sigla}</span>`
+    : `<span>${sigla}</span>`;
 }
 
 
