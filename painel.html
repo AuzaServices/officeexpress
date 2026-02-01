@@ -507,6 +507,35 @@ table th {
 </div>
 
   <script>
+
+let parceirosPorEstado = new Set();
+
+// 👉 Atualiza cache de parceiros uma vez
+async function atualizarParceirosCache() {
+  try {
+    const res = await fetch('/api/parceiros');
+    const parceiros = await res.json();
+    parceirosPorEstado = new Set(parceiros.map(p => p.estado));
+  } catch (err) {
+    console.error("Erro ao atualizar cache de parceiros:", err);
+  }
+}
+
+// 👉 Função auxiliar para exibir badge verde
+function estadoBadge(estado) {
+  if (!estado) return "—";
+  return parceirosPorEstado.has(estado)
+    ? `<span class="badge bg-success">${estado}</span>`
+    : `<span>${estado}</span>`;
+}
+
+async function temParceiroNoEstado(estado) {
+  const res = await fetch(`/api/parceiros?estado=${estado}`);
+  const parceiros = await res.json();
+  return parceiros.length > 0;
+}
+
+
     function apagarRegistro(id, tipo) {
       if (!confirm("Tem certeza que deseja apagar este registro?")) return;
 
@@ -543,7 +572,7 @@ async function carregarPDFs() {
     const tabela = document.querySelector('#tabela-arquivos tbody');
     tabela.innerHTML = '';
 
-    for (const pdf of data) {
+    data.forEach(pdf => {
       const telefone = pdf.telefone?.replace(/\D/g, '');
       const filename = pdf.filename || '';
       const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
@@ -562,20 +591,6 @@ async function carregarPDFs() {
       );
 
       const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
-
-      // 👉 verifica se há parceiro no estado
-      let estadoHTML = `<span>${pdf.estado || "—"}</span>`;
-      if (pdf.estado) {
-        try {
-          const respParceiro = await fetch(`/api/parceiros?estado=${pdf.estado}`);
-          const parceiros = await respParceiro.json();
-          if (parceiros.length > 0) {
-            estadoHTML = `<span class="badge bg-success">${pdf.estado}</span>`;
-          }
-        } catch (err) {
-          console.error("Erro ao verificar parceiro:", err);
-        }
-      }
 
       const linha = document.createElement('tr');
       linha.innerHTML = `
@@ -596,14 +611,11 @@ async function carregarPDFs() {
             '${pdf.cidade || ""}'
           )" class="btn btn-success btn-sm">Pago</button>
         </td>
-        <td>
-          ${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}
-        </td>
-        <td>${estadoHTML}</td> <!-- 👈 nova coluna Estado -->
+        <td>${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}</td>
+        <td>${estadoBadge(pdf.estado)}</td> <!-- 👈 nova coluna Estado -->
       `;
       tabela.appendChild(linha);
 
-      // 👉 trava o botão se já estiver pago
       if (pdf.jaPago) {
         const botao = linha.querySelector("button.btn-success");
         if (botao) {
@@ -613,7 +625,7 @@ async function carregarPDFs() {
           botao.textContent = "Pago";
         }
       }
-    }
+    });
   } catch (err) {
     console.error("Erro ao carregar PDFs:", err);
   }
@@ -651,14 +663,14 @@ function carregarLogs() {
     });
 }
 
-    async function carregarRelatorios() {
+   async function carregarRelatorios() {
   try {
     const res = await fetch('/api/analises');
     const data = await res.json();
     const tabela = document.querySelector('#tabela-relatorios tbody');
     tabela.innerHTML = '';
 
-    for (const rel of data) {
+    data.forEach(rel => {
       const telefone = rel.telefone?.replace(/\D/g, '');
       const filename = rel.filename || '';
       const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
@@ -677,20 +689,6 @@ function carregarLogs() {
       );
 
       const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
-
-      // 👉 verifica se há parceiro no estado
-      let estadoHTML = `<span>${rel.estado || "—"}</span>`;
-      if (rel.estado) {
-        try {
-          const respParceiro = await fetch(`/api/parceiros?estado=${rel.estado}`);
-          const parceiros = await respParceiro.json();
-          if (parceiros.length > 0) {
-            estadoHTML = `<span class="badge bg-success">${rel.estado}</span>`;
-          }
-        } catch (err) {
-          console.error("Erro ao verificar parceiro:", err);
-        }
-      }
 
       const linha = document.createElement('tr');
       linha.innerHTML = `
@@ -712,11 +710,10 @@ function carregarLogs() {
           )" class="btn btn-success btn-sm">Pago</button>
         </td>
         <td>${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}</td>
-        <td>${estadoHTML}</td> <!-- 👈 nova coluna Estado -->
+        <td>${estadoBadge(rel.estado)}</td> <!-- 👈 nova coluna Estado -->
       `;
       tabela.appendChild(linha);
 
-      // 👉 trava o botão se já estiver pago
       if (rel.jaPago) {
         const botao = linha.querySelector("button.btn-success");
         if (botao) {
@@ -726,7 +723,7 @@ function carregarLogs() {
           botao.textContent = "Pago";
         }
       }
-    }
+    });
   } catch (err) {
     console.error('Erro ao buscar análises:', err);
   }
@@ -1240,13 +1237,6 @@ async function apagarParceiro(id) {
     alert("Erro ao apagar parceiro: " + (data.error || "desconhecido"));
   }
 }
-
-async function temParceiroNoEstado(estado) {
-  const res = await fetch(`/api/parceiros?estado=${estado}`);
-  const parceiros = await res.json();
-  return parceiros.length > 0;
-}
-
   </script>
 
   
