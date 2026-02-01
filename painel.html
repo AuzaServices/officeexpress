@@ -513,7 +513,7 @@ let parceirosPorEstado = new Set();
 // 👉 Atualiza cache de parceiros uma vez
 async function atualizarParceirosCache() {
   try {
-    const res = await fetch('/api/parceiros');
+    const res = await fetch('/api/parceiros'); // retorna todos
     const parceiros = await res.json();
     parceirosPorEstado = new Set(parceiros.map(p => p.estado));
   } catch (err) {
@@ -527,12 +527,6 @@ function estadoBadge(estado) {
   return parceirosPorEstado.has(estado)
     ? `<span class="badge bg-success">${estado}</span>`
     : `<span>${estado}</span>`;
-}
-
-async function temParceiroNoEstado(estado) {
-  const res = await fetch(`/api/parceiros?estado=${estado}`);
-  const parceiros = await res.json();
-  return parceiros.length > 0;
 }
 
 
@@ -740,16 +734,16 @@ setInterval(() => {
 }, 2000);
 
 // Carrega imediatamente ao abrir
-window.onload = () => {
+window.onload = async () => {
+  await atualizarParceirosCache(); // carrega cache antes
   carregarPDFs();
-  carregarLogs();
   carregarRelatorios();
+  carregarLogs();
   carregarIndicacoes();
   carregarUsuarios();
   carregarParceiros();
   atualizarBotoesRelatorio();
 };
-
 
 function carregarIndicacoes() {
   fetch('/api/indicacoes')
