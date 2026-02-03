@@ -485,8 +485,12 @@ const path = require('path');
 app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) => {
   const { nome, telefone, cidade, estado } = req.body;
 
+  console.log("📋 Dados recebidos:", { nome, telefone, cidade, estado });
+  console.log("📥 Arquivo recebido:", req.file ? req.file.originalname : "nenhum", req.file ? req.file.mimetype : "nenhum");
+
   // validação obrigatória
   if (!req.file || !nome || !telefone || !cidade || !estado) {
+    console.warn("⚠️ Falha na validação: dados incompletos");
     return res.status(400).json({ erro: 'Dados incompletos. Envie nome, telefone, cidade, estado e o arquivo.' });
   }
 
@@ -495,10 +499,13 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     let textoExtraido;
 
     if (mime === 'application/pdf') {
+      console.log("🔎 Iniciando extração PDF...");
       const data = await pdfParse(req.file.buffer);
       textoExtraido = data.text.trim();
+      console.log("✅ Texto extraído (tamanho):", textoExtraido.length);
 
       if (textoExtraido.length < 50) {
+        console.warn("⚠️ PDF sem texto suficiente");
         return res.status(400).json({
           erro: 'O PDF parece não conter texto digital. Envie um currículo gerado por editor de texto, não escaneado.'
         });
@@ -507,6 +514,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       mime === 'application/msword'
     ) {
+      console.log("🔎 Iniciando extração DOC/DOCX...");
       const textract = require('textract');
       textoExtraido = await new Promise((resolve, reject) => {
         textract.fromBufferWithMime(mime, req.file.buffer, (err, text) => {
@@ -514,17 +522,21 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
           else resolve(text.trim());
         });
       });
+      console.log("✅ Texto extraído (tamanho):", textoExtraido.length);
 
       if (textoExtraido.length < 50) {
+        console.warn("⚠️ Documento sem texto suficiente");
         return res.status(400).json({
           erro: 'O documento parece vazio ou ilegível. Envie um currículo válido gerado por editor de texto.'
         });
       }
     } else {
+      console.warn("⚠️ Formato não suportado:", mime);
       return res.status(400).json({ erro: 'Formato de arquivo não suportado. Envie PDF ou DOCX.' });
     }
 
     const { texto: relatorioTexto, indicadores } = analisarCurriculo(textoExtraido);
+    console.log("✅ Relatório gerado com indicadores:", indicadores);
 
     const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
@@ -534,8 +546,8 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
     doc.on('end', async () => {
       try {
         const pdfBuffer = Buffer.concat(buffers);
+        console.log("✅ PDF finalizado, tamanho:", pdfBuffer.length);
 
-        // sanitização
         let nomeSanitizado = nome.trim()
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
@@ -544,11 +556,10 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
         const filename = `Relatorio - ${nomeSanitizado}.pdf`.slice(0, 255);
 
         const telefoneLimpo = telefone.slice(0, 20);
-
-        // 👉 normaliza estado
         const estadoNormalizado = estado ? estado.toString().trim().toUpperCase().slice(0, 2) : null;
 
-        // 1. Salva em analises
+        console.log("📦 Salvando no banco:", { filename, estadoNormalizado });
+
         await pool.query(`
           INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -563,29 +574,34 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
           5.99
         ]);
 
-        // 2. ➕ Também insere no resumo_emitidos
         await pool.query(
           'INSERT INTO resumo_emitidos (estado, tipo, pago, valor) VALUES (?, "Análise", 0, ?)',
           [estadoNormalizado || 'DESCONHECIDO', 5.99]
         );
 
+        console.log("✅ Registro salvo com sucesso");
         res.json({ sucesso: true });
       } catch (err) {
-        console.error('❌ Erro ao salvar no banco:', err);
+        console.error('❌ Erro ao salvar no banco:', err.message, err.stack);
         res.status(500).json({ erro: 'Erro ao salvar no banco' });
       }
     });
 
     // === Marca d'água central (imagem) ===
-    const pageWidth = doc.page.width;
-    const pageHeight = doc.page.height;
-    const imgWidth = 300;
-    const imgHeight = 300;
-    const x = (pageWidth - imgWidth) / 2;
-    const y = (pageHeight - imgHeight) / 2;
+    try {
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      const imgWidth = 300;
+      const imgHeight = 300;
+      const x = (pageWidth - imgWidth) / 2;
+      const y = (pageHeight - imgHeight) / 2;
 
-    const marcaPath = path.join(__dirname, 'public', 'marca.png');
-    doc.image(marcaPath, x, y, { width: imgWidth, height: imgHeight });
+      const marcaPath = path.join(__dirname, 'public', 'marca.png');
+      doc.image(marcaPath, x, y, { width: imgWidth, height: imgHeight });
+      console.log("✅ Marca d'água aplicada");
+    } catch (err) {
+      console.error("❌ Erro na marca d'água:", err.message);
+    }
 
     // Cabeçalho do PDF
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#000000')
@@ -597,7 +613,7 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
        .text(`Nome: ${nome}`);
     doc.text(`Telefone: ${telefone}`);
     doc.text(`Cidade: ${cidade}`);
-    doc.text(`Estado: ${estadoNormalizado}`);
+    doc.text(`Estado: ${estado}`);
     doc.moveDown();
 
     // Corpo do relatório textual
@@ -609,54 +625,10 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       }
     });
 
-    doc.moveDown().moveDown();
-
-    // Indicadores Visuais
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-       .text('Indicadores Visuais');
-    doc.moveDown();
-
-    Object.entries(indicadores).forEach(([secao, valor]) => {
-      const porcentagem = Math.round((valor / 5) * 100);
-      const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
-
-      let cor;
-      if (porcentagem < 15) {
-        cor = '#B22222'; // vermelho
-      } else if (porcentagem < 50) {
-        cor = '#DAA520'; // amarelo
-      } else {
-        cor = '#228B22'; // verde
-      }
-
-      doc.font('Helvetica').fontSize(12).fillColor('#000000').text(`${label}: `, { continued: true });
-      doc.fillColor(cor).text(`${porcentagem}%`);
-    });
-
-    doc.moveDown().moveDown();
-
-    // Frase de incentivo + link
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-       .text('Dica final');
-
-    doc.font('Helvetica').fontSize(12).fillColor('#333333')
-       .text('Se seu currículo recebeu alertas importantes, considere criar uma nova versão mais completa e atrativa.');
-
-    doc.moveDown();
-
-    doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
-      link: 'https://www.officeexpress.com.br/',
-      underline: true
-    });
-
-    if (doc.y > doc.page.height - 100) {
-      doc.addPage();
-      doc.image(marcaPath, x, y, { width: imgWidth, height: imgHeight });
-    }
-
     doc.end();
+    console.log("📄 PDF em construção finalizado com doc.end()");
   } catch (err) {
-    console.error('Erro na análise e salvamento:', err);
+    console.error("❌ Erro geral na rota:", err.message, err.stack);
     res.status(500).json({ erro: 'Erro ao processar o arquivo' });
   }
 });
