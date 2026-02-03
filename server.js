@@ -488,7 +488,6 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
   console.log("📋 Dados recebidos:", { nome, telefone, cidade, estado });
   console.log("📥 Arquivo recebido:", req.file ? req.file.originalname : "nenhum", req.file ? req.file.mimetype : "nenhum");
 
-  // validação obrigatória
   if (!req.file || !nome || !telefone || !cidade || !estado) {
     console.warn("⚠️ Falha na validação: dados incompletos");
     return res.status(400).json({ erro: 'Dados incompletos. Envie nome, telefone, cidade, estado e o arquivo.' });
@@ -503,12 +502,8 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
       const data = await pdfParse(req.file.buffer);
       textoExtraido = data.text.trim();
       console.log("✅ Texto extraído (tamanho):", textoExtraido.length);
-
       if (textoExtraido.length < 50) {
-        console.warn("⚠️ PDF sem texto suficiente");
-        return res.status(400).json({
-          erro: 'O PDF parece não conter texto digital. Envie um currículo gerado por editor de texto, não escaneado.'
-        });
+        return res.status(400).json({ erro: 'PDF sem texto digital válido.' });
       }
     } else if (
       mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
@@ -523,16 +518,12 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
         });
       });
       console.log("✅ Texto extraído (tamanho):", textoExtraido.length);
-
       if (textoExtraido.length < 50) {
-        console.warn("⚠️ Documento sem texto suficiente");
-        return res.status(400).json({
-          erro: 'O documento parece vazio ou ilegível. Envie um currículo válido gerado por editor de texto.'
-        });
+        return res.status(400).json({ erro: 'Documento vazio ou ilegível.' });
       }
     } else {
       console.warn("⚠️ Formato não suportado:", mime);
-      return res.status(400).json({ erro: 'Formato de arquivo não suportado. Envie PDF ou DOCX.' });
+      return res.status(400).json({ erro: 'Formato não suportado. Envie PDF ou DOCX.' });
     }
 
     const { texto: relatorioTexto, indicadores } = analisarCurriculo(textoExtraido);
@@ -624,6 +615,51 @@ app.post('/api/analisar-e-salvar', upload.single('curriculo'), async (req, res) 
         doc.font('Helvetica').fontSize(12).fillColor('#000000').text(linha.trim());
       }
     });
+
+    doc.moveDown().moveDown();
+
+    // Indicadores Visuais
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+       .text('Indicadores Visuais');
+    doc.moveDown();
+
+    Object.entries(indicadores).forEach(([secao, valor]) => {
+      const porcentagem = Math.round((valor / 5) * 100);
+      const label = secao.charAt(0).toUpperCase() + secao.slice(1).padEnd(18);
+
+      let cor;
+      if (porcentagem < 15) {
+        cor = '#B22222'; // vermelho
+      } else if (porcentagem < 50) {
+        cor = '#DAA520'; // amarelo
+      } else {
+        cor = '#228B22'; // verde
+      }
+
+      doc.font('Helvetica').fontSize(12).fillColor('#000000').text(`${label}: `, { continued: true });
+      doc.fillColor(cor).text(`${porcentagem}%`);
+    });
+
+    doc.moveDown().moveDown();
+
+    // Frase de incentivo + link
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+       .text('Dica final');
+
+    doc.font('Helvetica').fontSize(12).fillColor('#333333')
+       .text('Se seu currículo recebeu alertas importantes, considere criar uma nova versão mais completa e atrativa.');
+
+    doc.moveDown();
+
+    doc.fillColor('#1E90FF').text('Clique aqui para acessar o criador de Currículos OfficeExpress', {
+      link: 'https://www.officeexpress.com.br/',
+      underline: true
+    });
+
+    if (doc.y > doc.page.height - 100) {
+      doc.addPage();
+      doc.image(path.join(__dirname, 'public', 'marca.png'), x, y, { width: imgWidth, height: imgHeight });
+    }
 
     doc.end();
     console.log("📄 PDF em construção finalizado com doc.end()");
