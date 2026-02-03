@@ -1,264 +1,180 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pagamento | Análise de Currículo</title>
-  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" href="icon.png" type="image/png" />
+  <title>Pagamento | Office Express</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    :root {
+      --bg-1: #001f33;
+      --bg-2: #00324a;
+      --border: #0a2a52;
+    }
     body {
-      background: linear-gradient(to right, #001f33, #00324a);
-      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #f9fafb;
     }
-    .toast {
+    header.cabecalho {
       position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #ff8800;
-      color: #00324a;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      z-index: 9999;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+      border-bottom: 1px solid var(--border);
     }
-
-#faixa-promocao {
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
-}
-
+    .cabecalho .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+    }
+    .logo {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+    main {
+      flex: 1;
+    }
+    .valor {
+      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+    }
+    .seguranca {
+      text-align: center;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      font-size: 0.85rem;
+      color: #444;
+      font-weight: 500;
+    }
+    footer {
+      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+      color: #fff;
+      padding: 0.6rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: auto;
+    }
+    #faixa-promocao {
+      font-size: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 </head>
-<body class="relative py-20 px-4 text-white">
-  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2 whitespace-nowrap">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-  <span class="text-xs font-medium">Promoção por tempo limitado - <span id="cronometro" class="font-bold">06:00</span> restantes!</span>
-</div>
-  <div id="particles-js" class="absolute inset-0 -z-10"></div>
+<body>
 
-  <section class="max-w-4xl mx-auto text-center">
-<h2 class="text-5xl font-black mb-6 text-white/80 font-sans">
-  ANÁLISE <span class="text-[#ff8800]">CONCLUÍDA</span>
-</h2>
-    <p class="text-xl text-white/80 mb-4">Ou você continua mandando currículos sem resposta...</p>
-    <p class="text-2xl text-[#ff8800] font-bold mb-8">Ou decide AGORA melhorar seu currículo com uma análise profissional</p>
+  <!-- Faixa de urgência -->
+  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2">
+    <i class="fa-regular fa-clock"></i>
+    <span class="font-medium">Oferta válida por tempo limitado — <span id="cronometro">06:00</span></span>
+  </div>
 
-    <div class="bg-black/80 border border-[#E7C75F]/50 rounded-xl p-6 mb-8">
-      <div class="flex justify-center items-center space-x-4 mb-4">
-        <span class="text-3xl text-white/50 line-through">R$12,50</span>
-        <span class="text-6xl font-black text-[#ff8800] font-['Anton'] animate-pulse">R$5,99</span>
+  <!-- Cabeçalho -->
+  <header class="cabecalho mt-8">
+    <div class="container mx-auto px-6">
+      <div class="wrap">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
       </div>
-      <p class="text-green-400 font-semibold mb-2">APENAS ESSA SEMANA</p>
-      <p class="text-white/60 text-sm">Valor promocional para os primeiros 100 currículos analisados nesta semana</p>
     </div>
+  </header>
 
+  <!-- Conteúdo principal -->
+  <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
+    <p class="mb-2">Serviço: Análise Profissional</p>
+    <p class="valor text-3xl mb-6">R$ 5,99</p>
+
+    <!-- Chave Pix -->
+    <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
     <input type="text" id="pix" readonly
-      class="w-full text-center font-bold text-[#0056b3] bg-[#eef6ff] border border-gray-300 rounded-lg py-3 mb-4"
-      value="00020126620014BR.GOV.BCB.PIX0121andrielysom@gmail.com0215Office Express 52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304D501" />
+      class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
+      value="00020126620014BR.GOV.BCB.PIX...">
 
-    <button onclick="copiarPix()" class="w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
+    <!-- Botões -->
+    <button onclick="copiarPix()" class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition">
       Copiar chave Pix
     </button>
 
-    <button onclick="liberarPDF()" class="w-full bg-gradient-to-r from-[#E7C75F] to-[#d4b84a] text-black font-black text-xl py-4 rounded-lg hover:from-green-600 hover:to-green-700 hover:text-white transition transform hover:scale-105 shadow-2xl">
-      ✅ Já paguei — quero minha Análise
-    </button>
+    <a id="whatsappLink" target="_blank"
+       class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center">
+      Já paguei — Enviar comprovante
+    </a>
 
-    <p class="text-xs text-white/60 mt-2 text-center italic">Só clique se realmente tiver efetuado o pagamento</p>
+    <p class="text-xs text-gray-500 mt-2 text-center">A análise será entregue após confirmação do pagamento.</p>
 
-    <div id="pdf" class="mt-8 hidden">
-      <p class="text-lg mt-4">Parabéns! Sua análise profissional está pronta.</p>
-      <a href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20de%20R$5,99%20e%20quero%20receber%20minha%20análise%20profissional%20em%20PDF."
-         target="_blank"
-         class="block mt-4 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
-        Receber Análise pelo WhatsApp
-      </a>
+    <!-- Selos de confiança -->
+    <div class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center">
+      <div>
+        <i class="fa-solid fa-lock mb-1"></i>
+        <span>Pagamento seguro</span>
+      </div>
+      <div>
+        <i class="fa-solid fa-bolt mb-1"></i>
+        <span>Entrega rápida</span>
+      </div>
+      <div>
+        <i class="fa-solid fa-shield-halved mb-1"></i>
+        <span>Garantia 7 dias</span>
+      </div>
     </div>
+  </main>
 
+  <!-- Aviso de segurança -->
+  <div class="seguranca">
+    🔒 Pagamento protegido com criptografia SSL
+  </div>
 
-    <div class="mt-6 text-sm text-white/60 space-y-2">
-<div class="flex justify-center gap-12 text-gray-600">
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-lock text-sm mb-1"></i>
-    <span class="text-sm">Pagamento 100% seguro</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-bolt text-sm mb-1"></i>
-    <span class="text-sm">Entrega imediata</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-shield-halved text-sm mb-1"></i>
-    <span class="text-sm">Garantia de 7 dias</span>
-  </div>
-</div>
-      <p class="mt-4">Mais de <span class="text-[#ff8800] font-bold">10.000 pessoas</span> já melhoraram seus currículos com a Office Express</p>
-      <p class="text-red-400 font-bold">Não seja mais um que fica esperando a sorte bater na porta...</p>
-    </div>
-  </section>
-
-  <footer class="mt-20 pt-8 text-center text-sm text-white/60">
-    <p class="mt-4 text-[#E7C75F] font-bold">Office Express © 2026 - Todos os direitos reservados</p>
+  <!-- Rodapé -->
+  <footer>
+    &copy; 2026 Office Express - Todos os direitos reservados
   </footer>
 
-  <script>
-async function copiarPix() {
-  const chave = document.getElementById("pix").value;
-
-  // Copia a chave para a área de transferência
-  try {
-    await navigator.clipboard.writeText(chave);
-
-    // 🔎 Captura dados da indicação (se você estiver guardando no sessionStorage)
-    const codigo = sessionStorage.getItem("codigoIndicacao"); // código do indicador
-    const indicadoNome = sessionStorage.getItem("primeiroNome") || "Cliente"; // nome do indicado
-
-    // Registra o pagamento como pendente no backend
-    const resp = await fetch("/api/pagamentos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        codigo,
-        indicado_nome: indicadoNome,
-        tipo: "analise"   // diferencia currículo de análise
-      })
+<script>
+  // Função copiar Pix
+  function copiarPix() {
+    const chave = document.getElementById("pix").value;
+    navigator.clipboard.writeText(chave).then(() => {
+      alert("Chave Pix copiada!");
     });
-
-    const data = await resp.json();
-    console.log("Pagamento registrado:", data);
-
-async function copiarPix() {
-  const chave = document.getElementById("pix").value;
-
-  try {
-    await navigator.clipboard.writeText(chave);
-
-    const codigo = sessionStorage.getItem("codigoIndicacao");
-    const indicadoNome = sessionStorage.getItem("primeiroNome") || "Cliente";
-
-    const resp = await fetch("/api/pagamentos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        codigo,
-        indicado_nome: indicadoNome,
-        tipo: "analise"
-      })
-    });
-
-    const data = await resp.json();
-    console.log("Pagamento registrado:", data);
-
-  } catch (err) {
-    console.error("Erro ao copiar Pix ou registrar pagamento:", err);
-    mostrarToast("Erro ao copiar ou registrar pagamento!");
   }
-}
 
-// Função auxiliar para mostrar toast
-function mostrarToast(mensagem) {
-  const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.innerText = mensagem;
-  document.body.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = 1; }, 100);
-  setTimeout(() => {
-    toast.style.opacity = 0;
-    setTimeout(() => toast.remove(), 500);
-  }, 3000);
-}
-
-  } catch (err) {
-    console.error("Erro ao copiar Pix ou registrar pagamento:", err);
-    mostrarToast("Erro ao copiar ou registrar pagamento!");
-  }
-}
-
-    function liberarPDF() {
-      const btn = event.target;
-      btn.innerText = "✅ Pagamento confirmado!";
-      btn.disabled = true;
-      btn.style.backgroundColor = "#28a745";
-      document.getElementById("pdf").style.display = "block";
+  // Cronômetro regressivo
+  let tempoRestante = 6 * 60;
+  function atualizarCronometro() {
+    const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
+    const segundos = String(tempoRestante % 60).padStart(2, '0');
+    document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
+    if (tempoRestante <= 0) {
+      window.location.href = "/pagamentototal";
+    } else {
+      tempoRestante--;
+      setTimeout(atualizarCronometro, 1000);
     }
-
-    function mostrarToast(mensagem) {
-      const toast = document.createElement("div");
-      toast.className = "toast";
-      toast.innerText = mensagem;
-      document.body.appendChild(toast);
-      setTimeout(() => { toast.style.opacity = 1; }, 100);
-      setTimeout(() => {
-        toast.style.opacity = 0;
-        setTimeout(() => toast.remove(), 500);
-      }, 3000);
-    }
-
-    tsParticles.load("particles-js", {
-      fullScreen: { enable: false },
-      particles: {
-        number: { value: 60 },
-        color: { value: "#e09d00" },
-        shape: { type: "circle" },
-        opacity: { value: 0.3 },
-        size: { value: 4 },
-        move: {
-          enable: true,
-          speed: 1.5,
-          direction: "none",
-          outModes: { default: "bounce" }
-        }
-      },
-      background: {
-        color: { value: "transparent" }
-      }
-    });
-
-    // Facebook Pixel
-    !function(f,b,e,v,n,t,s){
-      if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)
-    }(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
-
-    fbq('init', 'YOUR_PIXEL_ID'); // substitua pelo seu ID real
-    fbq('track', 'ViewContent', {
-      value: 2.00,
-      currency: 'BRL'
-    });
-    fbq('track', 'InitiateCheckout', {
-      value: 2.00,
-      currency: 'BRL'
-    });
-
-let tempoRestante = 6 * 60; // 6 minutos em segundos
-
-function atualizarCronometro() {
-  const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
-  const segundos = String(tempoRestante % 60).padStart(2, '0');
-  document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
-
-  if (tempoRestante <= 0) {
-    window.location.href = "/pagamentototalanalise";
-  } else {
-    tempoRestante--;
-    setTimeout(atualizarCronometro, 1000);
   }
-}
+  atualizarCronometro();
 
-atualizarCronometro();
-
-  </script>
-  
+  // Atualizar link WhatsApp
+  function atualizarLinkWhatsApp() {
+    let mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber minha Análise Profissional.";
+    const url = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
+    document.getElementById("whatsappLink").href = url;
+  }
+  window.onload = atualizarLinkWhatsApp;
+</script>
 </body>
 </html>

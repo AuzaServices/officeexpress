@@ -1,161 +1,157 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pagamento | Currículo</title>
-  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+  <link rel="icon" href="icon.png" type="image/png" />
+  <title>Pagamento | Office Express</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    :root {
+      --bg-1: #001f33;
+      --bg-2: #00324a;
+      --border: #0a2a52;
+    }
     body {
-      background: linear-gradient(to right, #001f33, #00324a);
-      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh; /* ocupa toda a altura da tela */
+      background: #f9fafb;
     }
-    .btn-brilhante {
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease;
-      box-shadow: 0 0 10px #ff8800aa;
-    }
-    .btn-brilhante::before {
-      content: '';
-      position: absolute;
+    header.cabecalho {
+      position: fixed;
       top: 0;
-      left: -75%;
-      width: 50%;
-      height: 100%;
-      background: linear-gradient(120deg, transparent, #fff6cc88, transparent);
-      transform: skewX(-20deg);
-      animation: brilhoBotao 2.5s infinite;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+      border-bottom: 1px solid var(--border);
     }
-    @keyframes brilhoBotao {
-      0% { left: -75%; }
-      50% { left: 125%; }
-      100% { left: 125%; }
+    .cabecalho .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
     }
-    .btn-brilhante:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #ff8800dd;
+    .logo {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+    main {
+      flex: 1; /* ocupa o espaço disponível */
+    }
+    .valor {
+      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+    }
+    .seguranca {
+      text-align: center;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      font-size: 0.85rem;
+      color: #444;
+      font-weight: 500;
+    }
+    footer {
+      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+      color: #fff;
+      padding: 0.6rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.75rem;
+      white-space: nowrap;   /* impede quebra */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: auto;      /* força o footer ao final */
     }
     #faixa-promocao {
-      font-size: 0.95rem;
-      letter-spacing: 0.5px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
-<body class="relative py-20 px-4 text-white">
-  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2 whitespace-nowrap">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    <span class="text-xs font-medium">Promoção por tempo limitado - <span id="cronometro" class="font-bold">06:00</span> restantes!</span>
+<body>
+
+  <!-- Faixa de urgência -->
+  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2">
+    <i class="fa-regular fa-clock"></i>
+    <span class="font-medium">Oferta válida por tempo limitado — <span id="cronometro">06:00</span></span>
   </div>
 
-  <div id="particles-js" class="absolute inset-0 -z-10"></div>
-
-  <section class="max-w-4xl mx-auto text-center">
-    <h2 class="text-5xl font-black mb-6 text-white/80 font-sans">
-      CURRÍCULO <span class="text-[#ff8800]">PRONTO</span>
-    </h2>
-    <p class="text-xl text-white/80 mb-4">Você pode continuar sendo ignorado(a) pelos recrutadores...</p>
-    <p class="text-2xl text-[#ff8800] font-bold mb-8">Ou pode AGIR AGORA e transformar seu currículo numa máquina de gerar entrevistas</p>
-
-    <div class="bg-black/80 border border-[#E7C75F]/50 rounded-xl p-6 mb-8">
-      <div class="flex justify-center items-center space-x-4 mb-4">
-        <span class="text-3xl text-white/50 line-through">R$12,50</span>
-        <span class="text-6xl font-black text-[#ff8800] font-['Anton'] animate-pulse">R$5,99</span>
+  <!-- Cabeçalho -->
+  <header class="cabecalho mt-8">
+    <div class="container mx-auto px-6">
+      <div class="wrap">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
       </div>
-      <p class="text-green-400 font-semibold mb-2">APENAS ESSA SEMANA</p>
-      <p class="text-white/60 text-sm">Valor promocional para os primeiros 100 currículos gerados nesta semana</p>
     </div>
+  </header>
 
+  <!-- Conteúdo principal -->
+  <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
+    <p class="mb-2">Serviço: Currículo Profissional</p>
+    <p class="valor text-3xl mb-6">R$ 5,99</p>
+
+    <!-- Chave Pix -->
+    <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
     <input type="text" id="pix" readonly
-      class="w-full text-center font-bold text-[#0056b3] bg-[#eef6ff] border border-gray-300 rounded-lg py-3 mb-4"
-      value="00020126620014BR.GOV.BCB.PIX0121andrielysom@gmail.com0215Office Express 52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304D501" />
+      class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
+      value="00020126620014BR.GOV.BCB.PIX...">
 
-    <button onclick="copiarPix()" class="btn-brilhante w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
+    <!-- Botões -->
+    <button onclick="copiarPix()" class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition">
       Copiar chave Pix
     </button>
 
-<a id="whatsappLink" target="_blank"
-   class="btn-brilhante block w-full bg-green-500 text-white font-bold py-4 rounded-lg hover:bg-green-600 transition text-xl">
-  ✅ Já paguei — Enviar comprovante pelo WhatsApp
-</a>
-    <p class="text-xs text-white/60 mt-2 text-center italic">O currículo só será entregue após confirmação do pagamento</p>
+    <a id="whatsappLink" target="_blank"
+       class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center">
+      Já paguei — Enviar comprovante
+    </a>
 
-    <div class="mt-6 text-sm text-white/60 space-y-2">
-<div class="flex justify-center gap-12 text-gray-600">
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-lock text-sm mb-1"></i>
-    <span class="text-sm">Pagamento 100% seguro</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-bolt text-sm mb-1"></i>
-    <span class="text-sm">Entrega imediata</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-shield-halved text-sm mb-1"></i>
-    <span class="text-sm">Garantia de 7 dias</span>
-  </div>
-</div>
+    <p class="text-xs text-gray-500 mt-2 text-center">O currículo será entregue após confirmação do pagamento.</p>
 
-
-      <p class="mt-4">Mais de <span class="text-[#ff8800] font-bold">10.000 pessoas</span> já criaram seus currículos com a Office Express</p>
-      <p class="text-red-400 font-bold">Não espere mais. Sua chance de ser chamado começa com um currículo profissional.</p>
+    <!-- Selos de confiança -->
+    <div class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center">
+      <div>
+        <i class="fa-solid fa-lock mb-1"></i>
+        <span>Pagamento seguro</span>
+      </div>
+      <div>
+        <i class="fa-solid fa-bolt mb-1"></i>
+        <span>Entrega rápida</span>
+      </div>
+      <div>
+        <i class="fa-solid fa-shield-halved mb-1"></i>
+        <span>Garantia 7 dias</span>
+      </div>
     </div>
-  </section>
+  </main>
 
-  <footer class="mt-20 pt-8 text-center text-sm text-white/60">
-    <p class="mt-4 text-[#E7C75F] font-bold">Office Express © 2026 - Todos os direitos reservados</p>
+  <!-- Aviso de segurança -->
+  <div class="seguranca">
+    🔒 Pagamento protegido com criptografia SSL
+  </div>
+
+  <!-- Rodapé -->
+  <footer>
+    &copy; 2026 Office Express - Todos os direitos reservados
   </footer>
 
 <script>
-function copiarPix() {
-  const chave = document.getElementById("pix").value;
-  navigator.clipboard.writeText(chave).then(() => {
-    alert("Chave Pix copiada!");
-
-    // Recupera dados da sessão
-    const codigo = sessionStorage.getItem("codigoIndicacao");
-    const nomeIndicador = sessionStorage.getItem("nomeIndicador");
-    const indicadoNome = sessionStorage.getItem("primeiroNome"); // precisa ter sido salvo antes
-    const tipo = "Currículo"; // ou "Análise"
-
-    // Log para debug
-    console.log("Dados para registrar pagamento:", {
-      codigo,
-      nomeIndicador,
-      indicado_nome: indicadoNome,
-      tipo
+  // Função copiar Pix
+  function copiarPix() {
+    const chave = document.getElementById("pix").value;
+    navigator.clipboard.writeText(chave).then(() => {
+      alert("Chave Pix copiada!");
     });
-
-    // Validação antes de enviar
-    if (!codigo || !indicadoNome || !tipo) {
-      console.error("Dados incompletos para registrar pagamento");
-      return;
-    }
-
-    // Faz o POST para o backend
-    fetch("/api/pagamentos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ codigo, indicado_nome: indicadoNome, tipo })
-    })
-    .then(resp => {
-      if (!resp.ok) {
-        throw new Error("Erro HTTP " + resp.status);
-      }
-      return resp.json();
-    })
-    .then(data => {
-      console.log("Pagamento pendente registrado:", data);
-    })
-    .catch(err => {
-      console.error("Erro ao registrar pendente:", err);
-    });
-  });
-}
+  }
 
   // Cronômetro regressivo
   let tempoRestante = 6 * 60;
@@ -172,21 +168,13 @@ function copiarPix() {
   }
   atualizarCronometro();
 
-function atualizarLinkWhatsApp() {
-  const codigo = sessionStorage.getItem("codigoIndicacao");
-  const nomeIndicador = sessionStorage.getItem("nomeIndicador");
-
-  let mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
-
-  if (codigo && nomeIndicador) {
-    mensagem += `\n\n*Indicação: ${nomeIndicador}*\n*Código: ${codigo}*`;
+  // Atualizar link WhatsApp
+  function atualizarLinkWhatsApp() {
+    let mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
+    const url = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
+    document.getElementById("whatsappLink").href = url;
   }
-
-  const url = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
-  document.getElementById("whatsappLink").href = url;
-}
-
-window.onload = atualizarLinkWhatsApp;
+  window.onload = atualizarLinkWhatsApp;
 </script>
 </body>
 </html>

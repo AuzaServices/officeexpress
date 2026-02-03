@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pagamento | Currículo</title>
+  <title>Pagamento | Análise Profissional</title>
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -37,18 +37,18 @@
       PAGAMENTO <span class="text-[#ff8800]">PADRÃO</span>
     </h2>
     <p class="text-xl text-white/80 mb-4">A promoção anterior expirou.</p>
-    <p class="text-2xl text-[#ff8800] font-bold mb-8">Para pagar com desconto novamente, será necessário refazer seu Currículo.</p>
+    <p class="text-2xl text-[#ff8800] font-bold mb-8">Para pagar com desconto novamente, será necessário refazer sua Análise.</p>
 
     <div class="bg-black/80 border border-[#E7C75F]/50 rounded-xl p-6 mb-8">
       <div class="flex justify-center items-center space-x-4 mb-4">
-        <span class="text-6xl font-black text-[#ff8800] font-['Anton']">R$12,50</span>
+        <span class="text-6xl font-black text-[#ff8800] font-['Anton']">R$5,99</span>
       </div>
-      <p class="text-white/60 text-sm">Este é o valor padrão do Currículo Profissional.</p>
+      <p class="text-white/60 text-sm">Este é o valor padrão da Análise Profissional.</p>
     </div>
 
     <input type="text" id="pix" readonly
       class="w-full text-center font-bold text-[#0056b3] bg-[#eef6ff] border border-gray-300 rounded-lg py-3 mb-4"
-      value="00020126430014BR.GOV.BCB.PIX0121andrielysom@gmail.com520400005303986540512.505802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63040E4C" />
+      value="00020126430014BR.GOV.BCB.PIX0121andrielysom@gmail.com52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63040E4C" />
 
     <button onclick="copiarPix()" class="w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
       Copiar chave Pix
@@ -59,32 +59,31 @@
     </button>
 
     <div id="pdf" class="mt-8 hidden">
-      <p class="text-lg mt-4">Parabéns! Sua seu Currículo está pronta.</p>
-      <a href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20de%20R$12,50%20e%20quero%20receber%20meu%20Currículo%20em%20PDF."
+      <p class="text-lg mt-4">Parabéns! Sua Análise Profissional está pronta.</p>
+      <a href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20de%20R$5,99%20e%20quero%20receber%20minha%20Análise%20Profissional%20em%20PDF."
          target="_blank"
          class="block mt-4 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
         Receber Análise pelo WhatsApp
       </a>
     </div>
 
-
     <div class="mt-6 text-sm text-white/60 space-y-2">
-<div class="flex justify-center gap-12 text-gray-600">
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-lock text-sm mb-1"></i>
-    <span class="text-sm">Pagamento 100% seguro</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-bolt text-sm mb-1"></i>
-    <span class="text-sm">Entrega imediata</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-shield-halved text-sm mb-1"></i>
-    <span class="text-sm">Garantia de 7 dias</span>
-  </div>
-</div>
-      <p class="mt-4">Mais de <span class="text-[#ff8800] font-bold">10.000 pessoas</span> já melhoraram seus currículos com a Office Express</p>
-      <p class="text-red-400 font-bold">Não é mais possível acessar a promoção anterior sem refazer o currículo.</p>
+      <div class="flex justify-center gap-12 text-gray-600">
+        <div class="flex flex-col items-center">
+          <i class="fa-solid fa-lock text-sm mb-1"></i>
+          <span class="text-sm">Pagamento 100% seguro</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <i class="fa-solid fa-bolt text-sm mb-1"></i>
+          <span class="text-sm">Entrega imediata</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <i class="fa-solid fa-shield-halved text-sm mb-1"></i>
+          <span class="text-sm">Garantia de 7 dias</span>
+        </div>
+      </div>
+      <p class="mt-4">Mais de <span class="text-[#ff8800] font-bold">10.000 pessoas</span> já utilizaram a Office Express para análises profissionais.</p>
+      <p class="text-red-400 font-bold">Não é mais possível acessar a promoção anterior sem refazer a análise.</p>
     </div>
   </section>
 
@@ -127,7 +126,7 @@
     // Impede retorno à página anterior
     history.pushState(null, null, location.href);
     window.onpopstate = function () {
-      location.href = "/curriculo";
+      location.href = "/analise";
     };
   </script>
 </body>
