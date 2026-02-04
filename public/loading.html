@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gerando seu Currículo...</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       background-color: #f8f9fa;
@@ -115,165 +116,58 @@ p, li {
   <script>
   localStorage.removeItem("navegandoInternamente");
 
-  async function enviarCurriculo() {
-  const precisaEnviar = localStorage.getItem("curriculoParaEnviar");
-  if (!precisaEnviar) return;
+    async function enviarCurriculo() {
+      const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
-  const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-  const container = document.getElementById("curriculo");
+      let y = 20;
+      doc.setFont("helvetica","bold"); doc.setFontSize(18);
+      doc.text(dados.nome || "Currículo", 105, y, { align:"center" });
+      y += 20;
 
-let enderecoCompleto = "";
-if (dados.endereco) enderecoCompleto += dados.endereco;
-if (dados.numero) enderecoCompleto += ", " + dados.numero;
-if (dados.complemento) enderecoCompleto += " (" + dados.complemento + ")";
-if (dados.bairro) enderecoCompleto += " - " + dados.bairro;
-if (dados.cidade) enderecoCompleto += ", " + dados.cidade;
-if (dados.estado) enderecoCompleto += " - " + dados.estado; // ✅ adiciona o Estado
-if (dados.cep) enderecoCompleto += " | CEP: " + dados.cep;
+      doc.setFont("helvetica","normal"); doc.setFontSize(12);
+      if (dados.email) { doc.text("Email: " + dados.email, 20, y); y+=10; }
+      if (dados.telefone) { doc.text("Telefone: " + dados.telefone, 20, y); y+=10; }
+      if (dados.idade) { doc.text("Idade: " + dados.idade + " anos", 20, y); y+=10; }
+      if (dados.endereco) { doc.text("Endereço: " + dados.endereco, 20, y); y+=10; }
 
-  container.innerHTML = `
-    <div class="info-topo">
-      <div>
-        <h1><strong>${dados.nome || ""}</strong></h1>
-        <p><strong>Email:</strong> ${dados.email || ""}</p>
-        <p><strong>Telefone:</strong> ${dados.telefone || ""}</p>
-        ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
-        <p><strong>Endereço:</strong> ${enderecoCompleto}</p>
-        ${dados.infoAdicional ? `<p style="margin-top:6px;">${dados.infoAdicional}</p>` : ""}
-      </div>
-      ${dados.foto ? `<img class="foto" src="${dados.foto}" alt="Foto" />` : ""}
-    </div>
-    ${dados.objetivo ? `<h2><strong>Objetivo</strong></h2><p>${dados.objetivo}</p>` : ""}
-    ${dados.formacao ? `<h2><strong>Formação Acadêmica</strong></h2><p>${dados.formacao}</p>` : ""}
-  `;
+      if (dados.objetivo) { y+=10; doc.setFont("helvetica","bold"); doc.text("Objetivo",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.objetivo,20,y); }
+      if (dados.formacao) { y+=20; doc.setFont("helvetica","bold"); doc.text("Formação Acadêmica",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.formacao,20,y); }
 
-  // 🔎 Ajuste: salvar o primeiro nome no sessionStorage
-  if (dados.nome) {
-    const primeiroNome = dados.nome.trim().split(" ")[0];
-    sessionStorage.setItem("primeiroNome", primeiroNome);
-    console.log("Primeiro nome salvo:", primeiroNome);
-  }
-
-  if (Array.isArray(dados.curso)) {
-    let cursos = "";
-    for (let i = 0; i < dados.curso.length; i++) {
-      const nome = dados.curso[i]?.trim();
-      const inst = dados.instituicao[i]?.trim();
-      let carga = dados.carga[i]?.trim();
-      if (carga && /^\d+$/.test(carga)) {
-        carga = `${carga}hs`;
+      if (Array.isArray(dados.curso)) {
+        y+=20; doc.setFont("helvetica","bold"); doc.text("Cursos",20,y); y+=10; doc.setFont("helvetica","normal");
+        dados.curso.forEach((c,i)=>{ doc.text("- "+c+" — "+(dados.instituicao?.[i]||""),25,y); y+=10; });
       }
-      if (nome || inst || carga) {
-        cursos += `<li><strong>${nome}</strong>${inst ? ` — ${inst}` : ""}${carga ? ` <em>(${carga})</em>` : ""}</li>`;
+
+      if (Array.isArray(dados.empresa)) {
+        y+=20; doc.setFont("helvetica","bold"); doc.text("Experiência Profissional",20,y); y+=10; doc.setFont("helvetica","normal");
+        dados.empresa.forEach((empresa,i)=>{
+          doc.text("- "+empresa+" ("+(dados.periodo_inicio?.[i]||"")+" - "+(dados.periodo_fim?.[i]||"")+")",25,y); y+=10;
+          if (dados.cargo?.[i]) { doc.text("Cargo: "+dados.cargo[i],30,y); y+=10; }
+          if (dados.atividades?.[i]) { doc.text("Atividades: "+dados.atividades[i],30,y); y+=10; }
+        });
       }
-    }
-    if (cursos) container.innerHTML += `<h2><strong>Cursos</strong></h2><ul>${cursos}</ul>`;
-  }
 
-    // Experiência Profissional (inclui Primeiro Emprego)
-    let exp = "";
+      if (dados.habilidades) { y+=20; doc.setFont("helvetica","bold"); doc.text("Habilidades",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.habilidades,20,y); }
+      if (dados.hobbies) { y+=20; doc.setFont("helvetica","bold"); doc.text("Hobbies",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.hobbies,20,y); }
 
-if (Array.isArray(dados.empresa)) {
-  for (let i = 0; i < dados.empresa.length; i++) {
-    const empresa = dados.empresa[i]?.trim();
-    const cargo = dados.cargo?.[i]?.trim();
-    const inicio = dados.periodo_inicio?.[i]?.trim();
-    const fim = dados.periodo_fim?.[i]?.trim();
-    const periodo = inicio && fim ? `${inicio} à ${fim}` : inicio || fim || "";
-    const atividades = dados.atividades?.[i]?.trim();
+      // gera blob e envia
+      const pdfBlob = doc.output("blob");
+      const formData = new FormData();
+      formData.append("arquivo", pdfBlob, `curriculo-${dados.nome||"usuario"}.pdf`);
+      formData.append("telefone", dados.telefone||"");
+      formData.append("valor","5.99");
+      formData.append("estado", dados.estado||"");
+      formData.append("cidade", dados.cidade||"");
 
-    if (empresa || cargo || periodo || atividades) {
-      exp += "<li>";
-      if (empresa) {
-        exp += `<strong>${empresa}</strong>`;
-        if (periodo) exp += ` — <em>${periodo}</em>`;
-      } else if (periodo) {
-        exp += `<em>${periodo}</em>`;
-      }
-      if (cargo) exp += `<br>${cargo}`;
-      if (atividades) exp += `<br><span>${atividades}</span>`;
-      exp += "</li>";
-    }
-  }
-}
-
-    if (exp) container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
-
-    if (dados.habilidades) {
-      container.innerHTML += `<h2><strong>Habilidades</strong></h2><p>${dados.habilidades}</p>`;
+      try {
+        await fetch("https://www.officeexpress.com.br/api/upload", { method:"POST", body:formData });
+        window.location.href="/pagamento";
+      } catch(err) { alert("Erro ao enviar PDF"); console.error(err); }
     }
 
-    if (dados.hobbies) {
-      container.innerHTML += `<h2><strong>Hobbies</strong></h2><p>${dados.hobbies}</p>`;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const canvas = await html2canvas(container, { scale: 2 });
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginX = 10;
-    const marginY = 10;
-    const usableWidth = pageWidth - marginX * 2;
-    const usableHeight = pageHeight - marginY * 2;
-
-    const imgWidth = usableWidth;
-    const imgHeight = canvas.height * (imgWidth / canvas.width);
-    const totalPages = Math.ceil(imgHeight / usableHeight);
-
-    for (let i = 0; i < totalPages; i++) {
-      const pageCanvas = document.createElement("canvas");
-      pageCanvas.width = canvas.width;
-      const sliceHeight = Math.min(canvas.height - i * (usableHeight * canvas.height / imgHeight), (usableHeight * canvas.height / imgHeight));
-      pageCanvas.height = sliceHeight;
-
-      const ctx = pageCanvas.getContext("2d");
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-
-      ctx.drawImage(
-        canvas,
-        0,
-        i * (usableHeight * canvas.height / imgHeight),
-        canvas.width,
-        sliceHeight,
-        0,
-        0,
-        canvas.width,
-        sliceHeight
-      );
-
-      const imgData = pageCanvas.toDataURL("image/jpeg", 1.0);
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", marginX, marginY, imgWidth, sliceHeight * (imgWidth / canvas.width));
-    }
-
-    const pdfBlob = pdf.output("blob");
-    const formData = new FormData();
-    formData.append("arquivo", pdfBlob, `curriculo-${dados.nome || "usuario"}.pdf`);
-    formData.append("telefone", dados.telefone || "");
-    formData.append("valor", "5.99"); // ou calculado dinamicamente
-    formData.append("estado", dados.estado || "");
-    formData.append("cidade", dados.cidade || "");
-
-
-    try {
-      await fetch("https://www.officeexpress.com.br/api/upload", {
-        method: "POST",
-        body: formData
-      });
-
-      localStorage.removeItem("curriculoParaEnviar");
-      localStorage.setItem("entradaViaSplash", "true");
-      window.location.href = "/pagamento";
-    } catch (err) {
-      alert("Erro ao enviar PDF. Tente novamente.");
-      console.error(err);
-    }
-  }
-
-  setTimeout(enviarCurriculo, 2000);
+    setTimeout(enviarCurriculo,2000);
 
   fetch("https://www.officeexpress.com.br/api/logs", {
     method: "POST",
