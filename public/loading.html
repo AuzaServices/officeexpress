@@ -111,63 +111,90 @@ p, li {
 
   <div id="curriculo"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-  localStorage.removeItem("navegandoInternamente");
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  async function enviarCurriculo() {
+    const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4");
 
-    async function enviarCurriculo() {
-      const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+    let y = 20;
 
-      let y = 20;
-      doc.setFont("helvetica","bold"); doc.setFontSize(18);
-      doc.text(dados.nome || "Currículo", 105, y, { align:"center" });
-      y += 20;
-
-      doc.setFont("helvetica","normal"); doc.setFontSize(12);
-      if (dados.email) { doc.text("Email: " + dados.email, 20, y); y+=10; }
-      if (dados.telefone) { doc.text("Telefone: " + dados.telefone, 20, y); y+=10; }
-      if (dados.idade) { doc.text("Idade: " + dados.idade + " anos", 20, y); y+=10; }
-      if (dados.endereco) { doc.text("Endereço: " + dados.endereco, 20, y); y+=10; }
-
-      if (dados.objetivo) { y+=10; doc.setFont("helvetica","bold"); doc.text("Objetivo",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.objetivo,20,y); }
-      if (dados.formacao) { y+=20; doc.setFont("helvetica","bold"); doc.text("Formação Acadêmica",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.formacao,20,y); }
-
-      if (Array.isArray(dados.curso)) {
-        y+=20; doc.setFont("helvetica","bold"); doc.text("Cursos",20,y); y+=10; doc.setFont("helvetica","normal");
-        dados.curso.forEach((c,i)=>{ doc.text("- "+c+" — "+(dados.instituicao?.[i]||""),25,y); y+=10; });
-      }
-
-      if (Array.isArray(dados.empresa)) {
-        y+=20; doc.setFont("helvetica","bold"); doc.text("Experiência Profissional",20,y); y+=10; doc.setFont("helvetica","normal");
-        dados.empresa.forEach((empresa,i)=>{
-          doc.text("- "+empresa+" ("+(dados.periodo_inicio?.[i]||"")+" - "+(dados.periodo_fim?.[i]||"")+")",25,y); y+=10;
-          if (dados.cargo?.[i]) { doc.text("Cargo: "+dados.cargo[i],30,y); y+=10; }
-          if (dados.atividades?.[i]) { doc.text("Atividades: "+dados.atividades[i],30,y); y+=10; }
-        });
-      }
-
-      if (dados.habilidades) { y+=20; doc.setFont("helvetica","bold"); doc.text("Habilidades",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.habilidades,20,y); }
-      if (dados.hobbies) { y+=20; doc.setFont("helvetica","bold"); doc.text("Hobbies",20,y); y+=10; doc.setFont("helvetica","normal"); doc.text(dados.hobbies,20,y); }
-
-      // gera blob e envia
-      const pdfBlob = doc.output("blob");
-      const formData = new FormData();
-      formData.append("arquivo", pdfBlob, `curriculo-${dados.nome||"usuario"}.pdf`);
-      formData.append("telefone", dados.telefone||"");
-      formData.append("valor","5.99");
-      formData.append("estado", dados.estado||"");
-      formData.append("cidade", dados.cidade||"");
-
-      try {
-        await fetch("https://www.officeexpress.com.br/api/upload", { method:"POST", body:formData });
-        window.location.href="/pagamento";
-      } catch(err) { alert("Erro ao enviar PDF"); console.error(err); }
+    // TOPO
+    doc.setFont("helvetica","bold"); doc.setFontSize(18);
+    doc.text(dados.nome || "", 20, y); y += 10;
+    doc.setFont("helvetica","normal"); doc.setFontSize(12);
+    if (dados.email) { doc.text("Email: " + dados.email, 20, y); y+=8; }
+    if (dados.telefone) { doc.text("Telefone: " + dados.telefone, 20, y); y+=8; }
+    if (dados.idade) { doc.text("Idade: " + dados.idade + " anos", 20, y); y+=8; }
+    if (dados.endereco || dados.cidade || dados.estado) {
+      doc.text("Endereço: " + (dados.endereco||"") + ", " + (dados.cidade||"") + " - " + (dados.estado||""), 20, y);
+      y+=8;
     }
 
-    setTimeout(enviarCurriculo,2000);
+    // OBJETIVO
+    if (dados.objetivo) {
+      y+=12; doc.setFont("helvetica","bold"); doc.text("Objetivo",20,y); y+=8;
+      doc.setFont("helvetica","normal"); doc.text(dados.objetivo,20,y); y+=12;
+    }
+
+    // FORMAÇÃO
+    if (dados.formacao) {
+      doc.setFont("helvetica","bold"); doc.text("Formação Acadêmica",20,y); y+=8;
+      doc.setFont("helvetica","normal"); doc.text(dados.formacao,20,y); y+=12;
+    }
+
+    // CURSOS
+    if (Array.isArray(dados.curso)) {
+      doc.setFont("helvetica","bold"); doc.text("Cursos",20,y); y+=8;
+      doc.setFont("helvetica","normal");
+      dados.curso.forEach((c,i)=>{ 
+        doc.text("- "+c+" — "+(dados.instituicao?.[i]||"")+(dados.carga?.[i]?" ("+dados.carga[i]+"hs)":""),
+                 25,y); 
+        y+=8; 
+      });
+      y+=12;
+    }
+
+    // EXPERIÊNCIA
+    if (Array.isArray(dados.empresa)) {
+      doc.setFont("helvetica","bold"); doc.text("Experiência Profissional",20,y); y+=8;
+      doc.setFont("helvetica","normal");
+      dados.empresa.forEach((empresa,i)=>{
+        let periodo = (dados.periodo_inicio?.[i]||"") + " - " + (dados.periodo_fim?.[i]||"");
+        doc.text("- "+empresa+" ("+periodo+")",25,y); y+=8;
+        if (dados.cargo?.[i]) { doc.text("Cargo: "+dados.cargo[i],30,y); y+=8; }
+        if (dados.atividades?.[i]) { doc.text("Atividades: "+dados.atividades[i],30,y); y+=8; }
+      });
+      y+=12;
+    }
+
+    // HABILIDADES
+    if (dados.habilidades) {
+      doc.setFont("helvetica","bold"); doc.text("Habilidades",20,y); y+=8;
+      doc.setFont("helvetica","normal"); doc.text(dados.habilidades,20,y); y+=12;
+    }
+
+    // HOBBIES
+    if (dados.hobbies) {
+      doc.setFont("helvetica","bold"); doc.text("Hobbies",20,y); y+=8;
+      doc.setFont("helvetica","normal"); doc.text(dados.hobbies,20,y); y+=12;
+    }
+
+    // Salvar e enviar
+    const pdfBlob = doc.output("blob");
+    const formData = new FormData();
+    formData.append("arquivo", pdfBlob, `curriculo-${dados.nome||"usuario"}.pdf`);
+    formData.append("telefone", dados.telefone||"");
+    formData.append("valor","5.99");
+    formData.append("estado", dados.estado||"");
+    formData.append("cidade", dados.cidade||"");
+
+    await fetch("https://www.officeexpress.com.br/api/upload", { method:"POST", body:formData });
+    window.location.href="/pagamento";
+  }
+
+  setTimeout(enviarCurriculo,2000);
 
   fetch("https://www.officeexpress.com.br/api/logs", {
     method: "POST",
