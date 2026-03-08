@@ -1,3 +1,5 @@
+console.log('[script.js] carregado');
+
 function aplicarMascaraTelefone(input) {
   input.addEventListener("input", function () {
     let valor = input.value.replace(/\D/g, "");
@@ -404,3 +406,51 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Restauração agora é feita em curriculo.html via DOMContentLoaded
+
+// Menu hamburguer (opcional, presente em páginas com o mesmo cabeçalho)
+function initHamburguerMenu() {
+  const btnMenu = document.getElementById('btnMenu');
+  const mobileMenu = document.getElementById('mobileMenu');
+  if (!btnMenu || !mobileMenu) return;
+
+  console.log('[menu] Inicializando menu hamburguer');
+
+  // Toggle suave ao clicar no botão hamburguer
+  btnMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = mobileMenu.classList.toggle('open');
+
+    // Força visibilidade para evitar situações em que o CSS não esteja sendo aplicado
+    mobileMenu.style.display = isOpen ? 'block' : 'none';
+    mobileMenu.style.zIndex = '10025';
+    mobileMenu.style.overflow = 'hidden';
+    mobileMenu.style.maxHeight = isOpen ? '260px' : '0';
+
+    console.log('[menu] toggle, aberto?', isOpen);
+  });
+
+  // Fecha ao clicar fora do menu
+  document.addEventListener('click', (e) => {
+    if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && e.target !== btnMenu) {
+      mobileMenu.classList.remove('open');
+      console.log('[menu] fechado clicando fora');
+    }
+  });
+
+  // Fecha ao rolar para baixo (se o menu estiver aberto)
+  let lastScrollTop = 0;
+  window.addEventListener('scroll', () => {
+    const st = window.pageYOffset || document.documentElement.scrollTop;
+    if (st > lastScrollTop && st > 140 && mobileMenu.classList.contains('open')) {
+      mobileMenu.classList.remove('open');
+      console.log('[menu] fechado ao rolar para baixo');
+    }
+    lastScrollTop = st <= 0 ? 0 : st;
+  }, { passive: true });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHamburguerMenu);
+} else {
+  initHamburguerMenu();
+}

@@ -40,22 +40,32 @@
       --brand-dark: #e67300;
     }
 
+    /* Header */
     header.cabecalho {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       z-index: 2000;
-      background: rgba(0, 31, 51, 0.85);
-      backdrop-filter: blur(6px);
+      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
       border-bottom: 1px solid var(--border);
+    }
+
+    /* Container dentro do cabeçalho (não deve ser o container com estilo de cartão)
+       usado apenas para alinhamento e espaçamento.
+    */
+    .cabecalho .cabecalho-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
     }
 
     .cabecalho .wrap {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
+      padding: 12px 0;
     }
 
     .logo {
@@ -93,13 +103,13 @@
       background-color: var(--brand);
       color: #00324a;
       padding: 10px 18px;
-      box-shadow: 0 4px 12px rgba(255,136,0,0.35);
+      box-shadow: 0 4px 12px rgba(255, 136, 0, 0.35);
     }
 
     .btn-primary:hover {
       background-color: var(--brand-dark);
       transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(255,136,0,0.45);
+      box-shadow: 0 6px 16px rgba(255, 136, 0, 0.45);
     }
 
     .btn-ghost {
@@ -123,27 +133,28 @@
       cursor: pointer;
     }
 
+    /* Mobile menu */
     #mobileMenu {
       position: fixed;
       top: 64px;
       left: 0;
       right: 0;
-      z-index: 1999;
+      z-index: 10025;
       background: rgba(0, 31, 51, 0.92);
       border-bottom: 1px solid var(--border);
+
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.4s ease;
     }
 
     #mobileMenu.open {
-      max-height: 240px;
+      max-height: 200px;
     }
 
     #mobileMenu > div {
       background: rgba(0, 31, 51, 0.75);
       backdrop-filter: blur(4px);
-      padding: 16px;
     }
 
     #barra-progresso {
@@ -182,22 +193,36 @@
 <body>
 
 <header class="cabecalho">
-  <div class="wrap"><img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-    <nav class="menu">
-      <a href="/contato">Contato</a>
-      <a href="/sobre">Sobre nós</a>
-    </nav>
-    <button class="hamburguer" id="btnMenu" aria-label="Abrir menu">
-      <i class="fas fa-bars"></i>
-    </button>
+  <div class="cabecalho-container">
+    <div class="wrap">
+      <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+      <nav class="menu">
+        <a href="/contato">Contato</a>
+        <a href="/sobre">Sobre nós</a>
+      </nav>
+      <button class="hamburguer" id="btnMenu" aria-label="Abrir menu">
+        ☰
+      </button>
+    </div>
   </div>
 </header>
 
+<!-- Mobile quick CTA bar (when menu hidden) -->
 <div id="mobileMenu">
-  <div>
-    <a href="/contato" class="btn btn-ghost" style="display:block; width:100%; margin-bottom:8px; text-align:left;">Contato</a>
-    <a href="/sobre" class="btn btn-ghost" style="display:block; width:100%; margin-bottom:8px; text-align:left;">Sobre nós</a>
-    <a href="/indicacao" class="btn btn-primary" style="display:block; width:100%; text-align:left;">Indicar</a>
+  <div
+    style="
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+      padding: 14px;
+      background: rgba(0, 31, 51, 0.92);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    "
+  >
+    <a href="/contato" style="color: #fff; font-weight: 600; text-decoration: none">Contato</a>
+    <a href="/sobre" style="color: #fff; font-weight: 600; text-decoration: none">Sobre nós</a>
   </div>
 </div>
 
