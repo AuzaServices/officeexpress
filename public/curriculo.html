@@ -929,12 +929,10 @@ Você está a um clique de transformar sua história profissional. <strong>Final
   const acoes = ["começou agora", "está fazendo", "terminou"];
   const nomesUsados = new Set();
 
-  // Gera um intervalo natural (entre 18 e 30 segundos)
+  // Gera um intervalo natural (entre 22 e 38 segundos)
   function proximoIntervalo() {
-    return 18000 + Math.floor(Math.random() * 12000); // 18s..30s
+    return 22000 + Math.floor(Math.random() * 16000); // 22s..38s
   }
-
-  let tempoAtual = proximoIntervalo();
 
   const container = document.getElementById("notificacoes");
 
@@ -959,13 +957,13 @@ Você está a um clique de transformar sua história profissional. <strong>Final
 
     container.appendChild(div);
 
-    const delay = tempoAtual;
+    const duracaoVisivel = 4000 + Math.floor(Math.random() * 3500); // 4-7.5s
+    const proximaIntervalo = proximoIntervalo();
 
     setTimeout(() => {
       div.remove();
-      tempoAtual = proximoIntervalo();
-      gerarNotificacao();
-    }, delay);
+      setTimeout(gerarNotificacao, proximaIntervalo);
+    }, duracaoVisivel);
   }
 
   // Exibe primeiro a notificação com o nome do usuário
@@ -981,11 +979,13 @@ Você está a um clique de transformar sua história profissional. <strong>Final
     nomesUsados.add(nomeUsuario);
 
     // Aguarda o tempo da primeira notificação antes de iniciar o ciclo
+    const duracaoVisivel = 4000 + Math.floor(Math.random() * 3500);
+    const proximaIntervalo = proximoIntervalo();
+
     setTimeout(() => {
       div.remove();
-      tempoAtual = proximoIntervalo();
-      gerarNotificacao();
-    }, proximoIntervalo());
+      setTimeout(gerarNotificacao, proximaIntervalo);
+    }, duracaoVisivel);
   } else {
     // Se não tiver nome, inicia direto
     gerarNotificacao();
