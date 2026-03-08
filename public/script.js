@@ -4,7 +4,54 @@ function aplicarMascaraTelefone(input) {
     if (valor.length > 11) valor = valor.slice(0, 11);
     const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1)$2-$3");
     input.value = formatado;
+    salvarDados(); // atualiza localStorage a cada mudança
   });
+}
+
+function getDadosFromForm() {
+  const form = document.getElementById("formulario");
+  if (!form) return {};
+
+  const valores = (nome) =>
+    Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map((el) =>
+      el.value.trim(),
+    );
+
+  const dados = {
+    nome: form.nome?.value.trim() || "",
+    idade: form.idade?.value.trim() || "",
+    email: form.email?.value.trim() || "",
+    telefone: valores("telefone").filter((t) => t).join(" "),
+    endereco: form.endereco?.value.trim() || "",
+    numero: form.numero?.value.trim() || "",
+    complemento: form.complemento?.value.trim() || "",
+    bairro: form.bairro?.value.trim() || "",
+    cidade: form.cidade?.value.trim() || "",
+    estado: form.estado?.value.trim() || "",
+    cep: form.cep?.value.trim() || "",
+    infoAdicional:
+      form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
+    objetivo: form.objetivo?.value.trim() || "",
+    formacao: form.formacao?.value.trim() || "",
+    habilidades: form.habilidades?.value.trim() || "",
+    hobbies: form.hobbies?.value.trim() || "",
+    curso: valores("curso"),
+    instituicao: valores("instituicao"),
+    carga: valores("carga"),
+    empresa: valores("empresa"),
+    cargo: valores("cargo"),
+    periodo_inicio: valores("periodo_inicio"),
+    periodo_fim: valores("periodo_fim"),
+    atividades: valores("atividades"),
+    foto: document.getElementById("preview-miniatura")?.src || null,
+  };
+
+  return dados;
+}
+
+function salvarDados() {
+  const dados = getDadosFromForm();
+  localStorage.setItem("curriculo", JSON.stringify(dados));
 }
 
 function adicionarTelefone() {
@@ -39,7 +86,11 @@ function adicionarTelefone() {
     const valor = input.value.replace(/\D/g, "");
     const valido = /^(\d{2})(9\d{8})$/.test(valor);
     erro.style.display = valor.length > 0 && !valido ? "inline" : "none";
+    salvarDados(); // salva sempre que o usuário digita
   });
+
+  // Salva imediatamente após criar o campo (para manter consistência)
+  salvarDados();
 }
 
 document
@@ -117,6 +168,13 @@ function salvar(dados) {
   }, 300);
 }
 
+// Chama a função salvarDados sempre que o formulário for alterado
+const formElement = document.getElementById("formulario");
+if (formElement) {
+  formElement.addEventListener("input", salvarDados);
+  formElement.addEventListener("change", salvarDados);
+}
+
 const dropArea = document.getElementById("drop-area");
 const uploadBox = document.getElementById("upload-box");
 const inputFoto = document.getElementById("foto");
@@ -162,6 +220,7 @@ function mostrarPreview(file) {
   reader.onload = function (e) {
     preview.src = e.target.result;
     preview.style.display = "block";
+    salvarDados(); // salva também a foto (base64) sempre que atualiza preview
   };
   reader.readAsDataURL(file);
 }
@@ -182,6 +241,7 @@ function adicionarCurso(curso = "", instituicao = "", carga = "") {
     input.addEventListener("input", salvarCursos);
   });
   salvarCursos();
+  salvarDados();
 }
 
 function salvarCursos() {
@@ -286,6 +346,7 @@ function adicionarExperiencia(
   });
 
   salvarExperiencias();
+  salvarDados();
 }
 
 function salvarExperiencias() {

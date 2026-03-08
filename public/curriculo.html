@@ -1300,13 +1300,26 @@ document.addEventListener("DOMContentLoaded", () => {
   if (dadosSalvos.habilidades) document.getElementById("habilidades").value = dadosSalvos.habilidades;
   if (dadosSalvos.hobbies) document.getElementById("hobbies").value = dadosSalvos.hobbies;
 
+  // Foto (preview)
+  if (dadosSalvos.foto) {
+    const preview = document.getElementById("preview-miniatura");
+    if (preview) {
+      preview.src = dadosSalvos.foto;
+      preview.style.display = "block";
+    }
+  }
+
   // Telefones
   if (dadosSalvos.telefone) {
     const telefones = dadosSalvos.telefone.split(" ");
-    telefones.forEach(t => {
+    const primeiroInput = document.querySelector("[name=\"telefone[]\"]");
+    if (primeiroInput && telefones.length > 0) {
+      primeiroInput.value = telefones[0];
+    }
+    telefones.slice(1).forEach((t) => {
       adicionarTelefone();
       const ultimoInput = document.querySelector("#telefones .telefone-input:last-of-type");
-      ultimoInput.value = t;
+      if (ultimoInput) ultimoInput.value = t;
     });
   }
 
