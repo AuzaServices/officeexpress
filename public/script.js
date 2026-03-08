@@ -71,6 +71,7 @@ function salvarDados() {
 }
 
 function adicionarTelefone() {
+  console.log("📞 adicionarTelefone() chamada");
   const container = document.getElementById("telefones");
 
   const bloco = document.createElement("div");
@@ -106,6 +107,7 @@ function adicionarTelefone() {
   });
 
   // Salva imediatamente após criar o campo (para manter consistência)
+  console.log("📞 Novo telefone adicionado ao DOM, salvando...");
   salvarDados();
 }
 
@@ -182,8 +184,14 @@ function salvar(dados) {
 // Chama a função salvarDados sempre que o formulário for alterado
 const formElement = document.getElementById("formulario");
 if (formElement) {
-  formElement.addEventListener("input", salvarDados);
-  formElement.addEventListener("change", salvarDados);
+  formElement.addEventListener("input", (e) => {
+    console.log("🎯 Evento input capturado! Campo:", e.target.name, "Valor:", e.target.value);
+    salvarDados();
+  });
+  formElement.addEventListener("change", (e) => {
+    console.log("🎯 Evento change capturado! Campo:", e.target.name, "Valor:", e.target.value);
+    salvarDados();
+  });
 }
 
 const dropArea = document.getElementById("drop-area");
@@ -237,6 +245,7 @@ function mostrarPreview(file) {
 }
 
 function adicionarCurso(curso = "", instituicao = "", carga = "") {
+  console.log("🎓 adicionarCurso() chamada");
   const container = document.getElementById("cursos");
   const novo = document.createElement("div");
   novo.className = "curso";
@@ -251,6 +260,7 @@ function adicionarCurso(curso = "", instituicao = "", carga = "") {
   novo.querySelectorAll("input").forEach((input) => {
     input.addEventListener("input", salvarCursos);
   });
+  console.log("🎓 Novo curso adicionado ao DOM, salvando...");
   salvarCursos();
   salvarDados();
 }
@@ -287,6 +297,7 @@ function adicionarExperiencia(
   inicioVal = "",
   fimVal = "",
 ) {
+  console.log("💼 adicionarExperiencia() chamada");
   const container = document.getElementById("experiencias");
   const nova = document.createElement("div");
   nova.className = "experiencia";
@@ -350,6 +361,7 @@ function adicionarExperiencia(
     });
   });
 
+  console.log("💼 Nova experiência adicionada ao DOM, salvando...");
   salvarExperiencias();
   salvarDados();
 }
