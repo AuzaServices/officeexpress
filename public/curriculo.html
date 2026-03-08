@@ -456,29 +456,6 @@ document.getElementById("gerarFrase").addEventListener("click", function (e) {
         <h2>Cursos</h2>
 <label>Caso não tenha deixe em branco</label>
         <div id="cursos">
-          <div class="curso">
-<!-- Nome do curso -->
-<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-  <label for="curso">Nome do curso</label>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="text" name="curso[]" id="curso" placeholder="Ex: Informática Básica, Administração e etc..." />
-    <button type="button" onclick="reconhecerCampo('curso')" style="background: none; border: none; cursor: pointer;">
-      <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-    </button>
-  </div>
-</div>
-
-<!-- Instituição -->
-<div style="display: flex; flex-direction: column; margin-bottom: 12px;">
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <input type="text" name="instituicao[]" id="instituicao" placeholder="Instituição (opcional)" />
-    <button type="button" onclick="reconhecerCampo('instituicao')" style="background: none; border: none; cursor: pointer;">
-      <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-    </button>
-  </div>
-</div>
-            <input type="text" name="carga[]" placeholder="Carga horária (ex: 40h)" class="carga-input" />
-          </div>
         </div>
         <button type="button" class="sub-botao" onclick="adicionarCurso()">+ Adicionar Curso</button>
       </div>
@@ -498,80 +475,11 @@ document.getElementById("gerarFrase").addEventListener("click", function (e) {
 </div>
 
   <div id="experiencias">
-    <div class="experiencia">
-      <!-- Empresa -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <input type="text" name="empresa[]" id="empresa-0" placeholder="Empresa" />
-        <button type="button" onclick="reconhecerCampo('empresa-0')" style="background: none; border: none; cursor: pointer;">
-          <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-        </button>
-      </div>
-
-      <!-- Cargo -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <input type="text" name="cargo[]" id="cargo-0" placeholder="Cargo" />
-        <button type="button" onclick="reconhecerCampo('cargo-0')" style="background: none; border: none; cursor: pointer;">
-          <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-        </button>
-      </div>
-
-      <!-- Atividades -->
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <textarea name="atividades[]" id="atividades-0" placeholder="Atividades desenvolvidas (opcional)..."></textarea>
-        <button type="button" onclick="reconhecerAtividades('atividades-0')" style="background: none; border: none; cursor: pointer;">
-          <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width: 24px;" />
-        </button>
-      </div>
-
-      <!-- Período -->
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-        <div style="flex: 1; min-width: 140px;">
-          <label for="periodo_inicio_0">Início:</label>
-          <input type="text" class="mesAno" name="periodo_inicio[]" id="periodo_inicio_0" placeholder="Selecione mês e ano">
-        </div>
-        <div style="flex: 1; min-width: 140px;">
-          <label for="periodo_fim_0">Fim:</label>
-          <input type="text" class="mesAno" name="periodo_fim[]" id="periodo_fim_0" placeholder="Selecione mês e ano">
-        </div>
-      </div>
-    </div>
   </div>
 
   <button type="button" class="sub-botao" onclick="adicionarExperiencia()">+ Adicionar Experiência</button>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const checkbox = document.getElementById("primeiroEmpregoCheck");
-  const experiencia = document.querySelector(".experiencia");
-
-  checkbox.addEventListener("change", () => {
-    const marcado = checkbox.checked;
-    const campos = experiencia.querySelectorAll("input, textarea, button");
-
-    if (marcado) {
-      const campoEmpresa = experiencia.querySelector('[name="empresa[]"]');
-      campoEmpresa.value = "Primeiro Emprego";
-    } else {
-      const campoEmpresa = experiencia.querySelector('[name="empresa[]"]');
-      if (campoEmpresa.value === "Primeiro Emprego") {
-        campoEmpresa.value = "";
-      }
-    }
-
-    campos.forEach(el => {
-      el.disabled = marcado;
-      el.style.opacity = marcado ? "0.6" : "1";
-      el.style.pointerEvents = marcado ? "none" : "auto";
-    });
-
-    // Reativa o checkbox mesmo quando desativado
-    checkbox.disabled = false;
-    checkbox.style.opacity = "1";
-    checkbox.style.pointerEvents = "auto";
-  });
-});
-</script>
       <!-- Etapa 6 -->
       <div class="etapa">
                 <h2>Escolaridade / O Que Te Torna Único(a)</h2>
@@ -992,6 +900,9 @@ window.handleVisibilityChange = function () {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const dadosSalvos = JSON.parse(localStorage.getItem("curriculo") || "{}");
+  
+  console.log("🔄 DOMContentLoaded DISPARADO na curriculo.html");
+  console.log("📦 Dados recuperados do localStorage:", dadosSalvos);
 
   if (dadosSalvos.nome) document.getElementById("nome").value = dadosSalvos.nome;
   if (dadosSalvos.idade) document.getElementById("idade").value = dadosSalvos.idade;
@@ -1031,6 +942,7 @@ document.addEventListener("DOMContentLoaded", () => {
     : [];
 
   if (telefonesSalvos.length > 0) {
+    console.log("📞 Restaurando telefones:", telefonesSalvos);
     const primeiroInput = document.querySelector('[name="telefone[]"]');
     if (primeiroInput) primeiroInput.value = telefonesSalvos[0];
     telefonesSalvos.slice(1).forEach((t) => {
@@ -1040,39 +952,37 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Cursos
-// Cursos
-if (dadosSalvos.curso) {
-  dadosSalvos.curso.forEach((c, i) => {
-    if (i === 0) {
-      // Preenche o primeiro campo já existente no HTML
-      document.querySelector('[name="curso[]"]').value = c;
-      document.querySelector('[name="instituicao[]"]').value = dadosSalvos.instituicao[i];
-      document.querySelector('[name="carga[]"]').value = dadosSalvos.carga[i];
+  // Cursos - Garante que script.js foi carregado
+  if (dadosSalvos.curso && Array.isArray(dadosSalvos.curso) && dadosSalvos.curso.length > 0) {
+    console.log("📚 Restaurando cursos:", dadosSalvos.curso);
+    if (typeof adicionarCurso === "function") {
+      dadosSalvos.curso.forEach((c, i) => {
+        adicionarCurso(c, dadosSalvos.instituicao?.[i] || "", dadosSalvos.carga?.[i] || "");
+      });
     } else {
-      // Cria novos campos para os demais
-      adicionarCurso(c, dadosSalvos.instituicao[i], dadosSalvos.carga[i]);
+      console.error("❌ Erro: adicionarCurso não está disponível! script.js não carregou?");
     }
-  });
-}
+  }
 
-  // Experiências
-// Experiências
-if (dadosSalvos.empresa) {
-  dadosSalvos.empresa.forEach((emp, i) => {
-    if (i === 0) {
-      // Preenche o primeiro campo já existente no HTML
-      document.querySelector('[name="empresa[]"]').value = emp;
-      document.querySelector('[name="cargo[]"]').value = dadosSalvos.cargo[i];
-      document.querySelector('[name="atividades[]"]').value = dadosSalvos.atividades[i];
-      document.querySelector('[name="periodo_inicio[]"]').value = dadosSalvos.periodo_inicio[i];
-      document.querySelector('[name="periodo_fim[]"]').value = dadosSalvos.periodo_fim[i];
+  // Experiências - Garante que script.js foi carregado
+  if (dadosSalvos.empresa && Array.isArray(dadosSalvos.empresa) && dadosSalvos.empresa.length > 0) {
+    console.log("💼 Restaurando experiências:", dadosSalvos.empresa);
+    if (typeof adicionarExperiencia === "function") {
+      dadosSalvos.empresa.forEach((emp, i) => {
+        adicionarExperiencia(
+          emp,
+          dadosSalvos.cargo?.[i] || "",
+          dadosSalvos.atividades?.[i] || "",
+          dadosSalvos.periodo_inicio?.[i] || "",
+          dadosSalvos.periodo_fim?.[i] || ""
+        );
+      });
     } else {
-      // Cria novos campos para os demais
-      adicionarExperiencia(emp, dadosSalvos.cargo[i], dadosSalvos.atividades[i], dadosSalvos.periodo_inicio[i], dadosSalvos.periodo_fim[i]);
+      console.error("❌ Erro: adicionarExperiencia não está disponível! script.js não carregou?");
     }
-  });
-}
+  }
+  
+  console.log("✅ Restauração completada!");
 });
 
 const codigo = sessionStorage.getItem("codigoIndicacao");

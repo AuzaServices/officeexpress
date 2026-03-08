@@ -18,14 +18,21 @@ function getDadosFromForm() {
   const dados = {};
   const formData = new FormData(form);
 
+  console.log("🔍 FormData.entries() bruto:");
   for (const [key, value] of formData.entries()) {
+    console.log(`   ${key}: "${value}"`);
+  }
+
+  // Reset e preenche novamente
+  const formData2 = new FormData(form);
+  for (const [key, value] of formData2.entries()) {
     const val = typeof value === "string" ? value.trim() : String(value).trim();
     const isArrayField = key.endsWith("[]");
     const name = isArrayField ? key.slice(0, -2) : key;
 
     if (isArrayField) {
       if (!Array.isArray(dados[name])) dados[name] = [];
-      if (val) dados[name].push(val); // só adiciona se não vazio
+      dados[name].push(val); // Adiciona TODOS os valores, vazios ou não
     } else {
       dados[name] = val;
     }
@@ -47,8 +54,8 @@ function getDadosFromForm() {
 
   // Foto
   const preview = document.getElementById("preview-miniatura");
-  if (preview && preview.src) {
-    dados.foto = preview.src;
+  if (preview && preview.src && preview.src.startsWith("data:image/")) {
+    dados.foto = preview.src; // Só salva se for base64, não URL
   }
 
   console.log("📝 getDadosFromForm() resultado:", dados); // DEBUG
@@ -115,73 +122,7 @@ document
   .querySelectorAll('[name="telefone[]"]')
   .forEach(aplicarMascaraTelefone);
 
-document.getElementById("formulario").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const form = document.getElementById("formulario");
-
-  const valores = (nome) =>
-    Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map((el) =>
-      el.value.trim(),
-    );
-
-  const dadosSalvos = JSON.parse(localStorage.getItem("curriculo") || "{}");
-
-  const dados = {
-    nome: form.nome?.value.trim() || "",
-    idade: form.idade?.value.trim() || "", // ✅ já está implementado
-    email: form.email?.value.trim() || "",
-    telefone: valores("telefone").filter((t) => t),
-    endereco: form.endereco?.value.trim() || "",
-    numero: form.numero?.value.trim() || "",
-    complemento: form.complemento?.value.trim() || "",
-    bairro: form.bairro?.value.trim() || "",
-    cidade: form.cidade?.value.trim() || "",
-    estado: form.estado?.value.trim() || "", // ✅ adiciona o Estado aqui
-    cep: form.cep?.value.trim() || "",
-    infoAdicional:
-      form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
-    objetivo: form.objetivo?.value.trim() || "",
-    formacao: form.formacao?.value.trim() || "",
-    habilidades: form.habilidades?.value.trim() || "",
-    hobbies: form.hobbies?.value.trim() || "",
-    empresa: valores("empresa"),
-    cargo: valores("cargo"),
-    periodo_inicio: valores("periodo_inicio"),
-    periodo_fim: valores("periodo_fim"),
-    atividades: valores("atividades"),
-    curso: valores("curso"),
-    instituicao: valores("instituicao"),
-    carga: valores("carga"),
-    foto:
-      document.getElementById("preview-miniatura")?.src ||
-      dadosSalvos.foto ||
-      null,
-  };
-
-  salvar(dados);
-});
-
-function salvar(dados) {
-  const atual = JSON.parse(localStorage.getItem("curriculo") || "{}" );
-  const merged = { ...atual, ...dados };
-  localStorage.setItem("curriculo", JSON.stringify(merged));
-  localStorage.setItem("entradaViaSplash", "true");
-  localStorage.setItem("navegandoInternamente", "false"); // ← Corrigido
-
-  // Se quiser desativar rastreio da página atual, só faça se ele já estiver definido
-  if (typeof enviarLogAbandono === "function") {
-    window.removeEventListener("unload", enviarLogAbandono);
-  }
-  if (typeof handleVisibilityChange === "function") {
-    document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }
-
-  setTimeout(() => {
-    window.location.href = "/visualizar";
-  }, 300);
-}
-
-// Chama a função salvarDados sempre que o formulário for alterado
+// ✅ Event listeners para salvar dados em tempo real
 const formElement = document.getElementById("formulario");
 if (formElement) {
   formElement.addEventListener("input", (e) => {
@@ -420,10 +361,16 @@ btnAvancar.addEventListener("click", () => {
     etapaAtual++;
     mostrarEtapa(etapaAtual);
   } else {
-    // Simula o submit manualmente
-    document
-      .getElementById("formulario")
-      .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    // ✅ FINALIZAR: Salva dados e redireciona (SEM disparar submit!)
+    console.log("✅ FINALIZANDO - Salvando dados antes de ir para visualizar...");
+    salvarDados(); // Garante que tudo está salvo com getDadosFromForm()
+    
+    localStorage.setItem("entradaViaSplash", "true");
+    localStorage.setItem("navegandoInternamente", "false");
+    
+    setTimeout(() => {
+      window.location.href = "/visualizar";
+    }, 300);
   }
 });
 
