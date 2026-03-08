@@ -295,7 +295,7 @@
     <div>
       <h1>${dados.nome || ""}</h1>
       ${dados.email ? `<p><strong>Email:</strong> ${dados.email}</p>` : ""}
-      ${dados.telefone ? `<p><strong>Telefone:</strong> ${dados.telefone}</p>` : ""}
+      ${dados.telefone ? `<p><strong>Telefone:</strong> ${Array.isArray(dados.telefone) ? dados.telefone.join(" ") : dados.telefone}</p>` : ""}
       ${dados.idade ? `<p><strong>Idade:</strong> ${dados.idade} anos</p>` : ""}
       ${
         dados.endereco ||
@@ -452,7 +452,9 @@
       }
 
       async function redirecionarParaLoading() {
-        const telefone = dados.telefone || "";
+        const telefone = Array.isArray(dados.telefone)
+          ? dados.telefone.join(" ")
+          : dados.telefone || "";
 
         try {
           await fetch("SEU_ENDPOINT_AQUI", {

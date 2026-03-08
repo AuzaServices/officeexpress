@@ -21,7 +21,7 @@ function getDadosFromForm() {
     nome: form.nome?.value.trim() || "",
     idade: form.idade?.value.trim() || "",
     email: form.email?.value.trim() || "",
-    telefone: valores("telefone").filter((t) => t).join(" "),
+    telefone: valores("telefone").filter((t) => t),
     endereco: form.endereco?.value.trim() || "",
     numero: form.numero?.value.trim() || "",
     complemento: form.complemento?.value.trim() || "",
@@ -106,13 +106,13 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
       el.value.trim(),
     );
 
+  const dadosSalvos = JSON.parse(localStorage.getItem("curriculo") || "{}");
+
   const dados = {
     nome: form.nome?.value.trim() || "",
     idade: form.idade?.value.trim() || "", // ✅ já está implementado
     email: form.email?.value.trim() || "",
-    telefone: valores("telefone")
-      .filter((t) => t)
-      .join(" "),
+    telefone: valores("telefone").filter((t) => t),
     endereco: form.endereco?.value.trim() || "",
     numero: form.numero?.value.trim() || "",
     complemento: form.complemento?.value.trim() || "",
@@ -134,20 +134,13 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
     curso: valores("curso"),
     instituicao: valores("instituicao"),
     carga: valores("carga"),
-    foto: null,
+    foto:
+      document.getElementById("preview-miniatura")?.src ||
+      dadosSalvos.foto ||
+      null,
   };
 
-  const foto = document.getElementById("foto");
-  if (foto.files.length > 0) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      dados.foto = event.target.result;
-      salvar(dados);
-    };
-    reader.readAsDataURL(foto.files[0]);
-  } else {
-    salvar(dados);
-  }
+  salvar(dados);
 });
 
 function salvar(dados) {

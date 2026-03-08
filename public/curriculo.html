@@ -787,7 +787,7 @@ Você está a um clique de transformar sua história profissional. <strong>Final
   <button type="button" id="avancar" class="botao-navegacao">Avançar</button>
 </div>
 
-  <script src="script.js"></script>
+  <script src="/script.js"></script>
 
 <script>
   const nomesUnicos = [
@@ -1309,14 +1309,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Informações adicionais
+  if (dadosSalvos.infoAdicional) {
+    const infoEl = document.getElementById("infoAdicional");
+    if (infoEl) infoEl.value = dadosSalvos.infoAdicional;
+  }
+
   // Telefones
-  if (dadosSalvos.telefone) {
-    const telefones = dadosSalvos.telefone.split(" ");
-    const primeiroInput = document.querySelector("[name=\"telefone[]\"]");
-    if (primeiroInput && telefones.length > 0) {
-      primeiroInput.value = telefones[0];
-    }
-    telefones.slice(1).forEach((t) => {
+  const telefonesSalvos = Array.isArray(dadosSalvos.telefone)
+    ? dadosSalvos.telefone
+    : typeof dadosSalvos.telefone === "string"
+    ? dadosSalvos.telefone.split(" ").filter(Boolean)
+    : [];
+
+  if (telefonesSalvos.length > 0) {
+    const primeiroInput = document.querySelector('[name="telefone[]"]');
+    if (primeiroInput) primeiroInput.value = telefonesSalvos[0];
+    telefonesSalvos.slice(1).forEach((t) => {
       adicionarTelefone();
       const ultimoInput = document.querySelector("#telefones .telefone-input:last-of-type");
       if (ultimoInput) ultimoInput.value = t;
