@@ -173,7 +173,7 @@
       right: 0;
       height: 5px;
       background: rgba(255, 255, 255, 0.18);
-      z-index: 1999;
+      z-index: 2950;
       transition: opacity 0.2s ease;
     }
 
@@ -183,7 +183,7 @@
 
     #notificacoes {
       position: fixed;
-      top: calc(56px + 5px + 10px);
+      top: calc(56px + 5px + 14px);
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -192,7 +192,7 @@
       align-items: center;
       width: min(800px, 90%);
       padding: 0 12px;
-      z-index: 10050;
+      z-index: 1500;
       pointer-events: none;
     }
 
@@ -285,6 +285,7 @@
       text-align: center;
     "
   >
+    <a href="/" style="color: #fff; font-weight: 600; text-decoration: none">Início</a>
     <a href="/contato" style="color: #fff; font-weight: 600; text-decoration: none">Contato</a>
     <a href="/sobre" style="color: #fff; font-weight: 600; text-decoration: none">Sobre nós</a>
   </div>
@@ -927,8 +928,13 @@ Você está a um clique de transformar sua história profissional. <strong>Final
 
   const acoes = ["começou agora", "está fazendo", "terminou"];
   const nomesUsados = new Set();
-  const tempos = [7000, 14000, 20000];
-  let tempoIndex = 0;
+
+  // Gera um intervalo natural (entre 18 e 30 segundos)
+  function proximoIntervalo() {
+    return 18000 + Math.floor(Math.random() * 12000); // 18s..30s
+  }
+
+  let tempoAtual = proximoIntervalo();
 
   const container = document.getElementById("notificacoes");
 
@@ -953,13 +959,13 @@ Você está a um clique de transformar sua história profissional. <strong>Final
 
     container.appendChild(div);
 
-    const tempoAtual = tempos[tempoIndex];
-    tempoIndex = (tempoIndex + 1) % tempos.length;
+    const delay = tempoAtual;
 
     setTimeout(() => {
       div.remove();
+      tempoAtual = proximoIntervalo();
       gerarNotificacao();
-    }, tempoAtual);
+    }, delay);
   }
 
   // Exibe primeiro a notificação com o nome do usuário
@@ -977,8 +983,9 @@ Você está a um clique de transformar sua história profissional. <strong>Final
     // Aguarda o tempo da primeira notificação antes de iniciar o ciclo
     setTimeout(() => {
       div.remove();
+      tempoAtual = proximoIntervalo();
       gerarNotificacao();
-    }, tempos[0]); // espera 7000ms antes de iniciar o ciclo
+    }, proximoIntervalo());
   } else {
     // Se não tiver nome, inicia direto
     gerarNotificacao();
