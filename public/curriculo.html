@@ -961,7 +961,13 @@ Você está a um clique de transformar sua história profissional. <strong>Final
     const proximaIntervalo = proximoIntervalo();
 
     setTimeout(() => {
-      div.remove();
+      div.classList.add("escondida");
+      const remover = () => {
+        if (div.parentNode) div.remove();
+      };
+      div.addEventListener("transitionend", remover, { once: true });
+      // Fallback caso a transição não dispare
+      setTimeout(remover, 700);
       setTimeout(gerarNotificacao, proximaIntervalo);
     }, duracaoVisivel);
   }
@@ -983,7 +989,12 @@ Você está a um clique de transformar sua história profissional. <strong>Final
     const proximaIntervalo = proximoIntervalo();
 
     setTimeout(() => {
-      div.remove();
+      div.classList.add("escondida");
+      const remover = () => {
+        if (div.parentNode) div.remove();
+      };
+      div.addEventListener("transitionend", remover, { once: true });
+      setTimeout(remover, 700);
       setTimeout(gerarNotificacao, proximaIntervalo);
     }, duracaoVisivel);
   } else {

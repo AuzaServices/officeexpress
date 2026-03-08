@@ -78,11 +78,19 @@ textarea:focus {
 }
 
 .experiencia {
+  display: grid;
+  gap: 12px;
   background-color: #f0f4f8;
   border-left: 4px solid var(--accent);
   padding: 20px;
   border-radius: 10px;
   margin-top: 20px;
+}
+
+.curso {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .botao {
@@ -358,8 +366,22 @@ textarea:focus {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   font-size: 0.95rem;
   font-weight: 500;
-  animation: fadeInClean 0.5s ease-in-out;
+  animation: fadeInClean 0.4s ease-in-out;
   position: relative;
+
+  /* animação suave para desaparecer */
+  transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease;
+  max-height: 250px;
+  overflow: hidden;
+}
+
+.notificacao.escondida {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .notificacao::before {
