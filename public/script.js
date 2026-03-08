@@ -12,46 +12,62 @@ function getDadosFromForm() {
   const form = document.getElementById("formulario");
   if (!form) return {};
 
-  const valores = (nome) =>
-    Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map((el) =>
-      el.value.trim(),
-    );
+  const dados = {};
+  const formData = new FormData(form);
 
-  const dados = {
-    nome: form.nome?.value.trim() || "",
-    idade: form.idade?.value.trim() || "",
-    email: form.email?.value.trim() || "",
-    telefone: valores("telefone").filter((t) => t),
-    endereco: form.endereco?.value.trim() || "",
-    numero: form.numero?.value.trim() || "",
-    complemento: form.complemento?.value.trim() || "",
-    bairro: form.bairro?.value.trim() || "",
-    cidade: form.cidade?.value.trim() || "",
-    estado: form.estado?.value.trim() || "",
-    cep: form.cep?.value.trim() || "",
-    infoAdicional:
-      form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
-    objetivo: form.objetivo?.value.trim() || "",
-    formacao: form.formacao?.value.trim() || "",
-    habilidades: form.habilidades?.value.trim() || "",
-    hobbies: form.hobbies?.value.trim() || "",
-    curso: valores("curso"),
-    instituicao: valores("instituicao"),
-    carga: valores("carga"),
-    empresa: valores("empresa"),
-    cargo: valores("cargo"),
-    periodo_inicio: valores("periodo_inicio"),
-    periodo_fim: valores("periodo_fim"),
-    atividades: valores("atividades"),
-    foto: document.getElementById("preview-miniatura")?.src || null,
+  // Agrupa campos repetidos (ex: telefone[], curso[], empresa[])
+  for (const [key, value] of formData.entries()) {
+    const val = value.trim();
+    const isArrayField = key.endsWith("[]");
+    const name = isArrayField ? key.slice(0, -2) : key;
+
+    if (isArrayField) {
+      if (!Array.isArray(dados[name])) dados[name] = [];
+      dados[name].push(val);
+    } else {
+      dados[name] = val;
+    }
+  }
+
+  // Normaliza telefones como array (mesmo que tenha sido preenchido apenas um)
+  if (dados.telefone && !Array.isArray(dados.telefone)) {
+    dados.telefone = [dados.telefone];
+  }
+
+  // Garantia de arrays vazios em campos dinâmicos (para simplificar o restore)
+  const ensureArray = (field) => {
+    if (!Array.isArray(dados[field])) dados[field] = [];
   };
+  ensureArray("curso");
+  ensureArray("instituicao");
+  ensureArray("carga");
+  ensureArray("empresa");
+  ensureArray("cargo");
+  ensureArray("periodo_inicio");
+  ensureArray("periodo_fim");
+  ensureArray("atividades");
+
+  // Foto (usar preview se presente)
+  const preview = document.getElementById("preview-miniatura");
+  if (preview && preview.src) {
+    dados.foto = preview.src;
+  }
 
   return dados;
 }
 
 function salvarDados() {
   const dados = getDadosFromForm();
-  localStorage.setItem("curriculo", JSON.stringify(dados));
+  const atual = JSON.parse(localStorage.getItem("curriculo") || "{}" );
+
+  // Mescla dados existentes com o que está no formulário (form prevalece)
+  const merged = { ...atual, ...dados };
+
+  try {
+    localStorage.setItem("curriculo", JSON.stringify(merged));
+  } catch (err) {
+    console.error("Falha ao salvar dados no localStorage:", err);
+  }
 }
 
 function adicionarTelefone() {
@@ -144,7 +160,9 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
 });
 
 function salvar(dados) {
-  localStorage.setItem("curriculo", JSON.stringify(dados));
+  const atual = JSON.parse(localStorage.getItem("curriculo") || "{}" );
+  const merged = { ...atual, ...dados };
+  localStorage.setItem("curriculo", JSON.stringify(merged));
   localStorage.setItem("entradaViaSplash", "true");
   localStorage.setItem("navegandoInternamente", "false"); // ← Corrigido
 
@@ -245,8 +263,7 @@ function salvarCursos() {
     const carga = bloco.querySelector('[name="carga[]"]').value;
     cursos.push({ curso, instituicao, carga });
   });
-  localStorage.setItem("cursosSalvos", JSON.stringify(cursos));
-}
+  localStorage.setItem("cursosSalvos", JSON.stringify(cursos));  salvarDados();}
 
 // Dispara o log assim que o site é acessado
 tsParticles.load("particles-js", {
@@ -352,8 +369,7 @@ function salvarExperiencias() {
     const fim = bloco.querySelector('[name="periodo_fim[]"]').value;
     experiencias.push({ empresa, cargo, atividades, inicio, fim });
   });
-  localStorage.setItem("experienciasSalvas", JSON.stringify(experiencias));
-}
+  localStorage.setItem("experienciasSalvas", JSON.stringify(experiencias));  salvarDados();}
 
 document.querySelectorAll(".carga-input").forEach((input) => {
   input.addEventListener("input", () => {
