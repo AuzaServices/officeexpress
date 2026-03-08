@@ -15,47 +15,47 @@ function getDadosFromForm() {
     return {};
   }
 
-  const dados = {};
-  const formData = new FormData(form);
-
-  console.log("🔍 FormData.entries() bruto:");
-  for (const [key, value] of formData.entries()) {
-    console.log(`   ${key}: "${value}"`);
-  }
-
-  // Reset e preenche novamente
-  const formData2 = new FormData(form);
-  for (const [key, value] of formData2.entries()) {
-    const val = typeof value === "string" ? value.trim() : String(value).trim();
-    const isArrayField = key.endsWith("[]");
-    const name = isArrayField ? key.slice(0, -2) : key;
-
-    if (isArrayField) {
-      if (!Array.isArray(dados[name])) dados[name] = [];
-      dados[name].push(val); // Adiciona TODOS os valores, vazios ou não
-    } else {
-      dados[name] = val;
-    }
-  }
-
-  // Garantia de arrays vazios em campos dinâmicos
-  const ensureArray = (field) => {
-    if (!Array.isArray(dados[field])) dados[field] = [];
+  const getValue = (selector) => {
+    const el = form.querySelector(selector);
+    return el ? String(el.value).trim() : "";
   };
-  ensureArray("telefone");
-  ensureArray("curso");
-  ensureArray("instituicao");
-  ensureArray("carga");
-  ensureArray("empresa");
-  ensureArray("cargo");
-  ensureArray("periodo_inicio");
-  ensureArray("periodo_fim");
-  ensureArray("atividades");
 
-  // Foto
+  const getArray = (name) =>
+    Array.from(form.querySelectorAll(`[name="${name}"]`)).map((el) =>
+      String(el.value).trim(),
+    );
+
+  const dados = {
+    nome: getValue("#nome"),
+    idade: getValue("#idade"),
+    email: getValue("#email"),
+    telefone: getArray("telefone[]"),
+    endereco: getValue("#endereco"),
+    numero: getValue("#numero"),
+    complemento: getValue("#complemento"),
+    bairro: getValue("#bairro"),
+    cidade: getValue("#cidade"),
+    estado: getValue("#estado"),
+    cep: getValue("#cep"),
+    objetivo: getValue("#objetivo"),
+    formacao: getValue("#formacao"),
+    habilidades: getValue("#habilidades"),
+    hobbies: getValue("#hobbies"),
+    infoAdicional: getValue("#infoAdicional"),
+    empresa: getArray("empresa[]"),
+    cargo: getArray("cargo[]"),
+    periodo_inicio: getArray("periodo_inicio[]"),
+    periodo_fim: getArray("periodo_fim[]"),
+    atividades: getArray("atividades[]"),
+    curso: getArray("curso[]"),
+    instituicao: getArray("instituicao[]"),
+    carga: getArray("carga[]"),
+  };
+
+  // Foto (só salva base64)
   const preview = document.getElementById("preview-miniatura");
   if (preview && preview.src && preview.src.startsWith("data:image/")) {
-    dados.foto = preview.src; // Só salva se for base64, não URL
+    dados.foto = preview.src;
   }
 
   console.log("📝 getDadosFromForm() resultado:", dados); // DEBUG
@@ -66,8 +66,17 @@ function salvarDados() {
   const dados = getDadosFromForm();
   const atual = JSON.parse(localStorage.getItem("curriculo") || "{}");
 
-  // Mescla dados existentes com o que está no formulário (form prevalece)
-  const merged = { ...atual, ...dados };
+  // Mescla dados existentes com o que está no formulário.
+  // Não sobrescreve arrays vazias (evita apagar dados ao navegar).
+  const merged = { ...atual };
+  for (const [key, value] of Object.entries(dados)) {
+    if (Array.isArray(value)) {
+      if (value.length > 0) merged[key] = value;
+      else if (!(key in merged)) merged[key] = value;
+    } else {
+      merged[key] = value;
+    }
+  }
 
   try {
     localStorage.setItem("curriculo", JSON.stringify(merged));
