@@ -14,10 +14,12 @@
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
-  background: url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80")
-    no-repeat center center fixed;
-  background-size: cover;
   color: var(--text);
+  background:
+    linear-gradient(135deg, rgba(204, 238, 255, 0.94), rgba(230, 247, 255, 0.94)),
+    url("https://www.transparenttextures.com/patterns/diamond-upholstery.png");
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 .container {

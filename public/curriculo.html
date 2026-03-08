@@ -21,7 +21,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
 
   <!-- Meta tags para compartilhamento -->
 <meta property="og:title" content="Transforme sua história em oportunidades — Currículo em minutos">
@@ -131,12 +130,17 @@
       color: var(--text-primary);
       font-size: 1.6rem;
       cursor: pointer;
+      line-height: 1;
+    }
+    .hamburguer:focus {
+      outline: 2px solid rgba(255, 136, 0, 0.7);
+      outline-offset: 4px;
     }
 
     /* Mobile menu */
     #mobileMenu {
       position: fixed;
-      top: 64px;
+      top: 56px;
       left: 0;
       right: 0;
       z-index: 10025;
@@ -144,27 +148,69 @@
       border-bottom: 1px solid var(--border);
 
       max-height: 0;
+      opacity: 0;
       overflow: hidden;
-      transition: max-height 0.4s ease;
+      pointer-events: none;
+      transition: max-height 0.35s ease, opacity 0.35s ease;
     }
 
     #mobileMenu.open {
-      max-height: 200px;
+      max-height: 240px;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     #mobileMenu > div {
       background: rgba(0, 31, 51, 0.75);
       backdrop-filter: blur(4px);
+      padding: 12px 16px;
     }
 
     #barra-progresso {
       position: fixed;
-      top: 64px;
+      top: 56px;
       left: 0;
       right: 0;
       height: 5px;
       background: rgba(255, 255, 255, 0.18);
       z-index: 1999;
+      transition: opacity 0.2s ease;
+    }
+
+    #barra-progresso.menu-aberto {
+      opacity: 0;
+    }
+
+    #notificacoes {
+      position: fixed;
+      top: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      z-index: 10050;
+      pointer-events: none;
+      width: 100%;
+      max-width: 800px;
+      padding: 0 12px;
+    }
+
+    .notificacao {
+      min-width: 280px;
+      max-width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #00324a;
+      border-radius: 14px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+      font-weight: 600;
+      text-align: center;
+      pointer-events: auto;
+      white-space: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     #progresso {
@@ -175,7 +221,7 @@
     }
 
     body {
-      padding-top: 106px; /* header + progress bar */
+      padding-top: 140px; /* header + progress bar + notificações */
     }
 
     @media (max-width: 768px) {
@@ -195,7 +241,9 @@
 <header class="cabecalho">
   <div class="cabecalho-container">
     <div class="wrap">
-      <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+      <a href="/" class="logo-link" aria-label="Voltar para o início">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+      </a>
       <nav class="menu">
         <a href="/contato">Contato</a>
         <a href="/sobre">Sobre nós</a>
@@ -400,19 +448,17 @@
 
   iniciarMonitoramento();
 </script>
-  <div id="particles-js"></div>
-
   <!-- Barra de progresso -->
-<div id="barra-progresso">
-  <div id="progresso"></div>
-</div>
+  <div id="barra-progresso">
+    <div id="progresso"></div>
+  </div>
 
-
-
-  <div id="notificacoes" style="margin-top: 20px; font-size: 0.95rem; color: #333; font-family: 'Inter', sans-serif;"></div>
+  <div id="notificacoes"></div>
 
   <div class="container">
-    <h1>Seu Currículo Profissional em até 10 minutos</h1>
+    <div class="titulo-wrapper">
+      <h1 class="titulo"><i class="fa-solid fa-bell" aria-hidden="true"></i><span>Seu Currículo Profissional em até 10 minutos</span></h1>
+    </div>
     <form id="formulario">
 
       <!-- Etapa 1 -->

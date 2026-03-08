@@ -222,26 +222,6 @@ function salvarCursos() {
   salvarDados();
 }
 
-// Dispara o log assim que o site é acessado
-tsParticles.load("particles-js", {
-  fullScreen: { enable: false },
-  particles: {
-    number: { value: 60 },
-    color: { value: "#e09d00" },
-    shape: { type: "circle" },
-    opacity: { value: 0.3 },
-    size: { value: 4 },
-    move: {
-      enable: true,
-      speed: 1.5,
-      direction: "none",
-      outModes: { default: "bounce" },
-    },
-  },
-  background: {
-    color: { value: "#f4f7fa" },
-  },
-});
 function adicionarExperiencia(
   empresaVal = "",
   cargoVal = "",
@@ -420,11 +400,8 @@ function initHamburguerMenu() {
     e.stopPropagation();
     const isOpen = mobileMenu.classList.toggle('open');
 
-    // Força visibilidade para evitar situações em que o CSS não esteja sendo aplicado
-    mobileMenu.style.display = isOpen ? 'block' : 'none';
-    mobileMenu.style.zIndex = '10025';
-    mobileMenu.style.overflow = 'hidden';
-    mobileMenu.style.maxHeight = isOpen ? '260px' : '0';
+    const barra = document.getElementById('barra-progresso');
+    if (barra) barra.classList.toggle('menu-aberto', isOpen);
 
     console.log('[menu] toggle, aberto?', isOpen);
   });
@@ -433,6 +410,8 @@ function initHamburguerMenu() {
   document.addEventListener('click', (e) => {
     if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && e.target !== btnMenu) {
       mobileMenu.classList.remove('open');
+      const barra = document.getElementById('barra-progresso');
+      if (barra) barra.classList.remove('menu-aberto');
       console.log('[menu] fechado clicando fora');
     }
   });
@@ -443,6 +422,8 @@ function initHamburguerMenu() {
     const st = window.pageYOffset || document.documentElement.scrollTop;
     if (st > lastScrollTop && st > 140 && mobileMenu.classList.contains('open')) {
       mobileMenu.classList.remove('open');
+      const barra = document.getElementById('barra-progresso');
+      if (barra) barra.classList.remove('menu-aberto');
       console.log('[menu] fechado ao rolar para baixo');
     }
     lastScrollTop = st <= 0 ? 0 : st;
