@@ -10,34 +10,32 @@ function aplicarMascaraTelefone(input) {
 
 function getDadosFromForm() {
   const form = document.getElementById("formulario");
-  if (!form) return {};
+  if (!form) {
+    console.warn("❌ Formulário não encontrado!");
+    return {};
+  }
 
   const dados = {};
   const formData = new FormData(form);
 
-  // Agrupa campos repetidos (ex: telefone[], curso[], empresa[])
   for (const [key, value] of formData.entries()) {
-    const val = value.trim();
+    const val = typeof value === "string" ? value.trim() : String(value).trim();
     const isArrayField = key.endsWith("[]");
     const name = isArrayField ? key.slice(0, -2) : key;
 
     if (isArrayField) {
       if (!Array.isArray(dados[name])) dados[name] = [];
-      dados[name].push(val);
+      if (val) dados[name].push(val); // só adiciona se não vazio
     } else {
       dados[name] = val;
     }
   }
 
-  // Normaliza telefones como array (mesmo que tenha sido preenchido apenas um)
-  if (dados.telefone && !Array.isArray(dados.telefone)) {
-    dados.telefone = [dados.telefone];
-  }
-
-  // Garantia de arrays vazios em campos dinâmicos (para simplificar o restore)
+  // Garantia de arrays vazios em campos dinâmicos
   const ensureArray = (field) => {
     if (!Array.isArray(dados[field])) dados[field] = [];
   };
+  ensureArray("telefone");
   ensureArray("curso");
   ensureArray("instituicao");
   ensureArray("carga");
@@ -47,26 +45,28 @@ function getDadosFromForm() {
   ensureArray("periodo_fim");
   ensureArray("atividades");
 
-  // Foto (usar preview se presente)
+  // Foto
   const preview = document.getElementById("preview-miniatura");
   if (preview && preview.src) {
     dados.foto = preview.src;
   }
 
+  console.log("📝 getDadosFromForm() resultado:", dados); // DEBUG
   return dados;
 }
 
 function salvarDados() {
   const dados = getDadosFromForm();
-  const atual = JSON.parse(localStorage.getItem("curriculo") || "{}" );
+  const atual = JSON.parse(localStorage.getItem("curriculo") || "{}");
 
   // Mescla dados existentes com o que está no formulário (form prevalece)
   const merged = { ...atual, ...dados };
 
   try {
     localStorage.setItem("curriculo", JSON.stringify(merged));
+    console.log("✅ Dados salvos em localStorage.curriculo:", merged); // DEBUG
   } catch (err) {
-    console.error("Falha ao salvar dados no localStorage:", err);
+    console.error("❌ Falha ao salvar dados no localStorage:", err);
   }
 }
 
@@ -256,14 +256,9 @@ function adicionarCurso(curso = "", instituicao = "", carga = "") {
 }
 
 function salvarCursos() {
-  const cursos = [];
-  document.querySelectorAll(".curso").forEach((bloco) => {
-    const curso = bloco.querySelector('[name="curso[]"]').value;
-    const instituicao = bloco.querySelector('[name="instituicao[]"]').value;
-    const carga = bloco.querySelector('[name="carga[]"]').value;
-    cursos.push({ curso, instituicao, carga });
-  });
-  localStorage.setItem("cursosSalvos", JSON.stringify(cursos));  salvarDados();}
+  // NÃO MAIS SALVA EM cursosSalvos - tudo vai via salvarDados()
+  salvarDados();
+}
 
 // Dispara o log assim que o site é acessado
 tsParticles.load("particles-js", {
@@ -360,16 +355,9 @@ function adicionarExperiencia(
 }
 
 function salvarExperiencias() {
-  const experiencias = [];
-  document.querySelectorAll(".experiencia").forEach((bloco) => {
-    const empresa = bloco.querySelector('[name="empresa[]"]').value;
-    const cargo = bloco.querySelector('[name="cargo[]"]').value;
-    const atividades = bloco.querySelector('[name="atividades[]"]').value;
-    const inicio = bloco.querySelector('[name="periodo_inicio[]"]').value;
-    const fim = bloco.querySelector('[name="periodo_fim[]"]').value;
-    experiencias.push({ empresa, cargo, atividades, inicio, fim });
-  });
-  localStorage.setItem("experienciasSalvas", JSON.stringify(experiencias));  salvarDados();}
+  // NÃO MAIS SALVA EM experienciasSalvas - tudo vai via salvarDados()
+  salvarDados();
+}
 
 document.querySelectorAll(".carga-input").forEach((input) => {
   input.addEventListener("input", () => {
@@ -447,14 +435,4 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const cursosSalvos = JSON.parse(localStorage.getItem("cursosSalvos") || "[]");
-  cursosSalvos.forEach((c) => adicionarCurso(c.curso, c.instituicao, c.carga));
-
-  const experienciasSalvas = JSON.parse(
-    localStorage.getItem("experienciasSalvas") || "[]",
-  );
-  experienciasSalvas.forEach((e) =>
-    adicionarExperiencia(e.empresa, e.cargo, e.atividades, e.inicio, e.fim),
-  );
-});
+// Restauração agora é feita em curriculo.html via DOMContentLoaded
