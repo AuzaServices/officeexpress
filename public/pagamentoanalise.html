@@ -1,186 +1,211 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="icon.png" type="image/png" />
-  <title>Pagamento | Office Express</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    :root {
-      --bg-1: #001f33;
-      --bg-2: #00324a;
-      --border: #0a2a52;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background: #f9fafb;
-    }
-    header.cabecalho {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-      border-bottom: 1px solid var(--border);
-    }
-    .cabecalho .wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-    }
-    .logo {
-      height: 34px;
-      width: auto;
-      display: block;
-    }
-    main {
-      flex: 1;
-    }
-    .valor {
-      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: 800;
-    }
-    .seguranca {
-      text-align: center;
-      margin-top: 2rem;
-      margin-bottom: 2rem;
-      font-size: 0.85rem;
-      color: #444;
-      font-weight: 500;
-    }
-    footer {
-      background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-      color: #fff;
-      padding: 0.6rem;
-      border-top: 1px solid var(--border);
-      text-align: center;
-      font-size: 0.75rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: auto;
-    }
-    #faixa-promocao {
-      font-size: 0.8rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Faixa de urgência -->
-  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2">
-    <i class="fa-regular fa-clock"></i>
-    <span class="font-medium">Oferta válida por tempo limitado — <span id="cronometro">06:00</span></span>
-  </div>
-
-  <!-- Cabeçalho -->
-<header class="cabecalho mt-8">
-  <div class="container mx-auto px-6">
-    <div class="wrap flex items-center space-x-4">
-      <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-      <i class="fas fa-lock text-white"></i>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/public/imagens/icon.png" type="image/png" />
+    <title>Pagamento | Office Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --bg-1: #001f33;
+        --bg-2: #00324a;
+        --border: #0a2a52;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: #f9fafb;
+      }
+      header.cabecalho {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+        border-bottom: 1px solid var(--border);
+      }
+      .cabecalho .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+      }
+      .logo {
+        height: 34px;
+        width: auto;
+        display: block;
+      }
+      main {
+        flex: 1;
+      }
+      .valor {
+        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+      }
+      .seguranca {
+        text-align: center;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        font-size: 0.85rem;
+        color: #444;
+        font-weight: 500;
+      }
+      footer {
+        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+        color: #fff;
+        padding: 0.6rem;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: auto;
+      }
+      #faixa-promocao {
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Faixa de urgência -->
+    <div
+      id="faixa-promocao"
+      class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2"
+    >
+      <i class="fa-regular fa-clock"></i>
+      <span class="font-medium"
+        >Oferta válida por tempo limitado —
+        <span id="cronometro">06:00</span></span
+      >
     </div>
-  </div>
-</header>
 
-  <!-- Conteúdo principal -->
-  <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
-  <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
-  <p class="mb-2">Serviço: Análise Profissional</p>
+    <!-- Cabeçalho -->
+    <header class="cabecalho mt-8">
+      <div class="container mx-auto px-6">
+        <div class="wrap flex items-center space-x-4">
+          <img
+            src="https://i.imgur.com/HjzGCoA.png"
+            alt="Office Express"
+            class="logo"
+          />
+          <i class="fas fa-lock text-white"></i>
+        </div>
+      </div>
+    </header>
 
-  <!-- Preço com desconto -->
-  <div class="flex items-baseline space-x-2 mb-6">
-    <span class="text-gray-400 line-through text-xl">R$ 12,50</span>
-    <span class="valor text-3xl font-bold text-green-700">R$ 5,99</span>
-  </div>
+    <!-- Conteúdo principal -->
+    <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
+      <p class="mb-2">Serviço: Análise Profissional</p>
 
-  <!-- Chave Pix -->
-  <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
-  <input type="text" id="pix" readonly
-    class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
-    value="00020126610014BR.GOV.BCB.PIX0121andrielysom@gmail.com0214Office Express52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304F671">
+      <!-- Preço com desconto -->
+      <div class="flex items-baseline space-x-2 mb-6">
+        <span class="text-gray-400 line-through text-xl">R$ 12,50</span>
+        <span class="valor text-3xl font-bold text-green-700">R$ 5,99</span>
+      </div>
 
-  <!-- Botões -->
-  <button onclick="copiarPix()" class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition">
-    Copiar chave Pix
-  </button>
+      <!-- Chave Pix -->
+      <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
+      <input
+        type="text"
+        id="pix"
+        readonly
+        class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
+        value="00020126610014BR.GOV.BCB.PIX0121andrielysom@gmail.com0214Office Express52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304F671"
+      />
 
-  <a id="whatsappLink" target="_blank"
-     class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center">
-    Enviar comprovante
-  </a>
+      <!-- Botões -->
+      <button
+        onclick="copiarPix()"
+        class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition"
+      >
+        Copiar chave Pix
+      </button>
 
-  <p class="text-xs text-gray-500 mt-2 text-center">A análise será entregue após confirmação do pagamento.</p>
+      <a
+        id="whatsappLink"
+        target="_blank"
+        class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center"
+      >
+        Enviar comprovante
+      </a>
 
-  <!-- Selos de confiança -->
-  <div class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center">
-    <div>
-      <i class="fa-solid fa-lock mb-1"></i>
-      <span>Pagamento seguro</span>
-    </div>
-    <div>
-      <i class="fa-solid fa-bolt mb-1"></i>
-      <span>Entrega rápida</span>
-    </div>
-    <div>
-      <i class="fa-solid fa-shield-halved mb-1"></i>
-      <span>Garantia 7 dias</span>
-    </div>
-  </div>
-</main>
+      <p class="text-xs text-gray-500 mt-2 text-center">
+        A análise será entregue após confirmação do pagamento.
+      </p>
 
-  <!-- Aviso de segurança -->
-  <div class="seguranca">
-    🔒 Pagamento protegido com criptografia SSL
-  </div>
+      <!-- Selos de confiança -->
+      <div
+        class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center"
+      >
+        <div>
+          <i class="fa-solid fa-lock mb-1"></i>
+          <span>Pagamento seguro</span>
+        </div>
+        <div>
+          <i class="fa-solid fa-bolt mb-1"></i>
+          <span>Entrega rápida</span>
+        </div>
+        <div>
+          <i class="fa-solid fa-shield-halved mb-1"></i>
+          <span>Garantia 7 dias</span>
+        </div>
+      </div>
+    </main>
 
-  <!-- Rodapé -->
-  <footer>
-    &copy; 2026 Office Express - Todos os direitos reservados
-  </footer>
+    <!-- Aviso de segurança -->
+    <div class="seguranca">🔒 Pagamento protegido com criptografia SSL</div>
 
-<script>
-  // Função copiar Pix
-  function copiarPix() {
-    const chave = document.getElementById("pix").value;
-    navigator.clipboard.writeText(chave).then(() => {
-      alert("Chave Pix copiada!");
-    });
-  }
+    <!-- Rodapé -->
+    <footer>&copy; 2026 Office Express - Todos os direitos reservados</footer>
 
-  // Cronômetro regressivo
-  let tempoRestante = 6 * 60;
-  function atualizarCronometro() {
-    const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, '0');
-    const segundos = String(tempoRestante % 60).padStart(2, '0');
-    document.getElementById('cronometro').textContent = `${minutos}:${segundos}`;
-    if (tempoRestante <= 0) {
-      window.location.href = "/pagamentototal";
-    } else {
-      tempoRestante--;
-      setTimeout(atualizarCronometro, 1000);
-    }
-  }
-  atualizarCronometro();
+    <script>
+      // Função copiar Pix
+      function copiarPix() {
+        const chave = document.getElementById("pix").value;
+        navigator.clipboard.writeText(chave).then(() => {
+          alert("Chave Pix copiada!");
+        });
+      }
 
-  // Atualizar link WhatsApp
-  function atualizarLinkWhatsApp() {
-    let mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber minha Análise Profissional.";
-    const url = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
-    document.getElementById("whatsappLink").href = url;
-  }
-  window.onload = atualizarLinkWhatsApp;
-</script>
-</body>
+      // Cronômetro regressivo
+      let tempoRestante = 6 * 60;
+      function atualizarCronometro() {
+        const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");
+        const segundos = String(tempoRestante % 60).padStart(2, "0");
+        document.getElementById("cronometro").textContent =
+          `${minutos}:${segundos}`;
+        if (tempoRestante <= 0) {
+          window.location.href = "/pagamentototal";
+        } else {
+          tempoRestante--;
+          setTimeout(atualizarCronometro, 1000);
+        }
+      }
+      atualizarCronometro();
+
+      // Atualizar link WhatsApp
+      function atualizarLinkWhatsApp() {
+        let mensagem =
+          "Olá, acabei de realizar o pagamento de R$5,99 e quero receber minha Análise Profissional.";
+        const url =
+          "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
+        document.getElementById("whatsappLink").href = url;
+      }
+      window.onload = atualizarLinkWhatsApp;
+    </script>
+  </body>
 </html>

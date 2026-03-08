@@ -1,134 +1,181 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pagamento | Análise Profissional</title>
-  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body {
-      background: linear-gradient(to right, #001f33, #00324a);
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #ff8800;
-      color: #00324a;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      z-index: 9999;
-    }
-  </style>
-</head>
-<body class="relative py-20 px-4 text-white">
-  <div id="particles-js" class="absolute inset-0 -z-10"></div>
-
-  <section class="max-w-4xl mx-auto text-center">
-    <h2 class="text-5xl font-black mb-6 text-white/80 font-sans">
-      PAGAMENTO <span class="text-[#ff8800]">PADRÃO</span>
-    </h2>
-    <p class="text-xl text-white/80 mb-4">A promoção anterior expirou.</p>
-    <p class="text-2xl text-[#ff8800] font-bold mb-8">Para pagar com desconto novamente, será necessário refazer sua Análise.</p>
-
-    <div class="bg-black/80 border border-[#E7C75F]/50 rounded-xl p-6 mb-8">
-      <div class="flex justify-center items-center space-x-4 mb-4">
-        <span class="text-6xl font-black text-[#ff8800] font-['Anton']">R$12,50</span>
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/public/imagens/icon.png" type="image/png" />
+    <title>Pagamento | Office Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --bg-1: #001f33;
+        --bg-2: #00324a;
+        --border: #0a2a52;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: #f9fafb;
+      }
+      header.cabecalho {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+        border-bottom: 1px solid var(--border);
+      }
+      .cabecalho .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+      }
+      .logo {
+        height: 34px;
+        width: auto;
+        display: block;
+      }
+      main {
+        flex: 1;
+      }
+      .valor {
+        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+      }
+      .seguranca {
+        text-align: center;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        font-size: 0.85rem;
+        color: #444;
+        font-weight: 500;
+      }
+      footer {
+        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
+        color: #fff;
+        padding: 0.6rem;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Cabeçalho -->
+    <header class="cabecalho">
+      <div class="container mx-auto px-6">
+        <div class="wrap flex items-center space-x-4">
+          <img
+            src="https://i.imgur.com/HjzGCoA.png"
+            alt="Office Express"
+            class="logo"
+          />
+          <i class="fas fa-lock text-white"></i>
+        </div>
       </div>
-      <p class="text-white/60 text-sm">Este é o valor padrão da Análise Profissional.</p>
-    </div>
+    </header>
 
-    <input type="text" id="pix" readonly
-      class="w-full text-center font-bold text-[#0056b3] bg-[#eef6ff] border border-gray-300 rounded-lg py-3 mb-4"
-      value="00020126430014BR.GOV.BCB.PIX0121andrielysom@gmail.com520400005303986540512.505802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***63040E4C" />
+    <!-- Conteúdo principal -->
+    <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
+      <p class="mb-2">Serviço: Análise Profissional</p>
 
-    <button onclick="copiarPix()" class="w-full bg-[#E7C75F] text-black font-bold py-3 rounded-lg mb-6 hover:bg-green-600 hover:text-white transition">
-      Copiar chave Pix
-    </button>
+      <!-- Preço -->
+      <div class="flex items-baseline space-x-2 mb-6">
+        <span class="valor text-3xl font-bold text-green-700">R$ 12,50</span>
+      </div>
 
-    <button onclick="liberarPDF()" class="w-full bg-gradient-to-r from-[#E7C75F] to-[#d4b84a] text-black font-black text-xl py-4 rounded-lg hover:from-green-600 hover:to-green-700 hover:text-white transition transform hover:scale-105 shadow-2xl">
-      ✅ Já paguei — quero minha Análise
-    </button>
+      <!-- Mensagem minimalista -->
+      <p class="text-sm text-gray-600 mb-6">
+        Se você deseja pagar R$5,99, refaça a análise e garanta a oferta.
+      </p>
 
-    <div id="pdf" class="mt-8 hidden">
-      <p class="text-lg mt-4">Parabéns! Sua sua Análise Profissional está pronta.</p>
-      <a href="https://wa.me/5585991340658?text=Olá,%20já%20realizei%20o%20pagamento%20de%20R$12,50%20e%20quero%20receber%20minha%20Análise%20Profissional%20em%20PDF."
-         target="_blank"
-         class="block mt-4 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
-        Receber Análise pelo WhatsApp
+      <!-- Chave Pix -->
+      <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
+      <input
+        type="text"
+        id="pix"
+        readonly
+        class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
+        value="00020126610014BR.GOV.BCB.PIX0121andrielysom@gmail.com0214Office Express52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304F671"
+      />
+
+      <!-- Botões -->
+      <button
+        onclick="copiarPix()"
+        class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition"
+      >
+        Copiar chave Pix
+      </button>
+
+      <a
+        id="whatsappLink"
+        target="_blank"
+        class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center"
+      >
+        Enviar comprovante
       </a>
-    </div>
 
+      <p class="text-xs text-gray-500 mt-2 text-center">
+        A análise será entregue após confirmação do pagamento.
+      </p>
 
-    <div class="mt-6 text-sm text-white/60 space-y-2">
-<div class="flex justify-center gap-12 text-gray-600">
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-lock text-sm mb-1"></i>
-    <span class="text-sm">Pagamento 100% seguro</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-bolt text-sm mb-1"></i>
-    <span class="text-sm">Entrega imediata</span>
-  </div>
-  <div class="flex flex-col items-center">
-    <i class="fa-solid fa-shield-halved text-sm mb-1"></i>
-    <span class="text-sm">Garantia de 7 dias</span>
-  </div>
-</div>
-      <p class="mt-4">Mais de <span class="text-[#ff8800] font-bold">10.000 pessoas</span> já melhoraram seus currículos com a Office Express</p>
-      <p class="text-red-400 font-bold">Não é mais possível acessar a promoção anterior sem refazer o currículo.</p>
-    </div>
-  </section>
+      <!-- Selos de confiança -->
+      <div
+        class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center"
+      >
+        <div>
+          <i class="fa-solid fa-lock mb-1"></i>
+          <span>Pagamento seguro</span>
+        </div>
+        <div>
+          <i class="fa-solid fa-bolt mb-1"></i>
+          <span>Entrega rápida</span>
+        </div>
+        <div>
+          <i class="fa-solid fa-shield-halved mb-1"></i>
+          <span>Garantia 7 dias</span>
+        </div>
+      </div>
+    </main>
 
-  <footer class="mt-20 pt-8 text-center text-sm text-white/60">
-    <p class="mt-4 text-[#E7C75F] font-bold">Office Express © 2026 - Todos os direitos reservados</p>
-  </footer>
+    <!-- Aviso de segurança -->
+    <div class="seguranca">🔒 Pagamento protegido com criptografia SSL</div>
 
-  <script>
-    function copiarPix() {
-      const chave = document.getElementById("pix").value;
-      navigator.clipboard.writeText(chave).then(() => {});
-    }
+    <!-- Rodapé -->
+    <footer>&copy; 2026 Office Express - Todos os direitos reservados</footer>
 
-    function liberarPDF() {
-      const btn = event.target;
-      btn.innerText = "✅ Pagamento confirmado!";
-      btn.disabled = true;
-      btn.style.backgroundColor = "#28a745";
-      document.getElementById("pdf").style.display = "block";
-    }
+    <script>
+      // Função copiar Pix
+      function copiarPix() {
+        const chave = document.getElementById("pix").value;
+        navigator.clipboard.writeText(chave).then(() => {
+          alert("Chave Pix copiada!");
+        });
+      }
 
-    tsParticles.load("particles-js", {
-      fullScreen: { enable: false },
-      particles: {
-        number: { value: 60 },
-        color: { value: "#e09d00" },
-        shape: { type: "circle" },
-        opacity: { value: 0.3 },
-        size: { value: 4 },
-        move: {
-          enable: true,
-          speed: 1.5,
-          direction: "none",
-          outModes: { default: "bounce" }
-        }
-      },
-      background: { color: { value: "transparent" } }
-    });
-
-    // Impede retorno à página anterior
-    history.pushState(null, null, location.href);
-    window.onpopstate = function () {
-      location.href = "/curriculo";
-    };
-  </script>
-</body>
+      // Atualizar link WhatsApp
+      function atualizarLinkWhatsApp() {
+        let mensagem =
+          "Olá, acabei de realizar o pagamento de R$12,50 e quero receber minha Análise Profissional.";
+        const url =
+          "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
+        document.getElementById("whatsappLink").href = url;
+      }
+      window.onload = atualizarLinkWhatsApp;
+    </script>
+  </body>
 </html>

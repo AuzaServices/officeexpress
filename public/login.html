@@ -1,107 +1,110 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Login - Painel Administrativo</title>
-  <link rel="icon" href="icon.png" type="image/png" />
-  <style>
-    body {
-      background: linear-gradient(135deg, #001f33, #00324a);
-      font-family: 'Segoe UI', sans-serif;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0;
-    }
-    .login-card {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      width: 100%;
-      max-width: 350px;
-    }
-    .login-card h2 {
-      margin-bottom: 20px;
-      font-weight: 600;
-      text-align: center;
-      color: #001f33;
-    }
-    .login-card input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .login-card button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 12px;
-      font-weight: 600;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 15px;
-    }
-    .btn-login {
-      background-color: #ff8800;
-      color: #fff;
-    }
-    .btn-login:hover {
-      background-color: #e67300;
-    }
-    .error-msg {
-      color: red;
-      font-size: 13px;
-      text-align: center;
-      margin-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="login-card">
-    <h2>Login Administrativo</h2>
-    <form id="loginForm">
-      <input type="text" id="usuario" placeholder="Usuário" required>
-      <input type="password" id="senha" placeholder="Senha" required>
-      <button type="submit" class="btn-login">Entrar</button>
-      <div id="error" class="error-msg"></div>
-    </form>
-  </div>
-
-  <script>
-    document.getElementById("loginForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const usuario = document.getElementById("usuario").value;
-      const senha = document.getElementById("senha").value;
-      const errorBox = document.getElementById("error");
-      errorBox.textContent = "";
-
-      try {
-        const res = await fetch("/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: usuario, password: senha }),
-          credentials: "include" // 👈 garante que o cookie da sessão seja salvo
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-          window.location.href = "/painel"; // ✅ painel administrativo
-        } else {
-          errorBox.textContent = data.error || "Usuário ou senha incorretos";
-        }
-      } catch (err) {
-        console.error("Erro no login:", err);
-        errorBox.textContent = "Erro no servidor. Tente novamente.";
+    <title>Login - Painel Administrativo</title>
+    <link rel="icon" href="/public/imagens/icon.png" type="image/png" />
+    <style>
+      body {
+        background: linear-gradient(135deg, #001f33, #00324a);
+        font-family: "Segoe UI", sans-serif;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
       }
-    });
-  </script>
-</body>
+      .login-card {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 350px;
+      }
+      .login-card h2 {
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-align: center;
+        color: #001f33;
+      }
+      .login-card input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      .login-card button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 12px;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+      }
+      .btn-login {
+        background-color: #ff8800;
+        color: #fff;
+      }
+      .btn-login:hover {
+        background-color: #e67300;
+      }
+      .error-msg {
+        color: red;
+        font-size: 13px;
+        text-align: center;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <h2>Login Administrativo</h2>
+      <form id="loginForm">
+        <input type="text" id="usuario" placeholder="Usuário" required />
+        <input type="password" id="senha" placeholder="Senha" required />
+        <button type="submit" class="btn-login">Entrar</button>
+        <div id="error" class="error-msg"></div>
+      </form>
+    </div>
+
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const usuario = document.getElementById("usuario").value;
+          const senha = document.getElementById("senha").value;
+          const errorBox = document.getElementById("error");
+          errorBox.textContent = "";
+
+          try {
+            const res = await fetch("/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: usuario, password: senha }),
+              credentials: "include", // 👈 garante que o cookie da sessão seja salvo
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+              window.location.href = "/painel"; // ✅ painel administrativo
+            } else {
+              errorBox.textContent =
+                data.error || "Usuário ou senha incorretos";
+            }
+          } catch (err) {
+            console.error("Erro no login:", err);
+            errorBox.textContent = "Erro no servidor. Tente novamente.";
+          }
+        });
+    </script>
+  </body>
 </html>

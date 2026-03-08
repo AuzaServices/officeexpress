@@ -1,232 +1,281 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Painel do Parceiro</title>
-  <link rel="icon" href="icon.png" type="image/png" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body {
-      background-color: #f8f9fa;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding-top: 80px;
-    }
-    .card { box-shadow: 0 2px 6px rgba(0,0,0,0.15); border-radius: 10px; }
-    .card h5 { font-weight: 600; }
-    .display-6 { font-weight: bold; }
+    <title>Painel do Parceiro</title>
+    <link rel="icon" href="/public/imagens/icon.png" type="image/png" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: "Segoe UI", sans-serif;
+        margin: 0;
+        padding-top: 80px;
+      }
+      .card {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+      }
+      .card h5 {
+        font-weight: 600;
+      }
+      .display-6 {
+        font-weight: bold;
+      }
 
-    .cabecalho {
-      background: linear-gradient(90deg, #001f33, #00324a);
-      padding: 10px 0;
-      width: 100%;
-      position: fixed;
-      top: 0; left: 0;
-      z-index: 1000;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    .cabecalho .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .cabecalho .logo { height: 40px; transition: transform 0.3s ease; }
-    .cabecalho .logo:hover { transform: scale(1.05); }
-    .logout-icon { color: #dc3545; font-size: 1.5rem; text-decoration: none; }
-    .logout-icon:hover { color: #b02a37; }
+      .cabecalho {
+        background: linear-gradient(90deg, #001f33, #00324a);
+        padding: 10px 0;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+      .cabecalho .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .cabecalho .logo {
+        height: 40px;
+        transition: transform 0.3s ease;
+      }
+      .cabecalho .logo:hover {
+        transform: scale(1.05);
+      }
+      .logout-icon {
+        color: #dc3545;
+        font-size: 1.5rem;
+        text-decoration: none;
+      }
+      .logout-icon:hover {
+        color: #b02a37;
+      }
 
-    .financeiro-card {
-      background: linear-gradient(135deg, #ff8c00, #ff6600);
-      color: #fff; border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      padding: 25px; margin-top: 20px;
-    }
+      .financeiro-card {
+        background: linear-gradient(135deg, #ff8c00, #ff6600);
+        color: #fff;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        padding: 25px;
+        margin-top: 20px;
+      }
 
-    .barra-botoes { position: sticky; top: 60px; z-index: 999; }
-    .barra-botoes .btn { border-radius: 25px; font-weight: 500; transition: transform 0.2s ease; }
-    .barra-botoes .btn:hover { transform: scale(1.05); }
+      .barra-botoes {
+        position: sticky;
+        top: 60px;
+        z-index: 999;
+      }
+      .barra-botoes .btn {
+        border-radius: 25px;
+        font-weight: 500;
+        transition: transform 0.2s ease;
+      }
+      .barra-botoes .btn:hover {
+        transform: scale(1.05);
+      }
 
-    /* Esconde abas por padrão */
-    #aba-relatorios, #aba-metas, #aba-suporte { display: none; }
-  </style>
-</head>
-<body>
+      /* Esconde abas por padrão */
+      #aba-relatorios,
+      #aba-metas,
+      #aba-suporte {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="cabecalho">
+      <div class="container">
+        <img
+          src="https://i.imgur.com/HjzGCoA.png"
+          alt="Office Express"
+          class="logo"
+        />
+        <a href="/logout-parceiro" class="logout-icon" title="Sair">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </header>
 
-<header class="cabecalho">
-  <div class="container">
-    <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-    <a href="/logout-parceiro" class="logout-icon" title="Sair">
-      <i class="fas fa-sign-out-alt"></i>
-    </a>
-  </div>
-</header>
+    <!-- Barra de botões -->
+    <nav class="barra-botoes bg-white shadow-sm py-2">
+      <div class="container d-flex justify-content-center flex-wrap gap-3">
+        <a href="?aba=dashboard" class="btn btn-outline-dark">
+          <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="?aba=relatorios" class="btn btn-outline-primary">
+          <i class="fas fa-chart-line"></i> Relatórios Mensais
+        </a>
+        <a href="?aba=metas" class="btn btn-outline-warning">
+          <i class="fas fa-bullseye"></i> Metas
+        </a>
+        <a href="?aba=suporte" class="btn btn-outline-info">
+          <i class="fas fa-headset"></i> Suporte
+        </a>
+      </div>
+    </nav>
 
-<!-- Barra de botões -->
-<nav class="barra-botoes bg-white shadow-sm py-2">
-  <div class="container d-flex justify-content-center flex-wrap gap-3">
-    <a href="?aba=dashboard" class="btn btn-outline-dark">
-  <i class="fas fa-tachometer-alt"></i> Dashboard
-</a>
-    <a href="?aba=relatorios" class="btn btn-outline-primary">
-      <i class="fas fa-chart-line"></i> Relatórios Mensais
-    </a>
-    <a href="?aba=metas" class="btn btn-outline-warning">
-      <i class="fas fa-bullseye"></i> Metas
-    </a>
-    <a href="?aba=suporte" class="btn btn-outline-info">
-      <i class="fas fa-headset"></i> Suporte
-    </a>
-  </div>
-</nav>
+    <div class="container my-4">
+      <h1 class="mb-4 text-center">
+        Painel do Parceiro - <span id="estado"></span>
+      </h1>
 
-<div class="container my-4">
-  <h1 class="mb-4 text-center">Painel do Parceiro - <span id="estado"></span></h1>
+      <!-- Aba Dashboard -->
+      <div id="aba-dashboard" class="mt-4">
+        <h2 class="mb-4 text-center">Dashboard</h2>
 
-  <!-- Aba Dashboard -->
-  <div id="aba-dashboard" class="mt-4">
-    <h2 class="mb-4 text-center">Dashboard</h2>
-
-    <!-- Painel principal -->
-    <div id="painel-principal">
-      <div class="row text-center">
-        <div class="col-md-6 mb-3">
-          <div class="card bg-light">
-            <div class="card-body">
-              <h5 class="card-title">Currículos Emitidos</h5>
-              <p id="curriculos" class="display-6">0</p>
+        <!-- Painel principal -->
+        <div id="painel-principal">
+          <div class="row text-center">
+            <div class="col-md-6 mb-3">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h5 class="card-title">Currículos Emitidos</h5>
+                  <p id="curriculos" class="display-6">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h5 class="card-title">Análises Emitidas</h5>
+                  <p id="analises" class="display-6">0</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="col-md-6 mb-3">
-          <div class="card bg-light">
-            <div class="card-body">
-              <h5 class="card-title">Análises Emitidas</h5>
-              <p id="analises" class="display-6">0</p>
+
+          <div class="row text-center">
+            <div class="col-md-6 mb-3">
+              <div class="card bg-success text-white">
+                <div class="card-body">
+                  <h5 class="card-title">Currículos Pagos</h5>
+                  <p id="curriculosPagos" class="display-6">0</p>
+                </div>
+              </div>
             </div>
+            <div class="col-md-6 mb-3">
+              <div class="card bg-success text-white">
+                <div class="card-body">
+                  <h5 class="card-title">Análises Pagas</h5>
+                  <p id="analisesPagos" class="display-6">0</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="financeiro-card text-center">
+            <h5><i class="fas fa-coins financeiro-icon"></i> Financeiro</h5>
+            <p>Total: R$ <span id="total">0.00</span></p>
+            <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
+            <p>Office Express: R$ <span id="empresa">0.00</span></p>
           </div>
         </div>
       </div>
 
-      <div class="row text-center">
-        <div class="col-md-6 mb-3">
-          <div class="card bg-success text-white">
-            <div class="card-body">
-              <h5 class="card-title">Currículos Pagos</h5>
-              <p id="curriculosPagos" class="display-6">0</p>
-            </div>
+      <!-- Aba Relatórios -->
+      <div id="aba-relatorios" class="mt-5" style="display: none">
+        <h2 class="mb-4 text-center">Relatórios Mensais</h2>
+        <div id="lista-relatorios" class="row"></div>
+      </div>
+
+      <!-- Aba Metas -->
+      <!-- Aba Metas -->
+      <div id="aba-metas" class="mt-5" style="display: none">
+        <h2 class="mb-4 text-center">Metas</h2>
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <canvas id="graficoMetas"></canvas>
           </div>
         </div>
-        <div class="col-md-6 mb-3">
-          <div class="card bg-success text-white">
-            <div class="card-body">
-              <h5 class="card-title">Análises Pagas</h5>
-              <p id="analisesPagos" class="display-6">0</p>
-            </div>
-          </div>
+        <div class="text-center mt-4">
+          <p><strong>Meta final:</strong> 300 currículos/análises pagos</p>
+          <p><span id="progressoTexto"></span></p>
         </div>
       </div>
 
-      <div class="financeiro-card text-center">
-        <h5><i class="fas fa-coins financeiro-icon"></i> Financeiro</h5>
-        <p>Total: R$ <span id="total">0.00</span></p>
-        <p>Parceiro(a): R$ <span id="parceiro">0.00</span></p>
-        <p>Office Express: R$ <span id="empresa">0.00</span></p>
+      <!-- Aba Suporte -->
+      <div id="aba-suporte" class="mt-5" style="display: none">
+        <h2 class="mb-4 text-center">Suporte</h2>
+        <div id="conteudo-suporte" class="row"></div>
       </div>
     </div>
-  </div>
 
-  <!-- Aba Relatórios -->
-  <div id="aba-relatorios" class="mt-5" style="display:none;">
-    <h2 class="mb-4 text-center">Relatórios Mensais</h2>
-    <div id="lista-relatorios" class="row"></div>
-  </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      const estadoParceiro = localStorage.getItem("estadoParceiro");
+      document.getElementById("estado").textContent = estadoParceiro || "—";
 
-  <!-- Aba Metas -->
-<!-- Aba Metas -->
-<div id="aba-metas" class="mt-5" style="display:none;">
-  <h2 class="mb-4 text-center">Metas</h2>
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <canvas id="graficoMetas"></canvas>
-    </div>
-  </div>
-  <div class="text-center mt-4">
-    <p><strong>Meta final:</strong> 300 currículos/análises pagos</p>
-    <p><span id="progressoTexto"></span></p>
-  </div>
-</div>
+      function getParametro(nome) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(nome);
+      }
 
-  <!-- Aba Suporte -->
-  <div id="aba-suporte" class="mt-5" style="display:none;">
-    <h2 class="mb-4 text-center">Suporte</h2>
-    <div id="conteudo-suporte" class="row"></div>
-  </div>
-</div>
+      // Painel principal
+      async function carregarPainel() {
+        try {
+          const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
+          if (!res.ok) throw new Error("Erro HTTP " + res.status);
+          const dados = await res.json();
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-  const estadoParceiro = localStorage.getItem("estadoParceiro");
-  document.getElementById("estado").textContent = estadoParceiro || "—";
+          // 👇 aqui
+          if (dados.forceLogout) {
+            alert("Sua conta foi removida. Você será desconectado.");
+            window.location.replace("/login-parceiro.html"); // força troca de página
+            return;
+          }
 
-  function getParametro(nome) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(nome);
-  }
+          document.getElementById("curriculos").textContent =
+            dados.curriculosEmitidos;
+          document.getElementById("analises").textContent =
+            dados.analisesEmitidas;
+          document.getElementById("curriculosPagos").textContent =
+            dados.curriculosPagos;
+          document.getElementById("analisesPagos").textContent =
+            dados.analisesPagas;
+          document.getElementById("total").textContent = dados.total;
+          document.getElementById("parceiro").textContent = dados.parceiro;
+          document.getElementById("empresa").textContent = dados.empresa;
+        } catch (err) {
+          console.error("Erro ao carregar painel:", err);
+          alert("Não foi possível carregar os dados do parceiro.");
+        }
+      }
 
-  // Painel principal
-  async function carregarPainel() {
-    try {
-      const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
-      if (!res.ok) throw new Error("Erro HTTP " + res.status);
-      const dados = await res.json();
+      // Relatórios mensais
+      async function carregarRelatoriosMensais() {
+        try {
+          const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
+          if (!res.ok) throw new Error("Erro HTTP " + res.status);
+          const dados = await res.json();
 
-      // 👇 aqui
-if (dados.forceLogout) {
-  alert("Sua conta foi removida. Você será desconectado.");
-  window.location.replace("/login-parceiro.html"); // força troca de página
-  return;
-}
+          // 👇 checagem imediata
+          if (dados.forceLogout) {
+            alert("Sua conta foi removida. Você será desconectado.");
+            window.location.replace("/login-parceiro.html"); // força troca de página
+            return;
+          }
 
+          const lista = document.getElementById("lista-relatorios");
+          lista.innerHTML = "";
 
-      document.getElementById("curriculos").textContent = dados.curriculosEmitidos;
-      document.getElementById("analises").textContent = dados.analisesEmitidas;
-      document.getElementById("curriculosPagos").textContent = dados.curriculosPagos;
-      document.getElementById("analisesPagos").textContent = dados.analisesPagas;
-      document.getElementById("total").textContent = dados.total;
-      document.getElementById("parceiro").textContent = dados.parceiro;
-      document.getElementById("empresa").textContent = dados.empresa;
-    } catch (err) {
-      console.error("Erro ao carregar painel:", err);
-      alert("Não foi possível carregar os dados do parceiro.");
-    }
-  }
-
-  // Relatórios mensais
-async function carregarRelatoriosMensais() {
-  try {
-    const res = await fetch(`/api/relatorios-mensais/${estadoParceiro}`);
-    if (!res.ok) throw new Error("Erro HTTP " + res.status);
-    const dados = await res.json();
-
-    // 👇 checagem imediata
-if (dados.forceLogout) {
-  alert("Sua conta foi removida. Você será desconectado.");
-  window.location.replace("/login-parceiro.html"); // força troca de página
-  return;
-}
-
-    const lista = document.getElementById("lista-relatorios");
-    lista.innerHTML = "";
-
-    dados.forEach(rel => {
-      lista.innerHTML += `
+          dados.forEach((rel) => {
+            lista.innerHTML += `
         <div class="col-md-4 mb-3">
           <div class="card shadow-sm">
             <div class="card-body text-center">
@@ -239,189 +288,211 @@ if (dados.forceLogout) {
           </div>
         </div>
       `;
-    });
-  } catch (err) {
-    console.error("Erro ao carregar relatórios mensais:", err);
-    alert("Erro ao carregar relatórios mensais.");
-  }
-}
-
-  // Função para baixar relatório em PDF
-  async function baixarRelatorio(mes, ano) {
-  try {
-    const res = await fetch(`/api/relatorio/${estadoParceiro}?mes=${mes}&ano=${ano}`);
-    if (!res.ok) throw new Error("Erro HTTP " + res.status);
-    const dados = await res.json();
-
-    // 👇 checagem imediata
-if (dados.forceLogout) {
-  alert("Sua conta foi removida. Você será desconectado.");
-  window.location.replace("/login-parceiro.html"); // força troca de página
-  return;
-}
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    const img = new Image();
-    img.src = "marca.png"; // logo da empresa
-    img.onload = () => {
-      // só gera PDF depois que a imagem carregar
-    };
-
-    function desenharCabecalho() {
-      doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
-      doc.setTextColor(0);
-      doc.setFontSize(14);
-      doc.text(`Relatório ${mes}/${ano} - ${estadoParceiro}`, 10, 15);
-      doc.setFontSize(9);
-      doc.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 10, 22);
-
-      doc.setFontSize(8);
-      let startY = 35;
-      doc.text("ID", 10, startY);
-      doc.text("Tipo", 25, startY);
-      doc.text("Documento", 55, startY);
-      doc.text("Valor (R$)", 110, startY);
-      doc.text("Cidade", 140, startY);
-      doc.text("Data Pagamento", 170, startY);
-      doc.line(10, startY + 2, 200, startY + 2);
-      return startY + 10;
-    }
-
-    let y = desenharCabecalho();
-    let total = 0;
-    const pageHeight = doc.internal.pageSize.height;
-
-    dados.forEach(item => {
-      if (y > pageHeight - 30) {
-        doc.addPage();
-        y = desenharCabecalho();
-      }
-
-      doc.text(String(item.id), 10, y);
-      doc.text(item.tipo, 25, y);
-
-      let docNome = item.nome_doc.length > 40 ? item.nome_doc.substring(0, 30) + "..." : item.nome_doc;
-      doc.text(docNome, 55, y);
-
-      doc.text(parseFloat(item.valor).toFixed(2), 110, y);
-
-      let cidadeNome = item.cidade && item.cidade.length > 20 ? item.cidade.substring(0, 15) + "..." : (item.cidade || "—");
-      doc.text(cidadeNome, 140, y);
-
-      doc.text(item.data ? item.data.split("T")[0].split("-").reverse().join("/") : "—", 170, y);
-
-      doc.line(10, y + 2, 200, y + 2);
-      y += 8;
-      total += parseFloat(item.valor) || 0;
-    });
-
-    y += 15;
-    const officeExpressParte = (total * 0.60).toFixed(2);
-    const socioParte = (total * 0.40).toFixed(2);
-
-    doc.setFontSize(10);
-    doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
-    y += 8;
-    doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
-    y += 8;
-    doc.text(`Sócio: R$ ${socioParte}`, 10, y);
-
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
-    }
-
-    doc.save(`relatorio_${estadoParceiro}_${mes}_${ano}.pdf`);
-  } catch (err) {
-    console.error("Erro ao baixar relatório:", err);
-    alert("Erro ao gerar relatório.");
-  }
-}
-
-  // Inicialização
-window.onload = () => {
-  const aba = getParametro("aba");
-
-  if (aba === "relatorios") {
-    mostrarAba("aba-relatorios");
-    carregarRelatoriosMensais();
-  } else if (aba === "metas") {
-    mostrarAba("aba-metas");
-    carregarMetas(); // ativa metas com gráfico
-  } else if (aba === "suporte") {
-    mostrarAba("aba-suporte");
-    carregarSuporte(); // se quiser implementar suporte
-  } else {
-    mostrarAba("aba-dashboard");
-    carregarPainel();
-    painelIntervalo = setInterval(carregarPainel, 5000);
-  }
-};
-
-function mostrarAba(abaId) {
-  ["aba-dashboard", "aba-relatorios", "aba-metas", "aba-suporte"].forEach(id => {
-    document.getElementById(id).style.display = (id === abaId) ? "block" : "none";
-  });
-}
-
-async function carregarMetas() {
-  try {
-    const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
-    if (!res.ok) throw new Error("Erro HTTP " + res.status);
-    const dados = await res.json();
-
-    if (dados.forceLogout) {
-      alert("Sua conta foi removida. Você será desconectado.");
-      window.location.replace("/login-parceiro.html");
-      return;
-    }
-
-    const pagos = dados.curriculosPagos + dados.analisesPagas;
-    const emitidos = dados.curriculosEmitidos + dados.analisesEmitidas;
-    const metaFinal = 300;
-    const restante = Math.max(metaFinal - pagos, 0);
-
-    const ctx = document.getElementById("graficoMetas").getContext("2d");
-    new Chart(ctx, {
-      type: "doughnut",
-      data: {
-        labels: ["Pagos", "Emitidos (não pagos)", "Meta restante"],
-        datasets: [{
-          data: [pagos, emitidos - pagos, restante],
-          backgroundColor: ["#28a745", "#ffc107", "#dc3545"],
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "bottom",
-            labels: { font: { size: 14 } }
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return `${context.label}: ${context.raw}`;
-              }
-            }
-          }
+          });
+        } catch (err) {
+          console.error("Erro ao carregar relatórios mensais:", err);
+          alert("Erro ao carregar relatórios mensais.");
         }
       }
-    });
 
-    document.getElementById("progressoTexto").textContent =
-      `Você já atingiu ${pagos} de ${metaFinal} currículos/análises pagos.`;
-  } catch (err) {
-    console.error("Erro ao carregar metas:", err);
-    alert("Erro ao carregar metas.");
-  }
-}
+      // Função para baixar relatório em PDF
+      async function baixarRelatorio(mes, ano) {
+        try {
+          const res = await fetch(
+            `/api/relatorio/${estadoParceiro}?mes=${mes}&ano=${ano}`,
+          );
+          if (!res.ok) throw new Error("Erro HTTP " + res.status);
+          const dados = await res.json();
 
-</script>
-</body>
+          // 👇 checagem imediata
+          if (dados.forceLogout) {
+            alert("Sua conta foi removida. Você será desconectado.");
+            window.location.replace("/login-parceiro.html"); // força troca de página
+            return;
+          }
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          const img = new Image();
+          img.src = "marca.png"; // logo da empresa
+          img.onload = () => {
+            // só gera PDF depois que a imagem carregar
+          };
+
+          function desenharCabecalho() {
+            doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
+            doc.setTextColor(0);
+            doc.setFontSize(14);
+            doc.text(`Relatório ${mes}/${ano} - ${estadoParceiro}`, 10, 15);
+            doc.setFontSize(9);
+            doc.text(
+              `Emitido em: ${new Date().toLocaleDateString("pt-BR")}`,
+              10,
+              22,
+            );
+
+            doc.setFontSize(8);
+            let startY = 35;
+            doc.text("ID", 10, startY);
+            doc.text("Tipo", 25, startY);
+            doc.text("Documento", 55, startY);
+            doc.text("Valor (R$)", 110, startY);
+            doc.text("Cidade", 140, startY);
+            doc.text("Data Pagamento", 170, startY);
+            doc.line(10, startY + 2, 200, startY + 2);
+            return startY + 10;
+          }
+
+          let y = desenharCabecalho();
+          let total = 0;
+          const pageHeight = doc.internal.pageSize.height;
+
+          dados.forEach((item) => {
+            if (y > pageHeight - 30) {
+              doc.addPage();
+              y = desenharCabecalho();
+            }
+
+            doc.text(String(item.id), 10, y);
+            doc.text(item.tipo, 25, y);
+
+            let docNome =
+              item.nome_doc.length > 40
+                ? item.nome_doc.substring(0, 30) + "..."
+                : item.nome_doc;
+            doc.text(docNome, 55, y);
+
+            doc.text(parseFloat(item.valor).toFixed(2), 110, y);
+
+            let cidadeNome =
+              item.cidade && item.cidade.length > 20
+                ? item.cidade.substring(0, 15) + "..."
+                : item.cidade || "—";
+            doc.text(cidadeNome, 140, y);
+
+            doc.text(
+              item.data
+                ? item.data.split("T")[0].split("-").reverse().join("/")
+                : "—",
+              170,
+              y,
+            );
+
+            doc.line(10, y + 2, 200, y + 2);
+            y += 8;
+            total += parseFloat(item.valor) || 0;
+          });
+
+          y += 15;
+          const officeExpressParte = (total * 0.6).toFixed(2);
+          const socioParte = (total * 0.4).toFixed(2);
+
+          doc.setFontSize(10);
+          doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
+          y += 8;
+          doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
+          y += 8;
+          doc.text(`Sócio: R$ ${socioParte}`, 10, y);
+
+          const pageCount = doc.internal.getNumberOfPages();
+          for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
+          }
+
+          doc.save(`relatorio_${estadoParceiro}_${mes}_${ano}.pdf`);
+        } catch (err) {
+          console.error("Erro ao baixar relatório:", err);
+          alert("Erro ao gerar relatório.");
+        }
+      }
+
+      // Inicialização
+      window.onload = () => {
+        const aba = getParametro("aba");
+
+        if (aba === "relatorios") {
+          mostrarAba("aba-relatorios");
+          carregarRelatoriosMensais();
+        } else if (aba === "metas") {
+          mostrarAba("aba-metas");
+          carregarMetas(); // ativa metas com gráfico
+        } else if (aba === "suporte") {
+          mostrarAba("aba-suporte");
+          carregarSuporte(); // se quiser implementar suporte
+        } else {
+          mostrarAba("aba-dashboard");
+          carregarPainel();
+          painelIntervalo = setInterval(carregarPainel, 5000);
+        }
+      };
+
+      function mostrarAba(abaId) {
+        ["aba-dashboard", "aba-relatorios", "aba-metas", "aba-suporte"].forEach(
+          (id) => {
+            document.getElementById(id).style.display =
+              id === abaId ? "block" : "none";
+          },
+        );
+      }
+
+      async function carregarMetas() {
+        try {
+          const res = await fetch(`/api/painel-parceiro/${estadoParceiro}`);
+          if (!res.ok) throw new Error("Erro HTTP " + res.status);
+          const dados = await res.json();
+
+          if (dados.forceLogout) {
+            alert("Sua conta foi removida. Você será desconectado.");
+            window.location.replace("/login-parceiro.html");
+            return;
+          }
+
+          const pagos = dados.curriculosPagos + dados.analisesPagas;
+          const emitidos = dados.curriculosEmitidos + dados.analisesEmitidas;
+          const metaFinal = 300;
+          const restante = Math.max(metaFinal - pagos, 0);
+
+          const ctx = document.getElementById("graficoMetas").getContext("2d");
+          new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels: ["Pagos", "Emitidos (não pagos)", "Meta restante"],
+              datasets: [
+                {
+                  data: [pagos, emitidos - pagos, restante],
+                  backgroundColor: ["#28a745", "#ffc107", "#dc3545"],
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: { font: { size: 14 } },
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      return `${context.label}: ${context.raw}`;
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          document.getElementById("progressoTexto").textContent =
+            `Você já atingiu ${pagos} de ${metaFinal} currículos/análises pagos.`;
+        } catch (err) {
+          console.error("Erro ao carregar metas:", err);
+          alert("Erro ao carregar metas.");
+        }
+      }
+    </script>
+  </body>
 </html>

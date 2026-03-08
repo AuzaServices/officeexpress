@@ -1,13 +1,11 @@
-
-
-  function aplicarMascaraTelefone(input) {
-    input.addEventListener("input", function () {
-      let valor = input.value.replace(/\D/g, "");
-      if (valor.length > 11) valor = valor.slice(0, 11);
-      const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1)$2-$3");
-      input.value = formatado;
-    });
-  }
+function aplicarMascaraTelefone(input) {
+  input.addEventListener("input", function () {
+    let valor = input.value.replace(/\D/g, "");
+    if (valor.length > 11) valor = valor.slice(0, 11);
+    const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1)$2-$3");
+    input.value = formatado;
+  });
+}
 
 function adicionarTelefone() {
   const container = document.getElementById("telefones");
@@ -44,54 +42,62 @@ function adicionarTelefone() {
   });
 }
 
-  document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
+document
+  .querySelectorAll('[name="telefone[]"]')
+  .forEach(aplicarMascaraTelefone);
 
-  document.getElementById("formulario").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const form = document.getElementById("formulario");
+document.getElementById("formulario").addEventListener("submit", function (e) {
+  e.preventDefault();
+  const form = document.getElementById("formulario");
 
-    const valores = nome => Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map(el => el.value.trim());
+  const valores = (nome) =>
+    Array.from(form.querySelectorAll(`[name="${nome}[]"]`)).map((el) =>
+      el.value.trim(),
+    );
 
-const dados = {
-  nome: form.nome?.value.trim() || "",
-  idade: form.idade?.value.trim() || "", // ✅ já está implementado
-  email: form.email?.value.trim() || "",
-  telefone: valores("telefone").filter(t => t).join(" "),
-  endereco: form.endereco?.value.trim() || "",
-  numero: form.numero?.value.trim() || "",
-  complemento: form.complemento?.value.trim() || "",
-  bairro: form.bairro?.value.trim() || "",
-  cidade: form.cidade?.value.trim() || "",
-  estado: form.estado?.value.trim() || "", // ✅ adiciona o Estado aqui
-  cep: form.cep?.value.trim() || "",
-  infoAdicional: form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
-  objetivo: form.objetivo?.value.trim() || "",
-  formacao: form.formacao?.value.trim() || "",
-  habilidades: form.habilidades?.value.trim() || "",
-  hobbies: form.hobbies?.value.trim() || "",
-  empresa: valores("empresa"),
-  cargo: valores("cargo"),
-  periodo_inicio: valores("periodo_inicio"),
-  periodo_fim: valores("periodo_fim"),
-  atividades: valores("atividades"),
-  curso: valores("curso"),
-  instituicao: valores("instituicao"),
-  carga: valores("carga"),
-  foto: null
-};
+  const dados = {
+    nome: form.nome?.value.trim() || "",
+    idade: form.idade?.value.trim() || "", // ✅ já está implementado
+    email: form.email?.value.trim() || "",
+    telefone: valores("telefone")
+      .filter((t) => t)
+      .join(" "),
+    endereco: form.endereco?.value.trim() || "",
+    numero: form.numero?.value.trim() || "",
+    complemento: form.complemento?.value.trim() || "",
+    bairro: form.bairro?.value.trim() || "",
+    cidade: form.cidade?.value.trim() || "",
+    estado: form.estado?.value.trim() || "", // ✅ adiciona o Estado aqui
+    cep: form.cep?.value.trim() || "",
+    infoAdicional:
+      form.querySelector('[name="infoAdicional"]')?.value.trim() || "",
+    objetivo: form.objetivo?.value.trim() || "",
+    formacao: form.formacao?.value.trim() || "",
+    habilidades: form.habilidades?.value.trim() || "",
+    hobbies: form.hobbies?.value.trim() || "",
+    empresa: valores("empresa"),
+    cargo: valores("cargo"),
+    periodo_inicio: valores("periodo_inicio"),
+    periodo_fim: valores("periodo_fim"),
+    atividades: valores("atividades"),
+    curso: valores("curso"),
+    instituicao: valores("instituicao"),
+    carga: valores("carga"),
+    foto: null,
+  };
 
-    const foto = document.getElementById("foto");
-    if (foto.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        dados.foto = event.target.result;
-        salvar(dados);
-      };
-      reader.readAsDataURL(foto.files[0]);
-    } else {
+  const foto = document.getElementById("foto");
+  if (foto.files.length > 0) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      dados.foto = event.target.result;
       salvar(dados);
-    }
-  });
+    };
+    reader.readAsDataURL(foto.files[0]);
+  } else {
+    salvar(dados);
+  }
+});
 
 function salvar(dados) {
   localStorage.setItem("curriculo", JSON.stringify(dados));
@@ -111,39 +117,39 @@ function salvar(dados) {
   }, 300);
 }
 
-  const dropArea = document.getElementById("drop-area");
-  const uploadBox = document.getElementById("upload-box");
-  const inputFoto = document.getElementById("foto");
-  const preview = document.getElementById("preview-miniatura");
+const dropArea = document.getElementById("drop-area");
+const uploadBox = document.getElementById("upload-box");
+const inputFoto = document.getElementById("foto");
+const preview = document.getElementById("preview-miniatura");
 
-  uploadBox.addEventListener("click", () => {
+uploadBox.addEventListener("click", () => {
   uploadEmAndamento = true;
   inputFoto.click();
 });
 
-  ["dragenter", "dragover"].forEach(eventName => {
-    dropArea.addEventListener(eventName, e => {
-      e.preventDefault();
-      uploadBox.style.borderColor = "#00324a";
-      uploadBox.style.backgroundColor = "#f0f8ff";
-    });
+["dragenter", "dragover"].forEach((eventName) => {
+  dropArea.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    uploadBox.style.borderColor = "#00324a";
+    uploadBox.style.backgroundColor = "#f0f8ff";
   });
+});
 
-  ["dragleave", "drop"].forEach(eventName => {
-    dropArea.addEventListener(eventName, e => {
-      e.preventDefault();
-      uploadBox.style.borderColor = "#ccc";
-      uploadBox.style.backgroundColor = "#fff";
-    });
+["dragleave", "drop"].forEach((eventName) => {
+  dropArea.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    uploadBox.style.borderColor = "#ccc";
+    uploadBox.style.backgroundColor = "#fff";
   });
+});
 
-  dropArea.addEventListener("drop", e => {
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
-      inputFoto.files = e.dataTransfer.files;
-      mostrarPreview(file);
-    }
-  });
+dropArea.addEventListener("drop", (e) => {
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) {
+    inputFoto.files = e.dataTransfer.files;
+    mostrarPreview(file);
+  }
+});
 
 inputFoto.addEventListener("change", () => {
   uploadEmAndamento = false;
@@ -151,14 +157,14 @@ inputFoto.addEventListener("change", () => {
   if (file) mostrarPreview(file);
 });
 
-  function mostrarPreview(file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      preview.src = e.target.result;
-      preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-  }
+function mostrarPreview(file) {
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    preview.src = e.target.result;
+    preview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
 
 function adicionarCurso(curso = "", instituicao = "", carga = "") {
   const container = document.getElementById("cursos");
@@ -172,7 +178,7 @@ function adicionarCurso(curso = "", instituicao = "", carga = "") {
   container.appendChild(novo);
 
   // Salvar ao digitar
-  novo.querySelectorAll("input").forEach(input => {
+  novo.querySelectorAll("input").forEach((input) => {
     input.addEventListener("input", salvarCursos);
   });
   salvarCursos();
@@ -180,7 +186,7 @@ function adicionarCurso(curso = "", instituicao = "", carga = "") {
 
 function salvarCursos() {
   const cursos = [];
-  document.querySelectorAll(".curso").forEach(bloco => {
+  document.querySelectorAll(".curso").forEach((bloco) => {
     const curso = bloco.querySelector('[name="curso[]"]').value;
     const instituicao = bloco.querySelector('[name="instituicao[]"]').value;
     const carga = bloco.querySelector('[name="carga[]"]').value;
@@ -189,27 +195,33 @@ function salvarCursos() {
   localStorage.setItem("cursosSalvos", JSON.stringify(cursos));
 }
 
-  // Dispara o log assim que o site é acessado
-  tsParticles.load("particles-js", {
-    fullScreen: { enable: false },
-    particles: {
-      number: { value: 60 },
-      color: { value: "#e09d00" },
-      shape: { type: "circle" },
-      opacity: { value: 0.3 },
-      size: { value: 4 },
-      move: {
-        enable: true,
-        speed: 1.5,
-        direction: "none",
-        outModes: { default: "bounce" }
-      }
+// Dispara o log assim que o site é acessado
+tsParticles.load("particles-js", {
+  fullScreen: { enable: false },
+  particles: {
+    number: { value: 60 },
+    color: { value: "#e09d00" },
+    shape: { type: "circle" },
+    opacity: { value: 0.3 },
+    size: { value: 4 },
+    move: {
+      enable: true,
+      speed: 1.5,
+      direction: "none",
+      outModes: { default: "bounce" },
     },
-    background: {
-      color: { value: "#f4f7fa" }
-    }
-  });
-function adicionarExperiencia(empresaVal = "", cargoVal = "", atividadesVal = "", inicioVal = "", fimVal = "") {
+  },
+  background: {
+    color: { value: "#f4f7fa" },
+  },
+});
+function adicionarExperiencia(
+  empresaVal = "",
+  cargoVal = "",
+  atividadesVal = "",
+  inicioVal = "",
+  fimVal = "",
+) {
   const container = document.getElementById("experiencias");
   const nova = document.createElement("div");
   nova.className = "experiencia";
@@ -261,15 +273,15 @@ function adicionarExperiencia(empresaVal = "", cargoVal = "", atividadesVal = ""
 
   container.appendChild(nova);
 
-  [empresa, cargo, atividades, inicio, fim].forEach(el => {
+  [empresa, cargo, atividades, inicio, fim].forEach((el) => {
     el.addEventListener("input", salvarExperiencias);
   });
 
-  [inicio, fim].forEach(input => {
+  [inicio, fim].forEach((input) => {
     flatpickr(input, {
       locale: flatpickr.l10ns.pt,
       dateFormat: "m/Y",
-      disableMobile: true
+      disableMobile: true,
     });
   });
 
@@ -278,7 +290,7 @@ function adicionarExperiencia(empresaVal = "", cargoVal = "", atividadesVal = ""
 
 function salvarExperiencias() {
   const experiencias = [];
-  document.querySelectorAll(".experiencia").forEach(bloco => {
+  document.querySelectorAll(".experiencia").forEach((bloco) => {
     const empresa = bloco.querySelector('[name="empresa[]"]').value;
     const cargo = bloco.querySelector('[name="cargo[]"]').value;
     const atividades = bloco.querySelector('[name="atividades[]"]').value;
@@ -289,28 +301,29 @@ function salvarExperiencias() {
   localStorage.setItem("experienciasSalvas", JSON.stringify(experiencias));
 }
 
-  document.querySelectorAll('.carga-input').forEach(input => {
-  input.addEventListener('input', () => {
-    input.value = input.value.replace(/\D/g, ''); // Remove tudo que não for número
+document.querySelectorAll(".carga-input").forEach((input) => {
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D/g, ""); // Remove tudo que não for número
   });
 });
 
-const etapas = document.querySelectorAll('.etapa');
-const progresso = document.getElementById('progresso');
-const btnAvancar = document.getElementById('avancar');
-const btnVoltar = document.getElementById('voltar');
+const etapas = document.querySelectorAll(".etapa");
+const progresso = document.getElementById("progresso");
+const btnAvancar = document.getElementById("avancar");
+const btnVoltar = document.getElementById("voltar");
 let etapaAtual = 0;
 
 function mostrarEtapa(index) {
   etapas.forEach((etapa, i) => {
-    etapa.classList.toggle('ativa', i === index);
+    etapa.classList.toggle("ativa", i === index);
   });
 
-  progresso.style.width = ((index + 1) / etapas.length) * 100 + '%';
-  btnVoltar.style.display = index === 0 ? 'none' : 'inline-block';
+  progresso.style.width = ((index + 1) / etapas.length) * 100 + "%";
+  btnVoltar.style.display = index === 0 ? "none" : "inline-block";
 
   // Apenas muda o texto, sem mexer em classe
-  btnAvancar.textContent = index === etapas.length - 1 ? 'Finalizar' : 'Avançar';
+  btnAvancar.textContent =
+    index === etapas.length - 1 ? "Finalizar" : "Avançar";
 
   if (index === etapas.length - 1) {
     btnAvancar.classList.add("finalizar");
@@ -321,9 +334,9 @@ function mostrarEtapa(index) {
   }
 }
 
-btnAvancar.addEventListener('click', () => {
+btnAvancar.addEventListener("click", () => {
   // validação apenas na terceira etapa (índice 2)
-  const indiceEtapaCidadeEstado = 2; 
+  const indiceEtapaCidadeEstado = 2;
 
   if (etapaAtual === indiceEtapaCidadeEstado) {
     const campoEstado = document.getElementById("estado");
@@ -338,13 +351,13 @@ btnAvancar.addEventListener('click', () => {
     mostrarEtapa(etapaAtual);
   } else {
     // Simula o submit manualmente
-    document.getElementById("formulario").dispatchEvent(
-      new Event("submit", { bubbles: true, cancelable: true })
-    );
+    document
+      .getElementById("formulario")
+      .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   }
 });
 
-btnVoltar.addEventListener('click', () => {
+btnVoltar.addEventListener("click", () => {
   if (etapaAtual > 0) {
     etapaAtual--;
     mostrarEtapa(etapaAtual);
@@ -353,12 +366,12 @@ btnVoltar.addEventListener('click', () => {
 
 mostrarEtapa(etapaAtual);
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".mesAno").forEach(input => {
+  document.querySelectorAll(".mesAno").forEach((input) => {
     if (!input._flatpickr) {
       flatpickr(input, {
         locale: flatpickr.l10ns.pt,
         dateFormat: "m/Y",
-        disableMobile: true
+        disableMobile: true,
       });
     }
   });
@@ -366,8 +379,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener("DOMContentLoaded", () => {
   const cursosSalvos = JSON.parse(localStorage.getItem("cursosSalvos") || "[]");
-  cursosSalvos.forEach(c => adicionarCurso(c.curso, c.instituicao, c.carga));
+  cursosSalvos.forEach((c) => adicionarCurso(c.curso, c.instituicao, c.carga));
 
-  const experienciasSalvas = JSON.parse(localStorage.getItem("experienciasSalvas") || "[]");
-  experienciasSalvas.forEach(e => adicionarExperiencia(e.empresa, e.cargo, e.atividades, e.inicio, e.fim));
+  const experienciasSalvas = JSON.parse(
+    localStorage.getItem("experienciasSalvas") || "[]",
+  );
+  experienciasSalvas.forEach((e) =>
+    adicionarExperiencia(e.empresa, e.cargo, e.atividades, e.inicio, e.fim),
+  );
 });

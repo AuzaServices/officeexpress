@@ -1,597 +1,730 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Painel de Registros</title>
-  <link rel="icon" href="icon.png" type="image/png" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    /* Estilo geral da página */
-:root {
-  --bg-1: #001f33;
-  --bg-2: #00324a;
-  --text-primary: #ffffff;
-  --text-secondary: #e0e6eb;
-  --text-muted: #cbd5e1;
-  --brand: #0066ff;
-  --brand-dark: #e67300;
-  --card: #001f33;
-  --border: #ffffff22;
-  --shadow: rgba(0,0,0,0.2);
-}
+  <head>
+    <meta charset="UTF-8" />
+    <title>Painel de Registros</title>
+    <link rel="icon" href="/public/imagens/icon.png" type="image/png" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      /* Estilo geral da página */
+      :root {
+        --bg-1: #001f33;
+        --bg-2: #00324a;
+        --text-primary: #ffffff;
+        --text-secondary: #e0e6eb;
+        --text-muted: #cbd5e1;
+        --brand: #0066ff;
+        --brand-dark: #e67300;
+        --card: #001f33;
+        --border: #ffffff22;
+        --shadow: rgba(0, 0, 0, 0.2);
+      }
 
-/* Estilo geral da página */
-body {
-  background-color: #f8f9fa;
-  font-family: 'Segoe UI', sans-serif;
-  margin: 0;
-  padding: 0;
-}
+      /* Estilo geral da página */
+      body {
+        background-color: #f8f9fa;
+        font-family: "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+      }
 
-/* Container principal */
-.container {
-  max-width: 1000px;
-  margin: auto;
-  padding: 40px;
-}
+      /* Container principal */
+      .container {
+        max-width: 1000px;
+        margin: auto;
+        padding: 40px;
+      }
 
-/* Título */
-h1 {
-  margin-bottom: 30px;
-  text-align: left;
-  font-weight: 600;
-  color: #343a40;
-}
+      /* Título */
+      h1 {
+        margin-bottom: 30px;
+        text-align: left;
+        font-weight: 600;
+        color: #343a40;
+      }
 
-/* Tabela */
-table th {
-  background-color: #e9ecef;
-}
+      /* Tabela */
+      table th {
+        background-color: #e9ecef;
+      }
 
-.btn-sm {
-  font-size: 0.9rem;
-  padding: 6px 12px;
-  border-radius: 20px;
-}
+      .btn-sm {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+      }
 
-/* Cabeçalho usando variáveis */
-.cabecalho {
-  background: linear-gradient(90deg, var(--bg-1), var(--bg-2)); /* usa suas cores */
-  padding: 8px 0;
-  width: 100%;
-  position: fixed;   /* fixa no topo */
-  top: 0;
-  left: 0;
-  z-index: 1000;     /* garante que fique acima do conteúdo */
-  box-shadow: 0 2px 6px var(--shadow); /* sombra para destacar */
-}
+      /* Cabeçalho usando variáveis */
+      .cabecalho {
+        background: linear-gradient(
+          90deg,
+          var(--bg-1),
+          var(--bg-2)
+        ); /* usa suas cores */
+        padding: 8px 0;
+        width: 100%;
+        position: fixed; /* fixa no topo */
+        top: 0;
+        left: 0;
+        z-index: 1000; /* garante que fique acima do conteúdo */
+        box-shadow: 0 2px 6px var(--shadow); /* sombra para destacar */
+      }
 
+      /* Container centralizado dentro do cabeçalho */
+      .cabecalho .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+      }
 
-/* Container centralizado dentro do cabeçalho */
-.cabecalho .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 15px;
-}
+      /* Flexbox para centralizar logo e menu */
+      .cabecalho .wrap {
+        display: flex;
+        flex-direction: column; /* logo em cima, menu embaixo */
+        justify-content: center;
+        align-items: center;
+      }
 
-/* Flexbox para centralizar logo e menu */
-.cabecalho .wrap {
-  display: flex;
-  flex-direction: column; /* logo em cima, menu embaixo */
-  justify-content: center;
-  align-items: center;
-}
+      /* Logo centralizada e menor */
+      .cabecalho .logo {
+        height: 40px;
+        width: auto;
+        transition: transform 0.3s ease;
+        margin-bottom: 5px;
+      }
 
-/* Logo centralizada e menor */
-.cabecalho .logo {
-  height: 40px;
-  width: auto;
-  transition: transform 0.3s ease;
-  margin-bottom: 5px;
-}
+      .cabecalho .logo:hover {
+        transform: scale(1.05);
+      }
 
-.cabecalho .logo:hover {
-  transform: scale(1.05);
-}
+      /* Menu de navegação */
+      .cabecalho .menu {
+        display: flex;
+        gap: 20px;
+      }
 
-/* Menu de navegação */
-.cabecalho .menu {
-  display: flex;
-  gap: 20px;
-}
+      .cabecalho .menu a {
+        color: var(--text-primary);
+        font-weight: 600;
+        text-decoration: none;
+        transition:
+          color 0.3s ease,
+          border-bottom 0.3s ease;
+        padding-bottom: 2px;
+      }
 
-.cabecalho .menu a {
-  color: var(--text-primary);
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.3s ease, border-bottom 0.3s ease;
-  padding-bottom: 2px;
-}
+      .cabecalho .menu a:hover {
+        color: var(--brand);
+        border-bottom: 2px solid var(--brand);
+      }
 
-.cabecalho .menu a:hover {
-  color: var(--brand);
-  border-bottom: 2px solid var(--brand);
-}
+      /* Ajuste para não cobrir a tabela */
+      .container-fluid {
+        margin-top: 70px; /* altura aproximada do cabeçalho */
+        padding: 20px;
+      }
 
-/* Ajuste para não cobrir a tabela */
-.container-fluid {
-  margin-top: 70px; /* altura aproximada do cabeçalho */
-  padding: 20px;
-}
+      /* Responsividade */
+      @media (max-width: 768px) {
+        .cabecalho .wrap {
+          flex-direction: column;
+          align-items: center;
+        }
 
-/* Responsividade */
-@media (max-width: 768px) {
-  .cabecalho .wrap {
-    flex-direction: column;
-    align-items: center;
-  }
+        .cabecalho .menu {
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 5px;
+        }
 
-  .cabecalho .menu {
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 5px;
-  }
+        .container-fluid {
+          margin-top: 90px;
+        }
+      }
 
-  .container-fluid {
-    margin-top: 90px;
-  }
-}
+      /* Espaço geral para os quadradinhos dos relatórios */
+      .row {
+        margin-left: 0;
+        margin-right: 0;
+        justify-content: center; /* centraliza os blocos */
+      }
 
-/* Espaço geral para os quadradinhos dos relatórios */
-.row {
-  margin-left: 0;
-  margin-right: 0;
-  justify-content: center; /* centraliza os blocos */
-}
+      /* Cada coluna (quadradinho) */
+      .col-md-3 {
+        padding: 10px; /* espaço interno entre os botões e as bordas da coluna */
+      }
 
-/* Cada coluna (quadradinho) */
-.col-md-3 {
-  padding: 10px; /* espaço interno entre os botões e as bordas da coluna */
-}
+      /* Botões dos relatórios */
+      .col-md-3 .btn {
+        background-color: var(--brand); /* cor da paleta */
+        color: var(--text-primary);
+        font-weight: 600;
+        border: none;
+        border-radius: 8px; /* cantos arredondados */
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* sombra leve */
+        transition:
+          transform 0.2s ease,
+          background-color 0.3s ease;
+        padding: 12px 0;
+      }
 
-/* Botões dos relatórios */
-.col-md-3 .btn {
-  background-color: var(--brand);       /* cor da paleta */
-  color: var(--text-primary);
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;                   /* cantos arredondados */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* sombra leve */
-  transition: transform 0.2s ease, background-color 0.3s ease;
-  padding: 12px 0;
-}
+      /* Efeito hover */
+      .col-md-3 .btn:hover {
+        background-color: var(--brand-dark);
+        transform: scale(1.05);
+      }
 
-/* Efeito hover */
-.col-md-3 .btn:hover {
-  background-color: var(--brand-dark);
-  transform: scale(1.05);
-}
+      /* Espaço entre os quadradinhos */
+      .mb-2 {
+        margin-bottom: 15px !important;
+      }
 
-/* Espaço entre os quadradinhos */
-.mb-2 {
-  margin-bottom: 15px !important;
-}
+      .cabecalho .wrap {
+        display: flex;
+        justify-content: center; /* mantém a logo centralizada */
+        align-items: center;
+        position: relative;
+      }
 
-.cabecalho .wrap {
-  display: flex;
-  justify-content: center;   /* mantém a logo centralizada */
-  align-items: center;
-  position: relative;
-}
+      .logo {
+        height: 40px;
+      }
 
-.logo {
-  height: 40px;
-}
+      /* Ícone fixo no canto direito */
+      .logout-icon {
+        position: absolute;
+        right: 50px; /* canto direito do cabeçalho */
+        top: 50%;
+        transform: translateY(-50%); /* centraliza verticalmente */
+        color: #dc3545; /* vermelho profissional */
+        font-size: 22px;
+        text-decoration: none;
+        transition:
+          color 0.3s ease,
+          transform 0.2s ease;
+      }
 
-/* Ícone fixo no canto direito */
-.logout-icon {
-  position: absolute;
-  right: 50px;   /* canto direito do cabeçalho */
-  top: 50%;
-  transform: translateY(-50%); /* centraliza verticalmente */
-  color: #dc3545; /* vermelho profissional */
-  font-size: 22px;
-  text-decoration: none;
-  transition: color 0.3s ease, transform 0.2s ease;
-}
+      .logout-icon:hover {
+        color: #b02a37; /* vermelho mais escuro */
+        transform: translateY(-50%) scale(1.1);
+      }
 
-.logout-icon:hover {
-  color: #b02a37; /* vermelho mais escuro */
-  transform: translateY(-50%) scale(1.1);
-}
+      /* Container fixo com scroll para logs */
+      .logs-scroll {
+        max-height: 300px; /* altura máxima visível */
+        overflow-y: auto; /* ativa barra de rolagem vertical */
+        border: 1px solid #dee2e6;
+      }
+    </style>
+  </head>
 
-/* Container fixo com scroll para logs */
-.logs-scroll {
-  max-height: 300px;   /* altura máxima visível */
-  overflow-y: auto;    /* ativa barra de rolagem vertical */
-  border: 1px solid #dee2e6;
-}
+  <body>
+    <header class="cabecalho">
+      <div class="container">
+        <div class="wrap">
+          <!-- Logo centralizada -->
+          <img
+            src="https://i.imgur.com/HjzGCoA.png"
+            alt="Office Express"
+            class="logo"
+          />
 
-  </style>
-</head>
+          <!-- Ícone de Logout no canto direito -->
+          <a href="/logout" class="logout-icon" title="Sair">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </div>
+      </div>
+    </header>
 
-<body>
-<header class="cabecalho">
-  <div class="container">
-    <div class="wrap">
-      <!-- Logo centralizada -->
-      <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+    <div class="container-fluid">
+      <h1>Currículos</h1>
+      <div class="table-responsive">
+        <table
+          class="table table-bordered table-hover align-middle"
+          id="tabela-arquivos"
+        >
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Arquivo</th>
+              <th>Data</th>
+              <th>Ação</th>
+              <th>Pago</th>
+              <th>Contato</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-      <!-- Ícone de Logout no canto direito -->
-      <a href="/logout" class="logout-icon" title="Sair">
-        <i class="fas fa-sign-out-alt"></i>
-      </a>
-    </div>
-  </div>
-</header>
-  
-  <div class="container-fluid">
-    <h1>Currículos</h1>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle" id="tabela-arquivos">
-        <thead class="table-light">
-          <tr>
-            <th>ID</th>
-            <th>Arquivo</th>
-            <th>Data</th>
-            <th>Ação</th>
-            <th>Pago</th>
-            <th>Contato</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <h1 class="mt-5 d-flex justify-content-between align-items-center">
+        Registros de Acessos
+        <button onclick="apagarTodosLogs()" class="btn btn-danger btn-sm">
+          Apagar Tudo
+        </button>
+      </h1>
+      <div class="table-responsive">
+        <table
+          class="table table-bordered table-hover align-middle"
+          id="tabela-acessos"
+        >
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Ação</th>
+              <th>Horário</th>
+              <th>Etapa</th>
+              <th>Localização</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-    <h1 class="mt-5 d-flex justify-content-between align-items-center">
-      Registros de Acessos
-      <button onclick="apagarTodosLogs()" class="btn btn-danger btn-sm">Apagar Tudo</button>
-    </h1>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle" id="tabela-acessos">
-        <thead class="table-light">
-          <tr>
-            <th>ID</th>
-            <th>Ação</th>
-            <th>Horário</th>
-            <th>Etapa</th>
-            <th>Localização</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <h1 class="mt-5">Analises de Currículos</h1>
+      <div class="table-responsive">
+        <table
+          class="table table-bordered table-hover align-middle"
+          id="tabela-relatorios"
+        >
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Arquivo</th>
+              <th>Data</th>
+              <th>Ação</th>
+              <th>Pago</th>
+              <th>Contato</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-    <h1 class="mt-5">Analises de Currículos</h1>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle" id="tabela-relatorios">
-        <thead class="table-light">
-          <tr>
-            <th>ID</th>
-            <th>Arquivo</th>
-            <th>Data</th>
-            <th>Ação</th>
-            <th>Pago</th>
-            <th>Contato</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <h1 class="mt-5">Indicações</h1>
+      <div class="table-responsive">
+        <table
+          class="table table-bordered table-hover align-middle"
+          id="tabela-indicacoes"
+        >
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Indicador</th>
+              <th>Indicado</th>
+              <th>Código</th>
+              <th>Tipo</th>
+              <th>Data</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-    <h1 class="mt-5">Indicações</h1>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle" id="tabela-indicacoes">
-        <thead class="table-light">
-          <tr>
-            <th>ID</th>
-            <th>Indicador</th>
-            <th>Indicado</th>
-            <th>Código</th>
-            <th>Tipo</th>
-            <th>Data</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <h1 class="mt-5">Usuários Cadastrados</h1>
+      <div class="table-responsive">
+        <table
+          class="table table-bordered table-hover align-middle"
+          id="tabela-usuarios"
+        >
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Código</th>
+              <th>WhatsApp</th>
+              <th>Indicações</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-    <h1 class="mt-5">Usuários Cadastrados</h1>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle" id="tabela-usuarios">
-        <thead class="table-light">
-          <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Código</th>
-            <th>WhatsApp</th>
-            <th>Indicações</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <h1 class="mt-5 d-flex justify-content-between align-items-center">
+        Relatórios por Estado
+        <button
+          onclick="abrirExclusao()"
+          class="btn btn-outline-danger btn-sm"
+          title="Excluir registros"
+        >
+          🗑️
+        </button>
+      </h1>
 
-    <h1 class="mt-5 d-flex justify-content-between align-items-center">
-      Relatórios por Estado
-      <button onclick="abrirExclusao()" class="btn btn-outline-danger btn-sm" title="Excluir registros">
-        🗑️
-      </button>
-    </h1>
-
-    <div class="row">
-      <div class="col-md-12">
-        <p>Selecione um Estado para emitir relatório de Currículos e Análises pagos:</p>
+      <div class="row">
+        <div class="col-md-12">
+          <p>
+            Selecione um Estado para emitir relatório de Currículos e Análises
+            pagos:
+          </p>
+        </div>
       </div>
     </div>
-  </div>
 
+    <div class="row">
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('AC')">
+          Acre
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('AL')">
+          Alagoas
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('AP')">
+          Amapá
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('AM')">
+          Amazonas
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('BA')">
+          Bahia
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('CE')">
+          Ceará
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('DF')">
+          Distrito Federal
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('ES')">
+          Espírito Santo
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('GO')">
+          Goiás
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('MA')">
+          Maranhão
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('MT')">
+          Mato Grosso
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('MS')">
+          Mato Grosso do Sul
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('MG')">
+          Minas Gerais
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('PA')">
+          Pará
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('PB')">
+          Paraíba
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('PR')">
+          Paraná
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('PE')">
+          Pernambuco
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('PI')">
+          Piauí
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('RJ')">
+          Rio de Janeiro
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('RN')">
+          Rio Grande do Norte
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('RS')">
+          Rio Grande do Sul
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('RO')">
+          Rondônia
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('RR')">
+          Roraima
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('SC')">
+          Santa Catarina
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('SP')">
+          São Paulo
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('SE')">
+          Sergipe
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="emitirRelatorio('TO')">
+          Tocantins
+        </button>
+      </div>
 
-<div class="row">
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AC')">Acre</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AL')">Alagoas</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AP')">Amapá</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('AM')">Amazonas</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('BA')">Bahia</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('CE')">Ceará</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('DF')">Distrito Federal</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('ES')">Espírito Santo</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('GO')">Goiás</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MA')">Maranhão</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MT')">Mato Grosso</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MS')">Mato Grosso do Sul</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('MG')">Minas Gerais</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PA')">Pará</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PB')">Paraíba</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PR')">Paraná</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PE')">Pernambuco</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('PI')">Piauí</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RJ')">Rio de Janeiro</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RN')">Rio Grande do Norte</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RS')">Rio Grande do Sul</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RO')">Rondônia</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('RR')">Roraima</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('SC')">Santa Catarina</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('SP')">São Paulo</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('SE')">Sergipe</button>
-  </div>
-  <div class="col-md-3 mb-2">
-    <button class="btn btn-primary w-100" onclick="emitirRelatorio('TO')">Tocantins</button>
-  </div>
+      <h1 class="mt-5 d-flex justify-content-between align-items-center">
+        Parceiros
+        <button
+          onclick="abrirCadastroParceiro()"
+          class="btn btn-warning btn-sm"
+        >
+          Cadastrar Parceiro
+        </button>
+      </h1>
 
-<h1 class="mt-5 d-flex justify-content-between align-items-center">
-  Parceiros
-  <button onclick="abrirCadastroParceiro()" class="btn btn-warning btn-sm">
-    Cadastrar Parceiro
-  </button>
-</h1>
-
-<div class="container-fluid"> <!-- 👈 adiciona este container -->
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover align-middle" id="tabela-parceiros">
-      <thead class="table-light">
-        <tr>
-          <th>ID</th>
-          <th>Nome</th>
-          <th>WhatsApp</th>
-          <th>Estado</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div> <!-- 👈 fecha o container -->
-
-</div>
-
-<div class="modal fade" id="modalCadastroParceiro" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="formCadastroParceiro">
-        <div class="modal-header">
-          <h5 class="modal-title">Cadastrar Parceiro</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="container-fluid">
+        <!-- 👈 adiciona este container -->
+        <div class="table-responsive">
+          <table
+            class="table table-bordered table-hover align-middle"
+            id="tabela-parceiros"
+          >
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>WhatsApp</th>
+                <th>Estado</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="nomeParceiro" class="form-label">Nome</label>
-            <input type="text" id="nomeParceiro" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label for="senhaParceiro" class="form-label">Senha</label>
-            <input type="password" id="senhaParceiro" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label for="whatsappParceiro" class="form-label">WhatsApp</label>
-            <input type="text" id="whatsappParceiro" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label for="estadoParceiro" class="form-label">Estado</label>
-<select id="estadoParceiro" class="form-select" required>
-  <option value="">Selecione o Estado</option>
-  <option value="AC">AC - Acre</option>
-  <option value="AL">AL - Alagoas</option>
-  <option value="AP">AP - Amapá</option>
-  <option value="AM">AM - Amazonas</option>
-  <option value="BA">BA - Bahia</option>
-  <option value="CE">CE - Ceará</option>
-  <option value="DF">DF - Distrito Federal</option>
-  <option value="ES">ES - Espírito Santo</option>
-  <option value="GO">GO - Goiás</option>
-  <option value="MA">MA - Maranhão</option>
-  <option value="MT">MT - Mato Grosso</option>
-  <option value="MS">MS - Mato Grosso do Sul</option>
-  <option value="MG">MG - Minas Gerais</option>
-  <option value="PA">PA - Pará</option>
-  <option value="PB">PB - Paraíba</option>
-  <option value="PR">PR - Paraná</option>
-  <option value="PE">PE - Pernambuco</option>
-  <option value="PI">PI - Piauí</option>
-  <option value="RJ">RJ - Rio de Janeiro</option>
-  <option value="RN">RN - Rio Grande do Norte</option>
-  <option value="RS">RS - Rio Grande do Sul</option>
-  <option value="RO">RO - Rondônia</option>
-  <option value="RR">RR - Roraima</option>
-  <option value="SC">SC - Santa Catarina</option>
-  <option value="SP">SP - São Paulo</option>
-  <option value="SE">SE - Sergipe</option>
-  <option value="TO">TO - Tocantins</option>
-</select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-warning">Cadastrar</button>
-        </div>
-      </form>
+      </div>
+      <!-- 👈 fecha o container -->
     </div>
-  </div>
-</div>
 
-  <script>
+    <div
+      class="modal fade"
+      id="modalCadastroParceiro"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="formCadastroParceiro">
+            <div class="modal-header">
+              <h5 class="modal-title">Cadastrar Parceiro</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="nomeParceiro" class="form-label">Nome</label>
+                <input
+                  type="text"
+                  id="nomeParceiro"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="senhaParceiro" class="form-label">Senha</label>
+                <input
+                  type="password"
+                  id="senhaParceiro"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="whatsappParceiro" class="form-label"
+                  >WhatsApp</label
+                >
+                <input type="text" id="whatsappParceiro" class="form-control" />
+              </div>
+              <div class="mb-3">
+                <label for="estadoParceiro" class="form-label">Estado</label>
+                <select id="estadoParceiro" class="form-select" required>
+                  <option value="">Selecione o Estado</option>
+                  <option value="AC">AC - Acre</option>
+                  <option value="AL">AL - Alagoas</option>
+                  <option value="AP">AP - Amapá</option>
+                  <option value="AM">AM - Amazonas</option>
+                  <option value="BA">BA - Bahia</option>
+                  <option value="CE">CE - Ceará</option>
+                  <option value="DF">DF - Distrito Federal</option>
+                  <option value="ES">ES - Espírito Santo</option>
+                  <option value="GO">GO - Goiás</option>
+                  <option value="MA">MA - Maranhão</option>
+                  <option value="MT">MT - Mato Grosso</option>
+                  <option value="MS">MS - Mato Grosso do Sul</option>
+                  <option value="MG">MG - Minas Gerais</option>
+                  <option value="PA">PA - Pará</option>
+                  <option value="PB">PB - Paraíba</option>
+                  <option value="PR">PR - Paraná</option>
+                  <option value="PE">PE - Pernambuco</option>
+                  <option value="PI">PI - Piauí</option>
+                  <option value="RJ">RJ - Rio de Janeiro</option>
+                  <option value="RN">RN - Rio Grande do Norte</option>
+                  <option value="RS">RS - Rio Grande do Sul</option>
+                  <option value="RO">RO - Rondônia</option>
+                  <option value="RR">RR - Roraima</option>
+                  <option value="SC">SC - Santa Catarina</option>
+                  <option value="SP">SP - São Paulo</option>
+                  <option value="SE">SE - Sergipe</option>
+                  <option value="TO">TO - Tocantins</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-warning">Cadastrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
 
-let parceirosPorEstado = new Set();
+    <script>
+      let parceirosPorEstado = new Set();
 
-// 👉 Atualiza cache de parceiros uma vez
-async function atualizarParceirosCache() {
-  try {
-    const res = await fetch('/api/parceiros'); // retorna todos
-    const parceiros = await res.json();
-    parceirosPorEstado = new Set(parceiros.map(p => p.estado.toUpperCase()));
-  } catch (err) {
-    console.error("Erro ao atualizar cache de parceiros:", err);
-  }
-}
+      // 👉 Atualiza cache de parceiros uma vez
+      async function atualizarParceirosCache() {
+        try {
+          const res = await fetch("/api/parceiros"); // retorna todos
+          const parceiros = await res.json();
+          parceirosPorEstado = new Set(
+            parceiros.map((p) => p.estado.toUpperCase()),
+          );
+        } catch (err) {
+          console.error("Erro ao atualizar cache de parceiros:", err);
+        }
+      }
 
-// 👉 Função auxiliar para exibir badge verde
-function estadoBadge(estado) {
-  if (!estado) return "—";
-  const sigla = estado.toUpperCase();
-  return parceirosPorEstado.has(sigla)
-    ? `<span class="badge bg-success">${sigla}</span>`
-    : `<span>${sigla}</span>`;
-}
+      // 👉 Função auxiliar para exibir badge verde
+      function estadoBadge(estado) {
+        if (!estado) return "—";
+        const sigla = estado.toUpperCase();
+        return parceirosPorEstado.has(sigla)
+          ? `<span class="badge bg-success">${sigla}</span>`
+          : `<span>${sigla}</span>`;
+      }
 
+      function apagarRegistro(id, tipo) {
+        if (!confirm("Tem certeza que deseja apagar este registro?")) return;
 
-    function apagarRegistro(id, tipo) {
-      if (!confirm("Tem certeza que deseja apagar este registro?")) return;
+        fetch(`/api/${tipo}/${id}`, { method: "DELETE" })
+          .then((res) => {
+            if (!res.ok) throw new Error("Erro ao apagar");
+            if (tipo === "pdfs") carregarPDFs();
+            else if (tipo === "analises") carregarRelatorios();
+          })
+          .catch((err) => {
+            console.error(`Erro ao apagar ${tipo} ${id}:`, err);
+            alert("Erro ao apagar registro.");
+          });
+      }
 
-      fetch(`/api/${tipo}/${id}`, { method: "DELETE" })
-        .then(res => {
-          if (!res.ok) throw new Error("Erro ao apagar");
-          if (tipo === "pdfs") carregarPDFs();
-          else if (tipo === "analises") carregarRelatorios();
-        })
-        .catch(err => {
-          console.error(`Erro ao apagar ${tipo} ${id}:`, err);
-          alert("Erro ao apagar registro.");
-        });
-    }
+      function apagarTodosLogs() {
+        if (
+          !confirm(
+            "Tem certeza que deseja apagar TODOS os registros de acesso?",
+          )
+        )
+          return;
 
-    function apagarTodosLogs() {
-      if (!confirm("Tem certeza que deseja apagar TODOS os registros de acesso?")) return;
+        fetch("/api/logs", { method: "DELETE" })
+          .then((res) => {
+            if (!res.ok) throw new Error("Erro ao apagar logs");
+            carregarLogs();
+          })
+          .catch((err) => {
+            console.error("Erro ao apagar todos os logs:", err);
+            alert("Erro ao apagar registros.");
+          });
+      }
 
-      fetch('/api/logs', { method: 'DELETE' })
-        .then(res => {
-          if (!res.ok) throw new Error("Erro ao apagar logs");
-          carregarLogs();
-        })
-        .catch(err => {
-          console.error('Erro ao apagar todos os logs:', err);
-          alert("Erro ao apagar registros.");
-        });
-    }
+      async function carregarPDFs() {
+        try {
+          const res = await fetch("/api/pdfs");
+          const data = await res.json();
+          const tabela = document.querySelector("#tabela-arquivos tbody");
+          tabela.innerHTML = "";
 
-async function carregarPDFs() {
-  try {
-    const res = await fetch('/api/pdfs');
-    const data = await res.json();
-    const tabela = document.querySelector('#tabela-arquivos tbody');
-    tabela.innerHTML = '';
+          data.forEach((pdf) => {
+            const telefone = pdf.telefone?.replace(/\D/g, "");
+            const filename = pdf.filename || "";
+            const nomeSemExtensao = filename.replace(/\.[^/.]+$/, "");
+            const nomeLimpo = nomeSemExtensao.replace(
+              /^(curriculo-|relatorio-)/i,
+              "",
+            );
+            const primeiroNome = nomeLimpo.split(" ")[0] || "Cliente";
 
-    data.forEach(pdf => {
-      const telefone = pdf.telefone?.replace(/\D/g, '');
-      const filename = pdf.filename || '';
-      const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
-      const nomeLimpo = nomeSemExtensao.replace(/^(curriculo-|relatorio-)/i, '');
-      const primeiroNome = nomeLimpo.split(' ')[0] || 'Cliente';
+            const mensagem = encodeURIComponent(
+              `📄 ${primeiroNome}, seu *Currículo Profissional* está pronto!\n\n` +
+                `_Ele foi criado para chamar a atenção dos recrutadores em segundos e te destacar da maioria._\n\n` +
+                `⏰ Atenção: a demanda está muito grande e só conseguimos manter seu currículo disponível por *1 hora*. ` +
+                `Após esse prazo ele é apagado automaticamente e será necessário refazê-lo.\n\n` +
+                `🔥 Garanta já: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
+                `💳 Link:\nhttps://www.officeexpress.com.br/pagamento\n` +
+                `🔹 Pix disponível lá!\n\n` +
+                `✅ Seu diferencial competitivo começa agora!`,
+            );
 
-      const mensagem = encodeURIComponent(
-        `📄 ${primeiroNome}, seu *Currículo Profissional* está pronto!\n\n` +
-        `_Ele foi criado para chamar a atenção dos recrutadores em segundos e te destacar da maioria._\n\n` +
-        `⏰ Atenção: a demanda está muito grande e só conseguimos manter seu currículo disponível por *1 hora*. ` +
-        `Após esse prazo ele é apagado automaticamente e será necessário refazê-lo.\n\n` +
-        `🔥 Garanta já: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
-        `💳 Link:\nhttps://www.officeexpress.com.br/pagamento\n` +
-        `🔹 Pix disponível lá!\n\n` +
-        `✅ Seu diferencial competitivo começa agora!`
-      );
+            const linkWhatsapp = telefone
+              ? `https://wa.me/55${telefone}?text=${mensagem}`
+              : "#";
 
-      const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
-
-      const linha = document.createElement('tr');
-      linha.innerHTML = `
+            const linha = document.createElement("tr");
+            linha.innerHTML = `
         <td>${pdf.id}</td>
-        <td>${pdf.filename || '—'}</td>
-        <td>${new Date(pdf.created_at).toLocaleString('pt-BR')}</td>
+        <td>${pdf.filename || "—"}</td>
+        <td>${new Date(pdf.created_at).toLocaleString("pt-BR")}</td>
         <td>
           <a href="/api/pdfs/${pdf.id}/download" class="btn btn-primary btn-sm">Baixar</a>
           <button onclick="apagarRegistro(${pdf.id}, 'pdfs')" class="btn btn-danger btn-sm ms-2">Apagar</button>
@@ -609,88 +742,94 @@ async function carregarPDFs() {
         <td>${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}</td>
         <td>${estadoBadge(pdf.estado)}</td> <!-- 👈 nova coluna Estado -->
       `;
-      tabela.appendChild(linha);
+            tabela.appendChild(linha);
 
-      // 👉 trava o botão se já estiver pago
-      if (pdf.jaPago) {
-        const botao = linha.querySelector("button.btn-success");
-        if (botao) {
-          botao.disabled = true;
-          botao.classList.remove("btn-success");
-          botao.classList.add("btn-secondary");
-          botao.textContent = "Pago";
+            // 👉 trava o botão se já estiver pago
+            if (pdf.jaPago) {
+              const botao = linha.querySelector("button.btn-success");
+              if (botao) {
+                botao.disabled = true;
+                botao.classList.remove("btn-success");
+                botao.classList.add("btn-secondary");
+                botao.textContent = "Pago";
+              }
+            }
+          });
+        } catch (err) {
+          console.error("Erro ao carregar PDFs:", err);
         }
       }
-    });
-  } catch (err) {
-    console.error("Erro ao carregar PDFs:", err);
-  }
-}
 
-function carregarLogs() {
-  fetch('/api/logs')
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.querySelector('#tabela-acessos tbody');
-      tbody.innerHTML = '';
+      function carregarLogs() {
+        fetch("/api/logs")
+          .then((res) => res.json())
+          .then((data) => {
+            const tbody = document.querySelector("#tabela-acessos tbody");
+            tbody.innerHTML = "";
 
-      data.forEach(log => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+            data.forEach((log) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
           <td>${log.id}</td>
           <td>${log.acao}</td>
-          <td>${new Date(log.timestamp).toLocaleString('pt-BR')}</td>
-          <td>${log.etapa || '—'}</td>
-          <td>${log.localizacao || '—'}</td>
+          <td>${new Date(log.timestamp).toLocaleString("pt-BR")}</td>
+          <td>${log.etapa || "—"}</td>
+          <td>${log.localizacao || "—"}</td>
         `;
-        tbody.appendChild(tr);
-      });
+              tbody.appendChild(tr);
+            });
 
-      // 👉 se tiver mais de 10 logs, ativa scroll
-      const tableWrapper = document.querySelector('#tabela-acessos').parentElement;
-      if (data.length > 10) {
-        tableWrapper.classList.add('logs-scroll');
-      } else {
-        tableWrapper.classList.remove('logs-scroll');
+            // 👉 se tiver mais de 10 logs, ativa scroll
+            const tableWrapper =
+              document.querySelector("#tabela-acessos").parentElement;
+            if (data.length > 10) {
+              tableWrapper.classList.add("logs-scroll");
+            } else {
+              tableWrapper.classList.remove("logs-scroll");
+            }
+          })
+          .catch((err) => {
+            console.error("Erro ao buscar acessos:", err);
+          });
       }
-    })
-    .catch(err => {
-      console.error('Erro ao buscar acessos:', err);
-    });
-}
 
-   async function carregarRelatorios() {
-  try {
-    const res = await fetch('/api/analises');
-    const data = await res.json();
-    const tabela = document.querySelector('#tabela-relatorios tbody');
-    tabela.innerHTML = '';
+      async function carregarRelatorios() {
+        try {
+          const res = await fetch("/api/analises");
+          const data = await res.json();
+          const tabela = document.querySelector("#tabela-relatorios tbody");
+          tabela.innerHTML = "";
 
-    data.forEach(rel => {
-      const telefone = rel.telefone?.replace(/\D/g, '');
-      const filename = rel.filename || '';
-      const nomeSemExtensao = filename.replace(/\.[^/.]+$/, '');
-      const nomeLimpo = nomeSemExtensao.replace(/^(curriculo-|relatorio-)/i, '');
-      const primeiroNome = nomeLimpo.split(' ')[0] || 'Cliente';
+          data.forEach((rel) => {
+            const telefone = rel.telefone?.replace(/\D/g, "");
+            const filename = rel.filename || "";
+            const nomeSemExtensao = filename.replace(/\.[^/.]+$/, "");
+            const nomeLimpo = nomeSemExtensao.replace(
+              /^(curriculo-|relatorio-)/i,
+              "",
+            );
+            const primeiroNome = nomeLimpo.split(" ")[0] || "Cliente";
 
-      const mensagem = encodeURIComponent(
-        `📊 Sua *Análise de Currículo* está pronta!\n\n` +
-        `_Essa Análise mostra exatamente o que trava suas chances e os ajustes que liberam entrevistas._\n\n` +
-        `⏰ Atenção: como a demanda está muito grande só conseguimos manter sua análise disponível por *1 hora*. ` +
-        `Depois disso ela é apagada automaticamente do sistema e será preciso solicitar novamente.\n\n` +
-        `🚀 Não perca: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
-        `💳 Link:\nhttps://www.officeexpress.com.br/pagamentoanalise\n` +
-        `🔹 Pix disponível lá!\n\n` +
-        `✅ Avance hoje mesmo rumo às entrevistas!`
-      );
+            const mensagem = encodeURIComponent(
+              `📊 Sua *Análise de Currículo* está pronta!\n\n` +
+                `_Essa Análise mostra exatamente o que trava suas chances e os ajustes que liberam entrevistas._\n\n` +
+                `⏰ Atenção: como a demanda está muito grande só conseguimos manter sua análise disponível por *1 hora*. ` +
+                `Depois disso ela é apagada automaticamente do sistema e será preciso solicitar novamente.\n\n` +
+                `🚀 Não perca: finalize o pagamento e receba o PDF completo direto no WhatsApp.\n\n` +
+                `💳 Link:\nhttps://www.officeexpress.com.br/pagamentoanalise\n` +
+                `🔹 Pix disponível lá!\n\n` +
+                `✅ Avance hoje mesmo rumo às entrevistas!`,
+            );
 
-      const linkWhatsapp = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : '#';
+            const linkWhatsapp = telefone
+              ? `https://wa.me/55${telefone}?text=${mensagem}`
+              : "#";
 
-      const linha = document.createElement('tr');
-      linha.innerHTML = `
+            const linha = document.createElement("tr");
+            linha.innerHTML = `
         <td>${rel.id}</td>
-        <td>${rel.filename || '—'}</td>
-        <td>${new Date(rel.criado_em).toLocaleString('pt-BR')}</td>
+        <td>${rel.filename || "—"}</td>
+        <td>${new Date(rel.criado_em).toLocaleString("pt-BR")}</td>
         <td>
           <a href="/api/analises/${rel.id}/download" class="btn btn-primary btn-sm">Baixar</a>
           <button onclick="apagarRegistro(${rel.id}, 'analises')" class="btn btn-danger btn-sm ms-2">Apagar</button>
@@ -708,154 +847,160 @@ function carregarLogs() {
         <td>${telefone ? `<a href="${linkWhatsapp}" target="_blank" class="btn btn-success btn-sm">WhatsApp</a>` : "—"}</td>
         <td>${estadoBadge(rel.estado)}</td> <!-- 👈 nova coluna Estado -->
       `;
-      tabela.appendChild(linha);
+            tabela.appendChild(linha);
 
-      // 👉 trava o botão se já estiver pago
-      if (rel.jaPago) {
-        const botao = linha.querySelector("button.btn-success");
-        if (botao) {
-          botao.disabled = true;
-          botao.classList.remove("btn-success");
-          botao.classList.add("btn-secondary");
-          botao.textContent = "Pago";
+            // 👉 trava o botão se já estiver pago
+            if (rel.jaPago) {
+              const botao = linha.querySelector("button.btn-success");
+              if (botao) {
+                botao.disabled = true;
+                botao.classList.remove("btn-success");
+                botao.classList.add("btn-secondary");
+                botao.textContent = "Pago";
+              }
+            }
+          });
+        } catch (err) {
+          console.error("Erro ao buscar análises:", err);
         }
       }
-    });
-  } catch (err) {
-    console.error('Erro ao buscar análises:', err);
-  }
-}
 
-setInterval(() => {
-  carregarPDFs();
-  carregarLogs();
-  carregarRelatorios();
-  carregarIndicacoes();
-  carregarUsuarios();
-  carregarParceiros();        // 👈 adiciona aqui
-  atualizarBotoesRelatorio();
-}, 2000);
+      setInterval(() => {
+        carregarPDFs();
+        carregarLogs();
+        carregarRelatorios();
+        carregarIndicacoes();
+        carregarUsuarios();
+        carregarParceiros(); // 👈 adiciona aqui
+        atualizarBotoesRelatorio();
+      }, 2000);
 
-// Carrega imediatamente ao abrir
-window.onload = async () => {
-  await atualizarParceirosCache(); // carrega cache antes
-  carregarPDFs();
-  carregarRelatorios();
-  carregarLogs();
-  carregarIndicacoes();
-  carregarUsuarios();
-  carregarParceiros();
-  atualizarBotoesRelatorio();
-};
+      // Carrega imediatamente ao abrir
+      window.onload = async () => {
+        await atualizarParceirosCache(); // carrega cache antes
+        carregarPDFs();
+        carregarRelatorios();
+        carregarLogs();
+        carregarIndicacoes();
+        carregarUsuarios();
+        carregarParceiros();
+        atualizarBotoesRelatorio();
+      };
 
-function carregarIndicacoes() {
-  fetch('/api/indicacoes')
-    .then(res => res.json())
-    .then(data => {
-      const tabela = document.querySelector('#tabela-indicacoes tbody');
-      tabela.innerHTML = '';
+      function carregarIndicacoes() {
+        fetch("/api/indicacoes")
+          .then((res) => res.json())
+          .then((data) => {
+            const tabela = document.querySelector("#tabela-indicacoes tbody");
+            tabela.innerHTML = "";
 
-      data.forEach(ind => {
-const linha = document.createElement('tr');
-linha.innerHTML = `
+            data.forEach((ind) => {
+              const linha = document.createElement("tr");
+              linha.innerHTML = `
   <td>${ind.id}</td>
-  <td>${ind.indicador_nome || '—'}</td>
+  <td>${ind.indicador_nome || "—"}</td>
   <td>${ind.indicado_nome}</td>
   <td>${ind.codigo}</td>
   <td>${ind.tipo}</td>
-  <td>${new Date(ind.created_at).toLocaleString('pt-BR')}</td>
+  <td>${new Date(ind.created_at).toLocaleString("pt-BR")}</td>
   <td>
- ${ind.status === 'pendente'
-  ? `<button onclick="confirmarPagamento(${ind.id}); registrarIndicacao('${ind.codigo}')" class="btn btn-success btn-sm">Pago</button>`
-  : '<span class="badge bg-success">Pago</span>'}
+ ${
+   ind.status === "pendente"
+     ? `<button onclick="confirmarPagamento(${ind.id}); registrarIndicacao('${ind.codigo}')" class="btn btn-success btn-sm">Pago</button>`
+     : '<span class="badge bg-success">Pago</span>'
+ }
     <button onclick="apagarIndicacao(${ind.id})" class="btn btn-danger btn-sm ms-2">Apagar</button>
   </td>
 `;
-tabela.appendChild(linha);
-      });
-    })
-    .catch(err => console.error('Erro ao carregar indicações:', err));
-}
+              tabela.appendChild(linha);
+            });
+          })
+          .catch((err) => console.error("Erro ao carregar indicações:", err));
+      }
 
-function carregarPagamentos() {
-  fetch('/api/pagamentos')
-    .then(res => res.json())
-    .then(data => {
-      const tabela = document.querySelector('#tabela-pagamentos tbody');
-      tabela.innerHTML = '';
+      function carregarPagamentos() {
+        fetch("/api/pagamentos")
+          .then((res) => res.json())
+          .then((data) => {
+            const tabela = document.querySelector("#tabela-pagamentos tbody");
+            tabela.innerHTML = "";
 
-      data.forEach(p => {
-const linha = document.createElement('tr');
-linha.innerHTML = `
+            data.forEach((p) => {
+              const linha = document.createElement("tr");
+              linha.innerHTML = `
   <td>${p.id}</td>
   <td>${p.codigo}</td>
   <td>${p.indicado_nome}</td>
   <td>${p.tipo}</td>
   <td>${p.status}</td>
-  <td>${new Date(p.created_at).toLocaleString('pt-BR')}</td>
+  <td>${new Date(p.created_at).toLocaleString("pt-BR")}</td>
   <td>
-    ${p.status === 'pendente' ? 
-      `<button onclick="confirmarPagamento(${p.id})" class="btn btn-success btn-sm">Pago</button>` 
-      : '—'}
+    ${
+      p.status === "pendente"
+        ? `<button onclick="confirmarPagamento(${p.id})" class="btn btn-success btn-sm">Pago</button>`
+        : "—"
+    }
   </td>
 `;
-tabela.appendChild(linha);
-      });
-    });
-}
+              tabela.appendChild(linha);
+            });
+          });
+      }
 
-// Confirmar pagamento (sem mexer em indicações)
-function confirmarPagamento(id) {
-  fetch(`/api/pagamentos/${id}/confirmar`, { method: "POST" })
-    .then(res => res.json())
-    .then(data => {
-      alert("Pagamento confirmado!");
-      carregarPagamentos(); // atualiza tabela de pagamentos
-    })
-    .catch(err => console.error("Erro ao confirmar pagamento:", err));
-}
+      // Confirmar pagamento (sem mexer em indicações)
+      function confirmarPagamento(id) {
+        fetch(`/api/pagamentos/${id}/confirmar`, { method: "POST" })
+          .then((res) => res.json())
+          .then((data) => {
+            alert("Pagamento confirmado!");
+            carregarPagamentos(); // atualiza tabela de pagamentos
+          })
+          .catch((err) => console.error("Erro ao confirmar pagamento:", err));
+      }
 
-// Registrar indicação (rota separada)
-function registrarIndicacao(codigo) {
-  fetch(`/api/indicar`, { 
-    method: "POST", 
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ codigo })
-  })
-    .then(res => res.json())
-    .then(data => {
-      alert("Indicação registrada!");
-      carregarUsuarios(); // atualiza contador de indicações
-    })
-    .catch(err => console.error("Erro ao registrar indicação:", err));
-}
+      // Registrar indicação (rota separada)
+      function registrarIndicacao(codigo) {
+        fetch(`/api/indicar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codigo }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            alert("Indicação registrada!");
+            carregarUsuarios(); // atualiza contador de indicações
+          })
+          .catch((err) => console.error("Erro ao registrar indicação:", err));
+      }
 
-function apagarIndicacao(id) {
-  if (!confirm("Tem certeza que deseja apagar esta indicação?")) return;
+      function apagarIndicacao(id) {
+        if (!confirm("Tem certeza que deseja apagar esta indicação?")) return;
 
-  fetch(`/api/indicacoes/${id}`, { method: "DELETE" })
-    .then(res => res.json())
-    .then(data => {
-      carregarIndicacoes(); // atualiza a tabela
-    })
-    .catch(err => {
-      console.error("Erro ao apagar indicação:", err);
-      alert("Erro ao apagar indicação.");
-    });
-}
+        fetch(`/api/indicacoes/${id}`, { method: "DELETE" })
+          .then((res) => res.json())
+          .then((data) => {
+            carregarIndicacoes(); // atualiza a tabela
+          })
+          .catch((err) => {
+            console.error("Erro ao apagar indicação:", err);
+            alert("Erro ao apagar indicação.");
+          });
+      }
 
-async function carregarUsuarios() {
-  const resp = await fetch('/api/usuarios');
-  const usuarios = await resp.json();
+      async function carregarUsuarios() {
+        const resp = await fetch("/api/usuarios");
+        const usuarios = await resp.json();
 
-  const tbody = document.querySelector('#tabela-usuarios tbody');
-  tbody.innerHTML = '';
+        const tbody = document.querySelector("#tabela-usuarios tbody");
+        tbody.innerHTML = "";
 
-usuarios.forEach(u => {
-  const numeroLimpo = u.whatsapp.replace(/\D/g, ''); // só dígitos
-  const numeroFinal = numeroLimpo.startsWith('55') ? numeroLimpo : '55' + numeroLimpo;
+        usuarios.forEach((u) => {
+          const numeroLimpo = u.whatsapp.replace(/\D/g, ""); // só dígitos
+          const numeroFinal = numeroLimpo.startsWith("55")
+            ? numeroLimpo
+            : "55" + numeroLimpo;
 
-  tbody.innerHTML += `
+          tbody.innerHTML += `
     <tr>
       <td>${u.id}</td>
       <td>${u.nome}</td>
@@ -873,342 +1018,402 @@ usuarios.forEach(u => {
       </td>
     </tr>
   `;
-});
-}
-
-async function alterarIndicacoes(id, acao) {
-  const resp = await fetch(`/api/usuarios/${id}/indicacoes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ acao })
-  });
-  const data = await resp.json();
-
-  if (data.success) {
-    // atualiza só a célula da tabela
-    const linha = document.querySelector(`#tabela-usuarios tr td:first-child:contains("${id}")`).parentNode;
-    linha.cells[4].innerText = data.indicacoes;
-  }
-}
-
-async function apagarUsuario(id) {
-  if (confirm('Tem certeza que deseja apagar este usuário?')) {
-    await fetch(`/api/usuarios/${id}`, {
-      method: 'DELETE'
-    });
-    carregarUsuarios();
-  }
-}
-
-window.onload = carregarUsuarios;
-
-function marcarPago(button, id, tipo, nome_doc, valor, estado, cidade) {
-  fetch('/salvar-pago', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, tipo, nome_doc, valor, estado, cidade })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      button.disabled = true;
-      button.classList.remove('btn-success');
-      button.classList.add('btn-secondary');
-      button.textContent = 'Pago';
-      alert("Pagamento registrado com sucesso!");
-    } else if (data.alreadyPaid) {
-      button.disabled = true;
-      button.classList.remove('btn-success');
-      button.classList.add('btn-secondary');
-      button.textContent = 'Pago';
-      alert("Esse pagamento já estava registrado.");
-    } else {
-      alert("Erro ao registrar pagamento.");
-    }
-    carregarPDFs();
-    carregarRelatorios();
-  })
-  .catch(err => {
-    console.error("Erro ao registrar pagamento:", err);
-    alert("Erro ao registrar pagamento.");
-  });
-}
-
-function emitirRelatorio(estado) {
-  const escolha = prompt(
-    `O que deseja fazer com o relatório de ${nomeEstado(estado)}?\n\n` +
-    "Digite:\n" +
-    "1 - Baixar PDF\n" +
-    "2 - Enviar para o parceiro"
-  );
-
-  if (escolha === "1") {
-    baixarRelatorioAdmin(estado);
-  } else if (escolha === "2") {
-    enviarRelatorioParceiro(estado);
-  }
-}
-
-// Baixar PDF para o admin
-async function baixarRelatorioAdmin(estado) {
-  try {
-    const res = await fetch(`/api/relatorio/${estado}`);
-    const dados = await res.json();
-    gerarPDF(dados, estado); // usa a função de geração de PDF
-  } catch (err) {
-    console.error("Erro ao baixar relatório:", err);
-    alert("Erro ao baixar relatório.");
-  }
-}
-
-function gerarPDF(dados, estado) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  // Logo
-  const img = new Image();
-  img.src = "marca.png"; // logo da empresa
-
-  // Espera carregar a imagem antes de desenhar
-  img.onload = () => {
-    doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
-
-    // Cabeçalho
-    doc.setTextColor(0);
-    doc.setFontSize(14);
-    doc.text(`Relatório - ${estado}`, 10, 15);
-    doc.setFontSize(9);
-    doc.text(`Emitido em: ${new Date().toLocaleDateString("pt-BR")}`, 10, 22);
-
-    // Colunas
-    doc.setFontSize(8);
-    let startY = 35;
-    doc.text("ID", 10, startY);
-    doc.text("Tipo", 25, startY);
-    doc.text("Documento", 55, startY);
-    doc.text("Valor (R$)", 110, startY);
-    doc.text("Cidade", 140, startY);
-    doc.text("Data Pagamento", 170, startY);
-    doc.line(10, startY + 2, 200, startY + 2);
-
-    let y = startY + 10;
-    let total = 0;
-    const pageHeight = doc.internal.pageSize.height;
-
-    dados.forEach(item => {
-      if (y > pageHeight - 30) {
-        doc.addPage();
-        y = startY + 10;
+        });
       }
 
-      doc.text(String(item.id), 10, y);
-      doc.text(item.tipo, 25, y);
+      async function alterarIndicacoes(id, acao) {
+        const resp = await fetch(`/api/usuarios/${id}/indicacoes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao }),
+        });
+        const data = await resp.json();
 
-      let docNome = item.nome_doc.length > 40 ? item.nome_doc.substring(0, 30) + "..." : item.nome_doc;
-      doc.text(docNome, 55, y);
-
-      doc.text(parseFloat(item.valor).toFixed(2), 110, y);
-
-      let cidadeNome = item.cidade && item.cidade.length > 20 ? item.cidade.substring(0, 15) + "..." : (item.cidade || "—");
-      doc.text(cidadeNome, 140, y);
-
-      doc.text(item.data ? item.data.split("T")[0].split("-").reverse().join("/") : "—", 170, y);
-
-      doc.line(10, y + 2, 200, y + 2);
-      y += 8;
-      total += parseFloat(item.valor) || 0;
-    });
-
-    // Totais
-    y += 15;
-    const officeExpressParte = (total * 0.60).toFixed(2);
-    const socioParte = (total * 0.40).toFixed(2);
-
-    doc.setFontSize(10);
-    doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
-    y += 8;
-    doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
-    y += 8;
-    doc.text(`Sócio: R$ ${socioParte}`, 10, y);
-
-    // Paginação
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
-    }
-
-    // Salvar
-    doc.save(`relatorio_${estado}.pdf`);
-  };
-}
-
-// Enviar relatório para o parceiro
-async function enviarRelatorioParceiro(estado) {
-  try {
-    const res = await fetch(`/api/enviar-relatorio/${estado}`, { method: "POST" });
-    const data = await res.json();
-    if (data.success) {
-      alert(`Relatório de ${estado} enviado ao parceiro.`);
-    }
-  } catch (err) {
-    console.error("Erro ao enviar relatório:", err);
-  }
-}
-
-async function atualizarBotoesRelatorio() {
-  const res = await fetch('/api/relatorio-geral');
-  const dados = await res.json();
-
-  dados.forEach(item => {
-    const total = (item.curriculos || 0) + (item.analises || 0);
-    const botao = document.querySelector(`button[onclick="emitirRelatorio('${item.estado}')"]`);
-    if (botao) {
-      if (total > 0) {
-        botao.textContent = `${nomeEstado(item.estado)} (${total})`;
-      } else {
-        botao.textContent = nomeEstado(item.estado);
-      }
-    }
-  });
-}
-
-// Função auxiliar para mapear sigla -> nome completo
-function nomeEstado(sigla) {
-  const estados = {
-    AC: "Acre", AL: "Alagoas", AM: "Amazonas", AP: "Amapá", BA: "Bahia",
-    CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás",
-    MA: "Maranhão", MG: "Minas Gerais", MS: "Mato Grosso do Sul", MT: "Mato Grosso",
-    PA: "Pará", PB: "Paraíba", PE: "Pernambuco", PI: "Piauí", PR: "Paraná",
-    RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RO: "Rondônia", RR: "Roraima",
-    RS: "Rio Grande do Sul", SC: "Santa Catarina", SE: "Sergipe", SP: "São Paulo",
-    TO: "Tocantins"
-  };
-  return estados[sigla] || sigla;
-}
-
-function abrirExclusao() {
-  const senha = prompt("Digite a senha para acessar exclusão:");
-  if (!senha) return;
-
-  fetch('/api/verificar-senha', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ senha })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.autorizado) {
-      const escolha = prompt(
-        "Digite a sigla do estado (ex: CE) para excluir registros.\n" +
-        "Ou digite 'TODOS' para excluir todos os registros."
-      );
-
-      if (escolha) {
-        if (escolha.toUpperCase() === "TODOS") {
-          excluirTodosRegistros();
-        } else {
-          excluirPorEstado(escolha.toUpperCase());
+        if (data.success) {
+          // atualiza só a célula da tabela
+          const linha = document.querySelector(
+            `#tabela-usuarios tr td:first-child:contains("${id}")`,
+          ).parentNode;
+          linha.cells[4].innerText = data.indicacoes;
         }
       }
-    } else {
-      alert("Senha incorreta!");
-    }
-  })
-  .catch(err => {
-    console.error("Erro ao verificar senha:", err);
-    alert("Erro na verificação da senha.");
-  });
-}
 
-function excluirPorEstado(estado) {
-  if (!confirm(`Tem certeza que deseja excluir todos os registros do estado ${estado}?`)) return;
-
-  const senha = prompt("Digite novamente a senha para confirmar exclusão:");
-  if (!senha) return;
-
-  fetch(`/api/registros/${estado}`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ senha })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        alert(`Registros do estado ${estado} foram excluídos.`);
-        carregarPDFs();
-        carregarRelatorios();
-      } else {
-        alert("Erro ao excluir registros por estado.");
+      async function apagarUsuario(id) {
+        if (confirm("Tem certeza que deseja apagar este usuário?")) {
+          await fetch(`/api/usuarios/${id}`, {
+            method: "DELETE",
+          });
+          carregarUsuarios();
+        }
       }
-    })
-    .catch(err => console.error("Erro ao excluir por estado:", err));
-}
 
-function excluirTodosRegistros() {
-  if (!confirm("Tem certeza que deseja excluir TODOS os registros?")) return;
+      window.onload = carregarUsuarios;
 
-  const senha = prompt("Digite novamente a senha para confirmar exclusão:");
-  if (!senha) return;
-
-  fetch(`/api/registros`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ senha })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        alert("Todos os registros foram excluídos.");
-        carregarPDFs();
-        carregarRelatorios();
-      } else {
-        alert("Erro ao excluir todos os registros.");
+      function marcarPago(button, id, tipo, nome_doc, valor, estado, cidade) {
+        fetch("/salvar-pago", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, tipo, nome_doc, valor, estado, cidade }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              button.disabled = true;
+              button.classList.remove("btn-success");
+              button.classList.add("btn-secondary");
+              button.textContent = "Pago";
+              alert("Pagamento registrado com sucesso!");
+            } else if (data.alreadyPaid) {
+              button.disabled = true;
+              button.classList.remove("btn-success");
+              button.classList.add("btn-secondary");
+              button.textContent = "Pago";
+              alert("Esse pagamento já estava registrado.");
+            } else {
+              alert("Erro ao registrar pagamento.");
+            }
+            carregarPDFs();
+            carregarRelatorios();
+          })
+          .catch((err) => {
+            console.error("Erro ao registrar pagamento:", err);
+            alert("Erro ao registrar pagamento.");
+          });
       }
-    })
-    .catch(err => console.error("Erro ao excluir todos os registros:", err));
-}
 
-function abrirCadastroParceiro() {
-  const modal = new bootstrap.Modal(document.getElementById('modalCadastroParceiro'));
-  modal.show();
-}
+      function emitirRelatorio(estado) {
+        const escolha = prompt(
+          `O que deseja fazer com o relatório de ${nomeEstado(estado)}?\n\n` +
+            "Digite:\n" +
+            "1 - Baixar PDF\n" +
+            "2 - Enviar para o parceiro",
+        );
 
-document.getElementById("formCadastroParceiro").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const nome = document.getElementById("nomeParceiro").value;
-  const senha = document.getElementById("senhaParceiro").value;
-  const whatsapp = document.getElementById("whatsappParceiro").value;
-  const estado = document.getElementById("estadoParceiro").value;
+        if (escolha === "1") {
+          baixarRelatorioAdmin(estado);
+        } else if (escolha === "2") {
+          enviarRelatorioParceiro(estado);
+        }
+      }
 
-  try {
-    const res = await fetch("/api/parceiros", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, senha, whatsapp, estado })
-    });
-    const data = await res.json();
-    if (data.success) {
-      alert("Parceiro cadastrado com sucesso!");
-      carregarParceiros();
-      bootstrap.Modal.getInstance(document.getElementById('modalCadastroParceiro')).hide();
-    } else {
-      alert(data.error || "Erro ao cadastrar parceiro.");
-    }
-  } catch (err) {
-    console.error("Erro no cadastro:", err);
-    alert("Erro no cadastro.");
-  }
-});
+      // Baixar PDF para o admin
+      async function baixarRelatorioAdmin(estado) {
+        try {
+          const res = await fetch(`/api/relatorio/${estado}`);
+          const dados = await res.json();
+          gerarPDF(dados, estado); // usa a função de geração de PDF
+        } catch (err) {
+          console.error("Erro ao baixar relatório:", err);
+          alert("Erro ao baixar relatório.");
+        }
+      }
 
-async function carregarParceiros() {
-  const res = await fetch("/api/parceiros");
-  const parceiros = await res.json();
-  const tbody = document.querySelector("#tabela-parceiros tbody");
-  tbody.innerHTML = "";
-  parceiros.forEach(p => {
-    tbody.innerHTML += `
+      function gerarPDF(dados, estado) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Logo
+        const img = new Image();
+        img.src = "marca.png"; // logo da empresa
+
+        // Espera carregar a imagem antes de desenhar
+        img.onload = () => {
+          doc.addImage(img, "PNG", 40, 80, 130, 130, "", "FAST");
+
+          // Cabeçalho
+          doc.setTextColor(0);
+          doc.setFontSize(14);
+          doc.text(`Relatório - ${estado}`, 10, 15);
+          doc.setFontSize(9);
+          doc.text(
+            `Emitido em: ${new Date().toLocaleDateString("pt-BR")}`,
+            10,
+            22,
+          );
+
+          // Colunas
+          doc.setFontSize(8);
+          let startY = 35;
+          doc.text("ID", 10, startY);
+          doc.text("Tipo", 25, startY);
+          doc.text("Documento", 55, startY);
+          doc.text("Valor (R$)", 110, startY);
+          doc.text("Cidade", 140, startY);
+          doc.text("Data Pagamento", 170, startY);
+          doc.line(10, startY + 2, 200, startY + 2);
+
+          let y = startY + 10;
+          let total = 0;
+          const pageHeight = doc.internal.pageSize.height;
+
+          dados.forEach((item) => {
+            if (y > pageHeight - 30) {
+              doc.addPage();
+              y = startY + 10;
+            }
+
+            doc.text(String(item.id), 10, y);
+            doc.text(item.tipo, 25, y);
+
+            let docNome =
+              item.nome_doc.length > 40
+                ? item.nome_doc.substring(0, 30) + "..."
+                : item.nome_doc;
+            doc.text(docNome, 55, y);
+
+            doc.text(parseFloat(item.valor).toFixed(2), 110, y);
+
+            let cidadeNome =
+              item.cidade && item.cidade.length > 20
+                ? item.cidade.substring(0, 15) + "..."
+                : item.cidade || "—";
+            doc.text(cidadeNome, 140, y);
+
+            doc.text(
+              item.data
+                ? item.data.split("T")[0].split("-").reverse().join("/")
+                : "—",
+              170,
+              y,
+            );
+
+            doc.line(10, y + 2, 200, y + 2);
+            y += 8;
+            total += parseFloat(item.valor) || 0;
+          });
+
+          // Totais
+          y += 15;
+          const officeExpressParte = (total * 0.6).toFixed(2);
+          const socioParte = (total * 0.4).toFixed(2);
+
+          doc.setFontSize(10);
+          doc.text(`Total Geral: R$ ${total.toFixed(2)}`, 10, y);
+          y += 8;
+          doc.text(`Office Express: R$ ${officeExpressParte}`, 10, y);
+          y += 8;
+          doc.text(`Sócio: R$ ${socioParte}`, 10, y);
+
+          // Paginação
+          const pageCount = doc.internal.getNumberOfPages();
+          for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.text(`Página ${i} de ${pageCount}`, 180, pageHeight - 10);
+          }
+
+          // Salvar
+          doc.save(`relatorio_${estado}.pdf`);
+        };
+      }
+
+      // Enviar relatório para o parceiro
+      async function enviarRelatorioParceiro(estado) {
+        try {
+          const res = await fetch(`/api/enviar-relatorio/${estado}`, {
+            method: "POST",
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert(`Relatório de ${estado} enviado ao parceiro.`);
+          }
+        } catch (err) {
+          console.error("Erro ao enviar relatório:", err);
+        }
+      }
+
+      async function atualizarBotoesRelatorio() {
+        const res = await fetch("/api/relatorio-geral");
+        const dados = await res.json();
+
+        dados.forEach((item) => {
+          const total = (item.curriculos || 0) + (item.analises || 0);
+          const botao = document.querySelector(
+            `button[onclick="emitirRelatorio('${item.estado}')"]`,
+          );
+          if (botao) {
+            if (total > 0) {
+              botao.textContent = `${nomeEstado(item.estado)} (${total})`;
+            } else {
+              botao.textContent = nomeEstado(item.estado);
+            }
+          }
+        });
+      }
+
+      // Função auxiliar para mapear sigla -> nome completo
+      function nomeEstado(sigla) {
+        const estados = {
+          AC: "Acre",
+          AL: "Alagoas",
+          AM: "Amazonas",
+          AP: "Amapá",
+          BA: "Bahia",
+          CE: "Ceará",
+          DF: "Distrito Federal",
+          ES: "Espírito Santo",
+          GO: "Goiás",
+          MA: "Maranhão",
+          MG: "Minas Gerais",
+          MS: "Mato Grosso do Sul",
+          MT: "Mato Grosso",
+          PA: "Pará",
+          PB: "Paraíba",
+          PE: "Pernambuco",
+          PI: "Piauí",
+          PR: "Paraná",
+          RJ: "Rio de Janeiro",
+          RN: "Rio Grande do Norte",
+          RO: "Rondônia",
+          RR: "Roraima",
+          RS: "Rio Grande do Sul",
+          SC: "Santa Catarina",
+          SE: "Sergipe",
+          SP: "São Paulo",
+          TO: "Tocantins",
+        };
+        return estados[sigla] || sigla;
+      }
+
+      function abrirExclusao() {
+        const senha = prompt("Digite a senha para acessar exclusão:");
+        if (!senha) return;
+
+        fetch("/api/verificar-senha", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ senha }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.autorizado) {
+              const escolha = prompt(
+                "Digite a sigla do estado (ex: CE) para excluir registros.\n" +
+                  "Ou digite 'TODOS' para excluir todos os registros.",
+              );
+
+              if (escolha) {
+                if (escolha.toUpperCase() === "TODOS") {
+                  excluirTodosRegistros();
+                } else {
+                  excluirPorEstado(escolha.toUpperCase());
+                }
+              }
+            } else {
+              alert("Senha incorreta!");
+            }
+          })
+          .catch((err) => {
+            console.error("Erro ao verificar senha:", err);
+            alert("Erro na verificação da senha.");
+          });
+      }
+
+      function excluirPorEstado(estado) {
+        if (
+          !confirm(
+            `Tem certeza que deseja excluir todos os registros do estado ${estado}?`,
+          )
+        )
+          return;
+
+        const senha = prompt(
+          "Digite novamente a senha para confirmar exclusão:",
+        );
+        if (!senha) return;
+
+        fetch(`/api/registros/${estado}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ senha }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              alert(`Registros do estado ${estado} foram excluídos.`);
+              carregarPDFs();
+              carregarRelatorios();
+            } else {
+              alert("Erro ao excluir registros por estado.");
+            }
+          })
+          .catch((err) => console.error("Erro ao excluir por estado:", err));
+      }
+
+      function excluirTodosRegistros() {
+        if (!confirm("Tem certeza que deseja excluir TODOS os registros?"))
+          return;
+
+        const senha = prompt(
+          "Digite novamente a senha para confirmar exclusão:",
+        );
+        if (!senha) return;
+
+        fetch(`/api/registros`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ senha }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              alert("Todos os registros foram excluídos.");
+              carregarPDFs();
+              carregarRelatorios();
+            } else {
+              alert("Erro ao excluir todos os registros.");
+            }
+          })
+          .catch((err) =>
+            console.error("Erro ao excluir todos os registros:", err),
+          );
+      }
+
+      function abrirCadastroParceiro() {
+        const modal = new bootstrap.Modal(
+          document.getElementById("modalCadastroParceiro"),
+        );
+        modal.show();
+      }
+
+      document
+        .getElementById("formCadastroParceiro")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const nome = document.getElementById("nomeParceiro").value;
+          const senha = document.getElementById("senhaParceiro").value;
+          const whatsapp = document.getElementById("whatsappParceiro").value;
+          const estado = document.getElementById("estadoParceiro").value;
+
+          try {
+            const res = await fetch("/api/parceiros", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nome, senha, whatsapp, estado }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              alert("Parceiro cadastrado com sucesso!");
+              carregarParceiros();
+              bootstrap.Modal.getInstance(
+                document.getElementById("modalCadastroParceiro"),
+              ).hide();
+            } else {
+              alert(data.error || "Erro ao cadastrar parceiro.");
+            }
+          } catch (err) {
+            console.error("Erro no cadastro:", err);
+            alert("Erro no cadastro.");
+          }
+        });
+
+      async function carregarParceiros() {
+        const res = await fetch("/api/parceiros");
+        const parceiros = await res.json();
+        const tbody = document.querySelector("#tabela-parceiros tbody");
+        tbody.innerHTML = "";
+        parceiros.forEach((p) => {
+          tbody.innerHTML += `
       <tr>
         <td>${p.id}</td>
         <td>${p.nome}</td>
@@ -1219,26 +1424,23 @@ async function carregarParceiros() {
         </td>
       </tr>
     `;
-  });
-}
+        });
+      }
 
-async function apagarParceiro(id) {
-  if (!confirm("Tem certeza que deseja apagar este parceiro?")) return;
+      async function apagarParceiro(id) {
+        if (!confirm("Tem certeza que deseja apagar este parceiro?")) return;
 
-  const res = await fetch(`/api/parceiros/${id}`, { method: "DELETE" });
-  const data = await res.json();
+        const res = await fetch(`/api/parceiros/${id}`, { method: "DELETE" });
+        const data = await res.json();
 
-  if (data.success) {
-    carregarParceiros(); // apenas recarrega a lista
-  } else {
-    alert("Erro ao apagar parceiro: " + (data.error || "desconhecido"));
-  }
-}
-  </script>
+        if (data.success) {
+          carregarParceiros(); // apenas recarrega a lista
+        } else {
+          alert("Erro ao apagar parceiro: " + (data.error || "desconhecido"));
+        }
+      }
+    </script>
 
-  
-
-<!-- Modal Cadastro Parceiro -->
-
-</body>
+    <!-- Modal Cadastro Parceiro -->
+  </body>
 </html>
