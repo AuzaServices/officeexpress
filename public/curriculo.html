@@ -183,7 +183,7 @@
 
     #notificacoes {
       position: fixed;
-      top: 110px;
+      top: 140px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -206,11 +206,27 @@
       border-radius: 14px;
       box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
       font-weight: 600;
-      text-align: center;
+      text-align: left;
       pointer-events: auto;
       white-space: nowrap;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notificacao .icone {
+      color: #d4b54f;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .notificacao .texto {
+      flex: 1;
+      min-width: 0;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
     #progresso {
@@ -221,7 +237,7 @@
     }
 
     body {
-      padding-top: 140px; /* header + progress bar + notificações */
+      padding-top: 160px; /* header + progress bar + notificações */
     }
 
     @media (max-width: 768px) {
@@ -457,7 +473,7 @@
 
   <div class="container">
     <div class="titulo-wrapper">
-      <h1 class="titulo"><i class="fa-solid fa-bell" aria-hidden="true"></i><span>Seu Currículo Profissional em até 10 minutos</span></h1>
+      <h1 class="titulo">Seu Currículo Profissional em até 10 minutos</h1>
     </div>
     <form id="formulario">
 
@@ -930,7 +946,11 @@ Você está a um clique de transformar sua história profissional. <strong>Final
 
     const div = document.createElement("div");
     div.classList.add("notificacao");
-    div.textContent = texto;
+    div.innerHTML = `
+      <span class="icone"><i class="fa-solid fa-bell"></i></span>
+      <span class="texto">${texto}</span>
+    `;
+
     container.appendChild(div);
 
     const tempoAtual = tempos[tempoIndex];
@@ -947,7 +967,10 @@ Você está a um clique de transformar sua história profissional. <strong>Final
   if (nomeUsuario) {
     const div = document.createElement("div");
     div.classList.add("notificacao");
-    div.textContent = `${nomeUsuario} começou agora o currículo.`;
+    div.innerHTML = `
+      <span class="icone"><i class="fa-solid fa-bell"></i></span>
+      <span class="texto">${nomeUsuario} começou agora o currículo.</span>
+    `;
     container.appendChild(div);
     nomesUsados.add(nomeUsuario);
 
