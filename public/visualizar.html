@@ -66,18 +66,24 @@
 
       @media (max-width: 768px) { .hamburguer { display: block; } nav.menu { display: none; } }
 
-      .impressora-barra {
+      /* Corpo da impressora */
+      .impressora-corpo {
         position: fixed;
         top: 56px;
         left: 0;
         right: 0;
+        z-index: 1500;
+      }
+
+      /* Barra superior da impressora */
+      .impressora-barra {
         height: 45px;
         background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
-        z-index: 1500;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        position: relative;
       }
 
       .impressora-barra::before {
@@ -137,6 +143,7 @@
 
       .impressora-nome { color: #888; font-size: 12px; font-family: "Arial", sans-serif; text-transform: uppercase; letter-spacing: 2px; }
 
+      /* Área principal */
       .area-visualizacao {
         display: flex;
         flex-direction: column;
@@ -159,6 +166,7 @@
         border: 1px solid #e0e0e0;
         transform: translateY(-700px);
         opacity: 0;
+        z-index: 10;
       }
 
       #curriculo-viewer.imprimindo { animation: imprimirPapel 3.5s ease-out forwards; }
@@ -272,13 +280,17 @@
       </div>
     </div>
 
-    <div class="impressora-barra">
-      <div class="impressora-leds">
-        <div class="led vermelho" id="ledVermelho"></div>
-        <div class="led verde" id="ledVerde"></div>
-        <div class="led amarelo" id="ledAmarelo"></div>
+    <!-- Corpo da impressora -->
+    <div class="impressora-corpo">
+      <!-- Barra superior -->
+      <div class="impressora-barra">
+        <div class="impressora-leds">
+          <div class="led vermelho" id="ledVermelho"></div>
+          <div class="led verde" id="ledVerde"></div>
+          <div class="led amarelo" id="ledAmarelo"></div>
+        </div>
+        <div class="impressora-nome">Office Express Printer</div>
       </div>
-      <div class="impressora-nome">Office Express Printer</div>
     </div>
 
     <div class="area-visualizacao">
@@ -312,10 +324,22 @@
 
       function verificarErros() {
         const erros = [];
-        if (!dados.nome || dados.nome.trim() === '') erros.push("Nome completo");
-        if (!dados.telefone || (Array.isArray(dados.telefone) && dados.telefone.length === 0) || (typeof dados.telefone === 'string' && dados.telefone.trim() === '')) erros.push("Telefone");
-        if (!dados.formacao || dados.formacao.trim() === '') erros.push("Escolaridade");
-        if (!dados.objetivo || dados.objetivo.trim() === '') erros.push("Objetivo");
+        
+        const nomeTrim = dados.nome ? dados.nome.trim() : '';
+        const palavrasNome = nomeTrim.split(/\s+/).filter(p => p.length > 0);
+        
+        if (!nomeTrim || palavrasNome.length < 2) {
+          erros.push("Nome completo (minimo 2 nomes)");
+        }
+        
+        if (!dados.telefone || (Array.isArray(dados.telefone) && dados.telefone.length === 0) || (typeof dados.telefone === 'string' && dados.telefone.trim() === '')) {
+          erros.push("Telefone");
+        }
+        
+        if (!dados.email || dados.email.trim() === '') {
+          erros.push("Email");
+        }
+        
         return erros;
       }
 
@@ -439,24 +463,22 @@
           viewer.appendChild(pagina);
         }
 
+        const ledVermelho = document.getElementById('ledVermelho');
+        const ledVerde = document.getElementById('ledVerde');
         const ledAmarelo = document.getElementById('ledAmarelo');
         
+        // Inicia animação
         setTimeout(() => {
           ledAmarelo.classList.add('imprimindo');
           document.getElementById("curriculo-viewer").classList.add("imprimindo");
           
+          // Finaliza após 3.5s
           setTimeout(() => {
             ledAmarelo.classList.remove('imprimindo');
             ledAmarelo.classList.add('esmaecido');
             
-            const ledVerde = document.getElementById('ledVerde');
-            ledVerde.classList.add('concluido');
-            
             if (temErros) {
-              ledVerde.classList.remove('concluido');
               ledVerde.classList.add('esmaecido');
-              
-              const ledVermelho = document.getElementById('ledVermelho');
               ledVermelho.classList.add('erro');
               
               const msgErro = document.getElementById('mensagemErro');
@@ -466,6 +488,9 @@
               const btnPdf = document.getElementById('btnGerarPdf');
               btnPdf.classList.add('bloqueado');
               btnPdf.onclick = function() { alert("Preencha os campos obrigatorios primeiro!"); };
+            } else {
+              ledVermelho.classList.add('esmaecido');
+              ledVerde.classList.add('concluido');
             }
             
             document.getElementById("navegacao").classList.add("mostrar");
@@ -532,7 +557,7 @@
       let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
       let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
 
-      document.addEventListener("click", (e) => {
+      document.addEventListener('click', (e) => {
         const el = e.target.closest("a");
         if (el && el.href && el.href.includes(window.location.origin)) { navegandoInternamente = true; }
       });
