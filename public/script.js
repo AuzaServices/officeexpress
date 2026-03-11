@@ -1,19 +1,44 @@
 console.log('[script.js] carregado');
 
+// Funções de notificação
+function mostrarNotificacao(mensagem, tipo) {
+  const container = document.getElementById('notificacoes');
+  if (!container) return;
+  
+  const notificacao = document.createElement('div');
+  notificacao.className = 'notificacao';
+  notificacao.innerHTML = '<span class="icone">' + (tipo === 'sucesso' ? '✓' : '!') + '</span> ' + mensagem;
+  
+  container.appendChild(notificacao);
+  
+  setTimeout(function() {
+    notificacao.classList.remove('escondida');
+  }, 10);
+  
+  setTimeout(function() {
+    notificacao.classList.add('escondida');
+    setTimeout(function() {
+      if (notificacao.parentNode) {
+        notificacao.parentNode.removeChild(notificacao);
+      }
+    }, 400);
+  }, 3000);
+}
+
 function aplicarMascaraTelefone(input) {
   input.addEventListener("input", function () {
     let valor = input.value.replace(/\D/g, "");
     if (valor.length > 11) valor = valor.slice(0, 11);
     const formatado = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1)$2-$3");
     input.value = formatado;
-    salvarDados(); // atualiza localStorage a cada mudança
+    salvarDados();
   });
 }
 
 function getDadosFromForm() {
   const form = document.getElementById("formulario");
   if (!form) {
-    console.warn("❌ Formulário não encontrado!");
+    console.warn("Formulario nao encontrado!");
     return {};
   }
 
@@ -41,9 +66,10 @@ function getDadosFromForm() {
     cep: getValue("#cep"),
     objetivo: getValue("#objetivo"),
     formacao: getValue("#formacao"),
-    habilidades: getValue("#habilidades"),
-    hobbies: getValue("#hobbies"),
+    habilidades: getValue("#habilidades-texto"),
+    hobbies: getValue("#hobbies-texto"),
     infoAdicional: getValue("#infoAdicional"),
+    primeiroEmprego: document.getElementById('experiencias')?.dataset.primeiroEmprego === "true" ? "true" : "",
     empresa: getArray("empresa[]"),
     cargo: getArray("cargo[]"),
     periodo_inicio: getArray("periodo_inicio[]"),
@@ -54,13 +80,12 @@ function getDadosFromForm() {
     carga: getArray("carga[]"),
   };
 
-  // Foto (só salva base64)
   const preview = document.getElementById("preview-miniatura");
   if (preview && preview.src && preview.src.startsWith("data:image/")) {
     dados.foto = preview.src;
   }
 
-  console.log("📝 getDadosFromForm() resultado:", dados); // DEBUG
+  console.log("📝 getDadosFromForm() resultado:", dados);
   return dados;
 }
 
@@ -68,8 +93,6 @@ function salvarDados() {
   const dados = getDadosFromForm();
   const atual = JSON.parse(localStorage.getItem("curriculo") || "{}");
 
-  // Mescla dados existentes com o que está no formulário.
-  // Não sobrescreve arrays vazias (evita apagar dados ao navegar).
   const merged = { ...atual };
   for (const [key, value] of Object.entries(dados)) {
     if (Array.isArray(value)) {
@@ -82,7 +105,9 @@ function salvarDados() {
 
   try {
     localStorage.setItem("curriculo", JSON.stringify(merged));
-    console.log("✅ Dados salvos em localStorage.curriculo:", merged); // DEBUG
+    console.log("✅ Dados salvos em localStorage.curriculo:", merged);
+    // Notificação de salvamento automático
+    // mostrarNotificacao('Dados salvos automaticamente', 'sucesso');
   } catch (err) {
     console.error("❌ Falha ao salvar dados no localStorage:", err);
   }
@@ -116,84 +141,15 @@ function adicionarTelefone() {
 
   aplicarMascaraTelefone(input);
 
-  // Validação visual igual ao primeiro campo
   input.addEventListener("input", function () {
     const valor = input.value.replace(/\D/g, "");
     const valido = /^(\d{2})(9\d{8})$/.test(valor);
     erro.style.display = valor.length > 0 && !valido ? "inline" : "none";
-    salvarDados(); // salva sempre que o usuário digita
+    salvarDados();
   });
 
-  // Salva imediatamente após criar o campo (para manter consistência)
   console.log("📞 Novo telefone adicionado ao DOM, salvando...");
   salvarDados();
-}
-
-document
-  .querySelectorAll('[name="telefone[]"]')
-  .forEach(aplicarMascaraTelefone);
-
-// ✅ Event listeners para salvar dados em tempo real
-const formElement = document.getElementById("formulario");
-if (formElement) {
-  formElement.addEventListener("input", (e) => {
-    console.log("🎯 Evento input capturado! Campo:", e.target.name, "Valor:", e.target.value);
-    salvarDados();
-  });
-  formElement.addEventListener("change", (e) => {
-    console.log("🎯 Evento change capturado! Campo:", e.target.name, "Valor:", e.target.value);
-    salvarDados();
-  });
-}
-
-const dropArea = document.getElementById("drop-area");
-const uploadBox = document.getElementById("upload-box");
-const inputFoto = document.getElementById("foto");
-const preview = document.getElementById("preview-miniatura");
-
-uploadBox.addEventListener("click", () => {
-  uploadEmAndamento = true;
-  inputFoto.click();
-});
-
-["dragenter", "dragover"].forEach((eventName) => {
-  dropArea.addEventListener(eventName, (e) => {
-    e.preventDefault();
-    uploadBox.style.borderColor = "#00324a";
-    uploadBox.style.backgroundColor = "#f0f8ff";
-  });
-});
-
-["dragleave", "drop"].forEach((eventName) => {
-  dropArea.addEventListener(eventName, (e) => {
-    e.preventDefault();
-    uploadBox.style.borderColor = "#ccc";
-    uploadBox.style.backgroundColor = "#fff";
-  });
-});
-
-dropArea.addEventListener("drop", (e) => {
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith("image/")) {
-    inputFoto.files = e.dataTransfer.files;
-    mostrarPreview(file);
-  }
-});
-
-inputFoto.addEventListener("change", () => {
-  uploadEmAndamento = false;
-  const file = inputFoto.files[0];
-  if (file) mostrarPreview(file);
-});
-
-function mostrarPreview(file) {
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    preview.src = e.target.result;
-    preview.style.display = "block";
-    salvarDados(); // salva também a foto (base64) sempre que atualiza preview
-  };
-  reader.readAsDataURL(file);
 }
 
 function adicionarCurso(curso = "", instituicao = "", carga = "") {
@@ -208,17 +164,10 @@ function adicionarCurso(curso = "", instituicao = "", carga = "") {
   `;
   container.appendChild(novo);
 
-  // Salvar ao digitar
   novo.querySelectorAll("input").forEach((input) => {
-    input.addEventListener("input", salvarCursos);
+    input.addEventListener("input", salvarDados);
   });
   console.log("🎓 Novo curso adicionado ao DOM, salvando...");
-  salvarCursos();
-  salvarDados();
-}
-
-function salvarCursos() {
-  // NÃO MAIS SALVA EM cursosSalvos - tudo vai via salvarDados()
   salvarDados();
 }
 
@@ -282,79 +231,90 @@ function adicionarExperiencia(
   container.appendChild(nova);
 
   [empresa, cargo, atividades, inicio, fim].forEach((el) => {
-    el.addEventListener("input", salvarExperiencias);
+    el.addEventListener("input", salvarDados);
   });
 
-  [inicio, fim].forEach((input) => {
-    flatpickr(input, {
-      locale: flatpickr.l10ns.pt,
-      dateFormat: "m/Y",
-      disableMobile: true,
+  if (typeof flatpickr !== "undefined") {
+    [inicio, fim].forEach((input) => {
+      flatpickr(input, {
+        locale: flatpickr.l10ns.pt,
+        dateFormat: "m/Y",
+        disableMobile: true,
+      });
     });
-  });
+  }
 
   console.log("💼 Nova experiência adicionada ao DOM, salvando...");
-  salvarExperiencias();
   salvarDados();
 }
 
-function salvarExperiencias() {
-  // NÃO MAIS SALVA EM experienciasSalvas - tudo vai via salvarDados()
-  salvarDados();
-}
-
-document.querySelectorAll(".carga-input").forEach((input) => {
-  input.addEventListener("input", () => {
-    input.value = input.value.replace(/\D/g, ""); // Remove tudo que não for número
-  });
-});
-
-const etapas = document.querySelectorAll(".etapa");
-const progresso = document.getElementById("progresso");
-const btnAvancar = document.getElementById("avancar");
-const btnVoltar = document.getElementById("voltar");
+// Funções de etapas do formulário
 let etapaAtual = 0;
 
 function mostrarEtapa(index) {
+  const etapas = document.querySelectorAll(".etapa");
+  const progresso = document.getElementById("progresso");
+  const btnAvancar = document.getElementById("avancar");
+  const btnVoltar = document.getElementById("voltar");
+  const navegacaoContainer = document.getElementById("navegacaoContainer");
+  
+  if (!etapas.length) return;
+  
   etapas.forEach((etapa, i) => {
-    etapa.classList.toggle("ativa", i === index);
+    etapa.classList.toggle("etapa-ativa", i === index);
   });
 
-  progresso.style.width = ((index + 1) / etapas.length) * 100 + "%";
-  btnVoltar.style.display = index === 0 ? "none" : "inline-block";
+  if (progresso) {
+    progresso.style.width = ((index + 1) / etapas.length) * 100 + "%";
+  }
+  
+  // Controla a visibilidade do botão Voltar com transição suave
+  if (btnVoltar) {
+    if (index === 0) {
+      btnVoltar.classList.add('escondido');
+    } else {
+      btnVoltar.classList.remove('escondido');
+    }
+  }
 
-  // Apenas muda o texto, sem mexer em classe
-  btnAvancar.textContent =
-    index === etapas.length - 1 ? "Finalizar" : "Avançar";
+  // Alinha os botões: centralizado na primeira etapa, espaço-between nas outras
+  if (navegacaoContainer) {
+    if (index === 0) {
+      navegacaoContainer.classList.remove('com-span');
+    } else {
+      navegacaoContainer.classList.add('com-span');
+    }
+  }
 
-  if (index === etapas.length - 1) {
-    btnAvancar.classList.add("finalizar");
-    btnAvancar.textContent = "Finalizar";
-  } else {
-    btnAvancar.classList.remove("finalizar");
-    btnAvancar.textContent = "Avançar";
+  if (btnAvancar) {
+    if (index === etapas.length - 1) {
+      btnAvancar.classList.add("finalizar");
+      btnAvancar.textContent = "Finalizar";
+    } else {
+      btnAvancar.classList.remove("finalizar");
+      btnAvancar.textContent = "Avançar";
+    }
   }
 }
 
-btnAvancar.addEventListener("click", () => {
-  // validação apenas na terceira etapa (índice 2)
+function avancarEtapa() {
   const indiceEtapaCidadeEstado = 2;
 
   if (etapaAtual === indiceEtapaCidadeEstado) {
     const campoEstado = document.getElementById("estado");
     if (campoEstado && !campoEstado.value) {
       alert("Selecione seu Estado antes de Avançar.");
-      return; // impede avanço
+      return;
     }
   }
 
+  const etapas = document.querySelectorAll(".etapa");
   if (etapaAtual < etapas.length - 1) {
     etapaAtual++;
     mostrarEtapa(etapaAtual);
   } else {
-    // ✅ FINALIZAR: Salva dados e redireciona (SEM disparar submit!)
     console.log("✅ FINALIZANDO - Salvando dados antes de ir para visualizar...");
-    salvarDados(); // Garante que tudo está salvo com getDadosFromForm()
+    salvarDados();
     
     localStorage.setItem("entradaViaSplash", "true");
     localStorage.setItem("navegandoInternamente", "false");
@@ -363,19 +323,98 @@ btnAvancar.addEventListener("click", () => {
       window.location.href = "/visualizar";
     }, 300);
   }
-});
+}
 
-btnVoltar.addEventListener("click", () => {
+function voltarEtapa() {
   if (etapaAtual > 0) {
     etapaAtual--;
     mostrarEtapa(etapaAtual);
   }
-});
+}
 
-mostrarEtapa(etapaAtual);
-document.addEventListener("DOMContentLoaded", () => {
+// Inicialização quando o DOM estiver pronto
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("DOM carregado, inicializando...");
+  
+  // Aplicar máscara aos telefones existentes
+  document.querySelectorAll('[name="telefone[]"]').forEach(aplicarMascaraTelefone);
+
+  // Event listeners do formulário
+  const formElement = document.getElementById("formulario");
+  if (formElement) {
+    formElement.addEventListener("input", (e) => {
+      console.log("🎯 Evento input capturado! Campo:", e.target.name, "Valor:", e.target.value);
+      salvarDados();
+    });
+    formElement.addEventListener("change", (e) => {
+      console.log("🎯 Evento change capturado! Campo:", e.target.name, "Valor:", e.target.value);
+      salvarDados();
+    });
+  }
+
+  // Upload de foto
+  const dropArea = document.getElementById("drop-area");
+  const uploadBox = document.getElementById("upload-box");
+  const inputFoto = document.getElementById("foto");
+  const preview = document.getElementById("preview-miniatura");
+
+  if (uploadBox && inputFoto) {
+    uploadBox.addEventListener("click", () => {
+      inputFoto.click();
+    });
+  }
+
+  if (dropArea) {
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        if (uploadBox) {
+          uploadBox.style.borderColor = "#00324a";
+          uploadBox.style.backgroundColor = "#f0f8ff";
+        }
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        if (uploadBox) {
+          uploadBox.style.borderColor = "#ccc";
+          uploadBox.style.backgroundColor = "#fff";
+        }
+      });
+    });
+
+    dropArea.addEventListener("drop", (e) => {
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) {
+        inputFoto.files = e.dataTransfer.files;
+        mostrarPreview(file);
+      }
+    });
+  }
+
+  if (inputFoto) {
+    inputFoto.addEventListener("change", () => {
+      const file = inputFoto.files[0];
+      if (file) mostrarPreview(file);
+    });
+  }
+
+  function mostrarPreview(file) {
+    if (!preview) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+      salvarDados();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Inicializar flatpickr para campos de data
   document.querySelectorAll(".mesAno").forEach((input) => {
-    if (!input._flatpickr) {
+    if (typeof flatpickr !== "undefined" && !input._flatpickr) {
       flatpickr(input, {
         locale: flatpickr.l10ns.pt,
         dateFormat: "m/Y",
@@ -383,55 +422,110 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
-});
 
-// Restauração agora é feita em curriculo.html via DOMContentLoaded
+  // Checkbox primeiro emprego - deixar invisível
+  const checkboxPrimeiroEmprego = document.getElementById('primeiroEmpregoCheck');
+  const experienciasDiv = document.getElementById('experiencias');
+  const btnAdicionarExperiencia = document.getElementById('btnAdicionarExperiencia');
+  
+  if (checkboxPrimeiroEmprego && experienciasDiv) {
+    checkboxPrimeiroEmprego.addEventListener('change', function() {
+      if (this.checked) {
+        // Deixar invisível - não mostrar nenhum input
+        experienciasDiv.style.display = 'none';
+        experienciasDiv.dataset.primeiroEmprego = "true";
+        if (btnAdicionarExperiencia) {
+          btnAdicionarExperiencia.disabled = true;
+          btnAdicionarExperiencia.style.opacity = "0.5";
+          btnAdicionarExperiencia.style.cursor = "not-allowed";
+        }
+      } else {
+        experienciasDiv.style.display = 'block';
+        experienciasDiv.innerHTML = '';
+        delete experienciasDiv.dataset.primeiroEmprego;
+        if (btnAdicionarExperiencia) {
+          btnAdicionarExperiencia.disabled = false;
+          btnAdicionarExperiencia.style.opacity = "1";
+          btnAdicionarExperiencia.style.cursor = "pointer";
+        }
+      }
+      salvarDados();
+    });
+    
+    // Verifica se é primeiro emprego ao carregar dados salvos
+    const dados = JSON.parse(localStorage.getItem('curriculo') || '{}');
+    if (dados.primeiroEmprego === true || dados.primeiroEmprego === "true") {
+      checkboxPrimeiroEmprego.checked = true;
+      experienciasDiv.style.display = 'none';
+      experienciasDiv.dataset.primeiroEmprego = "true";
+      if (btnAdicionarExperiencia) {
+        btnAdicionarExperiencia.disabled = true;
+        btnAdicionarExperiencia.style.opacity = "0.5";
+        btnAdicionarExperiencia.style.cursor = "not-allowed";
+      }
+      // Salva os dados para garantir que primeiroEmprego esteja no localStorage
+      salvarDados();
+    }
+  }
 
-// Menu hamburguer (opcional, presente em páginas com o mesmo cabeçalho)
-function initHamburguerMenu() {
+  // Marcar habilidades e hobbies selecionados do localStorage
+  function selecionarSugestoesSalvas(textareaId, containerId) {
+    const textarea = document.getElementById(textareaId);
+    const container = document.getElementById(containerId);
+    if (!textarea || !container) return;
+    
+    const valores = textarea.value ? textarea.value.split(',').map(s => s.trim()).filter(s => s) : [];
+    const botoes = container.querySelectorAll('button');
+    botoes.forEach(btn => {
+      if (valores.includes(btn.textContent.trim())) {
+        btn.classList.add('selecionado');
+      }
+    });
+  }
+  
+  // Aplicar selections salvas
+  selecionarSugestoesSalvas('habilidades-texto', 'habilidades-opcoes');
+  selecionarSugestoesSalvas('hobbies-texto', 'hobbies-opcoes');
+
+  // Botões de navegação
+  const btnAvancar = document.getElementById("avancar");
+  const btnVoltar = document.getElementById("voltar");
+  
+  if (btnAvancar) {
+    btnAvancar.addEventListener("click", avancarEtapa);
+  }
+  
+  if (btnVoltar) {
+    btnVoltar.addEventListener("click", voltarEtapa);
+  }
+
+  // Inicializar primeira etapa
+  mostrarEtapa(etapaAtual);
+
+  // Menu hamburguer
   const btnMenu = document.getElementById('btnMenu');
   const mobileMenu = document.getElementById('mobileMenu');
-  if (!btnMenu || !mobileMenu) return;
+  
+  if (btnMenu && mobileMenu) {
+    btnMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = mobileMenu.classList.toggle('open');
+      btnMenu.setAttribute('aria-expanded', isOpen);
+      btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+    });
 
-  console.log('[menu] Inicializando menu hamburguer');
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.pageYOffset;
+      if (currentScroll > lastScroll && currentScroll > 150) {
+        mobileMenu.classList.remove('open');
+        btnMenu.setAttribute('aria-expanded', 'false');
+        btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+      }
+      lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+    }, { passive: true });
+  }
+  
+  console.log("✅ Inicialização concluída!");
+});
 
-  // Toggle suave ao clicar no botão hamburguer
-  btnMenu.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isOpen = mobileMenu.classList.toggle('open');
-
-    const barra = document.getElementById('barra-progresso');
-    if (barra) barra.classList.toggle('menu-aberto', isOpen);
-
-    console.log('[menu] toggle, aberto?', isOpen);
-  });
-
-  // Fecha ao clicar fora do menu
-  document.addEventListener('click', (e) => {
-    if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && e.target !== btnMenu) {
-      mobileMenu.classList.remove('open');
-      const barra = document.getElementById('barra-progresso');
-      if (barra) barra.classList.remove('menu-aberto');
-      console.log('[menu] fechado clicando fora');
-    }
-  });
-
-  // Fecha ao rolar para baixo (se o menu estiver aberto)
-  let lastScrollTop = 0;
-  window.addEventListener('scroll', () => {
-    const st = window.pageYOffset || document.documentElement.scrollTop;
-    if (st > lastScrollTop && st > 140 && mobileMenu.classList.contains('open')) {
-      mobileMenu.classList.remove('open');
-      const barra = document.getElementById('barra-progresso');
-      if (barra) barra.classList.remove('menu-aberto');
-      console.log('[menu] fechado ao rolar para baixo');
-    }
-    lastScrollTop = st <= 0 ? 0 : st;
-  }, { passive: true });
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initHamburguerMenu);
-} else {
-  initHamburguerMenu();
-}

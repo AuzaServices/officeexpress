@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -73,34 +73,64 @@
       }
     </style>
   </head>
-  <body>
-    <!-- Cabeçalho -->
-    <header class="cabecalho">
-      <div class="container mx-auto px-6">
-        <div class="wrap flex items-center space-x-4">
-          <img
-            src="https://i.imgur.com/HjzGCoA.png"
-            alt="Office Express"
-            class="logo"
-          />
-          <i class="fas fa-lock text-white"></i>
-        </div>
-      </div>
-    </header>
+  <body style="padding-top: 80px;">
 
-    <!-- Conteúdo principal -->
+  <!-- Header -->
+  <header class="cabecalho">
+    <div class="container">
+      <div class="wrap">
+        <a href="/" class="logo-link" aria-label="Voltar para o início">
+          <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        </a>
+        <nav class="menu">
+          <a href="/contato">Contato</a>
+          <a href="/sobre">Sobre nós</a>
+        </nav>
+        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu -->
+  <div id="mobileMenu">
+    <div>
+      <a href="/contato">Contato</a>
+      <a href="/sobre">Sobre nós</a>
+    </div>
+  </div>
+
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  <div id="mobileMenu">
+    <div>
+      <a href="/contato">Contato</a>
+      <a href="/sobre">Sobre nos</a>
+    </div>
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- Cabe�alho -->
+    <!-- Conte�do principal -->
     <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
       <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
-      <p class="mb-2">Serviço: Análise Profissional</p>
+      <p class="mb-2">Servi�o: An�lise Profissional</p>
 
-      <!-- Preço -->
+      <!-- Pre�o -->
       <div class="flex items-baseline space-x-2 mb-6">
         <span class="valor text-3xl font-bold text-green-700">R$ 12,50</span>
       </div>
 
       <!-- Mensagem minimalista -->
       <p class="text-sm text-gray-600 mb-6">
-        Se você deseja pagar R$5,99, refaça a análise e garanta a oferta.
+        Se voc� deseja pagar R$5,99, refa�a a an�lise e garanta a oferta.
       </p>
 
       <!-- Chave Pix -->
@@ -113,7 +143,7 @@
         value="00020126610014BR.GOV.BCB.PIX0121andrielysom@gmail.com0214Office Express52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304F671"
       />
 
-      <!-- Botões -->
+      <!-- Bot�es -->
       <button
         onclick="copiarPix()"
         class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition"
@@ -130,10 +160,10 @@
       </a>
 
       <p class="text-xs text-gray-500 mt-2 text-center">
-        A análise será entregue após confirmação do pagamento.
+        A an�lise ser� entregue ap�s confirma��o do pagamento.
       </p>
 
-      <!-- Selos de confiança -->
+      <!-- Selos de confian�a -->
       <div
         class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center"
       >
@@ -143,7 +173,7 @@
         </div>
         <div>
           <i class="fa-solid fa-bolt mb-1"></i>
-          <span>Entrega rápida</span>
+          <span>Entrega r�pida</span>
         </div>
         <div>
           <i class="fa-solid fa-shield-halved mb-1"></i>
@@ -152,14 +182,12 @@
       </div>
     </main>
 
-    <!-- Aviso de segurança -->
-    <div class="seguranca">🔒 Pagamento protegido com criptografia SSL</div>
+    <!-- Aviso de seguran�a -->
+    <div class="seguranca">?? Pagamento protegido com criptografia SSL</div>
 
-    <!-- Rodapé -->
-    <footer>&copy; 2026 Office Express - Todos os direitos reservados</footer>
-
+    <!-- Rodap� -->
     <script>
-      // Função copiar Pix
+      // Fun��o copiar Pix
       function copiarPix() {
         const chave = document.getElementById("pix").value;
         navigator.clipboard.writeText(chave).then(() => {
@@ -170,12 +198,155 @@
       // Atualizar link WhatsApp
       function atualizarLinkWhatsApp() {
         let mensagem =
-          "Olá, acabei de realizar o pagamento de R$12,50 e quero receber minha Análise Profissional.";
+          "Ol�, acabei de realizar o pagamento de R$12,50 e quero receber minha An�lise Profissional.";
         const url =
           "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
         document.getElementById("whatsappLink").href = url;
       }
       window.onload = atualizarLinkWhatsApp;
     </script>
-  </body>
+  
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+        <div class="social-links">
+          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram" rel="noopener">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X/Twitter" rel="noopener">
+            <i class="fab fa-x-twitter"></i>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook" rel="noopener">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h4>Menu Rápido</h4>
+        <ul>
+          <li><a href="/">Início</a></li>
+          <li><a href="/curriculo">Criar Currículo</a></li>
+          <li><a href="/analise">Analisar Currículo</a></li>
+          <li><a href="/contato">Contato</a></li>
+          <li><a href="/sobre">Sobre Nós</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Serviços</h4>
+        <ul>
+          <li><a href="/curriculo">Currículo Profissional</a></li>
+          <li><a href="/analise">Análise de Currículo</a></li>
+          <li><a href="/indicacao">Indique e Ganhe</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="/politica" target="_blank">Política de Privacidade</a></li>
+          <li><a href="/termos" target="_blank">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+        <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+</body>
 </html>

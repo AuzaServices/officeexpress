@@ -1,456 +1,624 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9124893727059633"
-      crossorigin="anonymous"
-    ></script>
-    <title>Analisar Currículo | Office Express</title>
-    <link rel="icon" href="/imagens/icon.png" type="image/png" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-    <style>
-      body {
-        background-color: #E6F0FA;
-        background-image: url("https://www.transparenttextures.com/patterns/diamond-upholstery.png"), linear-gradient(135deg, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.94));
-        background-repeat: repeat;
-        background-size: auto, cover;
-        background-attachment: fixed;
-        background-blend-mode: overlay;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9124893727059633" crossorigin="anonymous"></script>
+  <title>Analisar Currículo | Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root {
+      --bg-1: #001f33;
+      --bg-2: #00324a;
+      --text-primary: #ffffff;
+      --text-secondary: #e0e6eb;
+      --text-muted: #94a3b8;
+      --brand: #ff8800;
+      --brand-dark: #e67300;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+    body {
+      background-color: #E6F0FA;
+      background-image: url("https://www.transparenttextures.com/patterns/diamond-upholstery.png"), linear-gradient(135deg, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.94));
+      background-repeat: repeat;
+      background-size: auto, cover;
+      background-attachment: fixed;
+      background-blend-mode: overlay;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding-top: 80px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    h1 {
+      text-align: center;
+      color: var(--bg-1);
+      margin-bottom: 30px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 6px;
+      color: var(--bg-1);
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      border: 1px solid #d9e2ec;
+      border-radius: 8px;
+      background-color: #fff;
+      transition: border-color 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--brand);
+      outline: none;
+    }
+    .botao-ia-particles {
+      position: relative;
+      display: block;
+      margin: 60px auto 0;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(to right, #e09d00, #00324a);
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+    .botao-ia-particles:hover {
+      transform: scale(1.05);
+    }
+    .botao-ia-particles::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, #ffffff88, transparent);
+      transform: skewX(-20deg);
+      animation: brilhoBotao 2.5s infinite;
+    }
+    @keyframes brilhoBotao {
+      0% { left: -75%; }
+      50% { left: 125%; }
+      100% { left: 125%; }
+    }
+    .botao-ia-particles span {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      animation: flutuar 3s infinite ease-in-out;
+    }
+    @keyframes flutuar {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      25% { transform: translate(-10px, -15px) scale(1.1); opacity: 0.7; }
+      50% { transform: translate(15px, -5px) scale(1.2); opacity: 0.5; }
+      75% { transform: translate(-5px, 10px) scale(1.1); opacity: 0.6; }
+      100% { transform: translate(0, 0) scale(1); opacity: 1; }
+    }
+    .barra-container {
+      margin-top: 24px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .barra-wrapper {
+      flex: 1;
+      height: 14px;
+      background-color: #eee;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .barra {
+      height: 100%;
+      background: linear-gradient(to right, #e09d00, #00324a);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease-in-out;
+    }
+    .porcentagem {
+      font-weight: bold;
+      color: #00324a;
+      min-width: 40px;
+      text-align: right;
+    }
+    #particles-js {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: url("https://www.transparenttextures.com/patterns/diamond-upholstery.png"), linear-gradient(135deg, #cceeff, #e6f7ff);
+      background-repeat: repeat;
+      background-size: auto, cover;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+        margin: 20px;
       }
-
-      .barra-container {
-        margin-top: 24px;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: 100%;
-        max-width: 600px;
+      input, select, textarea {
+        font-size: 1.1rem;
       }
+    }
+  </style>
+</head>
+<body style="padding-top: 80px;">
 
-      .barra-wrapper {
-        flex: 1;
-        height: 14px;
-        background-color: #eee;
-        border-radius: 7px;
-        overflow: hidden;
-      }
-
-      .barra {
-        height: 100%;
-        background: linear-gradient(to right, #e09d00, #00324a);
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 0.3s ease-in-out;
-      }
-
-      .porcentagem {
-        font-weight: bold;
-        color: #00324a;
-        min-width: 40px;
-        text-align: right;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="particles-js"></div>
-
+  <!-- Header -->
+  <header class="cabecalho">
     <div class="container">
-      <h1>Envie seu Currículo para Análise Inteligente</h1>
-      <p class="subtexto">
-        Aceitamos apenas arquivos no formato <strong>.pdf</strong>. O relatório
-        será gerado e enviado para seu numero de Whatsapp.
-      </p>
-
-      <form
-        id="form-analisar"
-        enctype="multipart/form-data"
-        onsubmit="return false;"
-      >
-        <label for="nome">Seu nome:</label>
-        <input type="text" id="nome" name="nome" required />
-
-        <label for="telefone">
-          Seu telefone: <span style="color: #bfc2c6">(Whatsapp)</span>
-        </label>
-        <input
-          type="text"
-          id="telefone"
-          name="telefone"
-          required
-          placeholder="(DDD)9XXXX-XXXX"
-        />
-
-        <label for="estado">Estado:</label>
-        <select id="estado" name="estado" required>
-          <option value="">Selecione...</option>
-          <option value="AC">AC</option>
-          <option value="AL">AL</option>
-          <option value="AM">AM</option>
-          <option value="AP">AP</option>
-          <option value="BA">BA</option>
-          <option value="CE">CE</option>
-          <option value="DF">DF</option>
-          <option value="ES">ES</option>
-          <option value="GO">GO</option>
-          <option value="MA">MA</option>
-          <option value="MG">MG</option>
-          <option value="MS">MS</option>
-          <option value="MT">MT</option>
-          <option value="PA">PA</option>
-          <option value="PB">PB</option>
-          <option value="PE">PE</option>
-          <option value="PI">PI</option>
-          <option value="PR">PR</option>
-          <option value="RJ">RJ</option>
-          <option value="RN">RN</option>
-          <option value="RO">RO</option>
-          <option value="RR">RR</option>
-          <option value="RS">RS</option>
-          <option value="SC">SC</option>
-          <option value="SE">SE</option>
-          <option value="SP">SP</option>
-          <option value="TO">TO</option>
-        </select>
-
-        <label for="cidade">Cidade:</label>
-        <input
-          type="text"
-          id="cidade"
-          name="cidade"
-          required
-          placeholder="Ex: São Paulo"
-        />
-
-        <label for="curriculo">Selecione seu currículo:</label>
-        <input
-          type="file"
-          id="curriculo"
-          name="curriculo"
-          accept=".pdf,.doc,.docx"
-          required
-        />
-
-        <div id="area-botao">
-          <button id="botao-ia" class="botao-ia-particles">
-            Analisar Currículo
-            <span
-              class="particula"
-              style="top: 10%; left: 20%; animation-delay: 0s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 30%; left: 80%; animation-delay: 0.4s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 60%; left: 40%; animation-delay: 0.8s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 80%; left: 70%; animation-delay: 1.2s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 50%; left: 10%; animation-delay: 1.6s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 20%; left: 60%; animation-delay: 2s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 70%; left: 30%; animation-delay: 2.4s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 40%; left: 50%; animation-delay: 2.8s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 85%; left: 15%; animation-delay: 3.2s"
-            ></span>
-            <span
-              class="particula"
-              style="top: 25%; left: 75%; animation-delay: 3.6s"
-            ></span>
-          </button>
-        </div>
-
-        <div id="painel-carregamento" style="visibility: hidden">
-          <div class="barra-container">
-            <div class="barra-wrapper">
-              <div class="barra" id="barra1"></div>
-            </div>
-            <div class="porcentagem" id="porcentagem1">0%</div>
-          </div>
-          <ul class="frases-barra" id="frases1">
-            <li>Detectando palavras-chave</li>
-            <li>Avaliando competências</li>
-            <li>Mapeando áreas de atuação</li>
-          </ul>
-
-          <div class="barra-container">
-            <div class="barra-wrapper">
-              <div class="barra" id="barra2"></div>
-            </div>
-            <div class="porcentagem" id="porcentagem2">0%</div>
-          </div>
-          <ul class="frases-barra" id="frases2">
-            <li>Verificando alinhamento profissional</li>
-            <li>Comparando com vagas atuais</li>
-            <li>Gerando insights personalizados</li>
-          </ul>
-        </div>
-      </form>
-
-      <div id="notificacoes"></div>
+      <div class="wrap">
+        <a href="/" class="logo-link" aria-label="Voltar para o início">
+          <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        </a>
+        <nav class="menu">
+          <a href="/contato">Contato</a>
+          <a href="/sobre">Sobre nós</a>
+        </nav>
+        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
     </div>
+  </header>
 
-    <script>
-      tsParticles.load("particles-js", {
-        fullScreen: { enable: false },
-        particles: {
-          number: { value: 60 },
-          color: { value: "#e09d00" },
-          shape: { type: "circle" },
-          opacity: { value: 0.3 },
-          size: { value: 4 },
-          move: {
-            enable: true,
-            speed: 1.5,
-            direction: "none",
-            outModes: { default: "bounce" },
-          },
-        },
-        background: {
-          color: { value: "#f4f7fa" },
-        },
+  <!-- Mobile Menu -->
+  <div id="mobileMenu">
+    <div>
+      <a href="/contato">Contato</a>
+      <a href="/sobre">Sobre nós</a>
+    </div>
+  </div>
+
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  <div id="mobileMenu">
+    <div>
+      <a href="/contato">Contato</a>
+      <a href="/sobre">Sobre nos</a>
+    </div>
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+  <div id="particles-js"></div>
+
+  <div class="container">
+    <h1>Envie seu Currículo para Análise Inteligente</h1>
+    <p class="subtexto">
+      Aceitamos apenas arquivos no formato <strong>.pdf</strong>. O relatório
+      será gerado e enviado para seu numero de Whatsapp.
+    </p>
+
+    <form id="form-analisar" enctype="multipart/form-data" onsubmit="return false;">
+      <label for="nome">Seu nome:</label>
+      <input type="text" id="nome" name="nome" required />
+
+      <label for="telefone">Seu telefone: <span style="color: #bfc2c6">(Whatsapp)</span></label>
+      <input type="text" id="telefone" name="telefone" required placeholder="(DDD)9XXXX-XXXX" />
+
+      <label for="estado">Estado:</label>
+      <select id="estado" name="estado" required>
+        <option value="">Selecione...</option>
+        <option value="AC">AC</option>
+        <option value="AL">AL</option>
+        <option value="AM">AM</option>
+        <option value="AP">AP</option>
+        <option value="BA">BA</option>
+        <option value="CE">CE</option>
+        <option value="DF">DF</option>
+        <option value="ES">ES</option>
+        <option value="GO">GO</option>
+        <option value="MA">MA</option>
+        <option value="MG">MG</option>
+        <option value="MS">MS</option>
+        <option value="MT">MT</option>
+        <option value="PA">PA</option>
+        <option value="PB">PB</option>
+        <option value="PE">PE</option>
+        <option value="PI">PI</option>
+        <option value="PR">PR</option>
+        <option value="RJ">RJ</option>
+        <option value="RN">RN</option>
+        <option value="RO">RO</option>
+        <option value="RR">RR</option>
+        <option value="RS">RS</option>
+        <option value="SC">SC</option>
+        <option value="SE">SE</option>
+        <option value="SP">SP</option>
+        <option value="TO">TO</option>
+      </select>
+
+      <label for="cidade">Cidade:</label>
+      <input type="text" id="cidade" name="cidade" required placeholder="Ex: São Paulo" />
+
+      <label for="curriculo">Selecione seu currículo:</label>
+      <input type="file" id="curriculo" name="curriculo" accept=".pdf,.doc,.docx" required />
+
+      <div id="area-botao">
+        <button id="botao-ia" class="botao-ia-particles">
+          Analisar Currículo
+          <span class="particula" style="top: 10%; left: 20%; animation-delay: 0s"></span>
+          <span class="particula" style="top: 30%; left: 80%; animation-delay: 0.4s"></span>
+          <span class="particula" style="top: 60%; left: 40%; animation-delay: 0.8s"></span>
+          <span class="particula" style="top: 80%; left: 70%; animation-delay: 1.2s"></span>
+          <span class="particula" style="top: 50%; left: 10%; animation-delay: 1.6s"></span>
+        </button>
+      </div>
+
+      <div id="painel-carregamento" style="visibility: hidden">
+        <div class="barra-container">
+          <div class="barra-wrapper">
+            <div class="barra" id="barra1"></div>
+          </div>
+          <div class="porcentagem" id="porcentagem1">0%</div>
+        </div>
+        <ul class="frases-barra" id="frases1">
+          <li>Detectando palavras-chave</li>
+          <li>Avaliando competências</li>
+          <li>Mapeando áreas de atuação</li>
+        </ul>
+
+        <div class="barra-container">
+          <div class="barra-wrapper">
+            <div class="barra" id="barra2"></div>
+          </div>
+          <div class="porcentagem" id="porcentagem2">0%</div>
+        </div>
+        <ul class="frases-barra" id="frases2">
+          <li>Verificando alinhamento profissional</li>
+          <li>Comparando com vagas atuais</li>
+          <li>Gerando insights personalizados</li>
+        </ul>
+      </div>
+    </form>
+
+    <div id="notificacoes"></div>
+  </div>
+
+  <!-- FOOTER -->
+  
+<script>
+    // Mobile menu toggle
+    const btnMenu = document.getElementById('btnMenu');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    if (btnMenu && mobileMenu) {
+      btnMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isOpen = mobileMenu.classList.toggle('open');
+        btnMenu.setAttribute('aria-expanded', isOpen);
+        btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
       });
 
-      const campoTelefone = document.getElementById("telefone");
-      campoTelefone.addEventListener("input", function (e) {
-        let valor = e.target.value.replace(/\D/g, "");
-        if (valor.length > 11) valor = valor.slice(0, 11);
-        let formatado = valor;
-        if (valor.length >= 2) {
-          formatado = `(${valor.slice(0, 2)})`;
-          if (valor.length >= 7) {
-            formatado += `${valor.slice(2, 7)}-${valor.slice(7)}`;
-          } else {
-            formatado += valor.slice(2);
-          }
+      let lastScroll = 0;
+      window.addEventListener('scroll', function() {
+        const currentScroll = window.pageYOffset;
+        if (currentScroll > lastScroll && currentScroll > 150) {
+          mobileMenu.classList.remove('open');
+          btnMenu.setAttribute('aria-expanded', 'false');
+          btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
         }
-        e.target.value = formatado;
-      });
+        lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+      }, { passive: true });
+    }
 
-      document
-        .getElementById("botao-ia")
-        .addEventListener("click", async () => {
-          const nome = document.getElementById("nome").value.trim();
-          const telefone = document.getElementById("telefone").value.trim();
-          const arquivo = document.getElementById("curriculo").files[0];
-          const estado = document.getElementById("estado").value.trim(); // vem do <select>
-          const cidade = document.getElementById("cidade").value.trim();
+    // Particles
+    tsParticles.load("particles-js", {
+      fullScreen: { enable: false },
+      particles: {
+        number: { value: 60 },
+        color: { value: "#e09d00" },
+        shape: { type: "circle" },
+        opacity: { value: 0.3 },
+        size: { value: 4 },
+        move: { enable: true, speed: 1.5, direction: "none", outModes: { default: "bounce" } },
+      },
+      background: { color: { value: "#f4f7fa" } },
+    });
 
-          // validação obrigatória
-          if (!nome || !telefone || !arquivo || !estado || !cidade) {
-            alert("Preencha todos os campos e selecione um arquivo.");
-            return;
-          }
+    // Phone mask
+    const campoTelefone = document.getElementById("telefone");
+    campoTelefone.addEventListener("input", function(e) {
+      let valor = e.target.value.replace(/\D/g, "");
+      if (valor.length > 11) valor = valor.slice(0, 11);
+      let formatado = valor;
+      if (valor.length >= 2) {
+        formatado = `(${valor.slice(0, 2)})`;
+        if (valor.length >= 7) {
+          formatado += `${valor.slice(2, 7)}-${valor.slice(7)}`;
+        } else {
+          formatado += valor.slice(2);
+        }
+      }
+      e.target.value = formatado;
+    });
 
-          const primeiroNome = nome.split(" ")[0];
-          sessionStorage.setItem("primeiroNome", primeiroNome);
+    // Submit
+    document.getElementById("botao-ia").addEventListener("click", async function() {
+      const nome = document.getElementById("nome").value.trim();
+      const telefone = document.getElementById("telefone").value.trim();
+      const arquivo = document.getElementById("curriculo").files[0];
+      const estado = document.getElementById("estado").value.trim();
+      const cidade = document.getElementById("cidade").value.trim();
 
-          const botao = document.getElementById("botao-ia");
-          botao.classList.add("derretendo");
+      if (!nome || !telefone || !arquivo || !estado || !cidade) {
+        alert("Preencha todos os campos e selecione um arquivo.");
+        return;
+      }
 
-          setTimeout(() => {
-            document.getElementById("area-botao").style.display = "none";
+      const primeiroNome = nome.split(" ")[0];
+      sessionStorage.setItem("primeiroNome", primeiroNome);
 
-            const painel = document.getElementById("painel-carregamento");
-            const barra1 = document.getElementById("barra1");
-            const barra2 = document.getElementById("barra2");
-            const pct1 = document.getElementById("porcentagem1");
-            const pct2 = document.getElementById("porcentagem2");
+      const botao = document.getElementById("botao-ia");
+      botao.classList.add("derretendo");
 
-            painel.style.visibility = "hidden";
+      setTimeout(function() {
+        document.getElementById("area-botao").style.display = "none";
+        const painel = document.getElementById("painel-carregamento");
+        painel.style.visibility = "visible";
+        iniciarCarregamento();
+      }, 800);
 
-            barra1.style.transition = "none";
-            barra2.style.transition = "none";
-            barra1.style.transform = "scaleX(0)";
-            barra2.style.transform = "scaleX(0)";
-            pct1.innerText = "0%";
-            pct2.innerText = "0%";
+      const formData = new FormData();
+      formData.append("nome", nome);
+      formData.append("telefone", telefone);
+      formData.append("curriculo", arquivo);
+      formData.append("estado", estado);
+      formData.append("cidade", cidade);
+      formData.append("valor", 5.99);
 
-            barra1.offsetWidth;
-            barra2.offsetWidth;
+      try {
+        const res = await fetch("/api/analisar-e-salvar", {
+          method: "POST",
+          body: formData,
+        });
+        const resultado = await res.json();
+        if (!resultado.sucesso) {
+          alert("Erro: " + resultado.erro);
+          return;
+        }
+        window.processoPronto = true;
+      } catch (err) {
+        console.error(err);
+        alert("Falha ao enviar arquivo.");
+      }
+    });
 
-            barra1.style.transition = "transform 0.3s ease-in-out";
-            barra2.style.transition = "transform 0.3s ease-in-out";
-            painel.style.visibility = "visible";
+    function iniciarCarregamento() {
+      const barra1 = document.getElementById("barra1");
+      const barra2 = document.getElementById("barra2");
+      const pct1 = document.getElementById("porcentagem1");
+      const pct2 = document.getElementById("porcentagem2");
 
-            iniciarCarregamento();
-          }, 800);
+      let barra1Finalizada = false;
+      let barra2Finalizada = false;
 
-          // monta o FormData com todos os campos
-          const formData = new FormData();
-          formData.append("nome", nome);
-          formData.append("telefone", telefone);
-          formData.append("curriculo", arquivo);
-          formData.append("estado", estado); // obrigatório
-          formData.append("cidade", cidade); // obrigatório
-          formData.append("valor", 5.99);
-
-          try {
-            const res = await fetch("/api/analisar-e-salvar", {
-              method: "POST",
-              body: formData,
-            });
-
-            const resultado = await res.json();
-            if (!resultado.sucesso) {
-              alert("Erro: " + resultado.erro);
-              return;
+      function verificarFinalizacao() {
+        if (barra1Finalizada && barra2Finalizada) {
+          setTimeout(function() {
+            if (window.processoPronto) {
+              window.location.href = "/pagamentoanalise";
+            } else {
+              alert("O envio falhou. Tente novamente.");
             }
-
-            window.processoPronto = true;
-          } catch (err) {
-            console.error(err);
-            alert("Falha ao enviar arquivo.");
-          }
-        });
-
-      function iniciarCarregamento() {
-        const barra1 = document.getElementById("barra1");
-        const barra2 = document.getElementById("barra2");
-        const pct1 = document.getElementById("porcentagem1");
-        const pct2 = document.getElementById("porcentagem2");
-        const frases1 = document.querySelectorAll("#frases1 li");
-        const frases2 = document.querySelectorAll("#frases2 li");
-
-        let etapa1 = 0;
-        let etapa2 = 0;
-        let barra1Finalizada = false;
-        let barra2Finalizada = false;
-
-        frases1.forEach((f) => {
-          f.classList.remove("visivel");
-          f.style.display = "none";
-        });
-        frases2.forEach((f) => {
-          f.classList.remove("visivel");
-          f.style.display = "none";
-        });
-
-        function mostrarFrase(lista, index) {
-          lista.forEach((f, i) => {
-            f.classList.remove("visivel");
-            f.style.display = "none";
-          });
-
-          if (lista[index]) {
-            lista[index].style.display = "block";
-            setTimeout(() => {
-              lista[index].classList.add("visivel");
-            }, 50);
-
-            setTimeout(() => {
-              lista[index].classList.remove("visivel");
-              lista[index].style.display = "none";
-            }, 2000);
-          }
+          }, 500);
         }
+      }
 
-        function verificarFinalizacao() {
-          if (barra1Finalizada && barra2Finalizada) {
-            setTimeout(() => {
-              if (window.processoPronto) {
-                window.location.href = "/pagamentoanalise";
-              } else {
-                alert("O envio falhou. Tente novamente.");
-              }
-            }, 500);
-          }
+      function curvaProgresso(t) {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      }
+
+      let t1 = 0;
+      const intervalo1 = setInterval(function() {
+        t1 += 0.015;
+        if (t1 > 1) t1 = 1;
+        const p1 = Math.min(100, Math.floor(curvaProgresso(t1) * 100));
+        barra1.style.transform = "scaleX(" + (p1 / 100) + ")";
+        pct1.innerText = p1 + "%";
+
+        if (p1 === 100 && !barra1Finalizada) {
+          barra1Finalizada = true;
+          clearInterval(intervalo1);
+          setTimeout(verificarFinalizacao, 500);
         }
+      }, 120);
 
-        function curvaProgresso(t) {
-          // Curva de easing suave e sempre crescente
-          return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-        }
+      let t2 = 0;
+      setTimeout(function() {
+        const intervalo2 = setInterval(function() {
+          t2 += 0.015;
+          if (t2 > 1) t2 = 1;
+          const p2 = Math.min(100, Math.floor(curvaProgresso(t2) * 100));
+          barra2.style.transform = "scaleX(" + (p2 / 100) + ")";
+          pct2.innerText = p2 + "%";
 
-        let t1 = 0;
-        const intervalo1 = setInterval(() => {
-          t1 += 0.015;
-          if (t1 > 1) t1 = 1;
-          const p1 = Math.min(100, Math.floor(curvaProgresso(t1) * 100));
-          barra1.style.transform = `scaleX(${p1 / 100})`;
-          pct1.innerText = p1 + "%";
-
-          if (p1 >= 20 && etapa1 === 0) {
-            mostrarFrase(frases1, 0);
-            etapa1++;
-          }
-          if (p1 >= 50 && etapa1 === 1) {
-            mostrarFrase(frases1, 1);
-            etapa1++;
-          }
-          if (p1 >= 80 && etapa1 === 2) {
-            mostrarFrase(frases1, 2);
-            etapa1++;
-          }
-
-          if (p1 === 100 && !barra1Finalizada) {
-            barra1Finalizada = true;
-            clearInterval(intervalo1);
+          if (p2 === 100 && !barra2Finalizada) {
+            barra2Finalizada = true;
+            clearInterval(intervalo2);
             setTimeout(verificarFinalizacao, 500);
           }
         }, 120);
+      }, 600);
+    }
+  </script>
 
-        let t2 = 0;
-        setTimeout(() => {
-          const intervalo2 = setInterval(() => {
-            t2 += 0.015;
-            if (t2 > 1) t2 = 1;
-            const p2 = Math.min(100, Math.floor(curvaProgresso(t2) * 100));
-            barra2.style.transform = `scaleX(${p2 / 100})`;
-            pct2.innerText = p2 + "%";
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
 
-            if (p2 >= 20 && etapa2 === 0) {
-              mostrarFrase(frases2, 0);
-              etapa2++;
-            }
-            if (p2 >= 50 && etapa2 === 1) {
-              mostrarFrase(frases2, 1);
-              etapa2++;
-            }
-            if (p2 >= 80 && etapa2 === 2) {
-              mostrarFrase(frases2, 2);
-              etapa2++;
-            }
-
-            if (p2 === 100 && !barra2Finalizada) {
-              barra2Finalizada = true;
-              clearInterval(intervalo2);
-              setTimeout(verificarFinalizacao, 500);
-            }
-          }, 120);
-        }, 600);
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
       }
+    })();
+  </script>
 
-      function salvarNome() {
-        const nomeCompleto = document.getElementById("nome").value.trim();
-        const primeiroNome = nomeCompleto.split(" ")[0]; // pega só o primeiro nome
-        sessionStorage.setItem("primeiroNome", primeiroNome);
-        alert("Nome salvo: " + primeiroNome);
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
       }
-    </script>
-  </body>
+    })();
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+        <div class="social-links">
+          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram" rel="noopener">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X/Twitter" rel="noopener">
+            <i class="fab fa-x-twitter"></i>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook" rel="noopener">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h4>Menu Rápido</h4>
+        <ul>
+          <li><a href="/">Início</a></li>
+          <li><a href="/curriculo">Criar Currículo</a></li>
+          <li><a href="/analise">Analisar Currículo</a></li>
+          <li><a href="/contato">Contato</a></li>
+          <li><a href="/sobre">Sobre Nós</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Serviços</h4>
+        <ul>
+          <li><a href="/curriculo">Currículo Profissional</a></li>
+          <li><a href="/analise">Análise de Currículo</a></li>
+          <li><a href="/indicacao">Indique e Ganhe</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="/politica" target="_blank">Política de Privacidade</a></li>
+          <li><a href="/termos" target="_blank">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+        <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+</body>
 </html>

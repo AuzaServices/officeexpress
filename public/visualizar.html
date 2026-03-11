@@ -254,33 +254,70 @@
       }
     </style>
   </head>
-  <body>
+  <body style="padding-top: 80px;">
 
-    <header class="cabecalho">
-      <div class="cabecalho-container">
-        <div class="wrap">
-          <a href="/" class="logo-link" aria-label="Voltar para o inicio">
-            <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-          </a>
-          <nav class="menu">
-            <a href="/">Inicio</a>
-            <a href="/contato">Contato</a>
-            <a href="/sobre">Sobre nos</a>
-          </nav>
-          <button class="hamburguer" id="btnMenu" aria-label="Abrir menu">☰</button>
-        </div>
-      </div>
-    </header>
-
-    <div id="mobileMenu">
-      <div style="display: flex; flex-direction: column; gap: 12px; justify-content: center; padding: 14px; background: rgba(0, 31, 51, 0.92); border-bottom: 1px solid var(--border); text-align: center;">
-        <a href="/" style="color: #fff; font-weight: 600; text-decoration: none">Inicio</a>
-        <a href="/contato" style="color: #fff; font-weight: 600; text-decoration: none">Contato</a>
-        <a href="/sobre" style="color: #fff; font-weight: 600; text-decoration: none">Sobre nos</a>
+  <!-- Header -->
+  <header class="cabecalho">
+    <div class="container">
+      <div class="wrap">
+        <a href="/" class="logo-link" aria-label="Voltar para o início">
+          <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        </a>
+        <nav class="menu">
+          <a href="/contato">Contato</a>
+          <a href="/sobre">Sobre nós</a>
+        </nav>
+        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
+          <i class="fas fa-bars"></i>
+        </button>
       </div>
     </div>
+  </header>
 
-    <!-- Corpo da impressora -->
+  <!-- Mobile Menu -->
+
+  <div id="mobileMenu" style="display: none;">
+    <div>
+      <a href="/contato">Contato</a>
+      <a href="/sobre">Sobre nós</a>
+    </div>
+  </div>
+
+  <!-- Script inline para menu mobile -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var isOpen = mobileMenu.style.display === 'block';
+          if (isOpen) {
+            mobileMenu.style.display = 'none';
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+            btnMenu.setAttribute('aria-expanded', 'false');
+          } else {
+            mobileMenu.style.display = 'block';
+            btnMenu.innerHTML = '<i class="fas fa-times"></i>';
+            btnMenu.setAttribute('aria-expanded', 'true');
+          }
+        });
+        
+        mobileMenu.querySelectorAll('a').forEach(function(link) {
+          link.addEventListener('click', function() {
+            mobileMenu.style.display = 'none';
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+            btnMenu.setAttribute('aria-expanded', 'false');
+          });
+        });
+      }
+    });
+  </script>
+
+<!-- Corpo da impressora -->
+
     <div class="impressora-corpo">
       <!-- Barra superior -->
       <div class="impressora-barra">
@@ -316,10 +353,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
-      const btnMenu = document.getElementById('btnMenu');
-      const mobileMenu = document.getElementById('mobileMenu');
-      btnMenu.addEventListener('click', () => mobileMenu.classList.toggle('open'));
-
       const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
 
       function verificarErros() {
@@ -361,7 +394,7 @@
           ${dados.foto ? `<img src="${dados.foto}" class="foto" />` : ""}
         </div>
         ${dados.objetivo ? `<h2>Objetivo</h2><p>${dados.objetivo}</p>` : ""}
-        ${dados.formacao ? `<h2>Formacao Academica</h2><p>${dados.formacao}</p>` : ""}
+        ${dados.formacao ? `<h2>Formação Acadêmica</h2><p>${dados.formacao}</p>` : ""}
       `;
 
       if (Array.isArray(dados.curso)) {
@@ -382,7 +415,19 @@
         if (html) curriculo.innerHTML += `<h2>Cursos</h2><ul>${html}</ul>`;
       }
 
-      if (Array.isArray(dados.empresa)) {
+      // Verifica se é primeiro emprego ou se há empresas cadastradas
+      const primeiroEmprego = dados.primeiroEmprego === "true" || dados.primeiroEmprego === true;
+      const temEmpresas = Array.isArray(dados.empresa) && dados.empresa.length > 0;
+      
+      console.log("DEBUG - primeiroEmprego:", primeiroEmprego);
+      console.log("DEBUG - dados.primeiroEmprego:", dados.primeiroEmprego);
+      console.log("DEBUG - temEmpresas:", temEmpresas);
+      
+      if (primeiroEmprego) {
+        // Exibe mensagem de primeiro emprego
+        curriculo.innerHTML += `<h2>Experiência Profissional</h2><p><em>Primeiro emprego</em></p>`;
+      } else if (temEmpresas) {
+        // Exibe as experiências profissionais cadastradas
         let html = "";
         for (let i = 0; i < dados.empresa.length; i++) {
           const empresa = dados.empresa[i]?.trim();
@@ -584,6 +629,51 @@
       window.addEventListener("unload", enviarLogAbandono);
       document.addEventListener("visibilitychange", handleVisibilityChange);
     </script>
-  </body>
+  
+
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais.</p>
+        <div class="social-links">
+          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X"><i class="fab fa-x-twitter"></i></a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h4>Menu Rápido</h4>
+        <ul>
+          <li><a href="/">Início</a></li>
+          <li><a href="/curriculo">Criar Currículo</a></li>
+          <li><a href="/analise">Analisar</a></li>
+          <li><a href="/contato">Contato</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4>Serviços</h4>
+        <ul>
+          <li><a href="/indicacao">Indique e Ganhe</a></li>
+          <li><a href="/faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/politica">Política de Privacidade</a></li>
+          <li><a href="/termos">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+</body>
 </html>
 

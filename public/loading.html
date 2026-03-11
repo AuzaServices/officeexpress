@@ -183,8 +183,20 @@
 
         // Experiência Profissional (inclui Primeiro Emprego)
         let exp = "";
-
-        if (Array.isArray(dados.empresa)) {
+        
+        // Verifica se é primeiro emprego ou se há empresas cadastradas
+        const primeiroEmprego = dados.primeiroEmprego === "true" || dados.primeiroEmprego === true;
+        const temEmpresas = Array.isArray(dados.empresa) && dados.empresa.length > 0;
+        
+        console.log("DEBUG - primeiroEmprego:", primeiroEmprego);
+        console.log("DEBUG - dados.primeiroEmprego:", dados.primeiroEmprego);
+        console.log("DEBUG - temEmpresas:", temEmpresas);
+        
+        if (primeiroEmprego) {
+          // Exibe mensagem de primeiro emprego
+          container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><p><em>Primeiro emprego</em></p>`;
+        } else if (temEmpresas) {
+          // Exibe as experiências profissionais cadastradas
           for (let i = 0; i < dados.empresa.length; i++) {
             const empresa = dados.empresa[i]?.trim();
             const cargo = dados.cargo?.[i]?.trim();
@@ -207,10 +219,9 @@
               exp += "</li>";
             }
           }
+          if (exp)
+            container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
         }
-
-        if (exp)
-          container.innerHTML += `<h2><strong>Experiência Profissional</strong></h2><ul>${exp}</ul>`;
 
         if (dados.habilidades) {
           container.innerHTML += `<h2><strong>Habilidades</strong></h2><p>${dados.habilidades}</p>`;
