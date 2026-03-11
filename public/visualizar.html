@@ -6,6 +6,8 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9124893727059633" crossorigin="anonymous"></script>
     <title>Visualização do Currículo</title>
     <link rel="icon" href="/imagens/icon.png" type="image/png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css" />
     <style>
       :root {
         --bg-1: #001f33;
@@ -49,7 +51,7 @@
 
       #mobileMenu {
         position: fixed;
-        top: 56px;
+        top: 66px;
         left: 0;
         right: 0;
         z-index: 10025;
@@ -69,7 +71,7 @@
       /* Corpo da impressora */
       .impressora-corpo {
         position: fixed;
-        top: 56px;
+        top: 66px;
         left: 0;
         right: 0;
         z-index: 1500;
@@ -84,6 +86,7 @@
         justify-content: center;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         position: relative;
+        top: -5px;
       }
 
       .impressora-barra::before {
@@ -150,7 +153,7 @@
         align-items: center;
         justify-content: flex-start;
         min-height: 100vh;
-        padding: 130px 20px 40px;
+        padding: 140px 20px 40px;
         width: 100%;
       }
 
@@ -208,7 +211,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 10px;
+        gap: 5px;
         z-index: 1000;
         width: 90%;
         max-width: 400px;
@@ -230,17 +233,23 @@
       .mensagem-erro.mostrar { display: block; }
 
       @media (min-width: 795px) {
-        .botoes-flutuantes { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .botoes-flutuantes { 
+          position: sticky; 
+          bottom: 20px; 
+          left: 50%; 
+          transform: translateX(-50%); 
+        }
         .area-botoes-mobile { display: contents; }
+        .espaco-botoes { display: none; }
       }
 
       @media (max-width: 794px) {
         .impressora-barra { height: 35px; }
         .impressora-nome { font-size: 10px; }
-        .area-visualizacao { padding: 110px 10px 30px; }
+        .area-visualizacao { padding: 45px 10px 30px; }
         #curriculo-viewer { width: 100%; height: auto; aspect-ratio: 794 / 1123; border-radius: 2px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
         .pagina .marca-dagua { width: 60%; height: 60%; background-size: contain; }
-        .area-botoes-mobile { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 20px; padding-bottom: 20px; }
+        .area-botoes-mobile { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 10px; padding-bottom: 20px; }
         .botoes-flutuantes { position: static; transform: none; width: 95%; margin-top: 0; }
         .linha-botoes { flex-direction: column; gap: 8px; }
         .botoes-flutuantes button { max-width: 100%; }
@@ -249,72 +258,12 @@
       }
 
       @media (max-width: 400px) {
-        .linha-botoes { flex-direction: column; gap: 8px; }
+        .linha-botoes { flex-direction: column; gap: 5px; }
         .botoes-flutuantes button { max-width: 100%; }
       }
     </style>
   </head>
-  <body style="padding-top: 80px;">
-
-  <!-- Header -->
-  <header class="cabecalho">
-    <div class="container">
-      <div class="wrap">
-        <a href="/" class="logo-link" aria-label="Voltar para o início">
-          <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        </a>
-        <nav class="menu">
-          <a href="/contato">Contato</a>
-          <a href="/sobre">Sobre nós</a>
-        </nav>
-        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
-          <i class="fas fa-bars"></i>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Mobile Menu -->
-
-  <div id="mobileMenu" style="display: none;">
-    <div>
-      <a href="/contato">Contato</a>
-      <a href="/sobre">Sobre nós</a>
-    </div>
-  </div>
-
-  <!-- Script inline para menu mobile -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var btnMenu = document.getElementById('btnMenu');
-      var mobileMenu = document.getElementById('mobileMenu');
-      
-      if (btnMenu && mobileMenu) {
-        btnMenu.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var isOpen = mobileMenu.style.display === 'block';
-          if (isOpen) {
-            mobileMenu.style.display = 'none';
-            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-            btnMenu.setAttribute('aria-expanded', 'false');
-          } else {
-            mobileMenu.style.display = 'block';
-            btnMenu.innerHTML = '<i class="fas fa-times"></i>';
-            btnMenu.setAttribute('aria-expanded', 'true');
-          }
-        });
-        
-        mobileMenu.querySelectorAll('a').forEach(function(link) {
-          link.addEventListener('click', function() {
-            mobileMenu.style.display = 'none';
-            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-            btnMenu.setAttribute('aria-expanded', 'false');
-          });
-        });
-      }
-    });
-  </script>
+  <body>
 
 <!-- Corpo da impressora -->
 
@@ -351,7 +300,10 @@
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Espaço para os botões no desktop -->
+    <div class="espaco-botoes"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
       const dados = JSON.parse(localStorage.getItem("curriculo")) || {};
 
@@ -466,13 +418,16 @@
 
       const style = document.createElement('style');
       style.textContent = `
-        #curriculo h1 { font-size: 32px; margin-bottom: 10px; color: #00324a; }
+        #curriculo { padding: 40px 50px; }
+        #curriculo h1 { font-size: 32px; margin-bottom: 10px; color: #00324a; text-align: left; margin-left: 0; padding-left: 0; }
         #curriculo h2 { font-size: 20px; margin-top: 30px; color: #00324a; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
-        #curriculo p, #curriculo li { font-size: 16px; margin: 2px 0; line-height: 1.2; }
+        #curriculo p, #curriculo li { font-size: 16px; margin: 2px 0; line-height: 1.2; text-align: left; }
         #curriculo ul { padding-left: 20px; margin-top: 10px; }
         #curriculo li { margin-bottom: 8px; }
-        #curriculo .info-topo { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        #curriculo .foto { width: 120px; height: 160px; border-radius: 5px; object-fit: cover; border: 1px solid #ccc; margin-left: 30px; }
+        #curriculo .info-topo { display: flex; justify-content: flex-start; align-items: flex-start; margin-bottom: 15px; gap: 20px; width: 100%; }
+        #curriculo .info-topo > div { flex: 1; text-align: left; }
+        #curriculo .info-topo > div * { text-align: left; }
+        #curriculo .foto { width: 120px; height: 160px; border-radius: 5px; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0; }
       `;
       clone.appendChild(style);
       document.body.appendChild(clone);
@@ -628,52 +583,41 @@
 
       window.addEventListener("unload", enviarLogAbandono);
       document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      // Impedir que os botões sobreponham o footer no desktop
+      function ajustarPosicaoBotoes() {
+        const botoesFlutuantes = document.querySelector('.botoes-flutuantes');
+        const footer = document.querySelector('.footer');
+        
+        // Só executa no desktop (largura >= 795px)
+        if (!botoesFlutuantes || !footer || window.innerWidth < 795) return;
+        
+        // Verifica se os botões estão visíveis
+        if (!botoesFlutuantes.classList.contains('mostrar')) return;
+        
+        const footerRect = footer.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const botoesRect = botoesFlutuantes.getBoundingClientRect();
+        
+        // Se o footer está visível e os botões iriam sobrepô-lo
+        if (footerRect.top < windowHeight && footerRect.top < botoesRect.bottom) {
+          // Posiciona os botões exatamente acima do footer
+          botoesFlutuantes.style.bottom = (windowHeight - footerRect.top - 80) + 'px';
+        } else {
+          // Reset para posição padrão
+          botoesFlutuantes.style.bottom = '20px';
+        }
+      }
+
+      // Espera os botões ficarem visíveis (após 3.5s da animação)
+      setTimeout(() => {
+        ajustarPosicaoBotoes();
+      }, 4000);
+
+      window.addEventListener('scroll', ajustarPosicaoBotoes, { passive: true });
+      window.addEventListener('resize', ajustarPosicaoBotoes);
     </script>
-  
 
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais.</p>
-        <div class="social-links">
-          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X"><i class="fab fa-x-twitter"></i></a>
-          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        </div>
-      </div>
-      <div class="footer-column">
-        <h4>Menu Rápido</h4>
-        <ul>
-          <li><a href="/">Início</a></li>
-          <li><a href="/curriculo">Criar Currículo</a></li>
-          <li><a href="/analise">Analisar</a></li>
-          <li><a href="/contato">Contato</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>Serviços</h4>
-        <ul>
-          <li><a href="/indicacao">Indique e Ganhe</a></li>
-          <li><a href="/faq">FAQ</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="/politica">Política de Privacidade</a></li>
-          <li><a href="/termos">Termos de Uso</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
-    </div>
-  </footer>
-
+  <script src="components.js"></script>
 </body>
 </html>
-
