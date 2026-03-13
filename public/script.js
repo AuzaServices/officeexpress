@@ -29,13 +29,22 @@ function enviarLog(etapa) {
   }
 }
 
-// 🌐 Global page abandonment tracking
+// 🌐 Global page abandonment (visualizar.html pattern)
 if (typeof window !== 'undefined') {
   let abandonmentLogged = false;
   window.addEventListener('beforeunload', () => {
-    if (!abandonmentLogged) {
+    const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+    if (!abandonmentLogged && !navegandoInternamente) {
       abandonmentLogged = true;
       enviarLog('abandono pagina');
+    }
+  });
+  
+  // Detect internal navigation (no abandonment)
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href]');
+    if (link?.href && link.href.includes(window.location.origin)) {
+      localStorage.setItem("navegandoInternamente", "true");
     }
   });
 }

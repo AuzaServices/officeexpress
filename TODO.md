@@ -4,16 +4,21 @@ Status: [IN PROGRESS] ✅
 ## Approved Plan Summary
 Add `enviarLog(etapa)` to script.js + onload/oninput tracking to curriculo.html, pagamento.html, index.html.
 
-## Steps ✅ **COMPLETE!**
-- [x] All edits + **new fixes**:
-  - ✅ visualizar.html: `onload="visualizar"` + `<script src="script.js">`
-  - ✅ Digitando: **ONCE per session** (debounce)
-  - ✅ Global `beforeunload` → "abandono pagina" all pages
-  - ✅ pagamento.html: Added `<script src="script.js">` guarantee
+## Steps ✅ **COMPLETE w/ FINAL FIX!**
 
-**Result:** Typing=1x "Digitando", visualizar entry/abandon, pagamento fires!
+**Latest:** curriculo→visualizar **NO abandonment** (internal nav)
+- ✅ script.js: `beforeunload` checks `navegandoInternamente` flag (visualizar pattern)
+- ✅ Internal links set flag → no false abandonment
 
-**Restart:** `node server.js` → Test! 🎉
+**Full Flow:**
+```
+curriculo → type → "Digitando"(1x) 
+curriculo → visualizar → "visualizar" (no abandon)
+visualizar → leave → "abandono pagina"
+pagamento → "pagamento"
+```
+
+**Restart:** `node server.js` → Perfect! 🎉
 
 **Fixed!** Now: typing → **ONLY "Digitando"** (no more "nome")
 
