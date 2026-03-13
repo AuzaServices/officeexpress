@@ -1177,6 +1177,8 @@
         placeholder="Ex: João"
         autocomplete="off"
         aria-label="Seu primeiro nome"
+        onfocus="enviarLog('nome index')"
+        oninput="if(this.value.length>2) enviarLog('Digitando')"
       />
       <button class="btn btn-primary" onclick="iniciarCurriculo()">
         Criar Meu Currículo

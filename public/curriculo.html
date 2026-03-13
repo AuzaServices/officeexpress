@@ -244,7 +244,7 @@
     }
   </style>
 </head>
-<body>
+<body onload="enviarLog('curriculo carregado')">
 
   <!-- Header -->
   <header class="cabecalho">
@@ -342,7 +342,9 @@
 
 <label for="nome">Nome Completo</label>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" name="nome" id="nome" required oninput="salvarNomeUsuario(this.value)" />
+          <input type="text" name="nome" id="nome" required 
+                 onfocus="enviarLog('nome')" 
+                 oninput="salvarNomeUsuario(this.value); if(this.value.length>2) enviarLog('Digitando')" />
           <button type="button" onclick="reconhecerVoz('nome')" style="background:none;border:none;cursor:pointer;">
             <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width:24px;" />
           </button>

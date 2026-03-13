@@ -1,5 +1,25 @@
 console.log('[script.js] carregado');
 
+// 🔍 Tracking function for painel.html logs (matches server.js /api/logs)
+function enviarLog(etapa) {
+  try {
+    const dadosCurriculo = localStorage.getItem('curriculo');
+    const nome = dadosCurriculo ? JSON.parse(dadosCurriculo).nome || 'Anônimo' : 'Anônimo';
+    fetch("/api/logs", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        acao: "etapa",  // 👈 required by server.js
+        nome: nome,
+        etapa: etapa,
+        timestamp: new Date().toISOString()
+      })
+    }).catch(e => console.log('📊 Log enviado:', etapa));
+  } catch(e) {
+    console.log('📊 Log falhou:', e);
+  }
+}
+
 // Funções de notificação
 function mostrarNotificacao(mensagem, tipo) {
   const container = document.getElementById('notificacoes');
