@@ -567,8 +567,7 @@ ar<!doctype html>
       window.enviarLogAbandono = function () {
         if (logEnviado || !entradaViaSplash || navegandoInternamente) return;
         logEnviado = true;
-        const tempo = Math.round((Date.now() - inicio) / 1000);
-        enviarLog(`Abandonou a Visualização apos ${tempo}s`);
+        enviarLog('Abandonou na Visualização');
       };
 
       window.handleVisibilityChange = function () {

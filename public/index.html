@@ -1181,9 +1181,8 @@ ra<!DOCTYPE html>
         autocomplete="off"
         aria-label="Seu primeiro nome"
         onfocus="enviarLog('nome index')"
-        oninput="if(this.value.length>2) enviarLog('Digitando')"
       />
-      <button class="btn btn-primary" onclick="iniciarCurriculo()">
+      <button class="btn btn-primary" onclick="iniciarCurriculo(); enviarLog('Digitando');">
         Criar Meu Currículo
       </button>
     </div>
@@ -1236,6 +1235,8 @@ ra<!DOCTYPE html>
       window.location.href = '/analise';
     }
 
+    let digitandoIniciado = false;
+
     function iniciarCurriculo() {
       const input = document.getElementById('primeiroNome');
       const nome = input.value.trim();
@@ -1246,10 +1247,18 @@ ra<!DOCTYPE html>
         return;
       }
 
+      digitandoIniciado = true;
       localStorage.setItem('nomeUsuario', nome);
       localStorage.setItem('entradaViaSplash', 'true');
       window.location.href = '/curriculo';
     }
+
+    // Detectar abandono após iniciar currículo
+    window.addEventListener('beforeunload', function() {
+      if (digitandoIniciado) {
+        enviarLog('Abandonou Digitando');
+      }
+    });
 
     // Block space key in input
     document.getElementById('primeiroNome')?.addEventListener('keydown', function(e) {
