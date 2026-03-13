@@ -978,6 +978,7 @@ ra<!DOCTYPE html>
   <!-- Header -->
   <header class="cabecalho">
     <div class="container">
+      
       <div class="wrap">
         <a href="/" class="logo-link" aria-label="Voltar para o início">
           <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
@@ -1015,9 +1016,6 @@ ra<!DOCTYPE html>
       </p>
       <div class="ctas">
         <a href="javascript:void(0)" class="btn btn-primary" onclick="abrirModalNome()">
-          <i class="fas fa-plus-circle"></i>
-          Criar Currículo
-        </a>
           <i class="fas fa-plus-circle"></i>
           Criar Currículo
         </a>
@@ -1241,18 +1239,22 @@ function iniciarCurriculo() {
       const input = document.getElementById('primeiroNome');
       const nome = input.value.trim();
 
+      console.log('🔍 iniciarCurriculo() called, nome:', nome); // DEBUG
+      
       if (nome === '' || nome.includes(' ')) {
-        alert('Por favor, digite apenas o primeiro nome.');
+        alert('Por favor, digite apenas o primeiro nome (sem espaços).');
         input.focus();
         return;
       }
 
-      // ✅ FIX: Copy visualizar.html pattern - explicit log + flags FIRST
+      // ✅ FIXED: Explicit log + flags FIRST (visualizar pattern)
       enviarLog('Digitando');
-      localStorage.setItem('navegandoInternamente', 'true'); // prevent abandonment
+      localStorage.setItem('navegandoInternamente', 'true');
       digitandoIniciado = true;
       localStorage.setItem('nomeUsuario', nome);
       localStorage.setItem('entradaViaSplash', 'true');
+      
+      console.log('✅ Redirecting to /curriculo with nome:', nome); // DEBUG
       window.location.href = '/curriculo';
     }
 
