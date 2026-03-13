@@ -1,4 +1,4 @@
-<!doctype html>
+ar<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -263,7 +263,7 @@
       }
     </style>
   </head>
-<body onload="enviarLog('visualizar')">
+<body onload="enviarLog('Vizualizado')">
 
 <!-- Corpo da impressora -->
 
@@ -568,13 +568,7 @@
         if (logEnviado || !entradaViaSplash || navegandoInternamente) return;
         logEnviado = true;
         const tempo = Math.round((Date.now() - inicio) / 1000);
-        const payload = JSON.stringify({ acao: "etapa", nome, etapa: `Abandonou Visualizou apos ${tempo}s`, timestamp: new Date().toISOString() });
-        try {
-          const blob = new Blob([payload], { type: "application/json" });
-          navigator.sendBeacon("https://www.officeexpress.com.br/api/logs", blob);
-        } catch (err) {
-          fetch("https://www.officeexpress.com.br/api/logs", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
-        }
+        enviarLog(`Abandonou a Visualização apos ${tempo}s`);
       };
 
       window.handleVisibilityChange = function () {
