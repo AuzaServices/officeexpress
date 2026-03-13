@@ -5,11 +5,20 @@ function enviarLog(etapa) {
   try {
     const dadosCurriculo = localStorage.getItem('curriculo');
     const nome = dadosCurriculo ? JSON.parse(dadosCurriculo).nome || 'Anônimo' : 'Anônimo';
+    
+    // 🛑 Debounce Digitando: only once per session
+    if (etapa === 'Digitando' && sessionStorage.getItem('typingLogged')) {
+      return;
+    }
+    if (etapa === 'Digitando') {
+      sessionStorage.setItem('typingLogged', 'true');
+    }
+    
     fetch("/api/logs", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        acao: "etapa",  // 👈 required by server.js
+        acao: "etapa",
         nome: nome,
         etapa: etapa,
         timestamp: new Date().toISOString()
@@ -18,6 +27,17 @@ function enviarLog(etapa) {
   } catch(e) {
     console.log('📊 Log falhou:', e);
   }
+}
+
+// 🌐 Global page abandonment tracking
+if (typeof window !== 'undefined') {
+  let abandonmentLogged = false;
+  window.addEventListener('beforeunload', () => {
+    if (!abandonmentLogged) {
+      abandonmentLogged = true;
+      enviarLog('abandono pagina');
+    }
+  });
 }
 
 // Funções de notificação
