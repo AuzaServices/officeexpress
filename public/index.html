@@ -1182,7 +1182,7 @@ ra<!DOCTYPE html>
         aria-label="Seu primeiro nome"
         onfocus="enviarLog('nome index')"
       />
-      <button class="btn btn-primary" onclick="iniciarCurriculo(); enviarLog('Digitando');">
+<button class="btn btn-primary" onclick="iniciarCurriculo()">
         Criar Meu Currículo
       </button>
     </div>
@@ -1237,7 +1237,7 @@ ra<!DOCTYPE html>
 
     let digitandoIniciado = false;
 
-    function iniciarCurriculo() {
+function iniciarCurriculo() {
       const input = document.getElementById('primeiroNome');
       const nome = input.value.trim();
 
@@ -1247,6 +1247,9 @@ ra<!DOCTYPE html>
         return;
       }
 
+      // ✅ FIX: Copy visualizar.html pattern - explicit log + flags FIRST
+      enviarLog('Digitando');
+      localStorage.setItem('navegandoInternamente', 'true'); // prevent abandonment
       digitandoIniciado = true;
       localStorage.setItem('nomeUsuario', nome);
       localStorage.setItem('entradaViaSplash', 'true');

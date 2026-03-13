@@ -79,7 +79,7 @@
       }
     </style>
   </head>
-<body onload="enviarLog('pagamento')" style="padding-top: 80px;">
+body onload="enviarLog('Pagamento')" style="padding-top: 80px;">
 
   <!-- Header -->
   <header class="cabecalho">
@@ -158,12 +158,10 @@
       />
 
       <!-- Botões -->
-      <button
+<button
         onclick="enviarLog('Pagamento'); copiarPix()"
         class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition"
       >
-        Copiar chave Pix
-      </button>
         Copiar chave Pix
       </button>
 
@@ -211,7 +209,15 @@
         });
       }
 
-      // Cronômetro regressivo
+// ✅ FIX Step 4: Abandonment protection (matches other pages)
+    let pagamentoIniciado = true;
+    window.addEventListener('beforeunload', function() {
+      if (pagamentoIniciado) {
+        enviarLog('Abandonou Pagamento');
+      }
+    });
+    
+    // Cronômetro regressivo
       let tempoRestante = 6 * 60;
       function atualizarCronometro() {
         const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");

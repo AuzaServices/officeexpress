@@ -97,6 +97,9 @@
       if (contador) contador.textContent = tempo + 's';
       if (tempo <= 0) {
         clearInterval(intervalo);
+        // ✅ FIX Step 3: Set prevention flags BEFORE redirect (matches visualizar pattern)
+        localStorage.setItem("navegandoInternamente", "true");
+        loadingIniciado = false;
         window.location.href = '/pagamento';
       }
     }, 1000);
