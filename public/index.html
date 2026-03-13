@@ -1162,7 +1162,12 @@ ra<!DOCTYPE html>
     </div>
   </section>
 
+  <!-- Load script.js HEAD for enviarLog - NO FOOTER CONFLICT -->
+  <script src="script.js"></script>
+  <script>window.enviarLogDefined = true; console.log('✅ script.js loaded before inline');</script>
+  
   <!-- Footer -->
+
   
 <!-- Modal -->
   <div id="modalNome" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -1180,7 +1185,7 @@ ra<!DOCTYPE html>
         aria-label="Seu primeiro nome"
         onfocus="enviarLog('nome index')"
       />
-<button class="btn btn-primary" onclick="iniciarCurriculo()">
+      <button class="btn btn-primary" onclick="iniciarCurriculo()">
         Criar Meu Currículo
       </button>
     </div>
