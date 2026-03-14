@@ -263,6 +263,14 @@
       }
     </style>
   </head>
+
+<script>
+  // Resetar flags ao entrar no visualizar
+  localStorage.removeItem('navegandoInternamente');
+  localStorage.removeItem('OFFICEEXPRESS_SAFE_VISUALIZACAO');
+</script>
+
+
 <body onload="enviarLog('Vizualizado')">
 
 <!-- Corpo da impressora -->
@@ -533,7 +541,8 @@
 
 function voltarParaCurriculo() { 
   localStorage.setItem("navegandoInternamente", "true");
-  window.location.href = "/curriculo"; 
+  localStorage.setItem("OFFICEEXPRESS_SAFE_VISUALIZACAO", "ACTIVE");
+  window.location.href = "/curriculo";
 }
 
       async function redirecionarParaLoading() {

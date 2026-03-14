@@ -1,10 +1,8 @@
-// ONE-TIME DIGITING + EXIT ONLY
 (function() {
   let abandonouCurriculo = false;
   let paginaVisivel = document.visibilityState === 'visible';
-  let goingToVisualizar = false;
   let digitandoLogged = sessionStorage.getItem('digitandoLogged') === 'true';
-  
+
   // ONE-TIME DIGITING LOG
   const nomeInput = document.getElementById('nome');
   if (nomeInput && !digitandoLogged) {
@@ -17,28 +15,36 @@
     }, { once: true });
   }
 
-  
   // Track visibility
   document.addEventListener('visibilitychange', function() {
     paginaVisivel = document.visibilityState === 'visible';
   });
-  
-  // Block visualizar.html navigation
+
+  // Marcar navegação interna legítima
   document.addEventListener('click', (e) => {
     const avancarBtn = e.target.closest('#avancar');
     if (avancarBtn && avancarBtn.textContent.includes('Finalizar')) {
-      goingToVisualizar = true;
+      localStorage.setItem('navegandoInternamente', 'true');
+    }
+
+    const editarBtn = e.target.closest('button');
+    if (editarBtn && editarBtn.textContent.toLowerCase().includes('editar')) {
+      localStorage.setItem('navegandoInternamente', 'true');
+    }
+
+    const linkInterno = e.target.closest('a[href]');
+    if (linkInterno && linkInterno.href.includes(window.location.origin)) {
+      localStorage.setItem('navegandoInternamente', 'true');
     }
   });
-  
-  window.addEventListener('beforeunload', function(e) {
-    if (!abandonouCurriculo && paginaVisivel && !goingToVisualizar) {
-      abandonouCurriculo = true;
-      enviarLog('Abandonou Digitando');
-    }
-  });
+
+  // BEFOREUNLOAD
+window.addEventListener('beforeunload', function(e) {
+  const navegandoInternamente = localStorage.getItem('navegandoInternamente') === 'true';
+  if (!abandonouCurriculo && paginaVisivel && !navegandoInternamente) {
+    abandonouCurriculo = true;
+    enviarLog('Abandonou Digitando');
+  }
+});
+
 })();
-
-
-
-
