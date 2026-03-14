@@ -531,7 +531,10 @@ ar<!doctype html>
         if (paginaAtual < paginas.length - 1) { paginaAtual++; atualizarVisualizacao(); }
       });
 
-      function voltarParaCurriculo() { window.location.href = "/curriculo"; }
+function voltarParaCurriculo() { 
+  localStorage.setItem("navegandoInternamente", "true");
+  window.location.href = "/curriculo"; 
+}
 
       async function redirecionarParaLoading() {
         if (temErros) { alert("Preencha os campos obrigatorios primeiro!"); return; }
@@ -544,7 +547,8 @@ ar<!doctype html>
           localStorage.setItem("navegandoInternamente", "true");
           window.removeEventListener("unload", enviarLogAbandono);
           document.removeEventListener("visibilitychange", handleVisibilityChange);
-          window.location.href = "/loading";
+localStorage.setItem("navegandoInternamente", "true");  
+window.location.href = "/loading";
         } catch (error) {
           console.error("Erro ao enviar telefone:", error);
           alert("Falha ao conectar com o servidor.");

@@ -244,7 +244,35 @@
     }
   </style>
 </head>
-<body>
+<body onload="enviarLog('Digitando')">
+  
+  <script>
+    // ✅ PERFECT visualizar pattern - page-specific + navegandoInternamente check
+    let curriculoAtivo = true;
+    let abandonoCurriculoLogged = false;
+    const entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+    
+    window.enviarAbandonoCurriculo = function() {
+      const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+      if (abandonoCurriculoLogged || !entradaViaSplash || !curriculoAtivo || navegandoInternamente) return;
+      abandonoCurriculoLogged = true;
+      enviarLog('Abandonou Digitando');
+    };
+    
+    window.addEventListener('beforeunload', enviarAbandonoCurriculo);
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') enviarAbandonoCurriculo();
+    });
+    
+    // Internal navigation protection
+    document.addEventListener('click', (e) => {
+      const button = e.target.closest('button[id="avancar"]');
+      if (button) {
+        curriculoAtivo = false;
+        localStorage.setItem("navegandoInternamente", "true");
+      }
+    });
+  </script>
 
   <!-- Header -->
   <header class="cabecalho">
@@ -764,4 +792,5 @@
     })();
   </script>
 </body>
-</html>
+</html>  
+

@@ -1183,9 +1183,11 @@ ra<!DOCTYPE html>
         placeholder="Ex: João"
         autocomplete="off"
         aria-label="Seu primeiro nome"
-        onfocus="enviarLog('nome index')"
+        placeholder="Ex: João"
+        autocomplete="off"
+        aria-label="Seu primeiro nome"
       />
-      <button class="btn btn-primary" onclick="iniciarCurriculo()">
+<button class="btn btn-primary" onclick="digitandoIniciado=true; localStorage.setItem('navegandoInternamente','true'); iniciarCurriculo()">
         Criar Meu Currículo
       </button>
     </div>
@@ -1244,31 +1246,18 @@ function iniciarCurriculo() {
       const input = document.getElementById('primeiroNome');
       const nome = input.value.trim();
 
-      console.log('🔍 iniciarCurriculo() called, nome:', nome); // DEBUG
-      
       if (nome === '' || nome.includes(' ')) {
         alert('Por favor, digite apenas o primeiro nome (sem espaços).');
         input.focus();
         return;
       }
 
-      // ✅ FIXED: Explicit log + flags FIRST (visualizar pattern)
-      enviarLog('Digitando');
-      localStorage.setItem('navegandoInternamente', 'true');
-      digitandoIniciado = true;
       localStorage.setItem('nomeUsuario', nome);
       localStorage.setItem('entradaViaSplash', 'true');
-      
-      console.log('✅ Redirecting to /curriculo with nome:', nome); // DEBUG
       window.location.href = '/curriculo';
     }
 
-    // Detectar abandono após iniciar currículo
-    window.addEventListener('beforeunload', function() {
-      if (digitandoIniciado) {
-        enviarLog('Abandonou Digitando');
-      }
-    });
+    // ✅ REMOVED: Abandonou Digitando per request - curriculo.html handles Digitando
 
     // Block space key in input
     document.getElementById('primeiroNome')?.addEventListener('keydown', function(e) {

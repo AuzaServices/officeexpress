@@ -6,13 +6,7 @@ function enviarLog(etapa) {
     const dadosCurriculo = localStorage.getItem('curriculo');
     const nome = dadosCurriculo ? JSON.parse(dadosCurriculo).nome || 'Anônimo' : 'Anônimo';
     
-    // 🛑 Debounce Digitando: only once per session
-    if (etapa === 'Digitando' && sessionStorage.getItem('typingLogged')) {
-      return;
-    }
-    if (etapa === 'Digitando') {
-      sessionStorage.setItem('typingLogged', 'true');
-    }
+    // ✅ REMOVED: Global Digitando debounce - curriculo onfocus handles it
     
     fetch("/api/logs", {
       method: "POST",
@@ -29,25 +23,6 @@ function enviarLog(etapa) {
   }
 }
 
-// 🌐 Global page abandonment (visualizar.html pattern)
-if (typeof window !== 'undefined') {
-  let abandonmentLogged = false;
-  window.addEventListener('beforeunload', () => {
-    const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-    if (!abandonmentLogged && !navegandoInternamente) {
-      abandonmentLogged = true;
-      enviarLog('abandono pagina');
-    }
-  });
-  
-  // Detect internal navigation (no abandonment)
-  document.addEventListener('click', (e) => {
-    const link = e.target.closest('a[href]');
-    if (link?.href && link.href.includes(window.location.origin)) {
-      localStorage.setItem("navegandoInternamente", "true");
-    }
-  });
-}
 
 // Funções de notificação
 function mostrarNotificacao(mensagem, tipo) {

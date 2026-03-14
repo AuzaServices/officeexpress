@@ -6,10 +6,7 @@
     <link rel="icon" href="/imagens/icon.png" type="image/png" />
     <title>Pagamento | Office Express</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <style>
       :root {
         --bg-1: #001f33;
@@ -19,7 +16,7 @@
       body {
         display: flex;
         flex-direction: column;
-        min-height: 100vh; /* ocupa toda a altura da tela */
+        min-height: 100vh;
         background: #f9fafb;
       }
       header.cabecalho {
@@ -43,7 +40,7 @@
         display: block;
       }
       main {
-        flex: 1; /* ocupa o espaço disponível */
+        flex: 1;
       }
       .valor {
         background: linear-gradient(to right, var(--bg-1), var(--bg-2));
@@ -66,10 +63,10 @@
         border-top: 1px solid var(--border);
         text-align: center;
         font-size: 0.75rem;
-        white-space: nowrap; /* impede quebra */
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-top: auto; /* força o footer ao final */
+        margin-top: auto;
       }
       #faixa-promocao {
         font-size: 0.8rem;
@@ -79,7 +76,7 @@
       }
     </style>
   </head>
-body onload="enviarLog('Pagamento')" style="padding-top: 80px;">
+body style="padding-top: 80px;">
 
   <!-- Header -->
   <header class="cabecalho">
@@ -107,284 +104,206 @@ body onload="enviarLog('Pagamento')" style="padding-top: 80px;">
     </div>
   </div>
 
+  <!-- Faixa de urgência -->
+  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2">
+    <i class="fa-regular fa-clock"></i>
+    <span class="font-medium">Oferta válida por tempo limitado — <span id="cronometro">06:00</span></span>
+  </div>
 
-<!-- HEADER -->
-  
-<!-- MOBILE MENU -->
-  <div id="mobileMenu">
-    <div>
-      <a href="/contato">Contato</a>
-      <a href="/sobre">Sobre nos</a>
+  <!-- Conteúdo principal -->
+  <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
+    <p class="mb-2">Serviço: Currículo Profissional</p>
+
+    <!-- Preço com desconto -->
+    <div class="flex items-baseline space-x-2 mb-6">
+      <span class="text-gray-400 line-through text-xl">R$ 12,50</span>
+      <span class="valor text-3xl font-bold text-green-700">R$ 5,99</span>
     </div>
-  </div>
 
-<!-- HEADER -->
-  
-<!-- MOBILE MENU -->
-  </div>
+    <!-- Chave Pix -->
+    <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
+    <input
+      type="text"
+      id="pix"
+      readonly
+      class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
+      value="00020126610014BR.GOV.BCB.PIX0121andrielysom@gmail.com0214Office Express52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304F671"
+    />
 
-<!-- Faixa de urgência -->
-    <div
-      id="faixa-promocao"
-      class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2"
+    <!-- Botão Copiar Pix -->
+    <button
+      id="btnCopiarPix"
+      class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition"
     >
-      <i class="fa-regular fa-clock"></i>
-      <span class="font-medium"
-        >Oferta válida por tempo limitado —
-        <span id="cronometro">06:00</span></span
-      >
+      <i class="fas fa-copy mr-2"></i>Copiar chave Pix
+    </button>
+
+    <a
+      id="whatsappLink"
+      target="_blank"
+      class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center"
+    >
+      Enviar comprovante
+    </a>
+
+    <p class="text-xs text-gray-500 mt-2 text-center">
+      O currículo será entregue após confirmação do pagamento.
+    </p>
+
+    <!-- Selos de confiança -->
+    <div class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center">
+      <div><i class="fa-solid fa-lock mb-1"></i><span>Pagamento seguro</span></div>
+      <div><i class="fa-solid fa-bolt mb-1"></i><span>Entrega rápida</span></div>
+      <div><i class="fa-solid fa-shield-halved mb-1"></i><span>Garantia 7 dias</span></div>
     </div>
+  </main>
 
-    <!-- Cabeçalho -->
-    <!-- Conteúdo principal -->
-    <main class="max-w-lg mx-auto mt-32 p-6 bg-white rounded-lg shadow-md">
-      <h2 class="text-2xl font-bold mb-4">Resumo do Pedido</h2>
-      <p class="mb-2">Serviço: Currículo Profissional</p>
-
-      <!-- Preço com desconto -->
-      <div class="flex items-baseline space-x-2 mb-6">
-        <span class="text-gray-400 line-through text-xl">R$ 12,50</span>
-        <span class="valor text-3xl font-bold text-green-700">R$ 5,99</span>
-      </div>
-
-      <!-- Chave Pix -->
-      <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
-      <input
-        type="text"
-        id="pix"
-        readonly
-        class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
-        value="00020126610014BR.GOV.BCB.PIX0121andrielysom@gmail.com0214Office Express52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304F671"
-      />
-
-      <!-- Botões -->
-<button
-        onclick="enviarLog('Pagamento'); copiarPix()"
-        class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition"
-      >
-        Copiar chave Pix
-      </button>
-
-      <a
-        id="whatsappLink"
-        target="_blank"
-        class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center"
-      >
-        Enviar comprovante
-      </a>
-
-      <p class="text-xs text-gray-500 mt-2 text-center">
-        O currículo será entregue após confirmação do pagamento.
-      </p>
-
-      <!-- Selos de confiança -->
-      <div
-        class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center"
-      >
-        <div>
-          <i class="fa-solid fa-lock mb-1"></i>
-          <span>Pagamento seguro</span>
-        </div>
-        <div>
-          <i class="fa-solid fa-bolt mb-1"></i>
-          <span>Entrega rápida</span>
-        </div>
-        <div>
-          <i class="fa-solid fa-shield-halved mb-1"></i>
-          <span>Garantia 7 dias</span>
-        </div>
-      </div>
-    </main>
-
-    <!-- Aviso de segurança -->
-    <div class="seguranca">🔒 Pagamento protegido com criptografia SSL</div>
-
-    <!-- Rodapé -->
-    <script>
-      // Função copiar Pix
-      function copiarPix() {
-        const chave = document.getElementById("pix").value;
-        navigator.clipboard.writeText(chave).then(() => {
-          alert("Chave Pix copiada!");
-        });
-      }
-
-// ✅ FIX Step 4: Abandonment protection (matches other pages)
-    let pagamentoIniciado = true;
-    window.addEventListener('beforeunload', function() {
-      if (pagamentoIniciado) {
-        enviarLog('Abandonou Pagamento');
-      }
-    });
-    
-    // Cronômetro regressivo
-      let tempoRestante = 6 * 60;
-      function atualizarCronometro() {
-        const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");
-        const segundos = String(tempoRestante % 60).padStart(2, "0");
-        document.getElementById("cronometro").textContent =
-          `${minutos}:${segundos}`;
-        if (tempoRestante <= 0) {
-          window.location.href = "/pagamentototal";
-        } else {
-          tempoRestante--;
-          setTimeout(atualizarCronometro, 1000);
-        }
-      }
-      atualizarCronometro();
-
-      // Atualizar link WhatsApp
-      function atualizarLinkWhatsApp() {
-        let mensagem =
-          "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
-        const url =
-          "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
-        document.getElementById("whatsappLink").href = url;
-      }
-      window.onload = atualizarLinkWhatsApp;
-    </script>
-  
-
-  <!-- FOOTER -->
-  
-<script>
-    (function() {
-      var btnMenu = document.getElementById('btnMenu');
-      var mobileMenu = document.getElementById('mobileMenu');
-      
-      if (btnMenu && mobileMenu) {
-        btnMenu.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var isOpen = mobileMenu.classList.toggle('open');
-          btnMenu.setAttribute('aria-expanded', isOpen);
-          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-        });
-
-        var lastScroll = 0;
-        window.addEventListener('scroll', function() {
-          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-          if (currentScroll > lastScroll && currentScroll > 150) {
-            mobileMenu.classList.remove('open');
-            btnMenu.setAttribute('aria-expanded', 'false');
-            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-          }
-          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
-        }, { passive: true });
-      }
-    })();
-  </script>
-
-  <!-- FOOTER -->
-  
-<script>
-    (function() {
-      var btnMenu = document.getElementById('btnMenu');
-      var mobileMenu = document.getElementById('mobileMenu');
-      
-      if (btnMenu && mobileMenu) {
-        btnMenu.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var isOpen = mobileMenu.classList.toggle('open');
-          btnMenu.setAttribute('aria-expanded', isOpen);
-          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-        });
-
-        var lastScroll = 0;
-        window.addEventListener('scroll', function() {
-          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-          if (currentScroll > lastScroll && currentScroll > 150) {
-            mobileMenu.classList.remove('open');
-            btnMenu.setAttribute('aria-expanded', 'false');
-            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-          }
-          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
-        }, { passive: true });
-      }
-    })();
-  </script>
+  <div class="seguranca">🔒 Pagamento protegido com criptografia SSL</div>
 
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-grid">
       <div class="footer-brand">
         <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais.</p>
         <div class="social-links">
-          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp" rel="noopener">
-            <i class="fab fa-whatsapp"></i>
-          </a>
-          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram" rel="noopener">
-            <i class="fab fa-instagram"></i>
-          </a>
-          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X/Twitter" rel="noopener">
-            <i class="fab fa-x-twitter"></i>
-          </a>
-          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook" rel="noopener">
-            <i class="fab fa-facebook-f"></i>
-          </a>
+          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X"><i class="fab fa-x-twitter"></i></a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
         </div>
       </div>
-
       <div class="footer-column">
         <h4>Menu Rápido</h4>
         <ul>
           <li><a href="/">Início</a></li>
           <li><a href="/curriculo">Criar Currículo</a></li>
-          <li><a href="/analise">Analisar Currículo</a></li>
+          <li><a href="/analise">Analisar</a></li>
           <li><a href="/contato">Contato</a></li>
-          <li><a href="/sobre">Sobre Nós</a></li>
         </ul>
       </div>
-
       <div class="footer-column">
         <h4>Serviços</h4>
         <ul>
-          <li><a href="/curriculo">Currículo Profissional</a></li>
-          <li><a href="/analise">Análise de Currículo</a></li>
           <li><a href="/indicacao">Indique e Ganhe</a></li>
+          <li><a href="/faq">FAQ</a></li>
         </ul>
       </div>
-
       <div class="footer-column">
-        <h4>Institucional</h4>
+        <h4>Legal</h4>
         <ul>
-          <li><a href="/politica" target="_blank">Política de Privacidade</a></li>
-          <li><a href="/termos" target="_blank">Termos de Uso</a></li>
+          <li><a href="/politica">Política de Privacidade</a></li>
+          <li><a href="/termos">Termos de Uso</a></li>
         </ul>
       </div>
     </div>
-
     <div class="footer-bottom">
-      <div class="container">
-        <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
-      </div>
+      <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
     </div>
   </footer>
 
+  <script src="script.js"></script>
   <script>
-    (function() {
-      var btnMenu = document.getElementById('btnMenu');
-      var mobileMenu = document.getElementById('mobileMenu');
-      if (btnMenu && mobileMenu) {
-        btnMenu.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var isOpen = mobileMenu.classList.toggle('open');
-          btnMenu.setAttribute('aria-expanded', isOpen);
-          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-        });
-        var lastScroll = 0;
-        window.addEventListener('scroll', function() {
-          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-          if (currentScroll > lastScroll && currentScroll > 150) {
-            mobileMenu.classList.remove('open');
-            btnMenu.setAttribute('aria-expanded', 'false');
-            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-          }
-          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
-        }, { passive: true });
-      }
-    })();
-  </script>
+    // ✅ TRIPLE COPY-PASTE PROTECTION: Copy-Pix + Payment log + Abandonment
+    let logEnviadoPagamento = false;
+    let pagamentoIniciado = true;
+    let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+    let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
 
+    // 1. Copy Pix + Payment log (triple fallback)
+    document.getElementById('btnCopiarPix').addEventListener('click', function(e) {
+      e.preventDefault();
+      enviarLog('Copiou o Pix'); // Log FIRST
+      
+      // Multiple copy methods for 100% reliability
+      const pixKey = document.getElementById('pix').value;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pixKey).then(() => {
+          alert('✅ Chave Pix copiada!');
+        }).catch(() => fallbackCopy(pixKey));
+      } else {
+        fallbackCopy(pixKey);
+      }
+    });
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('✅ Chave Pix copiada!');
+      } catch (err) {
+        alert('Pix: ' + text); // Last resort
+      }
+      document.body.removeChild(textArea);
+    }
+
+    // 2. Page abandonment (visualizar pattern)
+    window.enviarLogAbandonoPagamento = function() {
+      if (logEnviadoPagamento || !entradaViaSplash || navegandoInternamente || !pagamentoIniciado) return;
+      logEnviadoPagamento = true;
+      enviarLog('Abandonou Pagamento');
+    };
+    window.addEventListener('beforeunload', enviarLogAbandonoPagamento);
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') enviarLogAbandonoPagamento();
+    });
+
+    // 3. Cronometer + WhatsApp
+    let tempoRestante = 6 * 60;
+    function atualizarCronometro() {
+      const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");
+      const segundos = String(tempoRestante % 60).padStart(2, "0");
+      document.getElementById("cronometro").textContent = `${minutos}:${segundos}`;
+      if (tempoRestante <= 0) window.location.href = "/pagamentototal";
+      else { tempoRestante--; setTimeout(atualizarCronometro, 1000); }
+    }
+    atualizarCronometro();
+
+    function atualizarLinkWhatsApp() {
+      const mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
+      document.getElementById("whatsappLink").href = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
+    }
+    window.addEventListener('load', atualizarLinkWhatsApp);
+
+// ✅ Payment abandonment log (visualizar pattern)
+let abandonoPagamentoLogado = false;
+    let pagamentoAtivo = true;
+    window.enviarAbandonoPagamento = function() {
+      if (abandonoPagamentoLogado || !pagamentoAtivo) return;
+      abandonoPagamentoLogado = true;
+      enviarLog('Abandonou Pagamento');
+    };
+    window.addEventListener('beforeunload', enviarAbandonoPagamento);
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') enviarAbandonoPagamento();
+    });
+
+// Menu mobile
+(function() {
+  const btnMenu = document.getElementById('btnMenu');
+  const mobileMenu = document.getElementById('mobileMenu');
+  if (btnMenu && mobileMenu) {
+    btnMenu.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = mobileMenu.classList.toggle('open');
+      btnMenu.setAttribute('aria-expanded', isOpen);
+      btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+    });
+    window.addEventListener('scroll', () => {
+      const scrollY = window.pageYOffset;
+      if (scrollY > 150 && mobileMenu.classList.contains('open')) {
+        mobileMenu.classList.remove('open');
+        btnMenu.setAttribute('aria-expanded', 'false');
+        btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+      }
+    }, { passive: true });
+  }
+})();
+  </script>
 </body>
 </html>
+
