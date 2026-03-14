@@ -542,8 +542,13 @@
 function voltarParaCurriculo() { 
   localStorage.setItem("navegandoInternamente", "true");
   localStorage.setItem("OFFICEEXPRESS_SAFE_VISUALIZACAO", "ACTIVE");
-  window.location.href = "/curriculo";
+
+  // atraso curto garante que o localStorage seja persistido antes da navegação
+  setTimeout(() => {
+    window.location.href = "/curriculo";
+  }, 50);
 }
+
 
       async function redirecionarParaLoading() {
         if (temErros) { alert("Preencha os campos obrigatorios primeiro!"); return; }

@@ -49,6 +49,13 @@ window.addEventListener('beforeunload', function(e) {
   }
 });
 
+window.addEventListener("pagehide", function(e) {
+  const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+  if (!navegandoInternamente) {
+    enviarLog("Abandonou na Visualização - Fechou página");
+  }
+});
+
 
 
   // Sync state on load
