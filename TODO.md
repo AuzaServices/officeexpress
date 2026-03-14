@@ -1,50 +1,15 @@
-# OfficeExpress Flow Fix - TODO
-Status: 🔄 In Progress (0/6 complete)
+# TODO: Robustecer visualizacao-abandon-fix.js contra log falso no botão Editar
 
-## Approved Plan Steps:
+## Status: Em progresso ✅
 
-### 1. ✅ index.html - Fix "Digitando..." event  
-- Copied visualizar.html pattern ✅  
-- Fixed modal timing ✅
-- Copy visualizar.html pattern  
-- Fix modal button race condition  
-- ✅ Test: Modal → "Digitando..." in painel.html
+### Passos do plano aprovado:
+- [x] 1. Criar TODO.md com breakdown lógico
+- [x] 2. Editar public/visualizacao-abandon-fix.js com detecção melhorada (cliques, localStorage, timeout reset)
+- [x] 2.1. Fix redundância variável + simplificar beforeunload
+- [ ] 3. Testar navegação Editar → curriculo.html (sem log)
+- [ ] 4. Testar F5/close/tab hidden (com log)
+- [ ] 5. Opcional: Limpar lógica duplicada em visualizar.html
+- [ ] 6. Verificar curriculo-abandon-fix.js compatível
+- [ ] 7. attempt_completion com resultados de teste
 
-### 2. ✅ curriculo.html - Abandonment fixed (1 error left - cleanup next)
-
-- Add `enviarLog('Vizualizado')` in final redirect  
-- Set `navegandoInternamente=true` flag  
-- ✅ Test: Finish → "Vizualizado" (not abandonment)
-
-### 3. ✅ loading.html - Fix redirect abandonment  
-- Added prevention flags before redirect ✅  
-- No more false abandonment logs
-- Set `localStorage.setItem("navegandoInternamente", "true")`  
-- Disable `loadingIniciado=false` before redirect  
-- ✅ Test: Loading → pagamento (no "Abandonou Loading")
-
-### 4. ✅ pagamento.html - Fix "Pagamento" button/log  
-- Fixed onload to 'Pagamento' ✅  
-- Cleaned button HTML + onclick works ✅  
-- Added abandonment protection ✅
-- Fix `onload="enviarLog('Pagamento')"`  
-- Complete button: `onclick="enviarLog('Pagamento'); copiarPix()"`  
-- Add abandonment protection  
-- ✅ Test: Copy Pix → "Pagamento" in painel.html
-
-### 5. [ ] script.js - Consistent flag handling
-- Ensure `navegandoInternamente` works across all pages  
-- ✅ Test: Full flow prevention
-
-### 6. [ ] Full Flow Test
-- index → curriculo → visualizar → loading → pagamento  
-- ✅ Verify ALL logs: Digitando → Vizualizado → Loading → Pagamento  
-- ✅ No unwanted abandonments
-
-## Completion Criteria:
-- ✅ All 6 checkboxes marked  
-- ✅ End-to-end flow logged correctly in painel.html  
-- ✅ Execute `attempt_completion`
-
-**Next:** Step 1 - index.html edits
-
+**Próximo passo**: Edição do JS

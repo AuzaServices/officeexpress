@@ -7,10 +7,11 @@
   
 
   document.addEventListener('click', (e) => {
-    const editBtn = e.target.closest('[onclick*="voltarParaCurriculo"]');
-    const pdfBtn = e.target.closest('[onclick*="redirecionarParaLoading"]');
-    if (editBtn || pdfBtn) {
+    const button = e.target.closest('button');
+    if (button && (button.onclick.toString().includes('voltarParaCurriculo') || button.onclick.toString().includes('redirecionarParaLoading') || button.id === 'btnGerarPdf')) {
       goingToLoading = true;
+      localStorage.setItem("navegandoInternamente", "true");
+      setTimeout(() => { goingToLoading = false; localStorage.removeItem("navegandoInternamente"); }, 5000);
     }
   });
   
@@ -19,9 +20,13 @@
     paginaVisivel = document.visibilityState === 'visible';
   });
   
-  // REAL abandonment ONLY (F5/close/minimize)
+  // REAL abandonment ONLY (F5/close/minimize) - ROBUSTO
   window.addEventListener('beforeunload', function(e) {
-    if (!abandonoVisualizado && paginaVisivel && !goingToLoading) {
+    // Verificação ROBUSTA: localStorage primeiro
+    if (localStorage.getItem("navegandoInternamente") === "true" || goingToLoading) {
+      return; // Bloqueia 100% navegações legítimas
+    }
+    if (!abandonoVisualizado && paginaVisivel) {
       abandonoVisualizado = true;
       enviarLog('Abandonou na Visualização');
     }
