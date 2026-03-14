@@ -6,11 +6,13 @@
   let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
 
   // Função única de abandono
-  function enviarAbandonoVisualizar() {
-    if (logEnviadoVisualizar || !entradaViaSplash || !visualizarAtivo) return;
-    logEnviadoVisualizar = true;
-    enviarLog("Abandonou na Visualização");
-  }
+function enviarAbandonoVisualizar() {
+  const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+  if (logEnviadoVisualizar || !entradaViaSplash || !visualizarAtivo || navegandoInternamente) return;
+  logEnviadoVisualizar = true;
+  enviarLog("Abandonou na Visualização");
+}
+
 
   // Listeners
   window.addEventListener("beforeunload", enviarAbandonoVisualizar);

@@ -1,18 +1,20 @@
-// CURRICULO - Abandono consistente
 (function() {
   'use strict';
 
   let curriculoAtivo = true;
   let logEnviadoCurriculo = false;
 
-  // Função única de abandono
+  // Se veio de navegação interna (ex: Editar), não dispara abandono
+  if (localStorage.getItem("navegandoInternamente") === "true") {
+    curriculoAtivo = false;
+  }
+
   function enviarAbandonoCurriculo(evento) {
     if (logEnviadoCurriculo || !curriculoAtivo) return;
     logEnviadoCurriculo = true;
     enviarLog("Abandonou Currículo (" + evento.type + ")");
   }
 
-  // Eventos principais
   window.addEventListener("pagehide", enviarAbandonoCurriculo);
   window.addEventListener("beforeunload", enviarAbandonoCurriculo);
 
@@ -31,7 +33,6 @@
     }
   });
 
-  // Função exposta para o botão Finalizar
   window.finalizarCurriculo = function() {
     curriculoAtivo = false;
     localStorage.setItem("entradaViaSplash", "true");
