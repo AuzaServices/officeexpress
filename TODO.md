@@ -10,7 +10,8 @@ Status: 🔄 In Progress (0/6 complete)
 - Fix modal button race condition  
 - ✅ Test: Modal → "Digitando..." in painel.html
 
-### 2. [ ] curriculo.html - Fix "Vizualizado" log
+### 2. ✅ curriculo.html - Abandonment fixed (1 error left - cleanup next)
+
 - Add `enviarLog('Vizualizado')` in final redirect  
 - Set `navegandoInternamente=true` flag  
 - ✅ Test: Finish → "Vizualizado" (not abandonment)

@@ -552,4 +552,3 @@ document.addEventListener("DOMContentLoaded", function() {
   
   console.log("✅ Inicialização concluída!");
 });
-

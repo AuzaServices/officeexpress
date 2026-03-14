@@ -246,33 +246,8 @@
 </head>
 <body onload="enviarLog('Digitando')">
   
-  <script>
-    // ✅ PERFECT visualizar pattern - page-specific + navegandoInternamente check
-    let curriculoAtivo = true;
-    let abandonoCurriculoLogged = false;
-    const entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-    
-    window.enviarAbandonoCurriculo = function() {
-      const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-      if (abandonoCurriculoLogged || !entradaViaSplash || !curriculoAtivo || navegandoInternamente) return;
-      abandonoCurriculoLogged = true;
-      enviarLog('Abandonou Digitando');
-    };
-    
-    window.addEventListener('beforeunload', enviarAbandonoCurriculo);
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'hidden') enviarAbandonoCurriculo();
-    });
-    
-    // Internal navigation protection
-    document.addEventListener('click', (e) => {
-      const button = e.target.closest('button[id="avancar"]');
-      if (button) {
-        curriculoAtivo = false;
-        localStorage.setItem("navegandoInternamente", "true");
-      }
-    });
-  </script>
+  <script src="curriculo-abandon-fix.js"></script>
+
 
   <!-- Header -->
   <header class="cabecalho">
@@ -369,13 +344,14 @@
         </div>
 
 <label for="nome">Nome Completo</label>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" name="nome" id="nome" required 
-                 oninput="salvarNomeUsuario(this.value); if(this.value.length>2) enviarLog('Digitando')" />
-          <button type="button" onclick="reconhecerVoz('nome')" style="background:none;border:none;cursor:pointer;">
-            <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width:24px;" />
-          </button>
-        </div>
+<div style="display:flex;align-items:center;gap:10px;">
+  <input type="text" name="nome" id="nome" required 
+         oninput="salvarNomeUsuario(this.value)" />
+  <button type="button" onclick="reconhecerVoz('nome')" style="background:none;border:none;cursor:pointer;">
+    <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width:24px;" />
+  </button>
+</div>
+
 
         <script>
           function salvarNomeUsuario(nome) {
@@ -793,4 +769,3 @@
   </script>
 </body>
 </html>  
-
