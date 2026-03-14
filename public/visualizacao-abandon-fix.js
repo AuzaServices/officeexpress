@@ -1,66 +1,43 @@
-// ULTIMATE ROBUSTO - NUNCA falha em bloquear Editar, SEMPRE pega real abandono
 (function() {
   'use strict';
-  
-  let abandonoVisualizado = false;
-  let paginaVisivel = document.visibilityState === 'visible';
-  let safeNavigationActive = false;
-  let safeTimer = null;
-  
-  const activateSafeMode = () => {
-    safeNavigationActive = true;
-    localStorage.setItem('OFFICEEXPRESS_SAFE_VISUALIZACAO', 'ACTIVE');
-    if (safeTimer) clearTimeout(safeTimer);
-    safeTimer = setTimeout(() => {
-      safeNavigationActive = false;
-      localStorage.removeItem('OFFICEEXPRESS_SAFE_VISUALIZACAO');
-    }, 15000); // 15s generoso
-  };
 
-  // CLICK LISTENER MEGA-ROBUSTO - capture phase
-document.addEventListener('click', function(e) {
-  const targetBtn = e.target.closest('button');
-  if (targetBtn) {
-    const btnText = targetBtn.textContent.trim().toLowerCase();
-    if (btnText.includes('editar') || btnText.includes('pdf') || btnText.includes('gerar')) {
-      localStorage.setItem('navegandoInternamente', 'true');
-      activateSafeMode();
-    }
+  let logEnviadoVisualizar = false;
+  let visualizarAtivo = true;
+  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+
+  // Função única de abandono
+  function enviarAbandonoVisualizar() {
+    if (logEnviadoVisualizar || !entradaViaSplash || !visualizarAtivo) return;
+    logEnviadoVisualizar = true;
+    enviarLog("Abandonou na Visualização");
   }
-}, true);
 
-
-  document.addEventListener('visibilitychange', () => {
-    paginaVisivel = document.visibilityState === 'visible';
+  // Listeners
+  window.addEventListener("beforeunload", enviarAbandonoVisualizar);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") enviarAbandonoVisualizar();
   });
 
-  // BEFOREUNLOAD NUCLEAR - FECHA PÁGINA SEMPRE loga (exceto navegação legítima)
-window.addEventListener('beforeunload', function(e) {
-  const localSafe = localStorage.getItem('OFFICEEXPRESS_SAFE_VISUALIZACAO') === 'ACTIVE';
-  const navegandoInternamente = localStorage.getItem('navegandoInternamente') === 'true';
+  // Botão Editar → marca navegação interna e desativa abandono
+  window.voltarParaCurriculo = function() {
+    localStorage.setItem("navegandoInternamente", "true");
+    visualizarAtivo = false;
+    setTimeout(() => { window.location.href = "/curriculo"; }, 50);
+  };
 
-  if (safeNavigationActive || localSafe || navegandoInternamente) {
-    return; // não dispara log em navegação interna
-  }
+  // Botão Gerar PDF → mesma lógica
+  window.redirecionarParaLoading = async function() {
+    if (temErros) { alert("Preencha os campos obrigatórios primeiro!"); return; }
+    visualizarAtivo = false;
+    localStorage.setItem("navegandoInternamente", "true");
+    setTimeout(() => { window.location.href = "/loading"; }, 50);
+  };
 
-  if (paginaVisivel && !abandonoVisualizado) {
-    abandonoVisualizado = true;
-    enviarLog('Abandonou na Visualização - Fechou página');
-  }
-});
-
-window.addEventListener("pagehide", function(e) {
-  const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-  if (!navegandoInternamente) {
-    enviarLog("Abandonou na Visualização - Fechou página");
-  }
-});
-
-
-
-  // Sync state on load
-  if (localStorage.getItem('OFFICEEXPRESS_SAFE_VISUALIZACAO') === 'ACTIVE') {
-    activateSafeMode();
-  }
+  // Links internos → desativa abandono
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a[href]");
+    if (link?.href && link.href.includes(window.location.origin)) {
+      visualizarAtivo = false;
+    }
+  });
 })();
-

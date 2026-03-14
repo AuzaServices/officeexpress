@@ -336,16 +336,19 @@ function avancarEtapa() {
   if (etapaAtual < etapas.length - 1) {
     etapaAtual++;
     mostrarEtapa(etapaAtual);
-  } else {
-    console.log("✅ FINALIZANDO - Salvando dados antes de ir para visualizar...");
-    salvarDados();
+} else {
+  console.log("✅ FINALIZANDO - Salvando dados antes de ir para visualizar...");
+  salvarDados();
+  finalizarCurriculo(); // chama a função global
     
-    localStorage.setItem("entradaViaSplash", "true");
-    localStorage.setItem("navegandoInternamente", "false");
-    
-    setTimeout(() => {
-      window.location.href = "/visualizar";
-    }, 300);
+function finalizarCurriculo() {
+  curriculoAtivo = false;
+  localStorage.setItem("entradaViaSplash", "true");
+  localStorage.setItem("navegandoInternamente", "true");
+  setTimeout(() => { window.location.href = "/visualizar"; }, 50);
+}
+
+
   }
 }
 
