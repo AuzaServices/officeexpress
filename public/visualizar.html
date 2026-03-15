@@ -540,14 +540,20 @@
       });
 
 function voltarParaCurriculo() { 
+  // Marca saída segura
   localStorage.setItem("navegandoInternamente", "true");
   localStorage.setItem("OFFICEEXPRESS_SAFE_VISUALIZACAO", "ACTIVE");
 
+  // Remove listeners de abandono, igual ao PDF
+  window.removeEventListener("unload", enviarLogAbandono);
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+
   // atraso curto garante que o localStorage seja persistido antes da navegação
   setTimeout(() => {
-    window.location.href = "/curriculo";
+    window.location.replace("/curriculo");
   }, 50);
 }
+
 
 
       async function redirecionarParaLoading() {

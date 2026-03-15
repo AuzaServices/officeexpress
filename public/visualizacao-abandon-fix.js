@@ -2,44 +2,42 @@
   'use strict';
 
   let logEnviadoVisualizar = false;
-  let visualizarAtivo = true;
   let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+  let saidaSegura = false;
 
-  // Função única de abandono
-function enviarAbandonoVisualizar() {
-  const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-  if (logEnviadoVisualizar || !entradaViaSplash || !visualizarAtivo || navegandoInternamente) return;
-  logEnviadoVisualizar = true;
-  enviarLog("Abandonou na Visualização");
-}
+  function enviarAbandonoVisualizar() {
+    const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+    if (logEnviadoVisualizar || !entradaViaSplash || navegandoInternamente || saidaSegura) return;
+    logEnviadoVisualizar = true;
+    enviarLog("Abandonou na Visualização");
+  }
 
-
-  // Listeners
-  window.addEventListener("beforeunload", enviarAbandonoVisualizar);
+  // Usar apenas visibilitychange
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") enviarAbandonoVisualizar();
   });
 
-  // Botão Editar → marca navegação interna e desativa abandono
+  // Botão Editar
   window.voltarParaCurriculo = function() {
+    saidaSegura = true;
     localStorage.setItem("navegandoInternamente", "true");
-    visualizarAtivo = false;
-    setTimeout(() => { window.location.href = "/curriculo"; }, 50);
+    setTimeout(() => { window.location.replace("/curriculo"); }, 50);
   };
 
-  // Botão Gerar PDF → mesma lógica
+  // Botão PDF
   window.redirecionarParaLoading = async function() {
     if (temErros) { alert("Preencha os campos obrigatórios primeiro!"); return; }
-    visualizarAtivo = false;
+    saidaSegura = true;
     localStorage.setItem("navegandoInternamente", "true");
-    setTimeout(() => { window.location.href = "/loading"; }, 50);
+    setTimeout(() => { window.location.replace("/loading"); }, 50);
   };
 
-  // Links internos → desativa abandono
+  // Links internos
   document.addEventListener("click", (e) => {
     const link = e.target.closest("a[href]");
     if (link?.href && link.href.includes(window.location.origin)) {
-      visualizarAtivo = false;
+      saidaSegura = true;
+      localStorage.setItem("navegandoInternamente", "true");
     }
   });
 })();
