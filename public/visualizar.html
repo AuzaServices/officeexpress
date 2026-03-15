@@ -271,7 +271,7 @@
 </script>
 
 
-<body onload="enviarLog('Vizualizado')">
+<body onload="enviarLog('Visualizando')">
 
 <!-- Corpo da impressora -->
 
@@ -544,15 +544,19 @@ function voltarParaCurriculo() {
   localStorage.setItem("navegandoInternamente", "true");
   localStorage.setItem("OFFICEEXPRESS_SAFE_VISUALIZACAO", "ACTIVE");
 
-  // Remove listeners de abandono, igual ao PDF
+  // Remove listeners de abandono
   window.removeEventListener("unload", enviarLogAbandono);
   document.removeEventListener("visibilitychange", handleVisibilityChange);
 
-  // atraso curto garante que o localStorage seja persistido antes da navegação
+  // Dispara log de edição
+  enviarLog("Editando");
+
+  // atraso curto garante persistência antes da navegação
   setTimeout(() => {
     window.location.replace("/curriculo");
   }, 50);
 }
+
 
 
 

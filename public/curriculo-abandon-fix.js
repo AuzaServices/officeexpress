@@ -11,7 +11,7 @@
     console.log("DEBUG abandono:", evento.type, curriculoAtivo, logEnviadoCurriculo);
     if (logEnviadoCurriculo || !curriculoAtivo) return;
     logEnviadoCurriculo = true;
-    enviarLog("Abandonou Currículo");
+    enviarLog("Abandonou Digitando");
   }
 
   window.addEventListener("pagehide", enviarAbandonoCurriculo);
