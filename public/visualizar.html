@@ -592,17 +592,11 @@ window.location.href = "/loading";
 
       setTimeout(() => { window.rastreioLiberado = true; }, 300);
 
-      window.enviarLogAbandono = function () {
-        if (logEnviado || !entradaViaSplash || navegandoInternamente) return;
-        logEnviado = true;
-        enviarLog('Abandonou na Visualização');
-      };
 
       window.handleVisibilityChange = function () {
         if (document.visibilityState === "hidden" && window.rastreioLiberado) { enviarLogAbandono(); }
       };
-
-      window.addEventListener("unload", enviarLogAbandono);
+      
       document.addEventListener("visibilitychange", handleVisibilityChange);
 
       // Impedir que os botões sobreponham o footer no desktop
@@ -638,6 +632,61 @@ window.location.href = "/loading";
       window.addEventListener('scroll', ajustarPosicaoBotoes, { passive: true });
       window.addEventListener('resize', ajustarPosicaoBotoes);
     </script>
+
+  <script>(function() {
+  'use strict';
+
+  let logEnviadoVisualizar = false;
+  let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
+  let saidaSegura = false;
+
+  function enviarAbandonoVisualizar() {
+    const navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
+    if (logEnviadoVisualizar || !entradaViaSplash || navegandoInternamente || saidaSegura) return;
+    logEnviadoVisualizar = true;
+    enviarLog("Abandonou na Visualização");
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      enviarAbandonoVisualizar();
+    }
+    if (document.visibilityState === "visible") {
+      if (logEnviadoVisualizar) {
+        enviarLog("Visualizando");
+        logEnviadoVisualizar = false; // reset
+        saidaSegura = false;
+      }
+    }
+  });
+
+  // Botão Editar
+  window.voltarParaCurriculo = function() {
+    saidaSegura = true;
+    localStorage.setItem("navegandoInternamente", "true");
+    enviarLog("Editando");
+    setTimeout(() => { window.location.replace("/curriculo"); }, 50);
+  };
+
+  // Botão PDF
+  window.redirecionarParaLoading = async function() {
+    if (temErros) { alert("Preencha os campos obrigatórios primeiro!"); return; }
+    saidaSegura = true;
+    localStorage.setItem("navegandoInternamente", "true");
+    setTimeout(() => { window.location.replace("/loading"); }, 50);
+  };
+
+  // Links internos
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a[href]");
+    if (link?.href && link.href.includes(window.location.origin)) {
+      saidaSegura = true;
+      localStorage.setItem("navegandoInternamente", "true");
+    }
+  });
+})();</script>
+
+
 
   <script src="script.js"></script>
   <script src="components.js"></script>

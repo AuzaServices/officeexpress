@@ -4,21 +4,31 @@
   let curriculoAtivo = true;
   let logEnviadoCurriculo = false;
 
-  // Reset ao entrar
+  // Ao entrar no currículo, assume ativo
   localStorage.removeItem("navegandoInternamente");
 
   function enviarAbandonoCurriculo(evento) {
-    console.log("DEBUG abandono:", evento.type, curriculoAtivo, logEnviadoCurriculo);
     if (logEnviadoCurriculo || !curriculoAtivo) return;
     logEnviadoCurriculo = true;
     enviarLog("Abandonou Digitando");
   }
 
-  window.addEventListener("pagehide", enviarAbandonoCurriculo);
-  window.addEventListener("beforeunload", enviarAbandonoCurriculo);
+  // Saiu da aba ou página
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") enviarAbandonoCurriculo({type:"visibilitychange"});
+    if (document.visibilityState === "hidden") {
+      enviarAbandonoCurriculo({type:"visibilitychange"});
+    }
+    if (document.visibilityState === "visible") {
+      // Se já tinha abandonado, agora voltou
+      if (logEnviadoCurriculo) {
+        enviarLog("Digitando");
+        logEnviadoCurriculo = false; // reset
+        curriculoAtivo = true;
+      }
+    }
   });
+
+  window.addEventListener("pagehide", enviarAbandonoCurriculo);
 
   // Navegação legítima → desativa abandono
   document.addEventListener("click", (e) => {
