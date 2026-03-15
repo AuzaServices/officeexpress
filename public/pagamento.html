@@ -205,38 +205,57 @@ body style="padding-top: 80px;">
 
 <script src="script.js"></script>
 <script>
+  let abandonoRegistrado = false;
+
   function enviarPagamento() {
     enviarLog("Pagamento");
   }
 
   function enviarAbandono() {
-    enviarLog("Abandou Pagamento");
+    if (!abandonoRegistrado) {
+      enviarLog("Abandonou Pagamento");
+      abandonoRegistrado = true;
+    }
   }
 
   // Ao carregar a página
   window.addEventListener("load", () => {
+    abandonoRegistrado = false;
     enviarPagamento();
-    sessionStorage.removeItem("refreshing"); // limpa flag
+    sessionStorage.removeItem("refreshing"); // limpa flag de refresh
   });
 
-  // Antes de sair/recarregar → só marca refresh, não dispara abandono
+  // Antes de sair/recarregar/navegar
   window.addEventListener("beforeunload", function() {
+    // Marca que está em refresh
     sessionStorage.setItem("refreshing", "true");
   });
 
-  // Ao sair de verdade (fechar aba ou navegar para fora)
+  // Ao sair de verdade (fechar aba ou navegar)
   window.addEventListener("pagehide", function() {
     if (!sessionStorage.getItem("refreshing")) {
       enviarAbandono();
     }
   });
 
-  // Ao trocar de aba
+  // Ao minimizar ou trocar de aba
   document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === "visible") {
-      enviarPagamento();
-    } else if (document.visibilityState === "hidden") {
+    if (document.visibilityState === "hidden") {
       if (!sessionStorage.getItem("refreshing")) {
+        enviarAbandono();
+      }
+    } else if (document.visibilityState === "visible") {
+      enviarPagamento();
+    }
+  });
+
+  // Intercepta cliques em links internos
+  document.addEventListener("click", function(e) {
+    const target = e.target.closest("a");
+    if (target && target.getAttribute("href")) {
+      const href = target.getAttribute("href");
+      // Se for link interno → dispara abandono antes de navegar
+      if (href.endsWith(".html") || href.startsWith("/")) {
         enviarAbandono();
       }
     }
