@@ -268,7 +268,6 @@ body style="padding-top: 80px;">
     const pixKey = document.getElementById('pix').value;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(pixKey).then(() => {
-        alert('✅ Chave Pix copiada!');
       }).catch(() => fallbackCopy(pixKey));
     } else {
       fallbackCopy(pixKey);
