@@ -203,106 +203,113 @@ body style="padding-top: 80px;">
     </div>
   </footer>
 
-  <script src="script.js"></script>
-  <script>
-    // ✅ TRIPLE COPY-PASTE PROTECTION: Copy-Pix + Payment log + Abandonment
-    let logEnviadoPagamento = false;
-    let pagamentoIniciado = true;
-    let entradaViaSplash = localStorage.getItem("entradaViaSplash") === "true";
-    let navegandoInternamente = localStorage.getItem("navegandoInternamente") === "true";
-
-    // 1. Copy Pix + Payment log (triple fallback)
-    document.getElementById('btnCopiarPix').addEventListener('click', function(e) {
-      e.preventDefault();
-      enviarLog('Copiou o Pix'); // Log FIRST
-      
-      // Multiple copy methods for 100% reliability
-      const pixKey = document.getElementById('pix').value;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(pixKey).then(() => {
-          alert('✅ Chave Pix copiada!');
-        }).catch(() => fallbackCopy(pixKey));
-      } else {
-        fallbackCopy(pixKey);
-      }
-    });
-
-    function fallbackCopy(text) {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        alert('✅ Chave Pix copiada!');
-      } catch (err) {
-        alert('Pix: ' + text); // Last resort
-      }
-      document.body.removeChild(textArea);
-    }
-
-    // 2. Page abandonment (visualizar pattern)
-    window.enviarLogAbandonoPagamento = function() {
-      if (logEnviadoPagamento || !entradaViaSplash || navegandoInternamente || !pagamentoIniciado) return;
-      logEnviadoPagamento = true;
-      enviarLog('Abandonou Pagamento');
-    };
-    window.addEventListener('beforeunload', enviarLogAbandonoPagamento);
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'hidden') enviarLogAbandonoPagamento();
-    });
-
-    // 3. Cronometer + WhatsApp
-    let tempoRestante = 6 * 60;
-    function atualizarCronometro() {
-      const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");
-      const segundos = String(tempoRestante % 60).padStart(2, "0");
-      document.getElementById("cronometro").textContent = `${minutos}:${segundos}`;
-      if (tempoRestante <= 0) window.location.href = "/pagamentototal";
-      else { tempoRestante--; setTimeout(atualizarCronometro, 1000); }
-    }
-    atualizarCronometro();
-
-    function atualizarLinkWhatsApp() {
-      const mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
-      document.getElementById("whatsappLink").href = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
-    }
-    window.addEventListener('load', atualizarLinkWhatsApp);
-
-// ✅ Payment abandonment log (visualizar pattern)
-let abandonoPagamentoLogado = false;
-    let pagamentoAtivo = true;
-    window.enviarAbandonoPagamento = function() {
-      if (abandonoPagamentoLogado || !pagamentoAtivo) return;
-      abandonoPagamentoLogado = true;
-      enviarLog('Abandonou Pagamento');
-    };
-    window.addEventListener('beforeunload', enviarAbandonoPagamento);
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'hidden') enviarAbandonoPagamento();
-    });
-
-// Menu mobile
-(function() {
-  const btnMenu = document.getElementById('btnMenu');
-  const mobileMenu = document.getElementById('mobileMenu');
-  if (btnMenu && mobileMenu) {
-    btnMenu.addEventListener('click', e => {
-      e.stopPropagation();
-      const isOpen = mobileMenu.classList.toggle('open');
-      btnMenu.setAttribute('aria-expanded', isOpen);
-      btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-    });
-    window.addEventListener('scroll', () => {
-      const scrollY = window.pageYOffset;
-      if (scrollY > 150 && mobileMenu.classList.contains('open')) {
-        mobileMenu.classList.remove('open');
-        btnMenu.setAttribute('aria-expanded', 'false');
-        btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-      }
-    }, { passive: true });
+<script src="script.js"></script>
+<script>
+  function enviarPagamento() {
+    enviarLog("Pagamento");
   }
-})();
-  </script>
+
+  function enviarAbandono() {
+    enviarLog("Abandonou Pagamento");
+  }
+
+  // Ao carregar a página
+  window.addEventListener("load", () => {
+    enviarPagamento();
+    sessionStorage.removeItem("refreshing"); // limpa flag
+  });
+
+  // Antes de sair/recarregar
+  window.addEventListener("beforeunload", function() {
+    const navEntry = performance.getEntriesByType("navigation")[0];
+    const navType = navEntry ? navEntry.type : null;
+
+    if (navType === "reload") {
+      // Foi refresh → marca flag
+      sessionStorage.setItem("refreshing", "true");
+    } else {
+      // Não foi reload → abandono real (fechar aba/navegar fora)
+      enviarAbandono();
+    }
+  });
+
+  // Ao trocar de aba
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+      enviarPagamento();
+    } else if (document.visibilityState === "hidden") {
+      if (!sessionStorage.getItem("refreshing")) {
+        enviarAbandono();
+      }
+    }
+  });
+
+  // 1. Copy Pix
+  document.getElementById('btnCopiarPix').addEventListener('click', function(e) {
+    e.preventDefault();
+    enviarLog('Copiou o Pix');
+    const pixKey = document.getElementById('pix').value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(pixKey).then(() => {
+        alert('✅ Chave Pix copiada!');
+      }).catch(() => fallbackCopy(pixKey));
+    } else {
+      fallbackCopy(pixKey);
+    }
+  });
+
+  function fallbackCopy(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      alert('✅ Chave Pix copiada!');
+    } catch (err) {
+      alert('Pix: ' + text);
+    }
+    document.body.removeChild(textArea);
+  }
+
+  // 2. Cronômetro + WhatsApp
+  let tempoRestante = 6 * 60;
+  function atualizarCronometro() {
+    const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");
+    const segundos = String(tempoRestante % 60).padStart(2, "0");
+    document.getElementById("cronometro").textContent = `${minutos}:${segundos}`;
+    if (tempoRestante <= 0) window.location.href = "/pagamentototal";
+    else { tempoRestante--; setTimeout(atualizarCronometro, 1000); }
+  }
+  atualizarCronometro();
+
+  function atualizarLinkWhatsApp() {
+    const mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
+    document.getElementById("whatsappLink").href = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
+  }
+  window.addEventListener('load', atualizarLinkWhatsApp);
+
+  // Menu mobile
+  (function() {
+    const btnMenu = document.getElementById('btnMenu');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (btnMenu && mobileMenu) {
+      btnMenu.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = mobileMenu.classList.toggle('open');
+        btnMenu.setAttribute('aria-expanded', isOpen);
+        btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+      });
+      window.addEventListener('scroll', () => {
+        const scrollY = window.pageYOffset;
+        if (scrollY > 150 && mobileMenu.classList.contains('open')) {
+          mobileMenu.classList.remove('open');
+          btnMenu.setAttribute('aria-expanded', 'false');
+          btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+      }, { passive: true });
+    }
+  })();
+</script>
 </body>
 </html>
