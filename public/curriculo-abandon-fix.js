@@ -4,19 +4,21 @@
   let curriculoAtivo = true;
   let logEnviadoCurriculo = false;
 
-  // Se veio de navegação interna (ex: Editar), não dispara abandono
-  if (localStorage.getItem("navegandoInternamente") === "true") {
-    curriculoAtivo = false;
-  }
+  // Reset ao entrar
+  localStorage.removeItem("navegandoInternamente");
 
   function enviarAbandonoCurriculo(evento) {
+    console.log("DEBUG abandono:", evento.type, curriculoAtivo, logEnviadoCurriculo);
     if (logEnviadoCurriculo || !curriculoAtivo) return;
     logEnviadoCurriculo = true;
-    enviarLog("Abandonou Currículo (" + evento.type + ")");
+    enviarLog("Abandonou Currículo");
   }
 
   window.addEventListener("pagehide", enviarAbandonoCurriculo);
   window.addEventListener("beforeunload", enviarAbandonoCurriculo);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") enviarAbandonoCurriculo({type:"visibilitychange"});
+  });
 
   // Navegação legítima → desativa abandono
   document.addEventListener("click", (e) => {
