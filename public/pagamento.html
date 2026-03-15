@@ -210,7 +210,7 @@ body style="padding-top: 80px;">
   }
 
   function enviarAbandono() {
-    enviarLog("Abandonou Pagamento");
+    enviarLog("Abandou Pagamento");
   }
 
   // Ao carregar a página
@@ -219,16 +219,14 @@ body style="padding-top: 80px;">
     sessionStorage.removeItem("refreshing"); // limpa flag
   });
 
-  // Antes de sair/recarregar
+  // Antes de sair/recarregar → só marca refresh, não dispara abandono
   window.addEventListener("beforeunload", function() {
-    const navEntry = performance.getEntriesByType("navigation")[0];
-    const navType = navEntry ? navEntry.type : null;
+    sessionStorage.setItem("refreshing", "true");
+  });
 
-    if (navType === "reload") {
-      // Foi refresh → marca flag
-      sessionStorage.setItem("refreshing", "true");
-    } else {
-      // Não foi reload → abandono real (fechar aba/navegar fora)
+  // Ao sair de verdade (fechar aba ou navegar para fora)
+  window.addEventListener("pagehide", function() {
+    if (!sessionStorage.getItem("refreshing")) {
       enviarAbandono();
     }
   });
