@@ -270,8 +270,34 @@
   localStorage.removeItem('OFFICEEXPRESS_SAFE_VISUALIZACAO');
 </script>
 
+<body style="padding-top: 80px;" onload="enviarLog('Visualizando')">
 
-<body onload="enviarLog('Visualizando')">
+  <!-- HEADER -->
+  <header class="cabecalho">
+    <div class="container">
+      <div class="wrap">
+        <a href="/" class="logo-link" aria-label="Voltar para o inicio">
+          <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        </a>
+        <nav class="menu">
+          <a href="/contato">Contato</a>
+          <a href="/sobre">Sobre nos</a>
+        </nav>
+        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE MENU -->
+  <div id="mobileMenu">
+    <div>
+      <a href="/contato">Contato</a>
+      <a href="/sobre">Sobre nos</a>
+    </div>
+  </div>
+
 
 <!-- Corpo da impressora -->
 
@@ -557,9 +583,6 @@ function voltarParaCurriculo() {
   }, 50);
 }
 
-
-
-
       async function redirecionarParaLoading() {
         if (temErros) { alert("Preencha os campos obrigatorios primeiro!"); return; }
         
@@ -591,7 +614,6 @@ window.location.href = "/loading";
       });
 
       setTimeout(() => { window.rastreioLiberado = true; }, 300);
-
 
       window.handleVisibilityChange = function () {
         if (document.visibilityState === "hidden" && window.rastreioLiberado) { enviarLogAbandono(); }
@@ -686,10 +708,95 @@ window.location.href = "/loading";
   });
 })();</script>
 
-
-
   <script src="script.js"></script>
   <script src="components.js"></script>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        <p>A Office Express e uma plataforma digital que usa inteligencia artificial para criar curriculos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+        <div class="social-links">
+          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram" rel="noopener">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X/Twitter" rel="noopener">
+            <i class="fab fa-x-twitter"></i>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook" rel="noopener">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h4>Menu Rapido</h4>
+        <ul>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/curriculo">Criar Curriculo</a></li>
+          <li><a href="/analise">Analisar Curriculo</a></li>
+          <li><a href="/contato">Contato</a></li>
+          <li><a href="/sobre">Sobre Nos</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Servicos</h4>
+        <ul>
+          <li><a href="/curriculo">Curriculo Profissional</a></li>
+          <li><a href="/analise">Analise de Curriculo</a></li>
+          <li><a href="/indicacao">Indique e Ganhe</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="/politica" target="_blank">Politica de Privacidade</a></li>
+          <li><a href="/termos" target="_blank">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+        <p>2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+
+  <script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
 </body>
 </xai:function_call > 
 

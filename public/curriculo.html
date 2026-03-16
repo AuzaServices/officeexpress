@@ -119,7 +119,6 @@
       transform: translateY(-10px);
     }
 
-
     /* Sugestões */
     .sugestoes {
       display: flex;
@@ -244,35 +243,40 @@
     }
   </style>
 </head>
-<body onload="enviarLog('Digitando...')">
+<body style="padding-top: 80px;" onload="enviarLog('Digitando...')">
 
-  
-  <script src="curriculo-abandon-fix.js"></script>
-
-
-  <!-- Header -->
+  <!-- HEADER -->
   <header class="cabecalho">
     <div class="container">
       <div class="wrap">
-        <a href="/" class="logo-link" aria-label="Voltar para o início">
+        <a href="/" class="logo-link" aria-label="Voltar para o inicio">
           <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
         </a>
         <nav class="menu">
           <a href="/contato">Contato</a>
-          <a href="/sobre">Sobre nós</a>
+          <a href="/sobre">Sobre nos</a>
         </nav>
         <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
           <i class="fas fa-bars"></i>
         </button>
       </div>
+    </div>
   </header>
 
-  <!-- Mobile Menu -->
-  <div id="mobileMenu" style="display: none;">
+  <!-- MOBILE MENU -->
+  <div id="mobileMenu">
     <div>
       <a href="/contato">Contato</a>
-      <a href="/sobre">Sobre nós</a>
+      <a href="/sobre">Sobre nos</a>
     </div>
+  </div>
+
+
+<script src="curriculo-abandon-fix.js"></script>
+
+  <!-- Header -->
+  
+<!-- Mobile Menu -->
   </div>
 
   <!-- Script inline para menu mobile - executa imediatamente -->
@@ -352,7 +356,6 @@
     <img src="https://i.imgur.com/xNcIv1O.png" alt="Microfone" style="width:24px;" />
   </button>
 </div>
-
 
         <script>
           function salvarNomeUsuario(nome) {
@@ -477,48 +480,8 @@
   </div>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais.</p>
-        <div class="social-links">
-          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X"><i class="fab fa-x-twitter"></i></a>
-          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        </div>
-      </div>
-      <div class="footer-column">
-        <h4>Menu Rápido</h4>
-        <ul>
-          <li><a href="/">Início</a></li>
-          <li><a href="/curriculo">Criar Currículo</a></li>
-          <li><a href="/analise">Analisar</a></li>
-          <li><a href="/contato">Contato</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>Serviços</h4>
-        <ul>
-          <li><a href="/indicacao">Indique e Ganhe</a></li>
-          <li><a href="/faq">FAQ</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="/politica">Política de Privacidade</a></li>
-          <li><a href="/termos">Termos de Uso</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
-    </div>
-  </footer>
-
-  <!-- Scripts -->
+  
+<!-- Scripts -->
   <script src="/script.js"></script>
   
   <!-- Script de Notificações de Pessoas Criando Currículo -->
@@ -768,5 +731,92 @@
       }
     })();
   </script>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        <p>A Office Express e uma plataforma digital que usa inteligencia artificial para criar curriculos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+        <div class="social-links">
+          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram" rel="noopener">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X/Twitter" rel="noopener">
+            <i class="fab fa-x-twitter"></i>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook" rel="noopener">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h4>Menu Rapido</h4>
+        <ul>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/curriculo">Criar Curriculo</a></li>
+          <li><a href="/analise">Analisar Curriculo</a></li>
+          <li><a href="/contato">Contato</a></li>
+          <li><a href="/sobre">Sobre Nos</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Servicos</h4>
+        <ul>
+          <li><a href="/curriculo">Curriculo Profissional</a></li>
+          <li><a href="/analise">Analise de Curriculo</a></li>
+          <li><a href="/indicacao">Indique e Ganhe</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="/politica" target="_blank">Politica de Privacidade</a></li>
+          <li><a href="/termos" target="_blank">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+        <p>2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+
+  <script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
 </body>
-</html>  
+</html>

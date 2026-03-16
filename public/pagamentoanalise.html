@@ -10,6 +10,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
+    <link rel="stylesheet" href="style.css">
     <style>
       :root {
         --bg-1: #001f33;
@@ -21,26 +22,6 @@
         flex-direction: column;
         min-height: 100vh;
         background: #f9fafb;
-      }
-      header.cabecalho {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-        border-bottom: 1px solid var(--border);
-      }
-      .cabecalho .wrap {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 0;
-      }
-      .logo {
-        height: 34px;
-        width: auto;
-        display: block;
       }
       main {
         flex: 1;
@@ -59,18 +40,6 @@
         color: #444;
         font-weight: 500;
       }
-      footer {
-        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-        color: #fff;
-        padding: 0.6rem;
-        border-top: 1px solid var(--border);
-        text-align: center;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-top: auto;
-      }
       #faixa-promocao {
         font-size: 0.8rem;
         white-space: nowrap;
@@ -81,16 +50,15 @@
   </head>
   <body style="padding-top: 80px;">
 
-  <!-- Header -->
   <header class="cabecalho">
     <div class="container">
       <div class="wrap">
-        <a href="/" class="logo-link" aria-label="Voltar para o início">
+        <a href="/" class="logo-link" aria-label="Voltar para o inicio">
           <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
         </a>
         <nav class="menu">
           <a href="/contato">Contato</a>
-          <a href="/sobre">Sobre nós</a>
+          <a href="/sobre">Sobre nos</a>
         </nav>
         <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
           <i class="fas fa-bars"></i>
@@ -99,18 +67,7 @@
     </div>
   </header>
 
-  <!-- Mobile Menu -->
-  <div id="mobileMenu">
-    <div>
-      <a href="/contato">Contato</a>
-      <a href="/sobre">Sobre nós</a>
-    </div>
-  </div>
-
-
-<!-- HEADER -->
-  
-<!-- MOBILE MENU -->
+  <!-- MOBILE MENU -->
   <div id="mobileMenu">
     <div>
       <a href="/contato">Contato</a>
@@ -118,10 +75,50 @@
     </div>
   </div>
 
-<!-- HEADER -->
-  
-<!-- MOBILE MENU -->
-  </div>
+  <!-- Script inline para menu mobile - executa imediatamente -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Inicializando menu mobile...');
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      console.log('btnMenu:', btnMenu);
+      console.log('mobileMenu:', mobileMenu);
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          console.log('Clique detectado no botão menu');
+          e.preventDefault();
+          e.stopPropagation();
+          
+          var isOpen = mobileMenu.style.display === 'block';
+          
+          if (isOpen) {
+            mobileMenu.style.display = 'none';
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+            btnMenu.setAttribute('aria-expanded', 'false');
+          } else {
+            mobileMenu.style.display = 'block';
+            btnMenu.innerHTML = '<i class="fas fa-times"></i>';
+            btnMenu.setAttribute('aria-expanded', 'true');
+          }
+        });
+        
+        // Fechar menu ao clicar em um link
+        mobileMenu.querySelectorAll('a').forEach(function(link) {
+          link.addEventListener('click', function() {
+            mobileMenu.style.display = 'none';
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+            btnMenu.setAttribute('aria-expanded', 'false');
+          });
+        });
+        
+        console.log('Event listener adicionado com sucesso');
+      } else {
+        console.error('Elementos do menu não encontrados');
+      }
+    });
+  </script>
 
 <!-- Faixa de urgência -->
     <div
@@ -296,11 +293,38 @@
   </script>
 
   <!-- Footer -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-grid">
       <div class="footer-brand">
         <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+        <p>A Office Express e uma plataforma digital que usa inteligencia artificial para criar curriculos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
         <div class="social-links">
           <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp" rel="noopener">
             <i class="fab fa-whatsapp"></i>
@@ -318,21 +342,21 @@
       </div>
 
       <div class="footer-column">
-        <h4>Menu Rápido</h4>
+        <h4>Menu Rapido</h4>
         <ul>
-          <li><a href="/">Início</a></li>
-          <li><a href="/curriculo">Criar Currículo</a></li>
-          <li><a href="/analise">Analisar Currículo</a></li>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/curriculo">Criar Curriculo</a></li>
+          <li><a href="/analise">Analisar Curriculo</a></li>
           <li><a href="/contato">Contato</a></li>
-          <li><a href="/sobre">Sobre Nós</a></li>
+          <li><a href="/sobre">Sobre Nos</a></li>
         </ul>
       </div>
 
       <div class="footer-column">
-        <h4>Serviços</h4>
+        <h4>Servicos</h4>
         <ul>
-          <li><a href="/curriculo">Currículo Profissional</a></li>
-          <li><a href="/analise">Análise de Currículo</a></li>
+          <li><a href="/curriculo">Curriculo Profissional</a></li>
+          <li><a href="/analise">Analise de Curriculo</a></li>
           <li><a href="/indicacao">Indique e Ganhe</a></li>
         </ul>
       </div>
@@ -340,7 +364,7 @@
       <div class="footer-column">
         <h4>Institucional</h4>
         <ul>
-          <li><a href="/politica" target="_blank">Política de Privacidade</a></li>
+          <li><a href="/politica" target="_blank">Politica de Privacidade</a></li>
           <li><a href="/termos" target="_blank">Termos de Uso</a></li>
         </ul>
       </div>
@@ -348,15 +372,17 @@
 
     <div class="footer-bottom">
       <div class="container">
-        <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
+        <p>2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
       </div>
     </div>
   </footer>
+
 
   <script>
     (function() {
       var btnMenu = document.getElementById('btnMenu');
       var mobileMenu = document.getElementById('mobileMenu');
+      
       if (btnMenu && mobileMenu) {
         btnMenu.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -364,6 +390,7 @@
           btnMenu.setAttribute('aria-expanded', isOpen);
           btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
         });
+
         var lastScroll = 0;
         window.addEventListener('scroll', function() {
           var currentScroll = window.pageYOffset || document.documentElement.scrollTop;

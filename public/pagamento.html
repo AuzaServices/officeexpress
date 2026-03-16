@@ -6,7 +6,8 @@
     <link rel="icon" href="/imagens/icon.png" type="image/png" />
     <title>Pagamento | Office Express</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
     <style>
       :root {
         --bg-1: #001f33;
@@ -18,26 +19,6 @@
         flex-direction: column;
         min-height: 100vh;
         background: #f9fafb;
-      }
-      header.cabecalho {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-        border-bottom: 1px solid var(--border);
-      }
-      .cabecalho .wrap {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 0;
-      }
-      .logo {
-        height: 34px;
-        width: auto;
-        display: block;
       }
       main {
         flex: 1;
@@ -56,18 +37,6 @@
         color: #444;
         font-weight: 500;
       }
-      footer {
-        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-        color: #fff;
-        padding: 0.6rem;
-        border-top: 1px solid var(--border);
-        text-align: center;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-top: auto;
-      }
       #faixa-promocao {
         font-size: 0.8rem;
         white-space: nowrap;
@@ -76,18 +45,16 @@
       }
     </style>
   </head>
-body style="padding-top: 80px;">
 
-  <!-- Header -->
   <header class="cabecalho">
     <div class="container">
       <div class="wrap">
-        <a href="/" class="logo-link" aria-label="Voltar para o início">
+        <a href="/" class="logo-link" aria-label="Voltar para o inicio">
           <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
         </a>
         <nav class="menu">
           <a href="/contato">Contato</a>
-          <a href="/sobre">Sobre nós</a>
+          <a href="/sobre">Sobre nos</a>
         </nav>
         <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
           <i class="fas fa-bars"></i>
@@ -96,13 +63,58 @@ body style="padding-top: 80px;">
     </div>
   </header>
 
-  <!-- Mobile Menu -->
+  <!-- MOBILE MENU -->
   <div id="mobileMenu">
     <div>
       <a href="/contato">Contato</a>
-      <a href="/sobre">Sobre nós</a>
+      <a href="/sobre">Sobre nos</a>
     </div>
   </div>
+
+  <!-- Script inline para menu mobile - executa imediatamente -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Inicializando menu mobile...');
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      console.log('btnMenu:', btnMenu);
+      console.log('mobileMenu:', mobileMenu);
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          console.log('Clique detectado no botão menu');
+          e.preventDefault();
+          e.stopPropagation();
+          
+          var isOpen = mobileMenu.style.display === 'block';
+          
+          if (isOpen) {
+            mobileMenu.style.display = 'none';
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+            btnMenu.setAttribute('aria-expanded', 'false');
+          } else {
+            mobileMenu.style.display = 'block';
+            btnMenu.innerHTML = '<i class="fas fa-times"></i>';
+            btnMenu.setAttribute('aria-expanded', 'true');
+          }
+        });
+        
+        // Fechar menu ao clicar em um link
+        mobileMenu.querySelectorAll('a').forEach(function(link) {
+          link.addEventListener('click', function() {
+            mobileMenu.style.display = 'none';
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+            btnMenu.setAttribute('aria-expanded', 'false');
+          });
+        });
+        
+        console.log('Event listener adicionado com sucesso');
+      } else {
+        console.error('Elementos do menu não encontrados');
+      }
+    });
+  </script>
 
   <!-- Faixa de urgência -->
   <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2">
