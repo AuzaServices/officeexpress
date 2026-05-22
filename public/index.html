@@ -551,6 +551,9 @@
       height: 36px;
       width: auto;
       object-fit: contain;
+      object-position: center;
+      display: block;
+      margin: 0 auto;
       filter: brightness(0) invert(1);
       opacity: 0.6;
       transition: var(--transition);
@@ -971,11 +974,17 @@
       white-space: nowrap;
       border: 0;
     }
-    .empresas-scroll img:first-child {
-      width: 150px; /* defina o tamanho desejado */
-      height: auto; /* mantém proporção */
-      margin-top: -30px;
-}
+    .empresas-scroll img {
+      height: 50px;
+      width: 950px;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      margin: 0 auto;
+      flex-shrink: 0;
+    }
+
+
 
   </style>
 </head>
