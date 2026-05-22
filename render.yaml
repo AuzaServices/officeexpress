@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: officeexpress
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "node server.js"
+    envVars:
+      NODE_VERSION: 20
