@@ -1140,7 +1140,6 @@
           <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
         </a>
         <nav class="menu">
-          <a href="/index">Inicio</a>
           <a href="/contato">Contato</a>
           <a href="/sobre">Sobre nos</a>
         </nav>
@@ -1154,12 +1153,31 @@
   <!-- MOBILE MENU -->
   <div id="mobileMenu">
     <div>
-      <a href="/index">Inicio</a>
       <a href="/contato">Contato</a>
       <a href="/sobre">Sobre nos</a>
     </div>
   </div>
 
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
 
 <!-- Header -->
   
@@ -1515,6 +1533,122 @@
           btnMenu.setAttribute('aria-expanded', isOpen);
           btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
         });
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
         var lastScroll = 0;
         window.addEventListener('scroll', function() {
           var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
