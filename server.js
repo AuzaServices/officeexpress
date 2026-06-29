@@ -1846,17 +1846,28 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
 
-// 🧹 Tarefa agendada: limpar logs diariamente às 3h da manhã
-cron.schedule("0 3 * * *", async () => {
+// 🕒 Cron para limpar logs quando passar de 20
+cron.schedule("*/5 * * * *", async () => {
   try {
-    const [result] = await pool.query("DELETE FROM logs");
-    console.log(
-      `🧹 Logs limpos automaticamente às 03:00 — ${result.affectedRows} registros apagados`,
-    );
+    const [rows] = await pool.query("SELECT id FROM logs ORDER BY id ASC");
+
+    if (rows.length > 20) {
+      const excesso = rows.length - 20;
+      const idsParaApagar = rows.slice(0, excesso).map(r => r.id);
+      const placeholders = idsParaApagar.map(() => "?").join(",");
+
+      await pool.query(
+        `DELETE FROM logs WHERE id IN (${placeholders})`,
+        idsParaApagar
+      );
+
+      console.log(`🧹 Logs limpos: ${excesso} registros apagados`);
+    }
   } catch (err) {
-    console.error("❌ Erro ao limpar logs automaticamente:", err.message);
+    console.error("❌ Erro ao limpar logs:", err.message);
   }
 });
+
 
 // 🔄 Ping ao banco a cada 5 minutos
 cron.schedule("*/5 * * * *", async () => {
