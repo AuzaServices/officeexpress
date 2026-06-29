@@ -452,7 +452,7 @@ app.get("/api/pdfs/:id/download", async (req, res) => {
 });
 
 //////////////////////////
-// 📝 Salvar log de acesso com localização
+// 📥 Salvar log de acesso com localização
 //////////////////////////
 const IPINFO_TOKEN = "83e6d56256238e";
 
@@ -497,20 +497,26 @@ app.post("/api/logs", async (req, res) => {
   const localizacao = `${cidade} - ${estado}`;
 
   try {
-    // Apenas salva log detalhado na tabela logs
-    const query = `
+    // 👉 Insere o log
+    await pool.query(
+      `
       INSERT INTO logs (acao, nome, timestamp, localizacao, ip_raw, ip_publico, etapa)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    await pool.query(query, [
-      acao,
-      nome,
-      timestamp,
-      localizacao,
-      ipRaw,
-      ipPublico,
-      etapa,
-    ]);
+    `,
+      [acao, nome, timestamp, localizacao, ipRaw, ipPublico, etapa],
+    );
+
+    // 👉 Lógica de limpeza igual aos PDFs
+    const [logs] = await pool.query("SELECT id FROM logs ORDER BY id ASC");
+    if (logs.length >= 20) {
+      const idsParaApagar = logs.map(log => log.id);
+      const placeholders = idsParaApagar.map(() => "?").join(",");
+      await pool.query(
+        `DELETE FROM logs WHERE id IN (${placeholders})`,
+        idsParaApagar
+      );
+      console.log("🧹 Todos os logs foram apagados (atingiu 20 registros).");
+    }
 
     res.status(200).json({ mensagem: "Log salvo com sucesso", localizacao });
   } catch (err) {
@@ -542,6 +548,20 @@ app.get("/api/logs", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar logs" });
   }
 });
+
+//////////////////////////
+// 🗑️ Apagar TODOS os logs
+//////////////////////////
+app.delete("/api/logs", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM logs");
+    res.status(204).send(); // sucesso sem conteúdo
+  } catch (err) {
+    console.error("Erro ao apagar todos os logs:", err.message);
+    res.status(500).json({ error: "Erro ao apagar logs" });
+  }
+});
+
 
 //////////////////////////
 // 📥 Analisar e salvar relatório em PDF
