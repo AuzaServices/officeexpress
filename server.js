@@ -1846,27 +1846,21 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
 
-// 🕒 Cron para limpar logs quando passar de 20
+// 🕒 Cron para apagar todos os logs quando chegar a 20 registros
 cron.schedule("*/5 * * * *", async () => {
   try {
-    const [rows] = await pool.query("SELECT id FROM logs ORDER BY id ASC");
+    const [rows] = await pool.query("SELECT COUNT(*) AS total FROM logs");
+    const total = rows[0].total;
 
-    if (rows.length > 20) {
-      const excesso = rows.length - 20;
-      const idsParaApagar = rows.slice(0, excesso).map(r => r.id);
-      const placeholders = idsParaApagar.map(() => "?").join(",");
-
-      await pool.query(
-        `DELETE FROM logs WHERE id IN (${placeholders})`,
-        idsParaApagar
-      );
-
-      console.log(`🧹 Logs limpos: ${excesso} registros apagados`);
+    if (total >= 20) {
+      await pool.query("DELETE FROM logs");
+      console.log("🧹 Todos os logs foram apagados (atingiu 20 registros).");
     }
   } catch (err) {
     console.error("❌ Erro ao limpar logs:", err.message);
   }
 });
+
 
 
 // 🔄 Ping ao banco a cada 5 minutos
