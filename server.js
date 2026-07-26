@@ -373,9 +373,9 @@ app.post("/api/upload", upload.single("arquivo"), async (req, res) => {
       "SELECT id FROM pdfs ORDER BY created_at ASC",
     );
 
-    if (pdfs.length >= 5) {
+    if (pdfs.length >= 4) {
       // 2. Apaga os 5 mais antigos
-      const idsParaApagar = pdfs.slice(0, 5).map((pdf) => pdf.id);
+      const idsParaApagar = pdfs.slice(0, 4).map((pdf) => pdf.id);
       const placeholders = idsParaApagar.map(() => "?").join(",");
       await pool.query(
         `DELETE FROM pdfs WHERE id IN (${placeholders})`,
@@ -508,14 +508,14 @@ app.post("/api/logs", async (req, res) => {
 
     // 👉 Lógica de limpeza igual aos PDFs
     const [logs] = await pool.query("SELECT id FROM logs ORDER BY id ASC");
-    if (logs.length >= 20) {
+    if (logs.length >= 15) {
       const idsParaApagar = logs.map(log => log.id);
       const placeholders = idsParaApagar.map(() => "?").join(",");
       await pool.query(
         `DELETE FROM logs WHERE id IN (${placeholders})`,
         idsParaApagar
       );
-      console.log("🧹 Todos os logs foram apagados (atingiu 20 registros).");
+      console.log("🧹 Todos os logs foram apagados (atingiu 15 registros).");
     }
 
     res.status(200).json({ mensagem: "Log salvo com sucesso", localizacao });
