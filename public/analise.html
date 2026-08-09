@@ -1387,7 +1387,7 @@
       formData.append("valor", 5.99);
 
       try {
-        const res = await fetch("/api/analisar-e-salvar", {
+const res = await fetch("/api/analisar-e-salvar", {
           method: "POST",
           body: formData,
         });
@@ -1395,6 +1395,11 @@
         if (!resultado.sucesso) {
           alert("Erro: " + resultado.erro);
           return;
+        }
+        // Salva id e filename da análise para download após pagamento
+        if (resultado.id) {
+          localStorage.setItem("analiseId", resultado.id);
+          localStorage.setItem("analiseDados", JSON.stringify({ id: resultado.id, filename: resultado.filename }));
         }
         window.processoPronto = true;
       } catch (err) {
