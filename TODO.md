@@ -16,7 +16,8 @@
 
 ### 2. Configuração (`render.yaml` / `.env`)
 - [x] Adicionar variáveis de ambiente Mercado Pago ao `render.yaml`
-- [ ] **USUÁRIO:** Configurar `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY`, `MP_CLIENT_ID`, `MP_CLIENT_SECRET` no dashboard do Render
+- [x] Adicionar credenciais Mercado Pago ao `.env` local
+- [ ] **USUÁRIO:** Confirmar que as variáveis `MP_*` estão configuradas no dashboard do Render (o `render.yaml` já as inclui, mas é recomendado revisar/formulário no painel)
 
 ### 3. Frontend - Currículo
 - [x] `loading.html` → gera PDF, salva em `localStorage.curriculoPdf`, redireciona para `/pagamento`
