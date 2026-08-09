@@ -10,8 +10,15 @@ const pdfParse = require("pdf-parse");
 const cron = require("node-cron");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
+const { MercadoPagoConfig, Payment } = require("mercadopago");
 
 require("dotenv").config();
+
+// 🔌 Configuração Mercado Pago
+const clientMP = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN,
+});
+const paymentMP = new Payment(clientMP);
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -655,7 +662,7 @@ app.post(
 
           console.log("📦 Salvando no banco:", { filename, estadoNormalizado });
 
-          await pool.query(
+const [result] = await pool.query(
             `
           INSERT INTO analises (nome, telefone, cidade, estado, filename, mimetype, pdf_data, valor)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -678,7 +685,7 @@ app.post(
           );
 
           console.log("✅ Registro salvo com sucesso");
-          res.json({ sucesso: true });
+          res.json({ sucesso: true, id: result.insertId, filename });
         } catch (err) {
           console.error("❌ Erro ao salvar no banco:", err.message, err.stack);
           res.status(500).json({ erro: "Erro ao salvar no banco" });
@@ -1856,6 +1863,111 @@ app.get("/:page", (req, res) => {
 // Página 404 personalizada
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+});
+
+//////////////////////////
+// 💳 MERCADO PAGO - PIX
+//////////////////////////
+
+// Criar cobrança PIX
+app.post("/api/pix/criar", async (req, res) => {
+  const { valor, titulo, descricao, telefone, estado, cidade, tipo } = req.body;
+
+if (!valor || isNaN(valor)) {
+    return res.status(400).json({ error: "Valor inválido" });
+  }
+
+  // Valor em unidades (reais) para o Mercado Pago
+  const valorReais = parseFloat(valor).toFixed(2);
+
+  try {
+    const requestOptions = {
+      idempotencyKey: `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+    };
+
+    const tipoFinal = tipo || "curriculo";
+
+    const body = {
+      transaction_amount: Number(valorReais),
+      description: descricao || titulo || "Pagamento Office Express",
+      payment_method_id: "pix",
+      external_reference: `${tipoFinal}-${Date.now()}`,
+      payer: {
+        email: req.body.email || "cliente@officeexpress.com.br",
+        first_name: req.body.nome || "Cliente",
+        last_name: "Office Express",
+      },
+      notification_url: `${process.env.BASE_URL || "https://www.officeexpress.com.br"}/api/webhook/pix`,
+    };
+
+    const response = await paymentMP.create({ body, requestOptions });
+
+    const paymentData = response;
+    const paymentId = paymentData.id;
+
+    res.json({
+      id: paymentId,
+      status: paymentData.status,
+      qr_code: paymentData.point_of_interaction?.transaction_data?.qr_code,
+      qr_code_base64: paymentData.point_of_interaction?.transaction_data?.qr_code_base64,
+      valor: valorReais,
+      tipo: tipoFinal,
+    });
+  } catch (err) {
+    console.error("❌ Erro ao criar PIX:", err.message, err.cause || "");
+    res.status(500).json({ error: "Erro ao criar pagamento PIX" });
+  }
+});
+
+// Consultar status do PIX
+app.get("/api/pix/status/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const response = await paymentMP.get({ id });
+    res.json({
+      status: response.status,
+      status_detail: response.status_detail,
+      external_reference: response.external_reference,
+    });
+  } catch (err) {
+    console.error("❌ Erro ao consultar PIX:", err.message);
+    res.status(500).json({ error: "Erro ao consultar pagamento" });
+  }
+});
+
+// Webhook de notificação do Mercado Pago
+app.post("/api/webhook/pix", async (req, res) => {
+  res.status(200).send("OK");
+
+  try {
+    const { type, data } = req.body;
+    if (type !== "payment" || !data?.id) return;
+
+    const response = await paymentMP.get({ id: data.id });
+    const payment = response;
+
+if (payment.status === "approved") {
+      const externalReference = payment.external_reference || "";
+      const tipo = externalReference.includes("analise") ? "Análise" : "Currículo";
+      const valor = payment.transaction_amount || 5.99;
+
+      // Registra pagamento aprovado (apenas metadados, sem armazenar PDF)
+      try {
+        await pool.query(
+          `
+          INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago, enviado)
+          VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1, 0)
+        `,
+          [tipo, `Pagamento MP ${data.id}`, valor, "DESCONHECIDO", "Desconhecida"],
+        );
+        console.log("✅ Pagamento aprovado registrado:", data.id);
+      } catch (dbErr) {
+        console.error("❌ Erro ao registrar pagamento no banco:", dbErr.message);
+      }
+    }
+  } catch (err) {
+    console.error("❌ Erro no webhook:", err.message);
+  }
 });
 
 //////////////////////////

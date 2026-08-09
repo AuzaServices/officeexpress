@@ -143,7 +143,7 @@
       if(dados.habilidades)container.innerHTML+=`<h2>Habilidades</h2><p>${dados.habilidades}</p>`;
       if(dados.hobbies)container.innerHTML+=`<h2>Hobbies</h2><p>${dados.hobbies}</p>`;
 
-      const {jsPDF}=window.jspdf;
+const {jsPDF}=window.jspdf;
       const canvas=await html2canvas(container,{scale:2});
       const pdf=new jsPDF("p","mm","a4");
       const imgData=canvas.toDataURL("image/jpeg",1.0);
@@ -157,24 +157,17 @@
       let position=10;
       pdf.addImage(imgData,"JPEG",10,position,imgWidth,imgHeight);
 
-      // Gera blob e envia para backend
-      const pdfBlob=pdf.output("blob");
-      const formData=new FormData();
-      formData.append("arquivo",pdfBlob,`curriculo-${dados.nome||"usuario"}.pdf`);
-      formData.append("telefone",dados.telefone||"");
-      formData.append("valor","5.99");
-      formData.append("estado",dados.estado||"");
-      formData.append("cidade",dados.cidade||"");
+      // Gera o PDF em base64 e armazena no localStorage
+      const pdfBase64=pdf.output("datauristring");
 
       try{
-        await fetch("https://www.officeexpress.com.br/api/upload",{
-          method:"POST",
-          body:formData
-        });
+        localStorage.setItem("curriculoPdf", pdfBase64);
+        localStorage.setItem("pagamentoTipo", "curriculo");
+        localStorage.setItem("pagamentoValor", "5.99");
         localStorage.setItem("entradaViaSplash","true");
         window.location.href="/pagamento";
       }catch(err){
-        alert("Erro ao enviar PDF. Tente novamente.");
+        alert("Erro ao gerar PDF. Tente novamente.");
         console.error(err);
       }
     }

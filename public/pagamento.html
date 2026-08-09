@@ -43,6 +43,44 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      .botao-baixar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, #00b894, #00a381);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 14px rgba(0, 184, 148, 0.3);
+      }
+      .botao-baixar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(0, 184, 148, 0.4);
+      }
+      .botao-baixar:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+      }
+      .qr-box {
+        background: #fff;
+        border: 2px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .status-pendente { color: #d97706; font-weight: 600; }
+      .status-aprovado { color: #059669; font-weight: 700; }
     </style>
   </head>
 
@@ -76,21 +114,13 @@
   <!-- Script inline para menu mobile - executa imediatamente -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('Inicializando menu mobile...');
       var btnMenu = document.getElementById('btnMenu');
       var mobileMenu = document.getElementById('mobileMenu');
-      
-      console.log('btnMenu:', btnMenu);
-      console.log('mobileMenu:', mobileMenu);
-      
       if (btnMenu && mobileMenu) {
         btnMenu.addEventListener('click', function(e) {
-          console.log('Clique detectado no botão menu');
           e.preventDefault();
           e.stopPropagation();
-          
           var isOpen = mobileMenu.style.display === 'block';
-          
           if (isOpen) {
             mobileMenu.style.display = 'none';
             btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
@@ -101,8 +131,6 @@
             btnMenu.setAttribute('aria-expanded', 'true');
           }
         });
-        
-        // Fechar menu ao clicar em um link
         mobileMenu.querySelectorAll('a').forEach(function(link) {
           link.addEventListener('click', function() {
             mobileMenu.style.display = 'none';
@@ -110,10 +138,6 @@
             btnMenu.setAttribute('aria-expanded', 'false');
           });
         });
-        
-        console.log('Event listener adicionado com sucesso');
-      } else {
-        console.error('Elementos do menu não encontrados');
       }
     });
   </script>
@@ -135,40 +159,48 @@
       <span class="valor text-3xl font-bold text-green-700">R$ 5,99</span>
     </div>
 
-    <!-- Chave Pix -->
-    <label for="pix" class="block text-sm font-medium mb-2">Chave Pix</label>
-    <input
-      type="text"
-      id="pix"
-      readonly
-      class="w-full text-center font-bold text-blue-900 bg-gray-100 border rounded-lg py-3 mb-4"
-      value="00020126610014BR.GOV.BCB.PIX0121andrielysom@gmail.com0214Office Express52040000530398654045.995802BR5925ANDRIELYSON DAVID NASCIME6009HORIZONTE62070503***6304F671"
-    />
+    <!-- Área do QR Code -->
+    <div id="areaPagamento">
+      <div id="carregandoPix" class="text-center py-8">
+        <div class="inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-gray-600">Gerando QR Code...</p>
+      </div>
 
-    <!-- Botão Copiar Pix -->
-    <button
-      id="btnCopiarPix"
-      class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mb-4 hover:bg-blue-800 transition"
-    >
-      <i class="fas fa-copy mr-2"></i>Copiar chave Pix
-    </button>
+      <div id="qrContainer" class="qr-box hidden">
+        <p class="text-sm font-semibold text-gray-700 mb-3">Escaneie o QR Code abaixo para pagar com PIX</p>
+        <img id="qrCodeImg" alt="QR Code PIX" class="w-64 h-64 rounded-lg" />
+        <p class="text-xs text-gray-500 mt-3 text-center">O pagamento é direcionado ao nosso PIX com confirmação automática.</p>
+      </div>
 
-    <a
-      id="whatsappLink"
-      target="_blank"
-      class="block w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition text-center"
-    >
-      Enviar comprovante
-    </a>
+      <div id="statusMsg" class="hidden mt-4 text-center">
+        <span id="statusText" class="status-pendente">Aguardando pagamento...</span>
+      </div>
+
+      <div id="areaSucesso" class="hidden mt-6">
+        <div class="text-center mb-4">
+          <i class="fa-solid fa-circle-check text-5xl text-green-600"></i>
+          <h3 class="text-xl font-bold text-green-700 mt-3">Pagamento Confirmado!</h3>
+          <p class="text-sm text-gray-600 mt-1">Seu currículo está pronto para download.</p>
+        </div>
+        <button id="btnBaixarCurriculo" class="botao-baixar" onclick="baixarCurriculo()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Baixar Currículo
+        </button>
+      </div>
+    </div>
 
     <p class="text-xs text-gray-500 mt-2 text-center">
-      O currículo será entregue após confirmação do pagamento.
+      Após o pagamento, o botão de download será liberado automaticamente.
     </p>
 
     <!-- Selos de confiança -->
     <div class="mt-6 grid grid-cols-3 gap-4 text-gray-600 text-sm text-center">
       <div><i class="fa-solid fa-lock mb-1"></i><span>Pagamento seguro</span></div>
-      <div><i class="fa-solid fa-bolt mb-1"></i><span>Entrega rápida</span></div>
+      <div><i class="fa-solid fa-bolt mb-1"></i><span>Confirmação automática</span></div>
       <div><i class="fa-solid fa-shield-halved mb-1"></i><span>Garantia 7 dias</span></div>
     </div>
   </main>
@@ -220,6 +252,8 @@
 <script src="script.js"></script>
 <script>
   let abandonoRegistrado = false;
+  let pollInterval = null;
+  let pagamentoId = null;
 
   function enviarPagamento() {
     enviarLog("Pagamento");
@@ -232,116 +266,126 @@
     }
   }
 
+  function baixarCurriculo() {
+    const pdfBase64 = localStorage.getItem("curriculoPdf");
+    if (!pdfBase64) {
+      alert("Arquivo não encontrado. Refaça o pedido.");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = pdfBase64;
+    a.download = "curriculo-profissional.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  async function criarPix() {
+    const valor = localStorage.getItem("pagamentoValor") || "5.99";
+    const dados = JSON.parse(localStorage.getItem("curriculo") || "{}");
+    try {
+      const res = await fetch("/api/pix/criar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          valor: valor,
+          titulo: "Currículo Profissional",
+          tipo: "curriculo",
+          nome: dados.nome || "",
+          email: dados.email || "",
+          telefone: Array.isArray(dados.telefone) ? dados.telefone.join(" ") : (dados.telefone || ""),
+          estado: dados.estado || "",
+          cidade: dados.cidade || ""
+        })
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert("Erro ao gerar pagamento: " + data.error);
+        return;
+      }
+      pagamentoId = data.id;
+      document.getElementById("carregandoPix").classList.add("hidden");
+      document.getElementById("qrContainer").classList.remove("hidden");
+      document.getElementById("statusMsg").classList.remove("hidden");
+      document.getElementById("qrCodeImg").src = "data:image/jpeg;base64," + data.qr_code_base64;
+      iniciarPolling();
+    } catch (err) {
+      console.error(err);
+      alert("Falha ao gerar pagamento. Tente novamente.");
+    }
+  }
+
+  function iniciarPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(async () => {
+      if (!pagamentoId) return;
+      try {
+        const res = await fetch("/api/pix/status/" + pagamentoId);
+        const data = await res.json();
+        if (data.status === "approved") {
+          clearInterval(pollInterval);
+          pagamentoAprovado();
+        } else if (data.status === "rejected" || data.status === "cancelled") {
+          clearInterval(pollInterval);
+          document.getElementById("statusText").textContent = "Pagamento não concluído. Tente novamente.";
+          document.getElementById("statusText").className = "text-red-600 font-semibold";
+        }
+      } catch (err) {
+        console.error("Erro no polling:", err);
+      }
+    }, 3000);
+  }
+
+  function pagamentoAprovado() {
+    enviarLog("Pagou");
+    document.getElementById("qrContainer").classList.add("hidden");
+    document.getElementById("statusMsg").classList.add("hidden");
+    document.getElementById("areaSucesso").classList.remove("hidden");
+    const statusText = document.getElementById("statusText");
+    statusText.textContent = "Pagamento aprovado!";
+    statusText.className = "status-aprovado";
+  }
+
   // Ao carregar a página
   window.addEventListener("load", () => {
     abandonoRegistrado = false;
     enviarPagamento();
-    sessionStorage.removeItem("refreshing"); // limpa flag de refresh
+    criarPix();
   });
 
-  // Antes de sair/recarregar/navegar
-  window.addEventListener("beforeunload", function() {
-    // Marca que está em refresh
-    sessionStorage.setItem("refreshing", "true");
-  });
-
-  // Ao sair de verdade (fechar aba ou navegar)
-  window.addEventListener("pagehide", function() {
-    if (!sessionStorage.getItem("refreshing")) {
-      enviarAbandono();
-    }
-  });
-
-  // Ao minimizar ou trocar de aba
-  document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === "hidden") {
-      if (!sessionStorage.getItem("refreshing")) {
-        enviarAbandono();
-      }
-    } else if (document.visibilityState === "visible") {
-      // Reset flag ao voltar para a aba
-      abandonoRegistrado = false;
-      enviarPagamento();
-    }
-  });
-
-  // Intercepta cliques em links internos
-  document.addEventListener("click", function(e) {
-    const target = e.target.closest("a");
-    if (target && target.getAttribute("href")) {
-      const href = target.getAttribute("href");
-      // Se for link interno → dispara abandono antes de navegar
-      if (href.endsWith(".html") || href.startsWith("/")) {
-        enviarAbandono();
-      }
-    }
-  });
-
-  // 1. Copy Pix
-  document.getElementById('btnCopiarPix').addEventListener('click', function(e) {
-    e.preventDefault();
-    enviarLog('Copiou o Pix');
-    const pixKey = document.getElementById('pix').value;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(pixKey).then(() => {
-      }).catch(() => fallbackCopy(pixKey));
-    } else {
-      fallbackCopy(pixKey);
-    }
-  });
-
-  function fallbackCopy(text) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      alert('✅ Chave Pix copiada!');
-    } catch (err) {
-      alert('Pix: ' + text);
-    }
-    document.body.removeChild(textArea);
-  }
-
-  // 2. Cronômetro + WhatsApp
+  // Cronômetro
   let tempoRestante = 6 * 60;
   function atualizarCronometro() {
     const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");
     const segundos = String(tempoRestante % 60).padStart(2, "0");
     document.getElementById("cronometro").textContent = `${minutos}:${segundos}`;
-    if (tempoRestante <= 0) window.location.href = "/pagamentototal";
+    if (tempoRestante <= 0) { clearInterval(pollInterval); window.location.href = "/pagamentototal"; }
     else { tempoRestante--; setTimeout(atualizarCronometro, 1000); }
   }
   atualizarCronometro();
 
-  function atualizarLinkWhatsApp() {
-    const mensagem = "Olá, acabei de realizar o pagamento de R$5,99 e quero receber meu currículo em PDF.";
-    document.getElementById("whatsappLink").href = "https://wa.me/5585991340658?text=" + encodeURIComponent(mensagem);
-  }
-  window.addEventListener('load', atualizarLinkWhatsApp);
-
-  // Menu mobile
-  (function() {
-    const btnMenu = document.getElementById('btnMenu');
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (btnMenu && mobileMenu) {
-      btnMenu.addEventListener('click', e => {
-        e.stopPropagation();
-        const isOpen = mobileMenu.classList.toggle('open');
-        btnMenu.setAttribute('aria-expanded', isOpen);
-        btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-      });
-      window.addEventListener('scroll', () => {
-        const scrollY = window.pageYOffset;
-        if (scrollY > 150 && mobileMenu.classList.contains('open')) {
-          mobileMenu.classList.remove('open');
-          btnMenu.setAttribute('aria-expanded', 'false');
-          btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-        }
-      }, { passive: true });
+  // Abandono
+  window.addEventListener("beforeunload", function() {
+    sessionStorage.setItem("refreshing", "true");
+  });
+  window.addEventListener("pagehide", function() {
+    if (!sessionStorage.getItem("refreshing")) enviarAbandono();
+  });
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "hidden") {
+      if (!sessionStorage.getItem("refreshing")) enviarAbandono();
+    } else if (document.visibilityState === "visible") {
+      abandonoRegistrado = false;
+      enviarPagamento();
     }
-  })();
+  });
+  document.addEventListener("click", function(e) {
+    const target = e.target.closest("a");
+    if (target && target.getAttribute("href")) {
+      const href = target.getAttribute("href");
+      if (href.endsWith(".html") || href.startsWith("/")) enviarAbandono();
+    }
+  });
 </script>
 </body>
 </html>
