@@ -23,11 +23,12 @@
 - [x] `loading.html` → gera PDF, salva em `localStorage.curriculoPdf`, redireciona para `/pagamento`
 - [x] `pagamento.html` → QR Code Mercado Pago + polling + botão baixar currículo
 - [x] `pagamento.html` → botão copiar chave PIX (ícone SVG, sem texto)
+- [x] `pagamento.html` → input `readonly` com a chave PIX acima do botão de copiar
 
 ### 4. Frontend - Outras páginas de pagamento
-- [x] `pagamentototal.html` (R$12,50) → QR Code + download + botão copiar chave PIX
-- [x] `pagamentoanalise.html` (R$5,99) → QR Code + download + botão copiar chave PIX
-- [x] `pagamentototalanalise.html` (R$12,50) → QR Code + download + botão copiar chave PIX
+- [x] `pagamentototal.html` (R$12,50) → QR Code + download + botão copiar chave PIX + input readonly
+- [x] `pagamentoanalise.html` (R$5,99) → QR Code + download + botão copiar chave PIX + input readonly
+- [x] `pagamentototalanalise.html` (R$12,50) → QR Code + download + botão copiar chave PIX + input readonly
 
 ### 5. Página 404
 - [x] Criar `public/404.html`
