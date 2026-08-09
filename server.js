@@ -1905,7 +1905,7 @@ if (!valor || isNaN(valor)) {
     const paymentData = response;
     const paymentId = paymentData.id;
 
-    res.json({
+res.json({
       id: paymentId,
       status: paymentData.status,
       qr_code: paymentData.point_of_interaction?.transaction_data?.qr_code,
@@ -1914,8 +1914,9 @@ if (!valor || isNaN(valor)) {
       tipo: tipoFinal,
     });
   } catch (err) {
-    console.error("❌ Erro ao criar PIX:", err.message, err.cause || "");
-    res.status(500).json({ error: "Erro ao criar pagamento PIX" });
+    console.error("❌ Erro ao criar PIX:", err.message, "| cause:", err.cause?.message || err.cause || "");
+    const detalhe = err.cause?.message || err.message || "Erro desconhecido";
+    res.status(500).json({ error: "Erro ao criar pagamento PIX", detalhe });
   }
 });
 
