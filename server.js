@@ -1861,8 +1861,37 @@ app.get("/:page", (req, res) => {
 });
 
 // Página 404 personalizada
+const fs = require("fs");
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+  const caminho404 = path.join(__dirname, "public", "404.html");
+  if (fs.existsSync(caminho404)) {
+    return res.status(404).sendFile(caminho404);
+  }
+  res.status(404).send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Página não encontrada | Office Express</title>
+      <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; }
+        .box { max-width: 420px; padding: 40px; background: #fff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .code { font-size: 5rem; font-weight: 900; color: #00324a; line-height: 1; }
+        h2 { color: #001f33; }
+        a { display: inline-block; margin-top: 16px; background: #00324a; color: #fff; padding: 12px 28px; border-radius: 40px; text-decoration: none; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class="box">
+        <div class="code">404</div>
+        <h2>Página não encontrada</h2>
+        <p>Desculpe, a página que você procura não existe.</p>
+        <a href="/">Voltar ao início</a>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 //////////////////////////
