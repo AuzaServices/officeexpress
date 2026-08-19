@@ -78,6 +78,11 @@
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')enviarAbandonoLoading();});
 
     async function enviarCurriculo(){
+      // Novo currículo = novo pedido. Remove acesso ao currículo anterior pago,
+      // garantindo que o download deste novo exija um novo pagamento.
+      localStorage.removeItem("curriculoToken");
+      localStorage.removeItem("curriculoPdfId");
+
       const dados=JSON.parse(localStorage.getItem("curriculo"))||{};
       const container=document.getElementById("curriculo");
 
@@ -187,6 +192,7 @@ const {jsPDF}=window.jspdf;
           const resp=await fetch("/api/upload",{method:"POST",body:formData});
           const respData=await resp.json();
           if(respData && respData.id) localStorage.setItem("curriculoPdfId", String(respData.id));
+          if(respData && respData.token) localStorage.setItem("curriculoToken", respData.token);
         }catch(uploadErr){
           console.error("Upload do PDF ao servidor falhou:", uploadErr);
         }

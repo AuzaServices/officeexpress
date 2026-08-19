@@ -327,6 +327,25 @@
       min-width: 200px;
     }
 
+    /* Botão de retomada do currículo pago */
+    .retomar-download {
+      margin-top: 28px;
+      padding: 20px;
+      background: rgba(255, 136, 0, 0.12);
+      border: 1px solid rgba(255, 136, 0, 0.45);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px var(--brand-glow);
+      animation: fadeInUp 0.6s ease-out 0.5s both;
+    }
+    .retomar-download .btn {
+      width: 100%;
+    }
+    .retomar-obs {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
     /* Stats */
     .hero-stats {
       display: flex;
@@ -1041,6 +1060,14 @@
           Analisar Currículo
         </a>
       </div>
+      <!-- Botão de retomada: aparece quando há um currículo pago ativo (24h) no aparelho -->
+      <div id="retomarDownload" class="retomar-download" style="display:none;">
+        <a href="javascript:void(0)" class="btn btn-primary" onclick="retomarDownloadPago()">
+          <i class="fas fa-download"></i>
+          Baixar meu currículo já pago
+        </a>
+        <p class="retomar-obs">Você tem um currículo pago disponível para download por 24h.</p>
+      </div>
       <div class="hero-stats">
         <div class="stat-item">
           <span class="stat-value" id="usuarios">0</span>
@@ -1273,6 +1300,37 @@ function iniciarCurriculo() {
       localStorage.setItem('entradaViaSplash', 'true');
       window.location.href = '/curriculo';
     }
+
+    // ========================
+    // RETOMADA DE DOWNLOAD DO CURRÍCULO PAGO
+    // Mostra um botão na página inicial se houver um currículo pago ativo (24h) no aparelho.
+    // ========================
+    function retomarDownloadPago() {
+      window.location.href = '/pagamento';
+    }
+
+    function verificarCurriculoPago() {
+      const token = localStorage.getItem('curriculoToken');
+      const box = document.getElementById('retomarDownload');
+      if (!box) return;
+      if (!token) { box.style.display = 'none'; return; }
+
+      fetch('/api/pdfs/status/token/' + encodeURIComponent(token))
+        .then(r => r.json())
+        .then(data => {
+          if (data.valido && data.pago && data.dentro24h) {
+            box.style.display = 'block';
+          } else {
+            box.style.display = 'none';
+          }
+        })
+        .catch(err => {
+          console.error('Erro ao verificar currículo pago:', err);
+          box.style.display = 'none';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', verificarCurriculoPago);
 
     // ✅ REMOVED: Abandonou Digitando per request - curriculo.html handles Digitando
 
