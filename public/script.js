@@ -119,12 +119,9 @@ function salvarDados() {
 
   const merged = { ...atual };
   for (const [key, value] of Object.entries(dados)) {
-    if (Array.isArray(value)) {
-      if (value.length > 0) merged[key] = value;
-      else if (!(key in merged)) merged[key] = value;
-    } else {
-      merged[key] = value;
-    }
+    // Arrays sempre sobrescrevem (inclusive quando vazios), para que remover
+    // todos os itens de telefones/cursos/experiências seja refletido no save.
+    merged[key] = value;
   }
 
   try {
@@ -137,7 +134,7 @@ function salvarDados() {
   }
 }
 
-function adicionarTelefone() {
+function adicionarTelefone(valor = "") {
   console.log("📞 adicionarTelefone() chamada");
   const container = document.getElementById("telefones");
 
@@ -150,6 +147,7 @@ function adicionarTelefone() {
   input.name = "telefone[]";
   input.className = "telefone-input";
   input.placeholder = "(DDD) 9XXXX-XXXX";
+  input.value = valor;
   input.style.marginTop = "10px";
 
   const erro = document.createElement("span");

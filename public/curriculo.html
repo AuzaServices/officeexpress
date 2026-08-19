@@ -711,6 +711,40 @@
           preview.style.display = 'block';
         }
       }
+
+      // Recria telefones extras (o primeiro input já existe no HTML estático)
+      if (Array.isArray(dados.telefone) && dados.telefone.length > 0) {
+        const primeiro = document.querySelector('#telefones [name="telefone[]"]');
+        if (primeiro) primeiro.value = dados.telefone[0] || '';
+        for (let i = 1; i < dados.telefone.length; i++) {
+          if (typeof adicionarTelefone === 'function') adicionarTelefone(dados.telefone[i] || '');
+        }
+      }
+
+      // Recria cursos salvos
+      if (Array.isArray(dados.curso) && dados.curso.length > 0) {
+        for (let i = 0; i < dados.curso.length; i++) {
+          if (typeof adicionarCurso === 'function') {
+            adicionarCurso(dados.curso[i] || '', dados.instituicao?.[i] || '', dados.carga?.[i] || '');
+          }
+        }
+      }
+
+      // Recria experiências profissionais salvas (apenas se NÃO for primeiro emprego)
+      const ehPrimeiroEmprego = dados.primeiroEmprego === true || dados.primeiroEmprego === "true";
+      if (!ehPrimeiroEmprego && Array.isArray(dados.empresa) && dados.empresa.length > 0) {
+        for (let i = 0; i < dados.empresa.length; i++) {
+          if (typeof adicionarExperiencia === 'function') {
+            adicionarExperiencia(
+              dados.empresa[i] || '',
+              dados.cargo?.[i] || '',
+              dados.atividades?.[i] || '',
+              dados.periodo_inicio?.[i] || '',
+              dados.periodo_fim?.[i] || ''
+            );
+          }
+        }
+      }
     });
 
     // Busca CEP
