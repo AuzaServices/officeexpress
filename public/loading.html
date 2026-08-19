@@ -81,6 +81,7 @@
       // Novo currículo = novo item no carrinho. Remove acesso ao currículo anterior
       // (que já pago ficaria no servidor), garantindo que este exija novo pagamento.
       localStorage.removeItem("curriculoToken");
+      localStorage.removeItem("curriculoPdfId");
 
       const dados=JSON.parse(localStorage.getItem("curriculo"))||{};
       const container=document.getElementById("curriculo");

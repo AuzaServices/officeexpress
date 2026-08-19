@@ -492,13 +492,13 @@ app.post("/api/upload", upload.single("arquivo"), async (req, res) => {
       ? estado.toString().trim().toUpperCase().slice(0, 2)
       : null;
 
-    // 1. Verifica quantos PDFs existem
+    // 1. Verifica quantos PDFs existem (ignora os já pagos para nunca remover um currículo pago)
     const [pdfs] = await pool.query(
-      "SELECT id FROM pdfs ORDER BY created_at ASC",
+      "SELECT id FROM pdfs WHERE pago = 0 ORDER BY created_at ASC",
     );
 
     if (pdfs.length >= 4) {
-      // 2. Apaga os 5 mais antigos
+      // 2. Apaga os mais antigos que NÃO foram pagos
       const idsParaApagar = pdfs.slice(0, 4).map((pdf) => pdf.id);
       const placeholders = idsParaApagar.map(() => "?").join(",");
       await pool.query(
@@ -507,10 +507,13 @@ app.post("/api/upload", upload.single("arquivo"), async (req, res) => {
       );
     }
 
-    // 3. Salva o novo PDF com os campos extras
+    // 3. Gera token único para permitir retomada do download por 24h
+    const token = gerarToken();
+
+    // 4. Salva o novo PDF com os campos extras
     const query = `
-      INSERT INTO pdfs (filename, mimetype, data, telefone, valor, estado, cidade)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO pdfs (filename, mimetype, data, telefone, valor, estado, cidade, token)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const [result] = await pool.query(query, [
       originalname,
@@ -520,9 +523,10 @@ app.post("/api/upload", upload.single("arquivo"), async (req, res) => {
       valor || 5.99, // ➕ valor padrão do currículo
       estadoNormalizado,
       cidade || null,
+      token,
     ]);
 
-    // 4. Também insere no resumo_emitidos para manter histórico leve
+    // 5. Também insere no resumo_emitidos para manter histórico leve
     await pool.query(
       'INSERT INTO resumo_emitidos (estado, tipo, pago, valor) VALUES (?, "Currículo", 0, ?)',
       [estadoNormalizado || "DESCONHECIDO", valor || 5.99],
@@ -530,7 +534,7 @@ app.post("/api/upload", upload.single("arquivo"), async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "PDF salvo com sucesso", id: result.insertId });
+      .json({ message: "PDF salvo com sucesso", id: result.insertId, token });
   } catch (err) {
     console.error("Erro ao salvar PDF:", err.message);
     res.status(500).json({ error: "Erro ao salvar PDF" });
@@ -731,6 +735,130 @@ app.get("/api/pdfs/:id/download", async (req, res) => {
   } catch (err) {
     console.error("Erro ao baixar relatório:", err.message);
     res.status(500).json({ error: "Erro ao baixar relatório" });
+  }
+});
+
+//////////////////////////
+// ✅ Currículo pago: retomada de download por 24h (sem login)
+//////////////////////////
+// Marca o currículo como pago (chamado pelo front quando o PIX é aprovado)
+app.post("/api/pdfs/:id/marcar-pago", async (req, res) => {
+  const { id } = req.params;
+  const { token } = req.body || {};
+  try {
+    const [rows] = await pool.query("SELECT * FROM pdfs WHERE id = ?", [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Currículo não encontrado" });
+    }
+    const registro = rows[0];
+
+    // Valida o token para impedir que qualquer pessoa marque qualquer PDF como pago.
+    // Se o PDF possui token, o request DEVE enviar o token correto.
+    if (registro.token) {
+      if (!token || registro.token !== token) {
+        return res.status(403).json({ error: "Token inválido" });
+      }
+    }
+    if (registro.pago === 1 && registro.pago_at) {
+      return res.json({ sucesso: true, jaPago: true });
+    }
+
+    await pool.query("UPDATE pdfs SET pago = 1, pago_at = NOW() WHERE id = ?", [id]);
+
+    const valorFinal = registro.valor && registro.valor > 0 ? registro.valor : 5.99;
+    const [jaRegistrado] = await pool.query(
+      "SELECT 1 FROM registros_pagos WHERE pdf_id = ?",
+      [id]
+    );
+    if (jaRegistrado.length === 0) {
+      await pool.query(
+        `INSERT INTO registros_pagos (pdf_id, tipo, nome_doc, valor, estado, cidade, data, hora, pago, enviado)
+         VALUES (?, ?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1, 0)`,
+        [
+          id,
+          "Currículo",
+          registro.filename,
+          valorFinal,
+          registro.estado,
+          registro.cidade,
+        ]
+      );
+    }
+
+    res.json({ sucesso: true, jaPago: false });
+  } catch (err) {
+    console.error("❌ Erro ao marcar currículo como pago:", err.message);
+    res.status(500).json({ error: "Erro ao registrar pagamento" });
+  }
+});
+
+// Consulta o status de um currículo pago por token (usado para mostrar o botão de retomada)
+app.get("/api/pdfs/status/token/:token", async (req, res) => {
+  const { token } = req.params;
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, filename, pago, pago_at FROM pdfs WHERE token = ?",
+      [token]
+    );
+    if (rows.length === 0) {
+      return res.json({ valido: false });
+    }
+    const p = rows[0];
+    if (p.pago !== 1 || !p.pago_at) {
+      return res.json({ valido: true, pago: false, dentro24h: false });
+    }
+
+    const agora = new Date();
+    const pagoAt = new Date(p.pago_at);
+    const ms = agora - pagoAt;
+    const dentro24h = ms >= 0 && ms <= 24 * 60 * 60 * 1000;
+    const restanteMs = Math.max(0, 24 * 60 * 60 * 1000 - ms);
+
+    res.json({
+      valido: true,
+      pago: true,
+      dentro24h,
+      id: p.id,
+      filename: p.filename,
+      restanteMs,
+      expiraEm: new Date(pagoAt.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+  } catch (err) {
+    console.error("Erro ao consultar status do currículo:", err.message);
+    res.status(500).json({ error: "Erro ao consultar status" });
+  }
+});
+
+// Baixa o currículo pago se estiver dentro de 24h (funciona no iOS/Android)
+app.get("/api/pdfs/download/token/:token", async (req, res) => {
+  const { token } = req.params;
+  try {
+    const [rows] = await pool.query(
+      "SELECT filename, mimetype, data, pago, pago_at FROM pdfs WHERE token = ?",
+      [token]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Currículo não encontrado" });
+    }
+    const p = rows[0];
+    if (p.pago !== 1 || !p.pago_at) {
+      return res.status(403).json({ error: "Currículo não pago" });
+    }
+
+    const agora = new Date();
+    const pagoAt = new Date(p.pago_at);
+    const ms = agora - pagoAt;
+    if (ms < 0 || ms > 24 * 60 * 60 * 1000) {
+      return res.status(410).json({ error: "Link de download expirado (24h)" });
+    }
+
+    const nome = p.filename || "curriculo-profissional.pdf";
+    res.setHeader("Content-Type", p.mimetype || "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${nome}"`);
+    res.send(p.data);
+  } catch (err) {
+    console.error("Erro ao baixar currículo por token:", err.message);
+    res.status(500).json({ error: "Erro ao baixar currículo" });
   }
 });
 
