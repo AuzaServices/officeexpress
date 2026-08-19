@@ -86,6 +86,14 @@ body {
           <a href="/contato">Contato</a>
           <a href="/sobre">Sobre nos</a>
         </nav>
+        <a href="/pagamento" class="carrinho-link" id="carrinhoLink" aria-label="Meu carrinho" title="Meu carrinho">
+          <svg class="carrinho-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span class="carrinho-badge" id="carrinhoBadge" style="display:none;">1</span>
+        </a>
         <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
           <i class="fas fa-bars"></i>
         </button>
@@ -192,6 +200,16 @@ body {
           Após o pagamento, o botão de download será liberado automaticamente.
         </p>
 
+        <!-- Aviso para não fechar a página após o pagamento -->
+        <div class="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center">
+          <p class="text-sm font-semibold text-amber-800">
+            <i class="fa-solid fa-circle-exclamation"></i> Não feche esta página após o pagamento.
+          </p>
+          <p class="text-xs text-amber-700 mt-1">
+            Seu download fica disponível aqui por 24 horas. Se você sair, poderá voltar (no mesmo aparelho) para baixar novamente.
+          </p>
+        </div>
+
         <!-- Selos de confiança -->
         <div class="mt-5 grid grid-cols-3 gap-4 text-gray-500 text-xs text-center">
           <div><i class="fa-solid fa-lock mb-1 text-gray-400"></i><span class="block">Pagamento seguro</span></div>
@@ -291,14 +309,21 @@ let pollInterval = null;
   }
 
 function baixarCurriculo() {
-    // 1) Download via servidor (funciona no iOS e Android com Content-Disposition)
+    // 1) Download via carrinho (regenera o PDF sob demanda; funciona iOS/Android e qualquer aparelho)
+    const token = localStorage.getItem("curriculoToken");
+    if (token) {
+      window.location.href = "/api/carrinho/" + encodeURIComponent(token) + "/download";
+      return;
+    }
+
+    // 2) Fallback para fluxos antigos: download via id
     const pdfId = localStorage.getItem("curriculoPdfId");
     if (pdfId) {
       window.location.href = "/api/pdfs/" + pdfId + "/download";
       return;
     }
 
-    // 2) Fallback para currículos antigos que ficaram só no localStorage
+    // 3) Último recurso: currículo que ficou só no localStorage
     const pdfBase64 = localStorage.getItem("curriculoPdf");
     if (!pdfBase64) {
       alert("Arquivo não encontrado. Refaça o pedido.");
@@ -387,6 +412,21 @@ pagamentoId = data.id;
     }, 3000);
   }
 
+// Marca o item do carrinho como pago no servidor (inicia o prazo de 24h)
+  async function registrarPagamentoServidor() {
+    const token = localStorage.getItem("curriculoToken");
+    if (!token) return;
+    try {
+      await fetch("/api/carrinho/" + encodeURIComponent(token) + "/pagar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+    } catch (e) {
+      console.error("Erro ao registrar pagamento no servidor:", e);
+    }
+  }
+
 function pagamentoAprovado() {
     document.getElementById("qrContainer").classList.add("hidden");
     document.getElementById("statusMsg").classList.add("hidden");
@@ -394,12 +434,50 @@ function pagamentoAprovado() {
     const statusText = document.getElementById("statusText");
     statusText.textContent = "Pagamento aprovado!";
     statusText.className = "status-aprovado";
+    registrarPagamentoServidor();
     habilitarDownload();
   }
 
   window.addEventListener("load", () => {
-    criarPix();
+    atualizarCarrinho();
+    verificarPagamentoExistente();
   });
+
+  // Mostra o badge do carrinho quando há um item neste aparelho
+  function atualizarCarrinho() {
+    const badge = document.getElementById('carrinhoBadge');
+    if (!badge) return;
+    if (localStorage.getItem('curriculoToken')) {
+      badge.style.display = 'inline-flex';
+      badge.textContent = '1';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // Se o usuário já tem um item pago e dentro de 24h, libera o download direto
+  // (permite retomar após fechar a página, sem pedir novo pagamento).
+  async function verificarPagamentoExistente() {
+    const token = localStorage.getItem("curriculoToken");
+    if (!token) { criarPix(); return; }
+    try {
+      const res = await fetch("/api/carrinho/status/" + encodeURIComponent(token));
+      const data = await res.json();
+      if (data.valido && data.pago && data.dentro24h) {
+        document.getElementById("qrContainer").classList.add("hidden");
+        document.getElementById("statusMsg").classList.add("hidden");
+        document.getElementById("areaSucesso").classList.remove("hidden");
+        const statusText = document.getElementById("statusText");
+        statusText.textContent = "Pagamento aprovado!";
+        statusText.className = "status-aprovado";
+        habilitarDownload();
+        return;
+      }
+    } catch (e) {
+      console.error("Erro ao verificar pagamento existente:", e);
+    }
+    criarPix();
+  }
 
   // Menu mobile
   (function() {

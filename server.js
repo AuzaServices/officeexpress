@@ -75,6 +75,123 @@ app.use(
   }
 })();
 
+// 🧬 Migração defensiva: garante a tabela 'carrinho' (guarda só os DADOS do currículo,
+// nunca o PDF binário — o PDF é regenerado sob demanda no download)
+async function garantirSchemaCarrinho() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS carrinho (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        token VARCHAR(64) NOT NULL,
+        dados_json LONGTEXT NULL,
+        pagamento_id VARCHAR(64) NULL,
+        pago TINYINT(1) NOT NULL DEFAULT 0,
+        pago_at DATETIME NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE INDEX uniq_carrinho_token (token)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela 'carrinho' garantida");
+  } catch (err) {
+    console.error("⚠️ Não foi possível garantir a tabela carrinho:", err.message);
+  }
+}
+garantirSchemaCarrinho();
+
+// Gera um token único para identificação do item do carrinho
+function gerarToken() {
+  return (
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).substring(2, 10) +
+    Math.random().toString(36).substring(2, 10)
+  );
+}
+
+// Gera o PDF do currículo sob demanda a partir dos dados (Opção B: nada de PDF no banco)
+function gerarPdfCurriculo(dados) {
+  return new Promise((resolve, reject) => {
+    try {
+      const chunks = [];
+      const doc = new PDFDocument({ size: "A4", margin: 50, bufferPages: true });
+
+      doc.on("data", (c) => chunks.push(c));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", reject);
+
+      // Cabeçalho
+      doc.font("Helvetica-Bold").fontSize(22).fillColor("#00324a");
+      doc.text(dados.nome || "Currículo Profissional", { align: "left" });
+      doc.moveDown(0.4);
+
+      const linhas = [];
+      if (dados.email) linhas.push("Email: " + dados.email);
+      if (dados.telefone) linhas.push("Telefone: " + (Array.isArray(dados.telefone) ? dados.telefone.join(" / ") : dados.telefone));
+      if (dados.idade) linhas.push("Idade: " + dados.idade + " anos");
+      const end = [dados.endereco, dados.numero ? ", " + dados.numero : "", dados.cidade ? " - " + dados.cidade : "", dados.estado ? " - " + dados.estado : ""].join("").trim();
+      if (end) linhas.push("Endereço: " + end);
+      if (dados.infoAdicional) linhas.push(dados.infoAdicional);
+
+      doc.font("Helvetica").fontSize(10).fillColor("#333");
+      linhas.forEach((l) => doc.text(l));
+      doc.moveDown(0.6);
+
+      const secao = (titulo) => {
+        doc.moveDown(0.5);
+        doc.font("Helvetica-Bold").fontSize(14).fillColor("#00324a");
+        doc.text(titulo);
+        doc.moveDown(0.2);
+        doc.strokeColor("#cccccc").lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+        doc.moveDown(0.3);
+      };
+
+      if (dados.objetivo) { secao("Objetivo"); doc.font("Helvetica").fontSize(11).fillColor("#333").text(dados.objetivo); }
+      if (dados.formacao) { secao("Formação Acadêmica"); doc.font("Helvetica").fontSize(11).fillColor("#333").text(dados.formacao); }
+
+      if (Array.isArray(dados.curso) && dados.curso.some(Boolean)) {
+        secao("Cursos");
+        doc.font("Helvetica").fontSize(11).fillColor("#333");
+        dados.curso.forEach((c, i) => {
+          if (!c) return;
+          let linha = c;
+          if (dados.instituicao && dados.instituicao[i]) linha += " - " + dados.instituicao[i];
+          if (dados.carga && dados.carga[i]) linha += " (" + dados.carga[i] + ")";
+          doc.text("• " + linha);
+        });
+      }
+
+      const primeiroEmprego = dados.primeiroEmprego === "true" || dados.primeiroEmprego === true;
+      const temEmpresas = Array.isArray(dados.empresa) && dados.empresa.some(Boolean);
+      if (primeiroEmprego) {
+        secao("Experiência Profissional");
+        doc.font("Helvetica-Oblique").fontSize(11).fillColor("#333").text("Primeiro emprego");
+      } else if (temEmpresas) {
+        secao("Experiência Profissional");
+        doc.font("Helvetica").fontSize(11).fillColor("#333");
+        dados.empresa.forEach((emp, i) => {
+          if (!emp) return;
+          const cargo = dados.cargo && dados.cargo[i] ? dados.cargo[i] : "";
+          const ini = dados.periodo_inicio && dados.periodo_inicio[i] ? dados.periodo_inicio[i] : "";
+          const fim = dados.periodo_fim && dados.periodo_fim[i] ? dados.periodo_fim[i] : "";
+          const periodo = ini && fim ? ini + " a " + fim : (ini || fim);
+          const atividades = dados.atividades && dados.atividades[i] ? dados.atividades[i] : "";
+          doc.font("Helvetica-Bold").text(emp + (periodo ? " - " + periodo : ""));
+          if (cargo) doc.font("Helvetica").text(cargo);
+          if (atividades) doc.font("Helvetica").text(atividades);
+          doc.moveDown(0.3);
+        });
+      }
+
+      if (dados.habilidades) { secao("Habilidades"); doc.font("Helvetica").fontSize(11).fillColor("#333").text(dados.habilidades); }
+      if (dados.hobbies) { secao("Hobbies"); doc.font("Helvetica").fontSize(11).fillColor("#333").text(dados.hobbies); }
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 async function protegerParceiro(req, res, next) {
   if (!req.session.parceiroId) {
     return res.json({ forceLogout: true });
@@ -419,6 +536,165 @@ app.post("/api/upload", upload.single("arquivo"), async (req, res) => {
     res.status(500).json({ error: "Erro ao salvar PDF" });
   }
 });
+
+//////////////////////////
+// 🛒 Carrinho de Currículo (Opção B: guarda só os DADOS, regenera o PDF sob demanda)
+//////////////////////////
+// Cria um item no carrinho a partir dos dados do currículo (sem enviar o PDF)
+app.post("/api/carrinho", async (req, res) => {
+  try {
+    const dados = req.body && req.body.dados ? req.body.dados : {};
+    if (!dados || typeof dados !== "object") {
+      return res.status(400).json({ error: "Dados do currículo inválidos" });
+    }
+    const token = gerarToken();
+    const dadosJson = JSON.stringify(dados);
+
+    // Limpa itens antigos do carrinho (mais de 30 dias) para não acumular
+    try {
+      await pool.query(
+        "DELETE FROM carrinho WHERE created_at < (NOW() - INTERVAL 30 DAY)"
+      );
+    } catch (cleanErr) {
+      console.error("Erro ao limpar carrinho antigo:", cleanErr.message);
+    }
+
+    const [result] = await pool.query(
+      "INSERT INTO carrinho (token, dados_json) VALUES (?, ?)",
+      [token, dadosJson]
+    );
+
+    res.status(200).json({ message: "Currículo adicionado ao carrinho", token, id: result.insertId });
+  } catch (err) {
+    console.error("Erro ao criar item no carrinho:", err.message);
+    res.status(500).json({ error: "Erro ao criar item no carrinho" });
+  }
+});
+
+// Consulta o status de um item do carrinho por token
+app.get("/api/carrinho/status/:token", async (req, res) => {
+  const { token } = req.params;
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, pago, pago_at, dados_json, created_at FROM carrinho WHERE token = ?",
+      [token]
+    );
+    if (rows.length === 0) {
+      return res.json({ valido: false });
+    }
+    const item = rows[0];
+    let dados = null;
+    if (item.dados_json) {
+      try { dados = JSON.parse(item.dados_json); } catch (e) { dados = null; }
+    }
+
+    if (item.pago !== 1 || !item.pago_at) {
+      return res.json({ valido: true, pago: false, dentro24h: false, nome: dados && dados.nome || "" });
+    }
+
+    const agora = new Date();
+    const pagoAt = new Date(item.pago_at);
+    const ms = agora - pagoAt;
+    const dentro24h = ms >= 0 && ms <= 24 * 60 * 60 * 1000;
+
+    res.json({
+      valido: true,
+      pago: true,
+      dentro24h,
+      nome: dados && dados.nome || "",
+      expiraEm: new Date(pagoAt.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+  } catch (err) {
+    console.error("Erro ao consultar carrinho:", err.message);
+    res.status(500).json({ error: "Erro ao consultar carrinho" });
+  }
+});
+
+// Marca um item do carrinho como pago (inicia o prazo de 24h)
+app.post("/api/carrinho/:token/pagar", async (req, res) => {
+  const { token } = req.params;
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, pago, pago_at, dados_json FROM carrinho WHERE token = ?",
+      [token]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Item não encontrado" });
+    }
+    const item = rows[0];
+
+    if (item.pago === 1 && item.pago_at) {
+      return res.json({ sucesso: true, jaPago: true });
+    }
+
+    await pool.query(
+      "UPDATE carrinho SET pago = 1, pago_at = NOW() WHERE token = ?",
+      [token]
+    );
+
+    // Registra no histórico de pagos (metadados, sem PDF)
+    let nome = "Currículo";
+    let dados = null;
+    if (item.dados_json) {
+      try { dados = JSON.parse(item.dados_json); } catch (e) {}
+      if (dados && dados.nome) nome = dados.nome;
+    }
+    try {
+      await pool.query(
+        `INSERT INTO registros_pagos (tipo, nome_doc, valor, estado, cidade, data, hora, pago, enviado)
+         VALUES (?, ?, ?, ?, ?, DATE(NOW()), TIME(NOW()), 1, 0)`,
+        ["Currículo", nome, 5.99, dados && dados.estado || "DESCONHECIDO", dados && dados.cidade || "Desconhecida"]
+      );
+    } catch (regErr) {
+      console.error("Erro ao registrar pagamento do carrinho:", regErr.message);
+    }
+
+    res.json({ sucesso: true, jaPago: false });
+  } catch (err) {
+    console.error("Erro ao marcar carrinho como pago:", err.message);
+    res.status(500).json({ error: "Erro ao registrar pagamento" });
+  }
+});
+
+// Baixa o PDF regenerado sob demanda (apenas se pago e dentro de 24h)
+app.get("/api/carrinho/:token/download", async (req, res) => {
+  const { token } = req.params;
+  try {
+    const [rows] = await pool.query(
+      "SELECT dados_json, pago, pago_at FROM carrinho WHERE token = ?",
+      [token]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Currículo não encontrado" });
+    }
+    const item = rows[0];
+    if (item.pago !== 1 || !item.pago_at) {
+      return res.status(403).json({ error: "Currículo ainda não pago" });
+    }
+
+    const agora = new Date();
+    const pagoAt = new Date(item.pago_at);
+    const ms = agora - pagoAt;
+    if (ms < 0 || ms > 24 * 60 * 60 * 1000) {
+      return res.status(410).json({ error: "Link de download expirado (24h)" });
+    }
+
+    let dados = {};
+    if (item.dados_json) {
+      try { dados = JSON.parse(item.dados_json); } catch (e) { dados = {}; }
+    }
+
+    const buffer = await gerarPdfCurriculo(dados);
+    const nome = (dados.nome ? dados.nome.replace(/[^a-zA-Z0-9 ]/g, "").trim() : "curriculo") + ".pdf";
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${nome}"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error("Erro ao baixar currículo do carrinho:", err.message);
+    res.status(500).json({ error: "Erro ao gerar o currículo" });
+  }
+});
+
 //////////////////////////
 // 📋 Listar PDFs
 //////////////////////////
