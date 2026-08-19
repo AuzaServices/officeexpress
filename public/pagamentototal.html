@@ -291,17 +291,36 @@ let pollInterval = null;
   }
 
 function baixarCurriculo() {
+    // 1) Download via servidor (funciona no iOS e Android com Content-Disposition)
+    const pdfId = localStorage.getItem("curriculoPdfId");
+    if (pdfId) {
+      window.location.href = "/api/pdfs/" + pdfId + "/download";
+      return;
+    }
+
+    // 2) Fallback para currículos antigos que ficaram só no localStorage
     const pdfBase64 = localStorage.getItem("curriculoPdf");
     if (!pdfBase64) {
       alert("Arquivo não encontrado. Refaça o pedido.");
       return;
     }
+
+    // Converte data URI em Blob (necessário para download no iOS Safari)
+    const parts = pdfBase64.split(",");
+    const mime = parts[0].match(/:(.*?);/)[1];
+    const b64 = atob(parts[1]);
+    const bytes = new Uint8Array(b64.length);
+    for (let i = 0; i < b64.length; i++) bytes[i] = b64.charCodeAt(i);
+    const blob = new Blob([bytes], { type: mime });
+
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = pdfBase64;
+    a.href = url;
     a.download = "curriculo-profissional.pdf";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   // Habilitar o botão de download após pagamento

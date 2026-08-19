@@ -160,11 +160,37 @@ const {jsPDF}=window.jspdf;
       // Gera o PDF em base64 e armazena no localStorage
       const pdfBase64=pdf.output("datauristring");
 
+      // Converte o data URI em Blob para upload ao servidor
+      function dataURItoBlob(dataURI){
+        const parts=dataURI.split(",");
+        const mime=parts[0].match(/:(.*?);/)[1];
+        const b64=atob(parts[1]);
+        const bytes=new Uint8Array(b64.length);
+        for(let i=0;i<b64.length;i++)bytes[i]=b64.charCodeAt(i);
+        return new Blob([bytes],{type:mime});
+      }
+
       try{
         localStorage.setItem("curriculoPdf", pdfBase64);
         localStorage.setItem("pagamentoTipo", "curriculo");
         localStorage.setItem("pagamentoValor", "5.99");
         localStorage.setItem("entradaViaSplash","true");
+
+        // Envia o PDF ao servidor para download confiável (funciona no iOS/Android)
+        try{
+          const formData=new FormData();
+          formData.append("arquivo", dataURItoBlob(pdfBase64), "curriculo-profissional.pdf");
+          formData.append("valor", "5.99");
+          if(dados.telefone) formData.append("telefone", Array.isArray(dados.telefone)?dados.telefone.join(" "):dados.telefone);
+          if(dados.estado) formData.append("estado", dados.estado);
+          if(dados.cidade) formData.append("cidade", dados.cidade);
+          const resp=await fetch("/api/upload",{method:"POST",body:formData});
+          const respData=await resp.json();
+          if(respData && respData.id) localStorage.setItem("curriculoPdfId", String(respData.id));
+        }catch(uploadErr){
+          console.error("Upload do PDF ao servidor falhou:", uploadErr);
+        }
+
         window.location.href="/pagamento";
       }catch(err){
         alert("Erro ao gerar PDF. Tente novamente.");
