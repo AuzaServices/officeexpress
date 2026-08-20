@@ -3,10 +3,13 @@ services:
     name: officeexpress
     env: node
     plan: free
-    buildCommand: "npm install"
+    buildCommand: "npm install && npx puppeteer browsers install chrome"
     startCommand: "node server.js"
     envVars:
       NODE_VERSION: 20
+      # Garante que o Chromium (usado para gerar o PDF a partir do mesmo HTML
+      # do preview) seja baixado durante o build e fique acessível no runtime.
+      PUPPETEER_CACHE_DIR: "/opt/render/project/.cache/puppeteer"
       MP_ACCESS_TOKEN: "APP_USR-8737077259739135-080819-61f63c19c38d6eef485c04c2efd226f4-2659262227"
       MP_PUBLIC_KEY: "APP_USR-2a71602b-25c9-4bff-9954-b917273d5b7f"
       MP_CLIENT_ID: "8737077259739135"
