@@ -8,13 +8,56 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
-    .editor-wrap { max-width: 760px; margin: 0 auto; }
+    .editor-wrap { max-width: 1200px; margin: 0 auto; }
+    .editor-layout { display: flex; gap: 32px; align-items: flex-start; }
+    .editor-form { flex: 1 1 52%; min-width: 0; }
+    .editor-preview-col { flex: 1 1 48%; min-width: 0; position: sticky; top: 90px; }
     .nav-steps { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; }
     .etapa { display: none; }
     .etapa.ativa { display: block; animation: fadeInUp .3s ease; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     .foto-preview { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--brand); margin-top: 8px; display: none; }
     .info-banner { background: rgba(255,136,0,0.12); border: 1px solid rgba(255,136,0,0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; color: var(--text-secondary); font-size: .9rem; }
+    .btn-visualizar { display: none; }
+
+    /* Folha A4 em tempo real (desktop) */
+    .folha-a4 {
+      background: #ffffff; color: #1a1a2e; border-radius: 6px;
+      box-shadow: 0 20px 50px var(--shadow-lg); padding: 40px;
+      font-size: 14px; line-height: 1.55; min-height: 200px;
+      max-width: 100%; overflow: hidden;
+    }
+    .folha-a4 .fa-nome { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .folha-a4 .fa-contato { color: #444; font-size: 13px; margin-bottom: 18px; }
+    .folha-a4 .fa-foto { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; }
+    .folha-a4 .fa-secao { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin: 18px 0 8px; font-weight: 700; }
+    .folha-a4 .fa-exp-titulo { font-weight: 700; }
+    .folha-a4 .fa-exp-periodo { color: #666; font-size: 12px; }
+    .folha-a4 p { margin-bottom: 8px; }
+    .folha-a4 .fa-placeholder { color: #cbd5e1; }
+
+    /* Modal mobile */
+    .preview-modal {
+      display: none; position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+      padding: 24px; overflow: auto; align-items: flex-start; justify-content: center;
+    }
+    .preview-modal.aberto { display: flex; }
+    .preview-modal .modal-corpo { position: relative; width: 100%; max-width: 794px; }
+    .preview-modal .modal-fechar {
+      position: sticky; top: 0; float: right; z-index: 10; margin-bottom: 12px;
+      background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+      width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .preview-modal .modal-fechar svg { width: 22px; height: 22px; }
+    .preview-modal .folha-a4 { box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+    @media (max-width: 992px) {
+      .editor-layout { flex-direction: column; }
+      .editor-preview-col { display: none; }
+      .btn-visualizar { display: inline-flex; margin-top: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -36,7 +79,9 @@
 
       <div class="info-banner" id="modeloInfo"></div>
 
-      <div class="steps" id="steps"></div>
+      <div class="editor-layout">
+        <div class="editor-form">
+          <div class="steps" id="steps"></div>
 
       <!-- ETAPA 1: Pessoal -->
       <div class="etapa card" id="etapa0">
@@ -149,6 +194,27 @@
         <button class="btn btn-ghost" id="btnPrev" onclick="prev()">Voltar</button>
         <button class="btn btn-primary" id="btnNext" onclick="next()">Continuar</button>
       </div>
+
+          <button class="btn btn-secondary btn-visualizar" onclick="abrirPreviewMobile()">Visualizar folha</button>
+        </div><!-- /editor-form -->
+
+        <div class="editor-preview-col">
+          <div class="card" style="padding:20px">
+            <h3 style="margin-bottom:16px;font-size:1.1rem">Pré-visualização em tempo real</h3>
+            <div class="folha-a4" id="folhaA4"></div>
+          </div>
+        </div><!-- /editor-preview-col -->
+      </div><!-- /editor-layout -->
+
+      <!-- Modal mobile -->
+      <div class="preview-modal" id="previewModal">
+        <div class="modal-corpo">
+          <button class="modal-fechar" onclick="fecharPreviewMobile()" aria-label="Fechar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <div class="folha-a4" id="folhaA4Modal"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -200,15 +266,30 @@
       else salvarEIrPreview();
     };
 
-    // Foto
+    // Foto (redimensionada/compactada para caber no localStorage)
+    var fotoReduzida = "";
     document.getElementById("foto").addEventListener("change", function (e) {
       var file = e.target.files[0];
       if (!file) return;
       var reader = new FileReader();
       reader.onload = function (ev) {
-        var img = document.getElementById("fotoPreview");
+        var img = new Image();
+        img.onload = function () {
+          // Redimensiona para no máximo 300px e converte para JPEG (qualidade 0.8)
+          var max = 300;
+          var escala = Math.min(1, max / Math.max(img.width, img.height));
+          var w = Math.round(img.width * escala);
+          var h = Math.round(img.height * escala);
+          var canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          fotoReduzida = canvas.toDataURL("image/jpeg", 0.8);
+          var preview = document.getElementById("fotoPreview");
+          preview.src = fotoReduzida;
+          preview.style.display = "block";
+          if (typeof atualizarFolhas === "function") atualizarFolhas();
+        };
         img.src = ev.target.result;
-        img.style.display = "block";
       };
       reader.readAsDataURL(file);
     });
@@ -220,7 +301,7 @@
       d.innerHTML = '<input type="tel" class="tel" placeholder="(11) 99999-9999" value="' + (val || "") + '" />';
       document.getElementById("telefones").appendChild(d);
     }
-    window.addTelefone = function () { addTelefone(); };
+    window.addTelefone = addTelefone;
 
     // Cursos
     function addCurso() {
@@ -262,8 +343,9 @@
       return Array.prototype.map.call(document.querySelectorAll(sel), function (el) { return el.value.trim(); });
     }
 
-    function salvarEIrPreview() {
-      var dados = {
+    // Lê todos os campos do formulário e devolve o objeto de dados
+    function coletarDados() {
+      return {
         nome: document.getElementById("nome").value.trim(),
         idade: document.getElementById("idade").value,
         email: document.getElementById("email").value.trim(),
@@ -287,8 +369,131 @@
         periodo_inicio: getArray(".e-inicio"),
         periodo_fim: getArray(".e-fim"),
         atividades: getArray(".e-ativ"),
-        foto: document.getElementById("fotoPreview").src || ""
+        foto: fotoReduzida || document.getElementById("fotoPreview").src || ""
       };
+    }
+
+    // Cores e fontes por modelo (fiel ao back-end em lib/modelos.js)
+    var CORES = {
+      classico: "#00324a", moderno: "#2563eb", minimal: "#111827", profissional: "#334155",
+      executivo: "#0f172a", cronologico: "#0e7490", funcional: "#4d7c0f", compacto: "#1f2937",
+      soberio: "#3b2f2f", tecnico: "#1e3a8a"
+    };
+    var FONTES = { soberio: "Georgia, 'Times New Roman', serif" };
+    var ALINHADO_CENTRO = { classico: true };
+
+    function escH(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+
+    function periodoItem(e) { return [e.i, e.f].filter(Boolean).join(" a "); }
+
+    // Gera o HTML da folha A4 fiel ao modelo (mesma ordem e fonte do PDF/DOCX)
+    function montarFolha(dados) {
+      var cor = CORES[modelo] || "#00324a";
+      var fonte = FONTES[modelo] || "'Inter', sans-serif";
+      var centro = ALINHADO_CENTRO[modelo] || false;
+      var contato = [dados.email, (dados.telefone || []).filter(Boolean).join(" / "), [dados.endereco, dados.numero ? ", " + dados.numero : "", dados.cidade ? " - " + dados.cidade : "", dados.estado ? " - " + dados.estado : ""].join("").trim()].filter(Boolean);
+      var temExp = dados.primeiroEmprego || (dados.empresa || []).filter(Boolean).length > 0;
+      var cursos = (dados.curso || []).filter(Boolean);
+
+      var h = '<div style="font-family:' + fonte + '">';
+      h += '<div style="text-align:' + (centro ? "center" : "left") + '">';
+      if (dados.foto) h += '<img src="' + dados.foto + '" class="fa-foto" alt="foto" />';
+      h += '<div class="fa-nome" style="color:' + cor + '">' + (dados.nome || '<span class="fa-placeholder">Seu nome</span>') + '</div>';
+      if (contato.length) h += '<div class="fa-contato">' + escH(contato.join("  •  ")) + '</div>';
+      h += '</div>';
+
+      function secao(titulo) {
+        return '<div class="fa-secao" style="color:' + cor + '">' + titulo + '</div>';
+      }
+
+      if (dados.objetivo) h += secao("Objetivo") + '<p>' + escH(dados.objetivo) + '</p>';
+
+      if (temExp && modelo !== "funcional") {
+        h += secao("Experiência Profissional");
+        if (dados.primeiroEmprego) h += '<p>Primeiro emprego</p>';
+        else (dados.empresa || []).forEach(function (_, i) {
+          if (!dados.empresa[i]) return;
+          var per = periodoItem({ i: dados.periodo_inicio[i], f: dados.periodo_fim[i] });
+          h += '<div><div class="fa-exp-titulo">' + escH(dados.empresa[i]) + (per ? ' <span class="fa-exp-periodo">| ' + escH(per) + '</span>' : '') + '</div>';
+          if (dados.cargo[i]) h += '<div>' + escH(dados.cargo[i]) + '</div>';
+          if (dados.atividades[i]) h += '<p>' + escH(dados.atividades[i]) + '</p>';
+          h += '</div>';
+        });
+      }
+
+      if (dados.formacao) h += secao("Formação Acadêmica") + '<p>' + escH(dados.formacao) + '</p>';
+
+      if (cursos.length) {
+        h += secao("Cursos e Certificações");
+        cursos.forEach(function (_, i) {
+          var linha = dados.curso[i] + (dados.instituicao[i] ? " - " + dados.instituicao[i] : "") + (dados.carga[i] ? " (" + dados.carga[i] + ")" : "");
+          h += '<p>• ' + escH(linha) + '</p>';
+        });
+      }
+
+      if (dados.habilidades) h += secao("Habilidades") + '<p>' + escH(dados.habilidades) + '</p>';
+
+      if (temExp && modelo === "funcional") {
+        h += secao("Experiência Profissional");
+        if (dados.primeiroEmprego) h += '<p>Primeiro emprego</p>';
+        else (dados.empresa || []).forEach(function (_, i) {
+          if (!dados.empresa[i]) return;
+          h += '<p><strong>' + escH(dados.empresa[i]) + '</strong>' + (dados.cargo[i] ? " - " + escH(dados.cargo[i]) : "") + '</p>';
+          if (dados.atividades[i]) h += '<p>' + escH(dados.atividades[i]) + '</p>';
+        });
+      }
+
+      if (dados.hobbies) h += secao("Hobbies e Interesses") + '<p>' + escH(dados.hobbies) + '</p>';
+      if (dados.infoAdicional) h += secao("Informações Adicionais") + '<p>' + escH(dados.infoAdicional) + '</p>';
+      h += '</div>';
+      return h;
+    }
+
+    // Atualiza a folha desktop e a do modal em tempo real
+    function atualizarFolhas() {
+      var dados = coletarDados();
+      var html = montarFolha(dados);
+      var folha = document.getElementById("folhaA4");
+      var folhaModal = document.getElementById("folhaA4Modal");
+      if (folha) folha.innerHTML = html;
+      if (folhaModal) folhaModal.innerHTML = html;
+    }
+
+    // Debounce de 300ms
+    var timerDebounce = null;
+    function agendarAtualizacao() {
+      if (timerDebounce) clearTimeout(timerDebounce);
+      timerDebounce = setTimeout(atualizarFolhas, 300);
+    }
+
+    // Liga o debounce a todos os campos editáveis (inclusive repetíveis)
+    function ligarTempoReal() {
+      var seletor = 'input, textarea, select';
+      var campos = document.querySelectorAll('.editor-form ' + seletor);
+      for (var i = 0; i < campos.length; i++) {
+        var ev = campos[i].tagName === 'SELECT' ? 'change' : 'input';
+        campos[i].addEventListener(ev, agendarAtualizacao);
+      }
+    }
+    // Repete o vínculo para itens adicionados dinamicamente
+    function vincularNovoItem(containerId) {
+      var container = document.getElementById(containerId);
+      if (container) container.addEventListener('input', agendarAtualizacao);
+    }
+
+    // Modal mobile
+    window.abrirPreviewMobile = function () {
+      atualizarFolhas();
+      document.getElementById("previewModal").classList.add("aberto");
+      document.body.style.overflow = "hidden";
+    };
+    window.fecharPreviewMobile = function () {
+      document.getElementById("previewModal").classList.remove("aberto");
+      document.body.style.overflow = "";
+    };
+
+    function salvarEIrPreview() {
+      var dados = coletarDados();
       if (!dados.nome) { alert("Informe seu nome completo."); etapaAtual = 0; showEtapa(0); return; }
       if (!dados.email) { alert("Informe seu e-mail de contato."); etapaAtual = 1; showEtapa(1); return; }
       if (!dados.objetivo) { alert("Informe seu objetivo profissional."); etapaAtual = 2; showEtapa(2); return; }
@@ -332,9 +537,16 @@
         it.querySelector(".e-fim").value = (prev.periodo_fim && prev.periodo_fim[i]) || "";
         it.querySelector(".e-ativ").value = (prev.atividades && prev.atividades[i]) || "";
       });
-      if (prev.foto) { document.getElementById("fotoPreview").src = prev.foto; document.getElementById("fotoPreview").style.display = "block"; }
+      if (prev.foto) { fotoReduzida = prev.foto; document.getElementById("fotoPreview").src = prev.foto; document.getElementById("fotoPreview").style.display = "block"; }
       document.getElementById("primeiroEmprego").dispatchEvent(new Event("change"));
     } catch (e) {}
+
+    // Inicializa o preview em tempo real após o restore de dados
+    ligarTempoReal();
+    vincularNovoItem("telefones");
+    vincularNovoItem("cursos");
+    vincularNovoItem("experiencias");
+    atualizarFolhas();
 
     showEtapa(0);
   </script>
