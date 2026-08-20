@@ -155,9 +155,14 @@ app.post("/api/auth/logout", (req, res) => {
 app.get("/api/auth/me", async (req, res) => {
   const id = usuarioDaSessao(req);
   if (!id) return res.status(401).json({ error: "Não autenticado." });
-  const u = await buscarUsuarioPorId(id);
-  if (!u) return res.status(401).json({ error: "Não autenticado." });
-  res.json({ usuario: u });
+  try {
+    const u = await buscarUsuarioPorId(id);
+    if (!u) return res.status(401).json({ error: "Não autenticado." });
+    res.json({ usuario: u });
+  } catch (err) {
+    console.error("❌ Erro ao buscar usuário em /api/auth/me:", err.message);
+    res.status(500).json({ error: "Erro ao carregar a conta." });
+  }
 });
 
 // ---------------------------------------------------------------------------
