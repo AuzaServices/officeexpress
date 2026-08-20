@@ -87,8 +87,10 @@ async function garantirSchemaCarrinho() {
         pagamento_id VARCHAR(64) NULL,
         pago TINYINT(1) NOT NULL DEFAULT 0,
         pago_at DATETIME NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE INDEX uniq_carrinho_token (token)
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        usuario_id INT NULL,
+        UNIQUE INDEX uniq_carrinho_token (token),
+        INDEX idx_carrinho_usuario (usuario_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
     console.log("✅ Tabela 'carrinho' garantida");
