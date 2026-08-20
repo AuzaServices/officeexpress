@@ -380,6 +380,24 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Preview (gerado pelo MESMO gerador do download, garantindo fidelidade)
+// ---------------------------------------------------------------------------
+app.post("/api/preview", async (req, res) => {
+  const { modelo, dados } = req.body || {};
+  if (!modelo || !MODELOS.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
+  if (!dados) return res.status(400).json({ error: "Dados ausentes." });
+  try {
+    const buffer = await gerarPDF(modelo, dados);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline; filename=preview.pdf");
+    res.send(buffer);
+  } catch (err) {
+    console.error("❌ Erro ao gerar preview:", err.message);
+    res.status(500).json({ error: "Erro ao gerar o preview." });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Painel admin
 // ---------------------------------------------------------------------------
 function protegerAdmin(req, res, next) {

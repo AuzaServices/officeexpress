@@ -15,6 +15,9 @@
     .preview-paper .exp-titulo { font-weight: 700; }
     .preview-paper .exp-periodo { color: #666; font-size: 13px; }
     .foto-circ { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--pp-cor, #00324a); display: block; margin: 0 auto 16px; }
+    /* Preview do PDF real (mesmo gerador do download) */
+    .preview-paper { padding: 0; overflow: hidden; }
+    .preview-paper #previewPdf { width: 100%; height: 1123px; border: 0; display: block; }
   </style>
 </head>
 <body>
@@ -65,64 +68,27 @@
       }
     });
 
-    function periodo(e) { return [e.inicio, e.fim].filter(Boolean).join(" a "); }
-
     function render() {
-      var cor = cores[modelo] || "#00324a";
       var paper = document.getElementById("preview");
-      paper.style.setProperty("--pp-cor", cor);
-
-      var html = "";
-      if (dados.foto) html += '<img src="' + dados.foto + '" class="foto-circ" alt="foto" />';
-      html += '<h1>' + (dados.nome || "Seu Nome") + '</h1>';
-      var contato = [dados.email, (dados.telefone || []).join(" / "), [dados.endereco, dados.numero ? ", " + dados.numero : "", dados.cidade ? " - " + dados.cidade : "", dados.estado ? " - " + dados.estado : ""].join("").trim()].filter(Boolean);
-      if (contato.length) html += '<div class="pp-contato">' + contato.join("  &bull;  ") + '</div>';
-
-      if (dados.objetivo) html += '<h2>Objetivo</h2><p>' + esc(dados.objetivo) + '</p>';
-
-      var temExp = dados.primeiroEmprego || (dados.empresa || []).filter(Boolean).length > 0;
-      if (temExp && modelo !== "funcional") {
-        html += '<h2>Experiência Profissional</h2>';
-        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
-        else (dados.empresa || []).forEach(function (_, i) {
-          if (!dados.empresa[i]) return;
-          html += '<div class="exp-item"><div class="exp-titulo">' + esc(dados.empresa[i]) + (periodo({inicio:dados.periodo_inicio[i],fim:dados.periodo_fim[i]}) ? ' <span class="exp-periodo">| ' + esc(periodo({inicio:dados.periodo_inicio[i],fim:dados.periodo_fim[i]})) + '</span>' : '') + '</div>';
-          if (dados.cargo[i]) html += '<div class="exp-cargo">' + esc(dados.cargo[i]) + '</div>';
-          if (dados.atividades[i]) html += '<p>' + esc(dados.atividades[i]) + '</p>';
-          html += '</div>';
+      // Exibe o PDF real gerado pelo servidor (mesmo código do download),
+      // garantindo que a pré-visualização seja idêntica ao arquivo final.
+      paper.innerHTML = '<iframe id="previewPdf" title="Pré-visualização"></iframe>';
+      fetch("/api/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelo: modelo, dados: dados }),
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error("Falha ao gerar o preview");
+          return r.blob();
+        })
+        .then(function (blob) {
+          document.getElementById("previewPdf").src = URL.createObjectURL(blob);
+        })
+        .catch(function (err) {
+          paper.innerHTML = '<p style="padding:24px;color:#c0392b">Não foi possível carregar a pré-visualização.</p>';
         });
-      }
-
-      if (dados.formacao) html += '<h2>Formação Acadêmica</h2><p>' + esc(dados.formacao) + '</p>';
-
-      var cursos = (dados.curso || []).filter(Boolean);
-      if (cursos.length) {
-        html += '<h2>Cursos e Certificações</h2>';
-        cursos.forEach(function (_, i) {
-          var linha = dados.curso[i] + (dados.instituicao[i] ? " - " + dados.instituicao[i] : "") + (dados.carga[i] ? " (" + dados.carga[i] + ")" : "");
-          html += '<p>&bull; ' + esc(linha) + '</p>';
-        });
-      }
-
-      if (dados.habilidades) html += '<h2>Habilidades</h2><p>' + esc(dados.habilidades) + '</p>';
-
-      if (temExp && modelo === "funcional") {
-        html += '<h2>Experiência Profissional</h2>';
-        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
-        else (dados.empresa || []).forEach(function (_, i) {
-          if (!dados.empresa[i]) return;
-          html += '<p><strong>' + esc(dados.empresa[i]) + '</strong> ' + (dados.cargo[i] ? "- " + esc(dados.cargo[i]) : "") + '</p>';
-          if (dados.atividades[i]) html += '<p>' + esc(dados.atividades[i]) + '</p>';
-        });
-      }
-
-      if (dados.hobbies) html += '<h2>Hobbies e Interesses</h2><p>' + esc(dados.hobbies) + '</p>';
-      if (dados.infoAdicional) html += '<h2>Informações Adicionais</h2><p>' + esc(dados.infoAdicional) + '</p>';
-
-      paper.innerHTML = html;
     }
-
-    function esc(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
 
     async function irPagamento() {
       var btn = document.getElementById("btnIrPag");
