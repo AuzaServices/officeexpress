@@ -7,16 +7,12 @@
   <link rel="icon" href="/imagens/icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
+  <script src="/curriculo-render.js"></script>
   <style>
-    .preview-paper { padding: 40px; }
-    .preview-paper .fa-nome { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-    .preview-paper .fa-contato { color: #444; font-size: 13px; margin-bottom: 18px; }
-    .preview-paper .fa-foto { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; }
-    .preview-paper .fa-secao { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin: 18px 0 8px; font-weight: 700; }
-    .preview-paper .fa-exp-titulo { font-weight: 700; }
-    .preview-paper .fa-exp-periodo { color: #666; font-size: 12px; }
-    .preview-paper p { margin-bottom: 8px; }
-    .preview-paper .fa-placeholder { color: #cbd5e1; }
+    /* O preview renderiza o MESMO HTML/CSS do PDF (Opção C), escalado para caber. */
+    .preview-paper { padding: 0; overflow: hidden; }
+    .preview-doc { width: 794px; transform-origin: top left; background: #fff; }
+    .preview-doc .page { width: 794px; min-height: 1123px; }
   </style>
 </head>
 <body>
@@ -48,11 +44,6 @@
 
   <script src="/assets/app.js"></script>
   <script>
-    var cores = {
-      classico: "#00324a", moderno: "#2563eb", minimal: "#111827", profissional: "#334155",
-      executivo: "#0f172a", cronologico: "#0e7490", funcional: "#4d7c0f", compacto: "#1f2937",
-      soberio: "#3b2f2f", tecnico: "#1e3a8a"
-    };
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("preview");
 
@@ -67,72 +58,38 @@
       }
     });
 
-    function escH(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
-    var FONTES = { soberio: "Georgia, 'Times New Roman', serif" };
-    var ALINHADO_CENTRO = { classico: true };
-
+    // Renderiza usando o MESMO template do PDF (fonte única de verdade).
     function render() {
-      var cor = cores[modelo] || "#00324a";
-      var fonte = FONTES[modelo] || "'Inter', sans-serif";
-      var centro = ALINHADO_CENTRO[modelo] || false;
-      var contato = [dados.email, (dados.telefone || []).filter(Boolean).join(" / "), [dados.endereco, dados.numero ? ", " + dados.numero : "", dados.cidade ? " - " + dados.cidade : "", dados.estado ? " - " + dados.estado : ""].join("").trim()].filter(Boolean);
-      var temExp = dados.primeiroEmprego || (dados.empresa || []).filter(Boolean).length > 0;
-      var cursos = (dados.curso || []).filter(Boolean);
-
-      var html = '<div style="font-family:' + fonte + '">';
-      html += '<div style="text-align:' + (centro ? "center" : "left") + '">';
-      if (dados.foto) html += '<img src="' + dados.foto + '" class="fa-foto" alt="foto" />';
-      html += '<div class="fa-nome" style="color:' + cor + '">' + (dados.nome || '<span class="fa-placeholder">Seu nome</span>') + '</div>';
-      if (contato.length) html += '<div class="fa-contato">' + escH(contato.join("  •  ")) + '</div>';
-      html += '</div>';
-
-      function secao(titulo) {
-        return '<div class="fa-secao" style="color:' + cor + '">' + titulo + '</div>';
+      var preview = document.getElementById("preview");
+      if (!window.renderCurriculo) {
+        preview.innerHTML = '<p>Carregando pré-visualização…</p>';
+        return;
       }
-
-      if (dados.objetivo) html += secao("Objetivo") + '<p>' + escH(dados.objetivo) + '</p>';
-
-      if (temExp && modelo !== "funcional") {
-        html += secao("Experiência Profissional");
-        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
-        else (dados.empresa || []).forEach(function (_, i) {
-          if (!dados.empresa[i]) return;
-          var per = [dados.periodo_inicio[i], dados.periodo_fim[i]].filter(Boolean).join(" a ");
-          html += '<div><div class="fa-exp-titulo">' + escH(dados.empresa[i]) + (per ? ' <span class="fa-exp-periodo">| ' + escH(per) + '</span>' : '') + '</div>';
-          if (dados.cargo[i]) html += '<div>' + escH(dados.cargo[i]) + '</div>';
-          if (dados.atividades[i]) html += '<p>' + escH(dados.atividades[i]) + '</p>';
-          html += '</div>';
-        });
-      }
-
-      if (dados.formacao) html += secao("Formação Acadêmica") + '<p>' + escH(dados.formacao) + '</p>';
-
-      if (cursos.length) {
-        html += secao("Cursos e Certificações");
-        cursos.forEach(function (_, i) {
-          var linha = dados.curso[i] + (dados.instituicao[i] ? " - " + dados.instituicao[i] : "") + (dados.carga[i] ? " (" + dados.carga[i] + ")" : "");
-          html += '<p>• ' + escH(linha) + '</p>';
-        });
-      }
-
-      if (dados.habilidades) html += secao("Habilidades") + '<p>' + escH(dados.habilidades) + '</p>';
-
-      if (temExp && modelo === "funcional") {
-        html += secao("Experiência Profissional");
-        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
-        else (dados.empresa || []).forEach(function (_, i) {
-          if (!dados.empresa[i]) return;
-          html += '<p><strong>' + escH(dados.empresa[i]) + '</strong>' + (dados.cargo[i] ? " - " + escH(dados.cargo[i]) : "") + '</p>';
-          if (dados.atividades[i]) html += '<p>' + escH(dados.atividades[i]) + '</p>';
-        });
-      }
-
-      if (dados.hobbies) html += secao("Hobbies e Interesses") + '<p>' + escH(dados.hobbies) + '</p>';
-      if (dados.infoAdicional) html += secao("Informações Adicionais") + '<p>' + escH(dados.infoAdicional) + '</p>';
-      html += '</div>';
-
-      document.getElementById("preview").innerHTML = html;
+      var html = window.renderCurriculo.gerarHTML(modelo, dados);
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var styleEl = doc.querySelector("style");
+      var pageEl = doc.querySelector(".page");
+      if (!pageEl) return;
+      preview.innerHTML =
+        '<div class="preview-doc">' +
+        (styleEl ? styleEl.outerHTML : "") +
+        '<div class="page">' + pageEl.innerHTML + '</div>' +
+        '</div>';
+      dimensionarPreview();
     }
+
+    // Escala o documento A4 (794px) para caber na largura disponível.
+    function dimensionarPreview() {
+      var preview = document.getElementById("preview");
+      var doc = preview.querySelector(".preview-doc");
+      if (!doc) return;
+      var largura = preview.clientWidth || 794;
+      var escala = largura / 794;
+      doc.style.transform = "scale(" + escala + ")";
+      doc.style.height = (doc.offsetHeight * escala) + "px";
+      doc.style.transformOrigin = "top left";
+    }
+    window.addEventListener("resize", dimensionarPreview);
 
     async function irPagamento() {
       var btn = document.getElementById("btnIrPag");

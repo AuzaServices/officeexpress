@@ -27,7 +27,8 @@
     "node-cron": "^3.0.2",
     "nodemailer": "^9.0.5",
     "pdf-parse": "^1.1.1",
-    "pdfkit": "^0.13.0"
+    "pdfkit": "^0.13.0",
+    "puppeteer": "^25.8.0"
   },
   "repository": {
     "type": "git",

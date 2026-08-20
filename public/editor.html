@@ -20,21 +20,14 @@
     .info-banner { background: rgba(255,136,0,0.12); border: 1px solid rgba(255,136,0,0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; color: var(--text-secondary); font-size: .9rem; }
     .btn-visualizar { display: none; }
 
-    /* Folha A4 em tempo real (desktop) */
+    /* Folha A4 em tempo real (desktop) — renderiza o MESMO template do PDF */
     .folha-a4 {
-      background: #ffffff; color: #1a1a2e; border-radius: 6px;
-      box-shadow: 0 20px 50px var(--shadow-lg); padding: 40px;
-      font-size: 14px; line-height: 1.55; min-height: 200px;
+      background: #ffffff; border-radius: 6px;
+      box-shadow: 0 20px 50px var(--shadow-lg); padding: 0;
       max-width: 100%; overflow: hidden;
     }
-    .folha-a4 .fa-nome { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-    .folha-a4 .fa-contato { color: #444; font-size: 13px; margin-bottom: 18px; }
-    .folha-a4 .fa-foto { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; }
-    .folha-a4 .fa-secao { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin: 18px 0 8px; font-weight: 700; }
-    .folha-a4 .fa-exp-titulo { font-weight: 700; }
-    .folha-a4 .fa-exp-periodo { color: #666; font-size: 12px; }
-    .folha-a4 p { margin-bottom: 8px; }
-    .folha-a4 .fa-placeholder { color: #cbd5e1; }
+    .folha-a4 .preview-doc { width: 794px; transform-origin: top left; background: #fff; }
+    .folha-a4 .preview-doc .page { width: 794px; min-height: 1123px; }
 
     /* Modal mobile */
     .preview-modal {
@@ -223,6 +216,7 @@
   </footer>
 
   <script src="/assets/app.js"></script>
+  <script src="/curriculo-render.js"></script>
   <script>
     var etapaAtual = 0;
     var totalEtapas = 6;
@@ -373,80 +367,33 @@
       };
     }
 
-    // Cores e fontes por modelo (fiel ao back-end em lib/modelos.js)
-    var CORES = {
-      classico: "#00324a", moderno: "#2563eb", minimal: "#111827", profissional: "#334155",
-      executivo: "#0f172a", cronologico: "#0e7490", funcional: "#4d7c0f", compacto: "#1f2937",
-      soberio: "#3b2f2f", tecnico: "#1e3a8a"
-    };
-    var FONTES = { soberio: "Georgia, 'Times New Roman', serif" };
-    var ALINHADO_CENTRO = { classico: true };
-
-    function escH(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
-
-    function periodoItem(e) { return [e.i, e.f].filter(Boolean).join(" a "); }
-
-    // Gera o HTML da folha A4 fiel ao modelo (mesma ordem e fonte do PDF/DOCX)
+    // Gera o HTML da folha A4 fiel ao modelo usando o MESMO template do PDF
+    // (fonte única de verdade). Retorna o <style> + <div class="page">.
     function montarFolha(dados) {
-      var cor = CORES[modelo] || "#00324a";
-      var fonte = FONTES[modelo] || "'Inter', sans-serif";
-      var centro = ALINHADO_CENTRO[modelo] || false;
-      var contato = [dados.email, (dados.telefone || []).filter(Boolean).join(" / "), [dados.endereco, dados.numero ? ", " + dados.numero : "", dados.cidade ? " - " + dados.cidade : "", dados.estado ? " - " + dados.estado : ""].join("").trim()].filter(Boolean);
-      var temExp = dados.primeiroEmprego || (dados.empresa || []).filter(Boolean).length > 0;
-      var cursos = (dados.curso || []).filter(Boolean);
+      if (!window.renderCurriculo) return '<p>Carregando…</p>';
+      var html = window.renderCurriculo.gerarHTML(modelo, dados);
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var styleEl = doc.querySelector("style");
+      var pageEl = doc.querySelector(".page");
+      if (!pageEl) return '<p>Carregando…</p>';
+      return (
+        '<div class="preview-doc">' +
+        (styleEl ? styleEl.outerHTML : "") +
+        '<div class="page">' + pageEl.innerHTML + '</div>' +
+        '</div>'
+      );
+    }
 
-      var h = '<div style="font-family:' + fonte + '">';
-      h += '<div style="text-align:' + (centro ? "center" : "left") + '">';
-      if (dados.foto) h += '<img src="' + dados.foto + '" class="fa-foto" alt="foto" />';
-      h += '<div class="fa-nome" style="color:' + cor + '">' + (dados.nome || '<span class="fa-placeholder">Seu nome</span>') + '</div>';
-      if (contato.length) h += '<div class="fa-contato">' + escH(contato.join("  •  ")) + '</div>';
-      h += '</div>';
-
-      function secao(titulo) {
-        return '<div class="fa-secao" style="color:' + cor + '">' + titulo + '</div>';
-      }
-
-      if (dados.objetivo) h += secao("Objetivo") + '<p>' + escH(dados.objetivo) + '</p>';
-
-      if (temExp && modelo !== "funcional") {
-        h += secao("Experiência Profissional");
-        if (dados.primeiroEmprego) h += '<p>Primeiro emprego</p>';
-        else (dados.empresa || []).forEach(function (_, i) {
-          if (!dados.empresa[i]) return;
-          var per = periodoItem({ i: dados.periodo_inicio[i], f: dados.periodo_fim[i] });
-          h += '<div><div class="fa-exp-titulo">' + escH(dados.empresa[i]) + (per ? ' <span class="fa-exp-periodo">| ' + escH(per) + '</span>' : '') + '</div>';
-          if (dados.cargo[i]) h += '<div>' + escH(dados.cargo[i]) + '</div>';
-          if (dados.atividades[i]) h += '<p>' + escH(dados.atividades[i]) + '</p>';
-          h += '</div>';
-        });
-      }
-
-      if (dados.formacao) h += secao("Formação Acadêmica") + '<p>' + escH(dados.formacao) + '</p>';
-
-      if (cursos.length) {
-        h += secao("Cursos e Certificações");
-        cursos.forEach(function (_, i) {
-          var linha = dados.curso[i] + (dados.instituicao[i] ? " - " + dados.instituicao[i] : "") + (dados.carga[i] ? " (" + dados.carga[i] + ")" : "");
-          h += '<p>• ' + escH(linha) + '</p>';
-        });
-      }
-
-      if (dados.habilidades) h += secao("Habilidades") + '<p>' + escH(dados.habilidades) + '</p>';
-
-      if (temExp && modelo === "funcional") {
-        h += secao("Experiência Profissional");
-        if (dados.primeiroEmprego) h += '<p>Primeiro emprego</p>';
-        else (dados.empresa || []).forEach(function (_, i) {
-          if (!dados.empresa[i]) return;
-          h += '<p><strong>' + escH(dados.empresa[i]) + '</strong>' + (dados.cargo[i] ? " - " + escH(dados.cargo[i]) : "") + '</p>';
-          if (dados.atividades[i]) h += '<p>' + escH(dados.atividades[i]) + '</p>';
-        });
-      }
-
-      if (dados.hobbies) h += secao("Hobbies e Interesses") + '<p>' + escH(dados.hobbies) + '</p>';
-      if (dados.infoAdicional) h += secao("Informações Adicionais") + '<p>' + escH(dados.infoAdicional) + '</p>';
-      h += '</div>';
-      return h;
+    // Ajusta a escala do documento A4 (794px) para caber no contêiner.
+    function dimensionarFolha(el) {
+      if (!el) return;
+      var doc = el.querySelector(".preview-doc");
+      if (!doc) return;
+      var largura = el.clientWidth || 794;
+      var escala = largura / 794;
+      doc.style.transform = "scale(" + escala + ")";
+      doc.style.transformOrigin = "top left";
+      doc.style.height = (doc.offsetHeight * escala) + "px";
     }
 
     // Atualiza a folha desktop e a do modal em tempo real
@@ -455,8 +402,8 @@
       var html = montarFolha(dados);
       var folha = document.getElementById("folhaA4");
       var folhaModal = document.getElementById("folhaA4Modal");
-      if (folha) folha.innerHTML = html;
-      if (folhaModal) folhaModal.innerHTML = html;
+      if (folha) { folha.innerHTML = html; dimensionarFolha(folha); }
+      if (folhaModal) { folhaModal.innerHTML = html; dimensionarFolha(folhaModal); }
     }
 
     // Debounce de 300ms
@@ -547,6 +494,10 @@
     vincularNovoItem("cursos");
     vincularNovoItem("experiencias");
     atualizarFolhas();
+    window.addEventListener("resize", function () {
+      var f = document.getElementById("folhaA4");
+      if (f) dimensionarFolha(f);
+    });
 
     showEtapa(0);
   </script>

@@ -22,6 +22,13 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 // Middleware
 app.use(express.static("public"));
+
+// Serve o renderizador de currículo (mesmo código usado no servidor) para
+// que a pré-visualização use EXATAMENTE o mesmo template do PDF (Opção C).
+app.get("/curriculo-render.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+  res.sendFile(path.join(__dirname, "lib", "renderHTML.js"));
+});
 // Body parser com limite maior para aceitar currículos que incluem
 // foto em base64 (o default de 100kb gera PayloadTooLargeError).
 app.use(express.json({ limit: "10mb" }));
