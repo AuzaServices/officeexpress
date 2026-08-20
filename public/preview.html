@@ -8,16 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
-    .preview-paper h1 { font-size: 26px; }
-    .preview-paper .pp-contato { color: #444; }
-    .preview-paper h2 { color: var(--pp-cor, #00324a); }
-    .preview-paper .exp-item { margin-bottom: 12px; }
-    .preview-paper .exp-titulo { font-weight: 700; }
-    .preview-paper .exp-periodo { color: #666; font-size: 13px; }
-    .foto-circ { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--pp-cor, #00324a); display: block; margin: 0 auto 16px; }
-    /* Preview do PDF real (mesmo gerador do download) */
-    .preview-paper { padding: 0; overflow: hidden; }
-    .preview-paper #previewPdf { width: 100%; height: 1123px; border: 0; display: block; }
+    .preview-paper { padding: 40px; }
+    .preview-paper .fa-nome { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .preview-paper .fa-contato { color: #444; font-size: 13px; margin-bottom: 18px; }
+    .preview-paper .fa-foto { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; }
+    .preview-paper .fa-secao { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin: 18px 0 8px; font-weight: 700; }
+    .preview-paper .fa-exp-titulo { font-weight: 700; }
+    .preview-paper .fa-exp-periodo { color: #666; font-size: 12px; }
+    .preview-paper p { margin-bottom: 8px; }
+    .preview-paper .fa-placeholder { color: #cbd5e1; }
   </style>
 </head>
 <body>
@@ -68,26 +67,71 @@
       }
     });
 
+    function escH(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+    var FONTES = { soberio: "Georgia, 'Times New Roman', serif" };
+    var ALINHADO_CENTRO = { classico: true };
+
     function render() {
-      var paper = document.getElementById("preview");
-      // Exibe o PDF real gerado pelo servidor (mesmo código do download),
-      // garantindo que a pré-visualização seja idêntica ao arquivo final.
-      paper.innerHTML = '<iframe id="previewPdf" title="Pré-visualização"></iframe>';
-      fetch("/api/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelo: modelo, dados: dados }),
-      })
-        .then(function (r) {
-          if (!r.ok) throw new Error("Falha ao gerar o preview");
-          return r.blob();
-        })
-        .then(function (blob) {
-          document.getElementById("previewPdf").src = URL.createObjectURL(blob);
-        })
-        .catch(function (err) {
-          paper.innerHTML = '<p style="padding:24px;color:#c0392b">Não foi possível carregar a pré-visualização.</p>';
+      var cor = cores[modelo] || "#00324a";
+      var fonte = FONTES[modelo] || "'Inter', sans-serif";
+      var centro = ALINHADO_CENTRO[modelo] || false;
+      var contato = [dados.email, (dados.telefone || []).filter(Boolean).join(" / "), [dados.endereco, dados.numero ? ", " + dados.numero : "", dados.cidade ? " - " + dados.cidade : "", dados.estado ? " - " + dados.estado : ""].join("").trim()].filter(Boolean);
+      var temExp = dados.primeiroEmprego || (dados.empresa || []).filter(Boolean).length > 0;
+      var cursos = (dados.curso || []).filter(Boolean);
+
+      var html = '<div style="font-family:' + fonte + '">';
+      html += '<div style="text-align:' + (centro ? "center" : "left") + '">';
+      if (dados.foto) html += '<img src="' + dados.foto + '" class="fa-foto" alt="foto" />';
+      html += '<div class="fa-nome" style="color:' + cor + '">' + (dados.nome || '<span class="fa-placeholder">Seu nome</span>') + '</div>';
+      if (contato.length) html += '<div class="fa-contato">' + escH(contato.join("  •  ")) + '</div>';
+      html += '</div>';
+
+      function secao(titulo) {
+        return '<div class="fa-secao" style="color:' + cor + '">' + titulo + '</div>';
+      }
+
+      if (dados.objetivo) html += secao("Objetivo") + '<p>' + escH(dados.objetivo) + '</p>';
+
+      if (temExp && modelo !== "funcional") {
+        html += secao("Experiência Profissional");
+        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
+        else (dados.empresa || []).forEach(function (_, i) {
+          if (!dados.empresa[i]) return;
+          var per = [dados.periodo_inicio[i], dados.periodo_fim[i]].filter(Boolean).join(" a ");
+          html += '<div><div class="fa-exp-titulo">' + escH(dados.empresa[i]) + (per ? ' <span class="fa-exp-periodo">| ' + escH(per) + '</span>' : '') + '</div>';
+          if (dados.cargo[i]) html += '<div>' + escH(dados.cargo[i]) + '</div>';
+          if (dados.atividades[i]) html += '<p>' + escH(dados.atividades[i]) + '</p>';
+          html += '</div>';
         });
+      }
+
+      if (dados.formacao) html += secao("Formação Acadêmica") + '<p>' + escH(dados.formacao) + '</p>';
+
+      if (cursos.length) {
+        html += secao("Cursos e Certificações");
+        cursos.forEach(function (_, i) {
+          var linha = dados.curso[i] + (dados.instituicao[i] ? " - " + dados.instituicao[i] : "") + (dados.carga[i] ? " (" + dados.carga[i] + ")" : "");
+          html += '<p>• ' + escH(linha) + '</p>';
+        });
+      }
+
+      if (dados.habilidades) html += secao("Habilidades") + '<p>' + escH(dados.habilidades) + '</p>';
+
+      if (temExp && modelo === "funcional") {
+        html += secao("Experiência Profissional");
+        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
+        else (dados.empresa || []).forEach(function (_, i) {
+          if (!dados.empresa[i]) return;
+          html += '<p><strong>' + escH(dados.empresa[i]) + '</strong>' + (dados.cargo[i] ? " - " + escH(dados.cargo[i]) : "") + '</p>';
+          if (dados.atividades[i]) html += '<p>' + escH(dados.atividades[i]) + '</p>';
+        });
+      }
+
+      if (dados.hobbies) html += secao("Hobbies e Interesses") + '<p>' + escH(dados.hobbies) + '</p>';
+      if (dados.infoAdicional) html += secao("Informações Adicionais") + '<p>' + escH(dados.infoAdicional) + '</p>';
+      html += '</div>';
+
+      document.getElementById("preview").innerHTML = html;
     }
 
     async function irPagamento() {
