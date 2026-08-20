@@ -206,11 +206,7 @@ body {
             <i class="fa-solid fa-circle-exclamation"></i> Não feche esta página após o pagamento.
           </p>
           <p class="text-xs text-amber-700 mt-1">
-<<<<<<< HEAD
             Seu download fica disponível aqui por 24 horas. Se você sair, poderá voltar (no mesmo aparelho) para baixar novamente.
-=======
-            Seu download fica disponível aqui por 24 horas. Se você sair, poderá voltar a esta página (no mesmo aparelho) para baixar novamente.
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
           </p>
         </div>
 
@@ -313,7 +309,6 @@ let pollInterval = null;
   }
 
 function baixarCurriculo() {
-<<<<<<< HEAD
     // 1) Download via carrinho (regenera o PDF sob demanda; funciona iOS/Android e qualquer aparelho)
     const token = localStorage.getItem("curriculoToken");
     if (token) {
@@ -322,27 +317,13 @@ function baixarCurriculo() {
     }
 
     // 2) Fallback para fluxos antigos: download via id
-=======
-    // 1) Download via token (valida pagamento + prazo de 24h no servidor; funciona iOS/Android)
-    const token = localStorage.getItem("curriculoToken");
-    if (token) {
-      window.location.href = "/api/pdfs/download/token/" + encodeURIComponent(token);
-      return;
-    }
-
-    // 2) Fallback: download via id (currículos de fluxos antigos)
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
     const pdfId = localStorage.getItem("curriculoPdfId");
     if (pdfId) {
       window.location.href = "/api/pdfs/" + pdfId + "/download";
       return;
     }
 
-<<<<<<< HEAD
     // 3) Último recurso: currículo que ficou só no localStorage
-=======
-    // 3) Último recurso: currículos antigos que ficaram só no localStorage
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
     const pdfBase64 = localStorage.getItem("curriculoPdf");
     if (!pdfBase64) {
       alert("Arquivo não encontrado. Refaça o pedido.");
@@ -431,7 +412,6 @@ pagamentoId = data.id;
     }, 3000);
   }
 
-<<<<<<< HEAD
 // Marca o item do carrinho como pago no servidor (inicia o prazo de 24h)
   async function registrarPagamentoServidor() {
     const token = localStorage.getItem("curriculoToken");
@@ -441,18 +421,6 @@ pagamentoId = data.id;
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
-=======
-// Registra o pagamento no servidor (marca o currículo como pago e inicia o prazo de 24h)
-  async function registrarPagamentoServidor() {
-    const id = localStorage.getItem("curriculoPdfId");
-    const token = localStorage.getItem("curriculoToken");
-    if (!id || !token) return;
-    try {
-      await fetch("/api/pdfs/" + id + "/marcar-pago", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: token }),
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
       });
     } catch (e) {
       console.error("Erro ao registrar pagamento no servidor:", e);
@@ -471,7 +439,6 @@ function pagamentoAprovado() {
   }
 
   window.addEventListener("load", () => {
-<<<<<<< HEAD
     atualizarCarrinho();
     verificarPagamentoExistente();
   });
@@ -495,21 +462,6 @@ function pagamentoAprovado() {
     if (!token) { criarPix(); return; }
     try {
       const res = await fetch("/api/carrinho/status/" + encodeURIComponent(token));
-=======
-    verificarPagamentoExistente();
-  });
-
-  // Se o usuário já pagou este currículo (token válido e dentro de 24h),
-  // libera o download direto sem pedir novo pagamento.
-  async function verificarPagamentoExistente() {
-    const token = localStorage.getItem("curriculoToken");
-    if (!token) {
-      criarPix();
-      return;
-    }
-    try {
-      const res = await fetch("/api/pdfs/status/token/" + encodeURIComponent(token));
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
       const data = await res.json();
       if (data.valido && data.pago && data.dentro24h) {
         document.getElementById("qrContainer").classList.add("hidden");

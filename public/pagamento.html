@@ -404,11 +404,7 @@ function baixarCurriculo() {
       return;
     }
 
-<<<<<<< HEAD
     // 3) Último recurso: currículo que ficou só no localStorage
-=======
-    // 3) Último recurso: currículos antigos que ficaram só no localStorage
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
     const pdfBase64 = localStorage.getItem("curriculoPdf");
     if (!pdfBase64) {
       alert("Arquivo não encontrado. Refaça o pedido.");
@@ -498,7 +494,6 @@ pagamentoId = data.id;
     }, 3000);
   }
 
-<<<<<<< HEAD
 // Marca o item do carrinho como pago no servidor (inicia o prazo de 24h)
   async function registrarPagamentoServidor() {
     const token = localStorage.getItem("curriculoToken");
@@ -508,18 +503,6 @@ pagamentoId = data.id;
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
-=======
-// Registra o pagamento no servidor (marca o currículo como pago e inicia o prazo de 24h)
-  async function registrarPagamentoServidor() {
-    const id = localStorage.getItem("curriculoPdfId");
-    const token = localStorage.getItem("curriculoToken");
-    if (!id || !token) return;
-    try {
-      await fetch("/api/pdfs/" + id + "/marcar-pago", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: token }),
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
       });
     } catch (e) {
       console.error("Erro ao registrar pagamento no servidor:", e);
@@ -542,7 +525,6 @@ function pagamentoAprovado() {
   window.addEventListener("load", () => {
     abandonoRegistrado = false;
     enviarPagamento();
-<<<<<<< HEAD
     atualizarCarrinho();
     verificarPagamentoExistente();
   });
@@ -566,21 +548,6 @@ function pagamentoAprovado() {
     if (!token) { criarPix(); return; }
     try {
       const res = await fetch("/api/carrinho/status/" + encodeURIComponent(token));
-=======
-    verificarPagamentoExistente();
-  });
-
-  // Se o usuário já pagou este currículo (token válido e dentro de 24h),
-  // libera o download direto sem pedir novo pagamento.
-  async function verificarPagamentoExistente() {
-    const token = localStorage.getItem("curriculoToken");
-    if (!token) {
-      criarPix();
-      return;
-    }
-    try {
-      const res = await fetch("/api/pdfs/status/token/" + encodeURIComponent(token));
->>>>>>> 5e87d4fb22b7d847e260194e45ad77333fc0a6a8
       const data = await res.json();
       if (data.valido && data.pago && data.dentro24h) {
         document.getElementById("qrContainer").classList.add("hidden");
