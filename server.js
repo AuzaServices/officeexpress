@@ -26,6 +26,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Sessão
+// Confia no proxy do Render/Heroku para detectar HTTPS (X-Forwarded-Proto),
+// garantindo que o cookie de sessão seja tratado corretamente em produção.
+app.set("trust proxy", 1);
 // Torna o boot resistente a falhas de banco: se o MySQL estiver
 // indisponível no momento do boot, usa um store em memória (fallback),
 // para o servidor subir mesmo assim em vez de morrer ("Service Unavailable").
@@ -105,7 +108,11 @@ app.post("/api/auth/registrar", async (req, res) => {
 
   // Já autentica a sessão (email ainda não confirmado)
   req.session.usuarioId = usuarioId;
-  req.session.save(() => {
+  req.session.save((err) => {
+    if (err) {
+      console.error("❌ Falha ao salvar sessão de cadastro:", err.message);
+      return res.status(500).json({ error: "Conta criada, mas não foi possível iniciar a sessão. Faça login." });
+    }
     res.json({ success: true, message: "Conta criada! Confirme seu e-mail pelo link enviado.", usuario: { id: usuarioId, nome: nome.trim(), email: em, email_confirmado: 0 } });
   });
 });
@@ -132,7 +139,11 @@ app.post("/api/auth/login", async (req, res) => {
   const match = await bcrypt.compare(senha, rows[0].senha);
   if (!match) return res.status(401).json({ error: "E-mail ou senha incorretos." });
   req.session.usuarioId = rows[0].id;
-  req.session.save(() => {
+  req.session.save((err) => {
+    if (err) {
+      console.error("❌ Falha ao salvar sessão de login:", err.message);
+      return res.status(500).json({ error: "Não foi possível iniciar a sessão. Tente novamente." });
+    }
     res.json({ success: true, usuario: { id: rows[0].id, nome: rows[0].nome, email: rows[0].email, email_confirmado: rows[0].email_confirmado } });
   });
 });
