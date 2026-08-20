@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minha Conta - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer">&#9776;</button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <section class="section container">
+    <div class="section-header">
+      <h2>Minha Conta</h2>
+      <p id="saudacao"></p>
+    </div>
+
+    <div id="naoAutenticado" style="display:none;text-align:center;padding:40px">
+      <p style="color:var(--text-muted);margin-bottom:24px">Você precisa entrar para ver seus documentos.</p>
+      <a href="/login" class="btn btn-primary">Entrar</a>
+    </div>
+
+    <div id="conteudo">
+      <div class="card" style="margin-bottom:24px">
+        <h3 style="margin-bottom:16px">Meus currículos</h3>
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead><tr><th>#</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Data</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <p id="vazio" style="color:var(--text-muted);margin-top:16px;display:none">Você ainda não comprou nenhum currículo. <a href="/modelos" style="color:var(--brand)">Criar agora</a></p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    var nomesModelo = {};
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("minha-conta");
+
+    App.api("/api/modelos").then(function (r) {
+      if (r.ok) r.data.modelos.forEach(function (m) { nomesModelo[m.id] = m.nome; });
+    });
+
+    (async function () {
+      var u = await App.authMe();
+      if (!u) {
+        document.getElementById("naoAutenticado").style.display = "block";
+        document.getElementById("conteudo").style.display = "none";
+        return;
+      }
+      document.getElementById("saudacao").textContent = "Olá, " + u.nome + "!";
+      var { ok, data } = await App.api("/api/pedidos/meus");
+      if (!ok || !data.pedidos.length) {
+        document.getElementById("vazio").style.display = "block";
+        return;
+      }
+      var tbody = document.getElementById("tbody");
+      data.pedidos.forEach(function (p) {
+        var tr = document.createElement("tr");
+        var statusClass = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
+        var statusTxt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
+        tr.innerHTML =
+          "<td>" + p.id + "</td>" +
+          "<td>" + (nomesModelo[p.modelo] || p.modelo) + "</td>" +
+          "<td>" + App.formatarPreco(p.valor) + "</td>" +
+          '<td><span class="badge ' + statusClass + '">' + statusTxt + "</span></td>" +
+          "<td>" + (p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "-") + "</td>";
+        tbody.appendChild(tr);
+      });
+    })();
+  </script>
+</body>
+</html>

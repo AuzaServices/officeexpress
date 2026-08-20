@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento confirmado - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer">&#9776;</button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <div class="preview-page container">
+    <div class="pagamento-card card" style="text-align:center;padding:48px">
+      <div style="font-size:64px;color:var(--success)">&#10003;</div>
+      <h2 style="margin:16px 0 8px">Pagamento confirmado!</h2>
+      <p style="color:var(--text-muted);margin-bottom:32px">Seu currículo está pronto. Escolha o formato para baixar agora:</p>
+
+      <div class="preview-acoes" style="justify-content:center">
+        <button class="btn btn-primary" onclick="baixar('pdf')">Baixar PDF</button>
+        <button class="btn btn-secondary" onclick="baixar('docx')">Baixar Word (DOCX)</button>
+      </div>
+      <p style="margin-top:24px;color:var(--text-muted);font-size:.9rem">O download é liberado no momento da compra. <a href="/minha-conta" style="color:var(--brand)">Ver meus documentos</a></p>
+    </div>
+  </div>
+
+  <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    var pedidoId = new URLSearchParams(window.location.search).get("pedido");
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("sucesso");
+
+    function baixar(formato) {
+      if (!pedidoId) return alert("Pedido não identificado.");
+      window.open("/api/pedidos/" + pedidoId + "/download?formato=" + formato, "_blank");
+    }
+    window.baixar = baixar;
+  </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escolha seu modelo - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    .hero-modelos { padding: 60px 24px 20px; text-align: center; }
+    .hero-modelos h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; }
+    .hero-modelos p { color: var(--text-muted); max-width: 620px; margin: 12px auto 0; }
+    .preco-badge { display: inline-block; margin-top: 16px; background: rgba(255,136,0,0.15); border: 1px solid rgba(255,136,0,0.4); color: var(--brand-light); padding: 8px 20px; border-radius: 50px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer">&#9776;</button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <div class="hero-modelos container">
+    <h1>Escolha o modelo do seu currículo</h1>
+    <p>Todos os modelos são <strong>formais e minimalistas</strong>, otimizados para serem lidos 100% por sistemas de IA de contratação (ATS). Seu currículo é gerado em <strong>PDF e Word (DOCX)</strong>.</p>
+    <span class="preco-badge" id="precoBadge"></span>
+  </div>
+
+  <section class="section container">
+    <div class="modelos-grid" id="grid"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; <span id="ano"></span> Office Express. <a href="/termos">Termos</a> &middot; <a href="/politica">Privacidade</a></p>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    // Mini-visualizações (aproximação visual de cada modelo)
+    function miniTemplate(modeloId, cor) {
+      var t = '<div class="mini-tpl">';
+      t += '<div class="mt-1" style="background:' + cor + '"></div>';
+      t += '<div class="mt-2" style="background:#cbd5e1"></div>';
+      if (modeloId === "soberio") t += '<div class="mt-2" style="background:#e2e8f0"></div>';
+      t += '<div class="mt-line" style="background:' + cor + '"></div>';
+      t += '<div class="mt-3" style="background:#e2e8f0"></div><div class="mt-3" style="background:#e2e8f0"></div><div class="mt-3" style="background:#f1f5f9"></div>';
+      if (modeloId === "moderno") { t += '<div class="mt-line" style="background:#e2e8f0"></div><div class="mt-3" style="background:#e2e8f0"></div>'; }
+      if (modeloId === "compacto") { t += '<div class="mt-3" style="background:#e2e8f0"></div><div class="mt-3" style="background:#f1f5f9"></div>'; }
+      if (modeloId === "tecnico") { t += '<div class="mt-line" style="background:' + cor + '"></div><div class="mt-3" style="background:#e2e8f0"></div>'; }
+      t += '</div>';
+      return t;
+    }
+    var cores = {
+      classico: "#00324a", moderno: "#2563eb", minimal: "#111827", profissional: "#334155",
+      executivo: "#0f172a", cronologico: "#0e7490", funcional: "#4d7c0f", compacto: "#1f2937",
+      soberio: "#3b2f2f", tecnico: "#1e3a8a"
+    };
+
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("modelos");
+
+    App.api("/api/modelos").then(function (r) {
+      if (!r.ok) return;
+      var preco = r.data.preco;
+      document.getElementById("precoBadge").textContent = "Valor único: " + App.formatarPreco(preco) + " (PDF + Word)";
+      var grid = document.getElementById("grid");
+      r.data.modelos.forEach(function (m) {
+        var div = document.createElement("div");
+        div.className = "card modelo-card";
+        div.innerHTML =
+          '<div class="preview-box mini">' + miniTemplate(m.id, cores[m.id] || "#00324a") + '</div>' +
+          '<div class="modelo-nome">' + m.nome + '</div>' +
+          '<div class="modelo-desc">' + m.descricao + '</div>' +
+          '<button class="btn btn-primary btn-block">Usar este modelo</button>';
+        div.addEventListener("click", function () {
+          localStorage.setItem("modeloSelecionado", m.id);
+          window.location.href = "/editor";
+        });
+        grid.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>

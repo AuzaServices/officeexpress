@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pré-visualização - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    .preview-paper h1 { font-size: 26px; }
+    .preview-paper .pp-contato { color: #444; }
+    .preview-paper h2 { color: var(--pp-cor, #00324a); }
+    .preview-paper .exp-item { margin-bottom: 12px; }
+    .preview-paper .exp-titulo { font-weight: 700; }
+    .preview-paper .exp-periodo { color: #666; font-size: 13px; }
+    .foto-circ { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--pp-cor, #00324a); display: block; margin: 0 auto 16px; }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer">&#9776;</button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <div class="preview-page container">
+    <div class="section-header">
+      <h2>Pré-visualização</h2>
+      <p>Esta é uma prévia do seu currículo no modelo <strong id="modeloNome"></strong>. Após o pagamento, você recebe o arquivo em <strong>PDF e Word</strong>.</p>
+    </div>
+
+    <div class="preview-paper" id="preview"></div>
+
+    <div class="preview-acoes">
+      <button class="btn btn-ghost" onclick="history.back()">&#8592; Editar</button>
+      <button class="btn btn-ghost" onclick="window.location.href='/modelos'">Trocar modelo</button>
+      <button class="btn btn-primary" id="btnIrPag" onclick="irPagamento()">Continuar para pagamento &#8594;</button>
+    </div>
+  </div>
+
+  <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    var cores = {
+      classico: "#00324a", moderno: "#2563eb", minimal: "#111827", profissional: "#334155",
+      executivo: "#0f172a", cronologico: "#0e7490", funcional: "#4d7c0f", compacto: "#1f2937",
+      soberio: "#3b2f2f", tecnico: "#1e3a8a"
+    };
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("preview");
+
+    var modelo = localStorage.getItem("modeloSelecionado") || "classico";
+    var dados = {};
+    try { dados = JSON.parse(localStorage.getItem("curriculo") || "{}"); } catch (e) {}
+
+    App.api("/api/modelos").then(function (r) {
+      if (r.ok) {
+        var m = r.data.modelos.find(function (x) { return x.id === modelo; });
+        document.getElementById("modeloNome").textContent = m ? m.nome : "Clássico";
+      }
+    });
+
+    function periodo(e) { return [e.inicio, e.fim].filter(Boolean).join(" a "); }
+
+    function render() {
+      var cor = cores[modelo] || "#00324a";
+      var paper = document.getElementById("preview");
+      paper.style.setProperty("--pp-cor", cor);
+
+      var html = "";
+      if (dados.foto) html += '<img src="' + dados.foto + '" class="foto-circ" alt="foto" />';
+      html += '<h1>' + (dados.nome || "Seu Nome") + '</h1>';
+      var contato = [dados.email, (dados.telefone || []).join(" / "), [dados.endereco, dados.numero ? ", " + dados.numero : "", dados.cidade ? " - " + dados.cidade : "", dados.estado ? " - " + dados.estado : ""].join("").trim()].filter(Boolean);
+      if (contato.length) html += '<div class="pp-contato">' + contato.join("  &bull;  ") + '</div>';
+
+      if (dados.objetivo) html += '<h2>Objetivo</h2><p>' + esc(dados.objetivo) + '</p>';
+
+      var temExp = dados.primeiroEmprego || (dados.empresa || []).filter(Boolean).length > 0;
+      if (temExp && modelo !== "funcional") {
+        html += '<h2>Experiência Profissional</h2>';
+        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
+        else (dados.empresa || []).forEach(function (_, i) {
+          if (!dados.empresa[i]) return;
+          html += '<div class="exp-item"><div class="exp-titulo">' + esc(dados.empresa[i]) + (periodo({inicio:dados.periodo_inicio[i],fim:dados.periodo_fim[i]}) ? ' <span class="exp-periodo">| ' + esc(periodo({inicio:dados.periodo_inicio[i],fim:dados.periodo_fim[i]})) + '</span>' : '') + '</div>';
+          if (dados.cargo[i]) html += '<div class="exp-cargo">' + esc(dados.cargo[i]) + '</div>';
+          if (dados.atividades[i]) html += '<p>' + esc(dados.atividades[i]) + '</p>';
+          html += '</div>';
+        });
+      }
+
+      if (dados.formacao) html += '<h2>Formação Acadêmica</h2><p>' + esc(dados.formacao) + '</p>';
+
+      var cursos = (dados.curso || []).filter(Boolean);
+      if (cursos.length) {
+        html += '<h2>Cursos e Certificações</h2>';
+        cursos.forEach(function (_, i) {
+          var linha = dados.curso[i] + (dados.instituicao[i] ? " - " + dados.instituicao[i] : "") + (dados.carga[i] ? " (" + dados.carga[i] + ")" : "");
+          html += '<p>&bull; ' + esc(linha) + '</p>';
+        });
+      }
+
+      if (dados.habilidades) html += '<h2>Habilidades</h2><p>' + esc(dados.habilidades) + '</p>';
+
+      if (temExp && modelo === "funcional") {
+        html += '<h2>Experiência Profissional</h2>';
+        if (dados.primeiroEmprego) html += '<p>Primeiro emprego</p>';
+        else (dados.empresa || []).forEach(function (_, i) {
+          if (!dados.empresa[i]) return;
+          html += '<p><strong>' + esc(dados.empresa[i]) + '</strong> ' + (dados.cargo[i] ? "- " + esc(dados.cargo[i]) : "") + '</p>';
+          if (dados.atividades[i]) html += '<p>' + esc(dados.atividades[i]) + '</p>';
+        });
+      }
+
+      if (dados.hobbies) html += '<h2>Hobbies e Interesses</h2><p>' + esc(dados.hobbies) + '</p>';
+      if (dados.infoAdicional) html += '<h2>Informações Adicionais</h2><p>' + esc(dados.infoAdicional) + '</p>';
+
+      paper.innerHTML = html;
+    }
+
+    function esc(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+
+    async function irPagamento() {
+      var btn = document.getElementById("btnIrPag");
+      btn.disabled = true;
+      // Exige login
+      var u = await App.authMe();
+      if (!u) {
+        localStorage.setItem("redirectAposLogin", "/preview");
+        window.location.href = "/login";
+        return;
+      }
+      var { ok, data } = await App.api("/api/pedidos", {
+        method: "POST",
+        body: JSON.stringify({ modelo: modelo, dados: dados }),
+      });
+      if (ok) {
+        window.location.href = "/pagamento?pedido=" + data.pedido.id;
+      } else {
+        alert(data.error || "Erro ao criar o pedido.");
+        btn.disabled = false;
+      }
+    }
+    window.irPagamento = irPagamento;
+
+    render();
+  </script>
+</body>
+</html>

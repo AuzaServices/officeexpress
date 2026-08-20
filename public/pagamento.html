@@ -1,603 +1,185 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/imagens/icon.png" type="image/png" />
-    <title>Pagamento | Office Express</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
-    <style>
-      :root {
-        --bg-1: #001f33;
-        --bg-2: #00324a;
-        --border: #0a2a52;
-      }
-body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        background: #f9fafb;
-      }
-      main {
-        flex: 1;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 110px 16px 40px;
-      }
-      .valor {
-        color: #001f33;
-        background: linear-gradient(to right, var(--bg-1), var(--bg-2));
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-      }
-      .seguranca {
-        text-align: center;
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-        font-size: 0.85rem;
-        color: #444;
-        font-weight: 500;
-      }
-      #faixa-promocao {
-        font-size: 0.8rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .botao-baixar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        padding: 14px 20px;
-        background: linear-gradient(135deg, #00b894, #00a381);
-        color: #fff;
-        font-weight: 700;
-        font-size: 1rem;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 14px rgba(0, 184, 148, 0.3);
-      }
-      .botao-baixar:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 22px rgba(0, 184, 148, 0.4);
-      }
-      .botao-baixar:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-        box-shadow: none;
-        transform: none;
-      }
-.qr-box {
-        background: #fff;
-        border: 2px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-.chave-pix-input {
-        width: 100%;
-        margin-top: 14px;
-        padding: 10px 12px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #00324a;
-        background: #f8fafc;
-        border: 1px solid #d0d9e8;
-        border-radius: 10px;
-        text-align: center;
-        word-break: break-all;
-        user-select: all;
-        cursor: default;
-      }
-      .chave-pix-input:focus {
-        outline: none;
-        border-color: #00324a;
-      }
-      .botao-copiar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 44px;
-        height: 44px;
-        margin-top: 14px;
-        background: #f0f4ff;
-        color: #00324a;
-        border: 1px solid #d0d9e8;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.25s ease;
-      }
-      .botao-copiar:hover {
-        background: #e0ecff;
-        border-color: #00324a;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 50, 74, 0.15);
-      }
-      .botao-copiar.copiado {
-        background: #d1fae5;
-        border-color: #059669;
-        color: #059669;
-      }
-      .status-pendente { color: #d97706; font-weight: 600; }
-      .status-aprovado { color: #059669; font-weight: 700; }
-    </style>
-  </head>
-
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    .qr-img { max-width: 230px; margin: 16px auto; display: none; background: #fff; padding: 10px; border-radius: 12px; }
+    .copiar-pix { display: flex; gap: 8px; margin-top: 12px; }
+    .copiar-pix input { flex: 1; }
+  </style>
+</head>
+<body>
   <header class="cabecalho">
-    <div class="container">
-      <div class="wrap">
-        <a href="/" class="logo-link" aria-label="Voltar para o inicio">
-          <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        </a>
-        <nav class="menu">
-          <a href="/index">Inicio</a>
-          <a href="/contato">Contato</a>
-          <a href="/sobre">Sobre nos</a>
-        </nav>
-        <a href="/carrinho.html" class="carrinho-link" id="carrinhoLink" aria-label="Meu carrinho" title="Meu carrinho">
-          <svg class="carrinho-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-          <span class="carrinho-badge" id="carrinhoBadge" style="display:none;">1</span>
-        </a>
-        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
-          <i class="fas fa-bars"></i>
-        </button>
-      </div>
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer">&#9776;</button>
     </div>
   </header>
+  <div id="mobileMenu"></div>
 
-  <!-- MOBILE MENU -->
-  <div id="mobileMenu">
-    <div>
-      <a href="/index">Inicio</a>
-      <a href="/contato">Contato</a>
-      <a href="/sobre">Sobre nos</a>
+  <section class="section container">
+    <div class="section-header">
+      <h2>Pagamento</h2>
+      <p id="resumo"></p>
     </div>
-  </div>
 
-  <!-- Script inline para menu mobile - executa imediatamente -->
+    <div class="pagamento-card card">
+      <div id="alert" class="alert"></div>
+
+      <div class="tabs">
+        <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
+        <button class="tab" id="tabCard" onclick="ativarAba('card')">Cartão de crédito</button>
+      </div>
+
+      <!-- PIX -->
+      <div id="abaPix" class="pix-box">
+        <p>Escaneie o QR Code ou copie o código Pix para pagar. O currículo é liberado automaticamente após a confirmação.</p>
+        <img id="qrImg" class="qr-img" alt="QR Code Pix" />
+        <div class="copiar-pix" id="copiarArea" style="display:none">
+          <input type="text" id="pixCode" readonly />
+          <button class="btn btn-secondary" onclick="copiarPix()">Copiar</button>
+        </div>
+        <button class="btn btn-primary" id="btnGerarPix" onclick="gerarPix()">Gerar Pix</button>
+        <div class="status-pag" id="statusPix"></div>
+      </div>
+
+      <!-- CARTÃO -->
+      <div id="abaCard" style="display:none">
+        <p style="color:var(--text-muted);margin-bottom:16px">Preencha os dados do cartão. Seus dados são processados com segurança pelo Mercado Pago.</p>
+        <div id="cardForm">
+          <div class="campo"><label>Número do cartão</label><input id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" /></div>
+          <div class="campo"><label>Nome no cartão</label><input id="cardHolder" placeholder="Como está no cartão" /></div>
+          <div class="campo" style="display:flex;gap:12px">
+            <div style="flex:1"><label>Validade</label><input id="cardExp" placeholder="MM/AA" /></div>
+            <div style="flex:1"><label>CVV</label><input id="cardCvv" inputmode="numeric" placeholder="123" /></div>
+          </div>
+          <button class="btn btn-primary btn-block" id="btnPagarCard" onclick="pagarCartao()">Pagar</button>
+        </div>
+        <div class="status-pag" id="statusCard"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
+
+  <script src="/assets/app.js"></script>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var btnMenu = document.getElementById('btnMenu');
-      var mobileMenu = document.getElementById('mobileMenu');
-      if (btnMenu && mobileMenu) {
-        btnMenu.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var isOpen = mobileMenu.style.display === 'block';
-          if (isOpen) {
-            mobileMenu.style.display = 'none';
-            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-            btnMenu.setAttribute('aria-expanded', 'false');
-          } else {
-            mobileMenu.style.display = 'block';
-            btnMenu.innerHTML = '<i class="fas fa-times"></i>';
-            btnMenu.setAttribute('aria-expanded', 'true');
-          }
-        });
-        mobileMenu.querySelectorAll('a').forEach(function(link) {
-          link.addEventListener('click', function() {
-            mobileMenu.style.display = 'none';
-            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-            btnMenu.setAttribute('aria-expanded', 'false');
-          });
-        });
+    var pedidoId = new URLSearchParams(window.location.search).get("pedido");
+    var publicKey = "";
+    var preco = 0;
+    var mp = null;
+    var pollTimer = null;
+
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("pagamento");
+
+    if (!pedidoId) { App.mostrarAlerta("alert", "Pedido não identificado.", "error"); }
+
+    // Config
+    App.api("/api/config/pagamento").then(function (r) {
+      if (r.ok) {
+        publicKey = r.data.publicKey;
+        preco = r.data.preco;
+        document.getElementById("resumo").textContent = "Valor a pagar: " + App.formatarPreco(preco) + " (PDF + Word)";
+        if (window.MercadoPago && publicKey) {
+          mp = new MercadoPago(publicKey, { locale: "pt-BR" });
+        }
       }
     });
-  </script>
 
-  <!-- Faixa de urgência -->
-  <div id="faixa-promocao" class="fixed top-0 left-0 w-full bg-red-600 text-white py-2 px-4 z-50 shadow-md flex items-center justify-center gap-2">
-    <i class="fa-regular fa-clock"></i>
-    <span class="font-medium">Oferta válida por tempo limitado — <span id="cronometro">06:00</span></span>
-  </div>
-
-<!-- Conteúdo principal -->
-  <main>
-    <div class="w-full max-w-md mx-auto p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-      <div class="text-center mb-3">
-        <h2 class="text-2xl font-bold text-gray-900">Resumo do Pedido</h2>
-        <p class="text-sm text-gray-500">Currículo Profissional</p>
-      </div>
-
-      <!-- Preço com desconto -->
-      <div class="flex items-center justify-center gap-3 mb-4 pb-4 border-b border-gray-100">
-        <span class="text-gray-400 line-through text-lg">R$ 12,50</span>
-        <span class="valor text-3xl font-bold">R$ 5,99</span>
-      </div>
-
-      <!-- Área do QR Code -->
-      <div id="areaPagamento">
-        <div id="carregandoPix" class="text-center py-6">
-          <div class="inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p class="mt-3 text-gray-600 text-sm">Gerando QR Code...</p>
-        </div>
-
-<div id="qrContainer" class="qr-box hidden">
-          <p class="text-sm font-semibold text-gray-700 mb-3">Escaneie o QR Code abaixo para pagar com PIX</p>
-          <img id="qrCodeImg" alt="QR Code PIX" class="w-52 h-52 rounded-lg" />
-          <p class="text-xs text-gray-500 mt-3 text-center">O pagamento é direcionado ao nosso PIX com confirmação automática.</p>
-          <input id="pixKeyInput" type="text" readonly class="chave-pix-input" title="Chave PIX" value="" />
-          <button id="btnCopiarChave" type="button" class="botao-copiar" title="Copiar chave PIX" aria-label="Copiar chave PIX" onclick="copiarChavePix()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-        </div>
-
-        <div id="statusMsg" class="hidden mt-4 text-center">
-          <span id="statusText" class="status-pendente">Aguardando pagamento...</span>
-        </div>
-
-        <div id="areaSucesso" class="hidden mt-4">
-          <div class="text-center mb-4">
-            <i class="fa-solid fa-circle-check text-5xl text-green-600"></i>
-            <h3 class="text-xl font-bold text-green-700 mt-3">Pagamento Confirmado!</h3>
-            <p class="text-sm text-gray-600 mt-1">Seu currículo está pronto para download.</p>
-          </div>
-        </div>
-
-        <!-- Botão de download sempre visível (desabilitado até pagamento) -->
-        <button id="btnBaixarCurriculo" class="botao-baixar w-full" disabled>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Baixar Currículo
-        </button>
-      </div>
-
-      <p class="text-xs text-gray-500 mt-3 text-center">
-        Após o pagamento, o botão de download será liberado automaticamente.
-      </p>
-
-      <!-- Aviso para não fechar a página após o pagamento -->
-      <div class="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center">
-        <p class="text-sm font-semibold text-amber-800">
-          <i class="fa-solid fa-circle-exclamation"></i> Não feche esta página após o pagamento.
-        </p>
-        <p class="text-xs text-amber-700 mt-1">
-          Seu download fica disponível aqui por 24 horas. Se você sair, poderá voltar (no mesmo aparelho) para baixar novamente.
-        </p>
-      </div>
-
-      <!-- Selos de confiança -->
-      <div class="mt-5 grid grid-cols-3 gap-4 text-gray-500 text-xs text-center">
-        <div><i class="fa-solid fa-lock mb-1 text-gray-400"></i><span class="block">Pagamento seguro</span></div>
-        <div><i class="fa-solid fa-bolt mb-1 text-gray-400"></i><span class="block">Confirmação automática</span></div>
-        <div><i class="fa-solid fa-shield-halved mb-1 text-gray-400"></i><span class="block">Garantia 7 dias</span></div>
-      </div>
-    </div>
-  </main>
-
-  <div class="seguranca">🔒 Pagamento protegido com criptografia SSL</div>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
-        <p>A Office Express é uma plataforma digital que usa inteligência artificial para criar currículos profissionais.</p>
-        <div class="social-links">
-          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X"><i class="fab fa-x-twitter"></i></a>
-          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        </div>
-      </div>
-      <div class="footer-column">
-        <h4>Menu Rápido</h4>
-        <ul>
-          <li><a href="/">Início</a></li>
-          <li><a href="/curriculo">Criar Currículo</a></li>
-          <li><a href="/analise">Analisar</a></li>
-          <li><a href="/contato">Contato</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>Serviços</h4>
-        <ul>
-          <li><a href="/indicacao">Indique e Ganhe</a></li>
-          <li><a href="/faq">FAQ</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="/politica">Política de Privacidade</a></li>
-          <li><a href="/termos">Termos de Uso</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
-    </div>
-  </footer>
-
-<script src="script.js"></script>
-<script>
-let abandonoRegistrado = false;
-  let pollInterval = null;
-  let pagamentoId = null;
-  let chavePix = "";
-
-  function copiarChavePix() {
-    if (!chavePix) {
-      alert("Chave PIX indisponível. Refaça o pedido.");
-      return;
+    function ativarAba(aba) {
+      document.getElementById("abaPix").style.display = aba === "pix" ? "block" : "none";
+      document.getElementById("abaCard").style.display = aba === "card" ? "block" : "none";
+      document.getElementById("tabPix").classList.toggle("active", aba === "pix");
+      document.getElementById("tabCard").classList.toggle("active", aba === "card");
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(chavePix).then(() => {
-        feedbackCopiado();
-      }).catch(() => {
-        copiarFallback(chavePix);
-      });
-    } else {
-      copiarFallback(chavePix);
-    }
-  }
+    window.ativarAba = ativarAba;
 
-  function copiarFallback(texto) {
-    const ta = document.createElement("textarea");
-    ta.value = texto;
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      document.execCommand("copy");
-      feedbackCopiado();
-    } catch (e) {
-      alert("Copie a chave manualmente.");
-    }
-    document.body.removeChild(ta);
-  }
-
-  function feedbackCopiado() {
-    const btn = document.getElementById("btnCopiarChave");
-    btn.classList.add("copiado");
-    btn.querySelector("svg").style.stroke = "#059669";
-    setTimeout(() => {
-      btn.classList.remove("copiado");
-      btn.querySelector("svg").style.stroke = "";
-    }, 2000);
-  }
-
-  function enviarPagamento() {
-    enviarLog("Pagamento");
-  }
-
-  function enviarAbandono() {
-    if (!abandonoRegistrado) {
-      enviarLog("Abandonou Pagamento");
-      abandonoRegistrado = true;
-    }
-  }
-
-function baixarCurriculo() {
-    // 1) Download via carrinho (regenera o PDF sob demanda; funciona iOS/Android e qualquer aparelho)
-    const token = localStorage.getItem("curriculoToken");
-    if (token) {
-      window.location.href = "/api/carrinho/" + encodeURIComponent(token) + "/download";
-      return;
-    }
-
-    // 2) Fallback para fluxos antigos: download via id
-    const pdfId = localStorage.getItem("curriculoPdfId");
-    if (pdfId) {
-      window.location.href = "/api/pdfs/" + pdfId + "/download";
-      return;
-    }
-
-    // 3) Último recurso: currículo que ficou só no localStorage
-    const pdfBase64 = localStorage.getItem("curriculoPdf");
-    if (!pdfBase64) {
-      alert("Arquivo não encontrado. Refaça o pedido.");
-      return;
-    }
-
-    // Converte data URI em Blob (necessário para download no iOS Safari)
-    const parts = pdfBase64.split(",");
-    const mime = parts[0].match(/:(.*?);/)[1];
-    const b64 = atob(parts[1]);
-    const bytes = new Uint8Array(b64.length);
-    for (let i = 0; i < b64.length; i++) bytes[i] = b64.charCodeAt(i);
-    const blob = new Blob([bytes], { type: mime });
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "curriculo-profissional.pdf";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  // Habilitar o botão de download após pagamento
-  function habilitarDownload() {
-    const btn = document.getElementById("btnBaixarCurriculo");
-    btn.disabled = false;
-    btn.onclick = baixarCurriculo;
-  }
-
-  async function criarPix() {
-    const valor = localStorage.getItem("pagamentoValor") || "5.99";
-    const dados = JSON.parse(localStorage.getItem("curriculo") || "{}");
-    try {
-      const res = await fetch("/api/pix/criar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          valor: valor,
-          titulo: "Currículo Profissional",
-          tipo: "curriculo",
-          nome: dados.nome || "",
-          email: dados.email || "",
-          telefone: Array.isArray(dados.telefone) ? dados.telefone.join(" ") : (dados.telefone || ""),
-          estado: dados.estado || "",
-          cidade: dados.cidade || ""
-        })
-      });
-      const data = await res.json();
-      if (data.error) {
-        alert("Erro ao gerar pagamento: " + data.error);
-        return;
+    // ---------- PIX ----------
+    async function gerarPix() {
+      App.limparAlerta("alert");
+      var btn = document.getElementById("btnGerarPix");
+      btn.disabled = true; btn.textContent = "Gerando...";
+      var { ok, data } = await App.api("/api/pagamento/pix", { method: "POST", body: JSON.stringify({ pedidoId: Number(pedidoId) }) });
+      btn.disabled = false; btn.textContent = "Gerar Pix";
+      if (!ok) { App.mostrarAlerta("alert", data.error || "Erro ao gerar Pix.", "error"); return; }
+      if (data.qr_code_base64) {
+        document.getElementById("qrImg").src = "data:image/png;base64," + data.qr_code_base64;
       }
-pagamentoId = data.id;
-      chavePix = data.qr_code || "";
-      document.getElementById("pixKeyInput").value = chavePix;
-      document.getElementById("carregandoPix").classList.add("hidden");
-      document.getElementById("qrContainer").classList.remove("hidden");
-      document.getElementById("statusMsg").classList.remove("hidden");
-      document.getElementById("qrCodeImg").src = "data:image/jpeg;base64," + data.qr_code_base64;
-      iniciarPolling();
-    } catch (err) {
-      console.error(err);
-      alert("Falha ao gerar pagamento. Tente novamente.");
+      document.getElementById("qrImg").style.display = "block";
+      document.getElementById("pixCode").value = data.qr_code || "";
+      document.getElementById("copiarArea").style.display = "flex";
+      document.getElementById("statusPix").textContent = "Aguardando pagamento...";
+      iniciarPolling(data.id);
     }
-  }
+    window.gerarPix = gerarPix;
 
-  function iniciarPolling() {
-    if (pollInterval) clearInterval(pollInterval);
-    pollInterval = setInterval(async () => {
-      if (!pagamentoId) return;
-      try {
-        const res = await fetch("/api/pix/status/" + pagamentoId);
-        const data = await res.json();
-        if (data.status === "approved") {
-          clearInterval(pollInterval);
-          pagamentoAprovado();
+    function copiarPix() {
+      var el = document.getElementById("pixCode");
+      el.select(); document.execCommand("copy");
+      alert("Código Pix copiado!");
+    }
+    window.copiarPix = copiarPix;
+
+    function iniciarPolling(pagamentoId) {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async function () {
+        var { ok, data } = await App.api("/api/pagamento/status/" + pagamentoId);
+        if (ok && data.status === "approved") {
+          clearInterval(pollTimer);
+          await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(pagamentoId), tipo: "pix" }) });
+          window.location.href = "/sucesso?pedido=" + pedidoId;
         } else if (data.status === "rejected" || data.status === "cancelled") {
-          clearInterval(pollInterval);
-          document.getElementById("statusText").textContent = "Pagamento não concluído. Tente novamente.";
-          document.getElementById("statusText").className = "text-red-600 font-semibold";
+          clearInterval(pollTimer);
+          document.getElementById("statusPix").textContent = "Pagamento não concluído. Tente novamente.";
+        }
+      }, 4000);
+    }
+
+    // ---------- CARTÃO ----------
+    async function pagarCartao() {
+      App.limparAlerta("alert");
+      if (!mp) { App.mostrarAlerta("alert", "Erro ao carregar o processador de cartão. Tente o Pix.", "error"); return; }
+      var statusCard = document.getElementById("statusCard");
+      var btn = document.getElementById("btnPagarCard");
+      btn.disabled = true; statusCard.textContent = "Processando...";
+
+      var formData = {
+        cardNumber: document.getElementById("cardNumber").value.replace(/\s/g, ""),
+        cardExpirationMonth: document.getElementById("cardExp").value.split("/")[0],
+        cardExpirationYear: "20" + document.getElementById("cardExp").value.split("/")[1],
+        cardholderName: document.getElementById("cardHolder").value,
+        securityCode: document.getElementById("cardCvv").value,
+        identificationType: "CPF",
+        identificationNumber: "00000000000"
+      };
+
+      try {
+        var token = await mp.fields.createCardToken(formData);
+        var { ok, data } = await App.api("/api/pagamento/cartao", {
+          method: "POST",
+          body: JSON.stringify({ pedidoId: Number(pedidoId), card_token: token.id, email: "" }),
+        });
+        if (ok && (data.status === "approved")) {
+          await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(data.id), tipo: "card" }) });
+          window.location.href = "/sucesso?pedido=" + pedidoId;
+        } else {
+          statusCard.textContent = "";
+          App.mostrarAlerta("alert", (data && data.error) || "Pagamento não aprovado. Verifique os dados do cartão.", "error");
         }
       } catch (err) {
-        console.error("Erro no polling:", err);
+        App.mostrarAlerta("alert", "Erro ao processar o cartão: " + (err.message || "verifique os dados."), "error");
       }
-    }, 3000);
-  }
-
-// Marca o item do carrinho como pago no servidor (inicia o prazo de 24h)
-  async function registrarPagamentoServidor() {
-    const token = localStorage.getItem("curriculoToken");
-    if (!token) return;
-    try {
-      await fetch("/api/carrinho/" + encodeURIComponent(token) + "/pagar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-    } catch (e) {
-      console.error("Erro ao registrar pagamento no servidor:", e);
+      btn.disabled = false;
     }
-  }
-
-function pagamentoAprovado() {
-    enviarLog("Pagou");
-    document.getElementById("qrContainer").classList.add("hidden");
-    document.getElementById("statusMsg").classList.add("hidden");
-    document.getElementById("areaSucesso").classList.remove("hidden");
-    const statusText = document.getElementById("statusText");
-    statusText.textContent = "Pagamento aprovado!";
-    statusText.className = "status-aprovado";
-    registrarPagamentoServidor();
-    habilitarDownload();
-  }
-
-  // Ao carregar a página
-  window.addEventListener("load", () => {
-    abandonoRegistrado = false;
-    enviarPagamento();
-    atualizarCarrinho();
-    verificarPagamentoExistente();
-  });
-
-  // Mostra o badge do carrinho quando há um item neste aparelho
-  function atualizarCarrinho() {
-    const badge = document.getElementById('carrinhoBadge');
-    if (!badge) return;
-    if (localStorage.getItem('curriculoToken')) {
-      badge.style.display = 'inline-flex';
-      badge.textContent = '1';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-
-  // Se o usuário já tem um item pago e dentro de 24h, libera o download direto
-  // (permite retomar após fechar a página, sem pedir novo pagamento).
-  async function verificarPagamentoExistente() {
-    const token = localStorage.getItem("curriculoToken");
-    if (!token) { criarPix(); return; }
-    try {
-      const res = await fetch("/api/carrinho/status/" + encodeURIComponent(token));
-      const data = await res.json();
-      if (data.valido && data.pago && data.dentro24h) {
-        document.getElementById("qrContainer").classList.add("hidden");
-        document.getElementById("statusMsg").classList.add("hidden");
-        document.getElementById("areaSucesso").classList.remove("hidden");
-        const statusText = document.getElementById("statusText");
-        statusText.textContent = "Pagamento aprovado!";
-        statusText.className = "status-aprovado";
-        habilitarDownload();
-        return;
-      }
-    } catch (e) {
-      console.error("Erro ao verificar pagamento existente:", e);
-    }
-    criarPix();
-  }
-
-  // Cronômetro
-  let tempoRestante = 6 * 60;
-  function atualizarCronometro() {
-    const minutos = String(Math.floor(tempoRestante / 60)).padStart(2, "0");
-    const segundos = String(tempoRestante % 60).padStart(2, "0");
-    document.getElementById("cronometro").textContent = `${minutos}:${segundos}`;
-    if (tempoRestante <= 0) { clearInterval(pollInterval); window.location.href = "/pagamentototal"; }
-    else { tempoRestante--; setTimeout(atualizarCronometro, 1000); }
-  }
-  atualizarCronometro();
-
-  // Abandono
-  window.addEventListener("beforeunload", function() {
-    sessionStorage.setItem("refreshing", "true");
-  });
-  window.addEventListener("pagehide", function() {
-    if (!sessionStorage.getItem("refreshing")) enviarAbandono();
-  });
-  document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === "hidden") {
-      if (!sessionStorage.getItem("refreshing")) enviarAbandono();
-    } else if (document.visibilityState === "visible") {
-      abandonoRegistrado = false;
-      enviarPagamento();
-    }
-  });
-  document.addEventListener("click", function(e) {
-    const target = e.target.closest("a");
-    if (target && target.getAttribute("href")) {
-      const href = target.getAttribute("href");
-      if (href.endsWith(".html") || href.startsWith("/")) enviarAbandono();
-    }
-  });
-</script>
+    window.pagarCartao = pagarCartao;
+  </script>
 </body>
 </html>

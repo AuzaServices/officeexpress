@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Admin - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu">
+        <a href="#" onclick="sair();return false;">Sair</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section container">
+    <div class="section-header">
+      <h2>Painel Administrativo</h2>
+      <p id="msg" style="color:var(--danger)"></p>
+    </div>
+
+    <div id="naoAutorizado" style="display:none;text-align:center;padding:40px">
+      <p style="color:var(--text-muted);margin-bottom:24px">Você não está autenticado.</p>
+      <a href="/login-admin" class="btn btn-primary">Fazer login</a>
+    </div>
+
+    <div id="conteudo" style="display:none">
+      <!-- Estatísticas -->
+      <div class="stats-grid" id="stats"></div>
+
+      <!-- Editar preço -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Preço do currículo (valor fixo único)</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <input type="number" step="0.01" min="0.01" id="precoInput" style="max-width:200px;padding:12px 14px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+          <button class="btn btn-primary" onclick="salvarPreco()">Salvar preço</button>
+        </div>
+      </div>
+
+      <!-- Pedidos -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Pedidos recentes</h3>
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead><tr><th>#</th><th>Usuário</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Pago via</th><th>Data</th></tr></thead>
+            <tbody id="tbodyPedidos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Usuários -->
+      <div class="card">
+        <h3 style="margin-bottom:16px">Usuários cadastrados</h3>
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>E-mail confirmado</th><th>Data</th></tr></thead>
+            <tbody id="tbodyUsuarios"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    var nomesModelo = {};
+    document.getElementById("ano").textContent = new Date().getFullYear();
+
+    async function verificar() {
+      var { ok } = await App.api("/api/admin/estatisticas");
+      if (!ok) {
+        document.getElementById("naoAutorizado").style.display = "block";
+        document.getElementById("conteudo").style.display = "none";
+        return false;
+      }
+      document.getElementById("naoAutorizado").style.display = "none";
+      document.getElementById("conteudo").style.display = "block";
+      return true;
+    }
+    window.sair = async function () {
+      await App.api("/api/admin/logout", { method: "POST" });
+      window.location.href = "/login-admin";
+    };
+
+    App.api("/api/modelos").then(function (r) {
+      if (r.ok) r.data.modelos.forEach(function (m) { nomesModelo[m.id] = m.nome; });
+    });
+
+    async function carregar() {
+      if (!(await verificar())) return;
+
+      var { data: est } = await App.api("/api/admin/estatisticas");
+      document.getElementById("precoInput").value = est.preco;
+      document.getElementById("stats").innerHTML =
+        '<div class="stat-card"><div class="stat-value">' + est.totalPedidos + '</div><div class="stat-label">Pedidos totais</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + est.pagos + '</div><div class="stat-label">Pagamentos confirmados</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + App.formatarPreco(est.faturamento) + '</div><div class="stat-label">Faturamento</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + est.totalUsuarios + '</div><div class="stat-label">Usuários</div></div>';
+
+      // Pedidos
+      var { data: ped } = await App.api("/api/admin/pedidos");
+      var tbp = document.getElementById("tbodyPedidos");
+      tbp.innerHTML = "";
+      (ped.pedidos || []).forEach(function (p) {
+        var cls = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
+        var txt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + p.id + "</td>" +
+          "<td>" + (p.usuario_nome || "-") + "<br><small style='color:var(--text-muted)'>" + (p.usuario_email || "") + "</small></td>" +
+          "<td>" + (nomesModelo[p.modelo] || p.modelo) + "</td>" +
+          "<td>" + App.formatarPreco(p.valor) + "</td>" +
+          '<td><span class="badge ' + cls + '">' + txt + "</span></td>" +
+          "<td>" + (p.pagamento_tipo || "-") + "</td>" +
+          "<td>" + (p.created_at ? new Date(p.created_at).toLocaleString("pt-BR") : "-") + "</td>";
+        tbp.appendChild(tr);
+      });
+
+      // Usuários
+      var { data: usr } = await App.api("/api/admin/usuarios");
+      var tbu = document.getElementById("tbodyUsuarios");
+      tbu.innerHTML = "";
+      (usr.usuarios || []).forEach(function (u) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + u.id + "</td>" +
+          "<td>" + u.nome + "</td>" +
+          "<td>" + u.email + "</td>" +
+          "<td>" + (u.email_confirmado ? '<span class="badge badge-pago">Sim</span>' : '<span class="badge badge-pendente">Não</span>') + "</td>" +
+          "<td>" + (u.created_at ? new Date(u.created_at).toLocaleString("pt-BR") : "-") + "</td>";
+        tbu.appendChild(tr);
+      });
+    }
+
+    window.salvarPreco = async function () {
+      var v = document.getElementById("precoInput").value;
+      var { ok, data } = await App.api("/api/admin/preco", { method: "PUT", body: JSON.stringify({ preco: v }) });
+      if (ok) { document.getElementById("msg").style.color = "var(--success)"; document.getElementById("msg").textContent = "Preço atualizado para " + App.formatarPreco(data.preco); }
+      else { document.getElementById("msg").style.color = "var(--danger)"; document.getElementById("msg").textContent = data.error || "Erro."; }
+    };
+
+    carregar();
+  </script>
+</body>
+</html>

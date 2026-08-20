@@ -1,110 +1,62 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo"><img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" /></div>
+      <h1>Bem-vindo de volta</h1>
+      <p class="subtitle">Acesse sua conta para gerenciar seus currículos.</p>
 
-    <title>Login - Painel Administrativo</title>
-    <link rel="icon" href="/imagens/icon.png" type="image/png" />
-    <style>
-      body {
-        background: linear-gradient(135deg, #001f33, #00324a);
-        font-family: "Segoe UI", sans-serif;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0;
-      }
-      .login-card {
-        background-color: #fff;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        width: 100%;
-        max-width: 350px;
-      }
-      .login-card h2 {
-        margin-bottom: 20px;
-        font-weight: 600;
-        text-align: center;
-        color: #001f33;
-      }
-      .login-card input {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 14px;
-      }
-      .login-card button {
-        width: 100%;
-        padding: 12px;
-        margin-top: 12px;
-        font-weight: 600;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 15px;
-      }
-      .btn-login {
-        background-color: #ff8800;
-        color: #fff;
-      }
-      .btn-login:hover {
-        background-color: #e67300;
-      }
-      .error-msg {
-        color: red;
-        font-size: 13px;
-        text-align: center;
-        margin-top: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="login-card">
-      <h2>Login Administrativo</h2>
+      <div id="alert" class="alert"></div>
+
       <form id="loginForm">
-        <input type="text" id="usuario" placeholder="Usuário" required />
-        <input type="password" id="senha" placeholder="Senha" required />
-        <button type="submit" class="btn-login">Entrar</button>
-        <div id="error" class="error-msg"></div>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" required placeholder="voce@email.com" autocomplete="email" />
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" required placeholder="Sua senha" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="btnEntrar">Entrar</button>
       </form>
+
+      <div class="auth-links">
+        <p><a href="/esqueci-senha">Esqueci minha senha</a></p>
+        <p style="margin-top:10px">Ainda não tem conta? <a href="/cadastro">Criar conta</a></p>
+      </div>
     </div>
+  </div>
 
-    <script>
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const usuario = document.getElementById("usuario").value;
-          const senha = document.getElementById("senha").value;
-          const errorBox = document.getElementById("error");
-          errorBox.textContent = "";
+  <script src="/assets/app.js"></script>
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      App.limparAlerta("alert");
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
+      document.getElementById("btnEntrar").disabled = true;
 
-          try {
-            const res = await fetch("/auth/login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username: usuario, password: senha }),
-              credentials: "include", // 👈 garante que o cookie da sessão seja salvo
-            });
+      const { ok, data } = await App.api("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, senha }),
+      });
+      document.getElementById("btnEntrar").disabled = false;
 
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-              window.location.href = "/painel"; // ✅ painel administrativo
-            } else {
-              errorBox.textContent =
-                data.error || "Usuário ou senha incorretos";
-            }
-          } catch (err) {
-            console.error("Erro no login:", err);
-            errorBox.textContent = "Erro no servidor. Tente novamente.";
-          }
-        });
-    </script>
-  </body>
+      if (ok) {
+        window.location.href = "/minha-conta";
+      } else {
+        App.mostrarAlerta("alert", data.error || "Falha no login.", "error");
+      }
+    });
+  </script>
+</body>
 </html>
