@@ -187,6 +187,7 @@ const {jsPDF}=window.jspdf;
           const resp=await fetch("/api/carrinho",{
             method:"POST",
             headers:{"Content-Type":"application/json"},
+            credentials:"include",
             body:JSON.stringify({ dados: dados })
           });
           const respData=await resp.json();

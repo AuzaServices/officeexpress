@@ -98,6 +98,38 @@ async function garantirSchemaCarrinho() {
 }
 garantirSchemaCarrinho();
 
+// 🧬 Migração defensiva: garante colunas extras para vínculo de usuário logado.
+// - usuarios.email: identificador de login do cadastro no modal (nome, email, senha)
+// - carrinho.usuario_id: associa cada pedido/currículo ao usuário que o criou
+async function garantirSchemaUsuarioCarrinho() {
+  try {
+    // Garante a coluna email na tabela usuarios
+    const [uCols] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'email'"
+    );
+    if (Number(uCols[0].c) === 0) {
+      await pool.query(
+        "ALTER TABLE usuarios ADD COLUMN email VARCHAR(190) NULL, ADD UNIQUE INDEX uniq_usuario_email (email)"
+      );
+      console.log("✅ Coluna usuarios.email garantida");
+    }
+
+    // Garante a coluna usuario_id na tabela carrinho
+    const [cCols] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'carrinho' AND COLUMN_NAME = 'usuario_id'"
+    );
+    if (Number(cCols[0].c) === 0) {
+      await pool.query(
+        "ALTER TABLE carrinho ADD COLUMN usuario_id INT NULL, ADD INDEX idx_carrinho_usuario (usuario_id)"
+      );
+      console.log("✅ Coluna carrinho.usuario_id garantida");
+    }
+  } catch (err) {
+    console.error("⚠️ Não foi possível garantir schema de usuário/carrinho:", err.message);
+  }
+}
+garantirSchemaUsuarioCarrinho();
+
 // Gera um token único para identificação do item do carrinho
 function gerarToken() {
   return (
@@ -553,6 +585,7 @@ app.post("/api/carrinho", async (req, res) => {
     }
     const token = gerarToken();
     const dadosJson = JSON.stringify(dados);
+    const usuarioId = req.session && req.session.usuarioId ? req.session.usuarioId : null;
 
     // Limpa itens antigos do carrinho (mais de 30 dias) para não acumular
     try {
@@ -564,14 +597,47 @@ app.post("/api/carrinho", async (req, res) => {
     }
 
     const [result] = await pool.query(
-      "INSERT INTO carrinho (token, dados_json) VALUES (?, ?)",
-      [token, dadosJson]
+      "INSERT INTO carrinho (token, dados_json, usuario_id) VALUES (?, ?, ?)",
+      [token, dadosJson, usuarioId]
     );
 
     res.status(200).json({ message: "Currículo adicionado ao carrinho", token, id: result.insertId });
   } catch (err) {
     console.error("Erro ao criar item no carrinho:", err.message);
     res.status(500).json({ error: "Erro ao criar item no carrinho" });
+  }
+});
+
+// Lista todos os pedidos/currículos do usuário logado (para a página carrinho.html)
+app.get("/api/carrinho/usuario", async (req, res) => {
+  const usuarioId = req.session && req.session.usuarioId;
+  if (!usuarioId) {
+    return res.status(401).json({ error: "Não autenticado" });
+  }
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, token, dados_json, pago, pago_at, created_at FROM carrinho WHERE usuario_id = ? ORDER BY created_at DESC",
+      [usuarioId]
+    );
+    const pedidos = rows.map((item) => {
+      let nome = "";
+      try {
+        const d = JSON.parse(item.dados_json || "{}");
+        nome = d.nome || "";
+      } catch (e) {}
+      return {
+        id: item.id,
+        token: item.token,
+        nome,
+        pago: item.pago === 1,
+        pagoAt: item.pago_at,
+        criadoEm: item.created_at,
+      };
+    });
+    res.json({ pedidos });
+  } catch (err) {
+    console.error("Erro ao listar carrinho do usuário:", err.message);
+    res.status(500).json({ error: "Erro ao listar carrinho" });
   }
 });
 
@@ -1314,21 +1380,27 @@ app.delete("/api/analises/:id", async (req, res) => {
 
 // Cadastro
 app.post("/api/cadastro", async (req, res) => {
-  const { nome, senha, whatsapp } = req.body;
+  const { nome, email, senha, whatsapp } = req.body;
 
-  if (!nome || !senha || !whatsapp) {
-    return res.status(400).json({ error: "Preencha todos os campos" });
+  if (!nome || !email || !senha) {
+    return res.status(400).json({ error: "Preencha nome, email e senha" });
+  }
+
+  const emailNorm = String(email).trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
+    return res.status(400).json({ error: "Email inválido" });
   }
 
   try {
-    // Verifica se já existe usuário com esse nome
-    const [rows] = await pool.query("SELECT id FROM usuarios WHERE nome = ?", [
-      nome,
-    ]);
+    // Verifica se já existe usuário com esse email
+    const [rows] = await pool.query(
+      "SELECT id FROM usuarios WHERE email = ? OR nome = ?",
+      [emailNorm, nome]
+    );
     if (rows.length > 0) {
       return res
         .status(400)
-        .json({ error: "Nome já cadastrado, escolha outro" });
+        .json({ error: "Email ou nome já cadastrado" });
     }
 
     // Valida força da senha
@@ -1347,25 +1419,34 @@ app.post("/api/cadastro", async (req, res) => {
     const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     // Insere no banco
-    await pool.query(
-      "INSERT INTO usuarios (nome, senha, whatsapp, indicacoes, codigo) VALUES (?, ?, ?, 0, ?)",
-      [nome, hash, whatsapp, codigo],
+    const [result] = await pool.query(
+      "INSERT INTO usuarios (nome, email, senha, whatsapp, indicacoes, codigo) VALUES (?, ?, ?, ?, 0, ?)",
+      [nome, emailNorm, hash, whatsapp || "", codigo],
     );
 
-    res.json({ success: true, codigo });
+    // Loga o usuário automaticamente (sessão)
+    req.session.usuarioId = result.insertId;
+    req.session.usuarioNome = nome;
+
+    res.json({ success: true, codigo, id: result.insertId });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erro interno no servidor" });
   }
 });
 
-// Login
+// Login (usuário final — aceita email ou nome)
 app.post("/api/login", async (req, res) => {
-  const { nome, senha } = req.body;
+  const { email, nome, senha } = req.body;
+  const identificador = (email || nome || "").trim().toLowerCase();
+  if (!identificador || !senha) {
+    return res.status(400).json({ error: "Informe email e senha" });
+  }
   try {
-    const [rows] = await pool.query("SELECT * FROM usuarios WHERE nome = ?", [
-      nome,
-    ]);
+    const [rows] = await pool.query(
+      "SELECT * FROM usuarios WHERE email = ? OR LOWER(nome) = ?",
+      [identificador, identificador],
+    );
     if (rows.length === 0) {
       return res.status(401).json({ error: "Usuário não encontrado" });
     }
@@ -1376,9 +1457,15 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Senha incorreta" });
     }
 
+    // Loga o usuário (sessão)
+    req.session.usuarioId = usuario.id;
+    req.session.usuarioNome = usuario.nome;
+
     res.json({
       message: "Login realizado com sucesso",
+      id: usuario.id,
       nome: usuario.nome,
+      email: usuario.email,
       codigo: usuario.codigo,
       indicacoes: usuario.indicacoes,
       metaAtingida: usuario.indicacoes >= 5,

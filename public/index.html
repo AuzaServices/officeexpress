@@ -899,6 +899,21 @@
       border-color: var(--brand);
       box-shadow: 0 0 0 4px rgba(255, 136, 0, 0.15);
     }
+    .modal-card .modal-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #555;
+      text-align: left;
+    }
+    .modal-card .modal-obs {
+      margin: 4px 0 16px;
+      font-size: 0.82rem;
+      color: #888;
+      text-align: center;
+      line-height: 1.4;
+    }
     .modal-card .btn-primary {
       width: 100%;
       padding: 16px;
@@ -1069,7 +1084,7 @@
           <a href="/contato">Contato</a>
           <a href="/sobre">Sobre nós</a>
         </nav>
-        <a href="/pagamento" class="carrinho-link" id="carrinhoLink" aria-label="Meu carrinho" title="Meu carrinho">
+        <a href="/carrinho.html" class="carrinho-link" id="carrinhoLink" aria-label="Meu carrinho" title="Meu carrinho">
           <svg class="carrinho-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
@@ -1274,20 +1289,19 @@
       <button class="modal-close" onclick="fecharModal()" aria-label="Fechar">
         <i class="fas fa-times"></i>
       </button>
-      <h3 id="modalTitle">Vamos começar!</h3>
-      <p class="subtitle">Digite seu primeiro nome para criar seu currículo</p>
-      <input
-        type="text"
-        id="primeiroNome"
-        placeholder="Ex: João"
-        autocomplete="off"
-        aria-label="Seu primeiro nome"
-        placeholder="Ex: João"
-        autocomplete="off"
-        aria-label="Seu primeiro nome"
-      />
-<button class="btn btn-primary" onclick="digitandoIniciado=true; localStorage.setItem('navegandoInternamente','true'); iniciarCurriculo()">
-        Criar Meu Currículo
+      <h3 id="modalTitle">Crie sua conta gratuita</h3>
+      <p class="subtitle">Cadastre-se para salvar seu currículo e poder editá-lo sempre que quiser no futuro.</p>
+      <label for="primeiroNome" class="modal-label">Seu nome</label>
+      <input type="text" id="primeiroNome" placeholder="Ex: João Silva" autocomplete="name" aria-label="Seu nome" />
+      <label for="modalEmail" class="modal-label">Email</label>
+      <input type="email" id="modalEmail" placeholder="voce@email.com" autocomplete="email" aria-label="Seu email" />
+      <label for="modalSenha" class="modal-label">Senha</label>
+      <input type="password" id="modalSenha" placeholder="Crie uma senha" autocomplete="new-password" aria-label="Crie uma senha" />
+      <label for="modalConfirmarSenha" class="modal-label">Confirmar senha</label>
+      <input type="password" id="modalConfirmarSenha" placeholder="Repita a senha" autocomplete="new-password" aria-label="Confirme a senha" />
+      <p class="modal-obs">Seu currículo ficará salvo na sua conta. Quando concluir o pagamento, ele aparece como <strong>pago</strong> no seu carrinho.</p>
+      <button class="btn btn-primary" onclick="cadastrarECriarCurriculo()">
+        Criar conta e criar meu currículo
       </button>
     </div>
   </div>
@@ -1357,19 +1371,63 @@
 
     let digitandoIniciado = false;
 
-function iniciarCurriculo() {
-      const input = document.getElementById('primeiroNome');
-      const nome = input.value.trim();
+function cadastrarECriarCurriculo() {
+      const nome = document.getElementById('primeiroNome').value.trim();
+      const email = document.getElementById('modalEmail').value.trim();
+      const senha = document.getElementById('modalSenha').value;
+      const confirmar = document.getElementById('modalConfirmarSenha').value;
 
-      if (nome === '' || nome.includes(' ')) {
-        alert('Por favor, digite apenas o primeiro nome (sem espaços).');
-        input.focus();
+      if (!nome) {
+        alert('Por favor, informe seu nome.');
+        document.getElementById('primeiroNome').focus();
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('Por favor, informe um email válido.');
+        document.getElementById('modalEmail').focus();
+        return;
+      }
+      if (senha.length < 8) {
+        alert('A senha deve ter ao menos 8 caracteres.');
+        document.getElementById('modalSenha').focus();
+        return;
+      }
+      if (senha !== confirmar) {
+        alert('As senhas não coincidem.');
+        document.getElementById('modalConfirmarSenha').focus();
         return;
       }
 
-      localStorage.setItem('nomeUsuario', nome);
-      localStorage.setItem('entradaViaSplash', 'true');
-      window.location.href = '/curriculo';
+      const btn = document.querySelector('#modalNome .btn-primary');
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Criando conta...';
+
+      fetch('/api/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email, senha }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.error) {
+            alert(data.error);
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+            return;
+          }
+          // Cadastro realizado e usuário logado (sessão). Segue para criar o currículo.
+          localStorage.setItem('nomeUsuario', nome.split(' ')[0]);
+          localStorage.setItem('entradaViaSplash', 'true');
+          localStorage.setItem('navegandoInternamente', 'true');
+          window.location.href = '/curriculo';
+        })
+        .catch((err) => {
+          console.error(err);
+          alert('Falha ao criar conta. Tente novamente.');
+          btn.disabled = false;
+          btn.textContent = textoOriginal;
+        });
     }
 
     // ========================

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Carrinho | Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      padding-top: 66px;
+      background: #f4f7fb;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      color: #1a1a2e;
+    }
+
+    .carrinho-container {
+      max-width: 860px;
+      margin: 40px auto 60px;
+      padding: 0 20px;
+    }
+
+    .carrinho-container h1 {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+    }
+    .carrinho-container .sub {
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    /* Estado vazio */
+    .carrinho-vazio {
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+    }
+    .carrinho-vazio .icone {
+      font-size: 3rem;
+      color: #bbb;
+      margin-bottom: 16px;
+    }
+    .carrinho-vazio h2 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+    .carrinho-vazio p {
+      color: #777;
+      margin-bottom: 24px;
+    }
+    .carrinho-vazio .acoes {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .carrinho-vazio .btn {
+      padding: 12px 22px;
+      font-size: 0.95rem;
+    }
+
+    /* Lista de pedidos */
+    .pedido {
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pedido .miniatura {
+      width: 64px;
+      height: 84px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #00324a, #005f73);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .pedido .info {
+      flex: 1;
+      min-width: 180px;
+    }
+    .pedido .info .nome {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+    .pedido .info .data {
+      color: #888;
+      font-size: 0.82rem;
+    }
+    .pedido .status {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .status.pago {
+      background: #e6f7ee;
+      color: #0a7a3d;
+    }
+    .status.pendente {
+      background: #fff3e0;
+      color: #b26a00;
+    }
+    .pedido .botoes {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .pedido .botoes .btn {
+      font-size: 0.85rem;
+      padding: 9px 16px;
+    }
+
+    /* Login */
+    .login-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 420px;
+      margin: 24px auto 0;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      display: none;
+    }
+    .login-box h3 {
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .login-box input:focus {
+      border-color: #ff8800;
+    }
+    .login-box .btn {
+      width: 100%;
+    }
+    .login-box .erro {
+      color: #c0392b;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="carrinho-container">
+    <h1>Meu Carrinho</h1>
+    <p class="sub">Aqui ficam todos os seus currículos. Pague os pendentes ou baixe os que já foram pagos.</p>
+
+    <div id="carrinhoLista"></div>
+
+    <!-- Estado vazio / não logado -->
+    <div id="carrinhoVazio" class="carrinho-vazio" style="display:none;">
+      <div class="icone"><i class="fas fa-file-alt"></i></div>
+      <h2>Você ainda não tem nenhum currículo</h2>
+      <p>Crie seu currículo profissional agora mesmo. Ele ficará salvo na sua conta.</p>
+      <div class="acoes">
+        <a href="/" class="btn btn-primary"><i class="fas fa-plus"></i> Criar Currículo Profissional</a>
+        <button class="btn" onclick="mostrarLogin()"><i class="fas fa-sign-in-alt"></i> Fazer login</button>
+      </div>
+    </div>
+
+    <!-- Login -->
+    <div id="loginBox" class="login-box">
+      <h3>Entrar na sua conta</h3>
+      <div class="erro" id="loginErro"></div>
+      <input type="email" id="loginEmail" placeholder="Email" autocomplete="email" />
+      <input type="password" id="loginSenha" placeholder="Senha" autocomplete="current-password" />
+      <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
+    </div>
+  </main>
+
+  <script src="components.js"></script>
+  <script>
+    function mostrarLogin() {
+      document.getElementById('loginBox').style.display = 'block';
+      document.getElementById('loginBox').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function fazerLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const senha = document.getElementById('loginSenha').value;
+      const erro = document.getElementById('loginErro');
+      if (!email || !senha) {
+        erro.textContent = 'Informe email e senha.';
+        erro.style.display = 'block';
+        return;
+      }
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, senha }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.error) {
+            erro.textContent = data.error;
+            erro.style.display = 'block';
+            return;
+          }
+          erro.style.display = 'none';
+          carregarCarrinho();
+        })
+        .catch(() => {
+          erro.textContent = 'Falha ao entrar. Tente novamente.';
+          erro.style.display = 'block';
+        });
+    }
+
+    function baixarCurriculo(token) {
+      window.location.href = '/api/carrinho/' + encodeURIComponent(token) + '/download';
+    }
+
+    function continuarPagamento(token) {
+      localStorage.setItem('curriculoToken', token);
+      window.location.href = '/pagamento';
+    }
+
+    function editarCurriculo(token) {
+      localStorage.setItem('curriculoToken', token);
+      window.location.href = '/curriculo';
+    }
+
+    function formatarData(dataStr) {
+      if (!dataStr) return '';
+      const d = new Date(dataStr);
+      if (isNaN(d.getTime())) return dataStr;
+      return d.toLocaleDateString('pt-BR');
+    }
+
+    function carregarCarrinho() {
+      fetch('/api/carrinho/usuario', { credentials: 'include' })
+        .then((r) => r.json())
+        .then((data) => {
+          const lista = document.getElementById('carrinhoLista');
+          const vazio = document.getElementById('carrinhoVazio');
+
+          if (data.error === 'Não autenticado' || !Array.isArray(data.pedidos)) {
+            // Não logado ou sem pedidos: mostra estado vazio
+            lista.innerHTML = '';
+            vazio.style.display = 'block';
+            return;
+          }
+
+          if (data.pedidos.length === 0) {
+            lista.innerHTML = '';
+            vazio.style.display = 'block';
+            return;
+          }
+
+          vazio.style.display = 'none';
+          lista.innerHTML = data.pedidos.map((p) => {
+            const inicial = (p.nome || 'C').charAt(0).toUpperCase();
+            const statusHtml = p.pago
+              ? '<span class="status pago">Pago</span>'
+              : '<span class="status pendente">Pagamento pendente</span>';
+            const botoes = p.pago
+              ? '<button class="btn" onclick="baixarCurriculo(\'' + p.token + '\')"><i class="fas fa-download"></i> Baixar PDF</button>' +
+                '<button class="btn" onclick="editarCurriculo(\'' + p.token + '\')"><i class="fas fa-edit"></i> Editar</button>'
+              : '<button class="btn" onclick="continuarPagamento(\'' + p.token + '\')"><i class="fas fa-credit-card"></i> Continuar pagamento</button>' +
+                '<button class="btn" onclick="editarCurriculo(\'' + p.token + '\')"><i class="fas fa-edit"></i> Editar</button>';
+            return (
+              '<div class="pedido">' +
+              '<div class="miniatura">' + inicial + '</div>' +
+              '<div class="info">' +
+                '<div class="nome">' + (p.nome || 'Currículo sem nome') + '</div>' +
+                '<div class="data">Criado em ' + formatarData(p.criadoEm) + '</div>' +
+              '</div>' +
+              statusHtml +
+              '<div class="botoes">' + botoes + '</div>' +
+              '</div>'
+            );
+          }).join('');
+        })
+        .catch((err) => {
+          console.error(err);
+          document.getElementById('carrinhoLista').innerHTML = '<p style="color:#c0392b;">Erro ao carregar o carrinho.</p>';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', carregarCarrinho);
+  </script>
+</body>
+</html>
