@@ -488,8 +488,9 @@ document.addEventListener("DOMContentLoaded", function() {
         btnAdicionarExperiencia.style.opacity = "0.5";
         btnAdicionarExperiencia.style.cursor = "not-allowed";
       }
-      // Salva os dados para garantir que primeiroEmprego esteja no localStorage
-      salvarDados();
+      // NOTA: não chamar salvarDados() aqui. Na inicialização os campos ainda
+      // estão vazios (o preenchimento a partir do localStorage acontece depois),
+      // e isso sobrescreveria o curriculo salvo com valores em branco.
     }
   }
 
