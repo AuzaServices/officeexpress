@@ -22,8 +22,10 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 // Middleware
 app.use(express.static("public"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser com limite maior para aceitar currículos que incluem
+// foto em base64 (o default de 100kb gera PayloadTooLargeError).
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Sessão
 // Confia no proxy do Render/Heroku para detectar HTTPS (X-Forwarded-Proto),
