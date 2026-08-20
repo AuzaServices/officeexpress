@@ -376,10 +376,12 @@
       var styleEl = doc.querySelector("style");
       var pageEl = doc.querySelector(".page");
       if (!pageEl) return '<p>Carregando…</p>';
+      // O CSS de cada modelo é escopado por ".modelo-<id>" (ex.: .modelo-moderno .lateral).
+      // Mantemos essa classe no wrapper para o preview aplicar EXATAMENTE o estilo do modelo.
       return (
         '<div class="preview-doc">' +
         (styleEl ? styleEl.outerHTML : "") +
-        '<div class="page">' + pageEl.innerHTML + '</div>' +
+        '<div class="modelo-' + modelo + '"><div class="page">' + pageEl.innerHTML + '</div></div>' +
         '</div>'
       );
     }

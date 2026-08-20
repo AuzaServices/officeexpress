@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<style>
+
+  @page { size:A4; margin:0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color:#222; font-size:12px; line-height:1.5;
+    width:210mm; min-height:297mm;
+  }
+  .page { position:relative; padding:40px 48px; min-height:1123px; width:794px; }
+  .nome { font-size:26px; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:#00324a; margin:18px 0 8px; }
+  .sec { margin-bottom:4px; }
+  .par { white-space:pre-wrap; }
+  .lista { margin:0 0 0 18px; }
+  .lista li { margin-bottom:3px; }
+  .contato { margin:6px 0 4px; }
+  .contato .sep { margin:0 6px; color:#bbb; }
+  .exp-head { display:flex; justify-content:space-between; align-items:baseline; }
+  .exp-empresa { font-weight:bold; color:#111; }
+  .exp-periodo { color:#666; font-size:11px; white-space:nowrap; }
+  .exp-cargo { font-style:italic; color:#444; }
+  .exp-ativ { color:#333; margin-top:2px; }
+  .exp-item { margin-bottom:10px; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+  .tag { display:inline-block; background:#eef2ff; color:#1e3a8a; border-radius:12px; padding:3px 12px; font-size:11px; }
+  .lat-titulo { font-size:12px; text-transform:uppercase; letter-spacing:1px; font-weight:700; margin:18px 0 8px; }
+  .lat-lista li { margin-bottom:4px; }
+
+
+    .page { display:flex; padding:0; background:#fff; }
+    .modelo-moderno .lateral { width:34%; background:#2563eb; color:#fff; padding:28px 20px; }
+    .modelo-moderno .lateral .lat-titulo { color:#fff; border-bottom:1px solid rgba(255,255,255,0.4); }
+    .modelo-moderno .lateral .contato, .modelo-moderno .lateral .lat-lista { color:#e8eeff; }
+    .modelo-moderno .main { flex:1; padding:30px 26px; }
+    .modelo-moderno .nome { color:#2563eb; font-size:28px; font-weight:800; }
+    .modelo-moderno h2 { color:#2563eb; border-left:3px solid #2563eb; padding-left:10px; }
+    .modelo-moderno .lat-lista { list-style:none; margin:0; padding:0; }
+    .modelo-moderno .lat-lista li { margin-bottom:4px; }
+  
+</style>
+</head>
+<body class="modelo-moderno">
+  <div class="page">
+    
+  <div class="lateral">
+    <div class="lat-titulo">Contato</div>
+    <div class="lat-contato">m@x.com<br/>(11)99999-9999</div>
+    <div class="lat-titulo">Habilidades</div><ul class="lat-lista"><li>Excel</li><li>Comunicaçao</li></ul>
+    
+  </div>
+  <div class="main">
+    <h1 class="nome">Maria da Silva</h1>
+    <section class="sec"><h2 class="sec-titulo">Objetivo</h2><p class="par">Teste objetivo</p></section>
+    
+    <section class="sec"><h2 class="sec-titulo">Formação Acadêmica</h2><p class="par">Graduaçao em Adm</p></section>
+    
+    
+  </div>
+
+  </div>
+</body>
+</html>

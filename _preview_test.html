@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script src="/lib/renderHTML.js"></script>
+<style>
+  body { font-family: sans-serif; background:#eee; margin:0; padding:20px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:20px; }
+  .card { background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px; }
+  .card h3 { margin:0 0 8px; }
+  .preview-doc { width:794px; transform-origin: top left; background:#fff; overflow:hidden; }
+  .preview-doc .page { width:794px; min-height:1123px; }
+</style>
+</head>
+<body>
+<h2>Teste de preview — todos os modelos</h2>
+<div class="grid" id="grid"></div>
+<script>
+  var dados = {
+    nome: 'Maria da Silva',
+    email: 'maria@email.com',
+    telefone: ['(11) 99999-9999', '(11) 98888-8888'],
+    endereco: 'Rua das Flores',
+    numero: '123',
+    bairro: 'Centro',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    objetivo: 'Busco uma posição como Analista, onde possa aplicar minha experiência em gestão de projetos.',
+    formacao: 'Graduação em Administração - Universidade X (2015-2019)',
+    habilidades: 'Excel, Pacote Office, Comunicação, Liderança',
+    hobbies: 'Leitura, esportes',
+    infoAdicional: 'CNH B, disponibilidade imediata',
+    curso: ['Pacote Office', 'Gestão de Projetos'],
+    instituicao: ['SENAI', 'FGV'],
+    carga: ['40h', '60h'],
+    empresa: ['Empresa Alpha', 'Empresa Beta'],
+    cargo: ['Analista Jr.', 'Assistente'],
+    periodo_inicio: ['01/2018', '01/2015'],
+    periodo_fim: ['01/2020', '12/2017'],
+    atividades: ['Criação de relatórios gerenciais.', 'Atendimento a clientes.']
+  };
+  var ids = ['classico','moderno','minimal','profissional','executivo','cronologico','funcional','compacto','soberio','tecnico'];
+
+  function renderPreview(modelo) {
+    var html = window.renderCurriculo.gerarHTML(modelo, dados);
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    var styleEl = doc.querySelector('style');
+    var pageEl = doc.querySelector('.page');
+    return '<div class="preview-doc">' +
+      (styleEl ? styleEl.outerHTML : '') +
+      '<div class="modelo-' + modelo + '"><div class="page">' + pageEl.innerHTML + '</div></div>' +
+      '</div>';
+  }
+
+  var grid = document.getElementById('grid');
+  ids.forEach(function (m) {
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = document.createElement('h3');
+    h.textContent = m;
+    card.appendChild(h);
+    var div = document.createElement('div');
+    div.innerHTML = renderPreview(m);
+    var doc = div.querySelector('.preview-doc');
+    var largura = 360 - 24 - 2; // container width
+    var escala = largura / 794;
+    doc.style.transform = 'scale(' + escala + ')';
+    doc.style.height = (doc.offsetHeight * escala) + 'px';
+    card.appendChild(div);
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>
