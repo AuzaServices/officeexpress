@@ -127,6 +127,9 @@ nav.menu {
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Empurra o grupo (menu + carrinho) para a direita, mantendo-os próximos
+     em vez de espalhá-los com space-between. */
+  margin-left: auto;
 }
 
 nav.menu a {
@@ -539,6 +542,12 @@ textarea::placeholder {
   
   .hamburguer {
     display: block;
+  }
+  
+  /* No mobile o menu fica escondido; aproxima o carrinho do hambúrguer
+     empurrando ambos para a direita, agrupados. */
+  .carrinho-link {
+    margin-left: auto;
   }
   
   .cabecalho .wrap {
