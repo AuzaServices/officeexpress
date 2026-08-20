@@ -26,7 +26,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Sessão
-const sessionStore = new MySQLStore({}, pool);
+// Torna o boot resistente a falhas de banco: se o MySQL estiver
+// indisponível no momento do boot, usa um store em memória (fallback),
+// para o servidor subir mesmo assim em vez de morrer ("Service Unavailable").
+let sessionStore;
+try {
+  sessionStore = new MySQLStore({}, pool);
+  // Evita que erros assíncronos do store derrubem o processo Node
+  if (sessionStore.on) sessionStore.on("error", (err) => console.error("⚠️ Erro no store de sessão:", err.message));
+} catch (err) {
+  console.error("⚠️ Falha ao criar MySQLStore, usando store em memória:", err.message);
+  sessionStore = new session.MemoryStore();
+}
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "officeexpress-segredo-super-seguro",
@@ -421,6 +433,15 @@ app.get("/:page", (req, res) => {
   if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Rota não encontrada" });
   const file = path.join(__dirname, "public", `${req.params.page}.html`);
   res.sendFile(file, (err) => { if (err) res.status(404).send("Página não encontrada"); });
+});
+
+// Handlers globais: impedem que erros não capturados (ex: falha momentânea
+// de banco) derrubem o processo e causem "Service Unavailable" no Render.
+process.on("uncaughtException", (err) => {
+  console.error("❌ Exceção não capturada (mantendo o servidor ativo):", err.message);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("❌ Rejeição não tratada (mantendo o servidor ativo):", reason && reason.message ? reason.message : reason);
 });
 
 app.listen(PORT, () => {
