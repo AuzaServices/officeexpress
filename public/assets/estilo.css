@@ -210,3 +210,11 @@ table.tabela tr:hover td { background: rgba(255,255,255,0.03); }
   .auth-card { padding: 28px 20px; }
   .preview-paper { padding: 28px; }
 }
+
+/* Impede que o CSS do currículo (injetado no preview/editor) restrinja o
+   body da página do site a 210mm/794px — mantém o layout do editor íntegro. */
+html, body {
+  width: auto !important;
+  min-height: 100vh !important;
+}
+
