@@ -179,7 +179,7 @@
       <h2>Você ainda não tem nenhum currículo</h2>
       <p>Crie seu currículo profissional agora mesmo. Ele ficará salvo na sua conta.</p>
       <div class="acoes">
-        <a href="/" class="btn btn-primary"><i class="fas fa-plus"></i> Criar Currículo Profissional</a>
+        <a href="/" id="criarCurriculoLink" class="btn btn-primary"><i class="fas fa-plus"></i> Criar Currículo Profissional</a>
         <button class="btn" onclick="mostrarLogin()"><i class="fas fa-sign-in-alt"></i> Fazer login</button>
       </div>
     </div>
@@ -223,8 +223,11 @@
             erro.style.display = 'block';
             return;
           }
-          erro.style.display = 'none';
-          carregarCarrinho();
+          // Login OK: guarda o nome e segue para criar o currículo logado.
+          localStorage.setItem('nomeUsuario', (data.nome || email).split(' ')[0]);
+          localStorage.setItem('entradaViaSplash', 'true');
+          localStorage.setItem('navegandoInternamente', 'true');
+          window.location.href = '/curriculo';
         })
         .catch(() => {
           erro.textContent = 'Falha ao entrar. Tente novamente.';
@@ -259,15 +262,24 @@
         .then((data) => {
           const lista = document.getElementById('carrinhoLista');
           const vazio = document.getElementById('carrinhoVazio');
+          const criarLink = document.getElementById('criarCurriculoLink');
+          const loginBtn = document.querySelector('#carrinhoVazio button[onclick="mostrarLogin()"]');
 
-          if (data.error === 'Não autenticado' || !Array.isArray(data.pedidos)) {
-            // Não logado ou sem pedidos: mostra estado vazio
+          const naoAutenticado = data.error === 'Não autenticado' || !Array.isArray(data.pedidos);
+
+          if (naoAutenticado) {
+            // Não logado: criar currículo abre o cadastro na home e mostra o botão de login
+            if (criarLink) criarLink.href = '/';
+            if (loginBtn) loginBtn.style.display = 'inline-flex';
             lista.innerHTML = '';
             vazio.style.display = 'block';
             return;
           }
 
           if (data.pedidos.length === 0) {
+            // Logado, mas sem pedidos: criar currículo vai direto para a criação
+            if (criarLink) criarLink.href = '/curriculo';
+            if (loginBtn) loginBtn.style.display = 'none';
             lista.innerHTML = '';
             vazio.style.display = 'block';
             return;
