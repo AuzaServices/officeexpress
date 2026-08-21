@@ -3,7 +3,7 @@ services:
     name: officeexpress
     env: node
     plan: free
-    buildCommand: "npm install && npx puppeteer browsers install chrome"
+    buildCommand: "apt-get update && apt-get install -y --no-install-recommends fontconfig fonts-liberation fonts-dejavu-core fonts-freefont-ttf && npm install && npx puppeteer browsers install chrome"
     startCommand: "node server.js"
     envVars:
       NODE_VERSION: 20
