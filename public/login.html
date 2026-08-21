@@ -52,7 +52,13 @@
       document.getElementById("btnEntrar").disabled = false;
 
       if (ok) {
-        window.location.href = "/minha-conta";
+        if (!data.usuario.email_confirmado) {
+          App.mostrarAlerta("alert", "Confirme seu e-mail antes de continuar. Verifique o link enviado para sua caixa de entrada.", "error");
+          return;
+        }
+        var destino = localStorage.getItem("redirectAposLogin");
+        localStorage.removeItem("redirectAposLogin");
+        window.location.href = destino || "/modelos";
       } else {
         App.mostrarAlerta("alert", data.error || "Falha no login.", "error");
       }

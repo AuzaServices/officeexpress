@@ -43,11 +43,25 @@
     .preview-acoes .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
     @media (max-width: 992px) {
+      .preview-acoes { flex-direction: row; gap: 8px; }
+      .preview-acoes .btn { padding: 12px 6px; font-size: .72rem; gap: 4px; line-height: 1.2; flex-direction: column; }
+      .preview-acoes .btn svg { width: 20px; height: 20px; }
+    }
+
+    @media (max-width: 992px) {
       .preview-layout { grid-template-columns: 1fr; gap: 20px; }
-      .preview-acoes-card { max-width: 794px; margin: 0 auto; }
+      .preview-acoes-col {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
+        padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+        background: var(--card); border-top: 1px solid var(--border);
+        box-shadow: 0 -10px 30px var(--shadow-lg);
+      }
+      .preview-acoes-card { max-width: 794px; margin: 0 auto; padding: 0; background: transparent; border: none; box-shadow: none; border-radius: 0; }
+      .preview-acoes-card h3, .preview-acoes-card .sub { display: none; }
+      .preview-page { padding-bottom: 150px; }
     }
     @media (max-width: 600px) {
-      .preview-page { padding: 20px 0 40px; }
+      .preview-page { padding: 20px 0 150px; }
       .preview-page .container { padding: 0 14px; }
       .section-header { margin-bottom: 20px; }
       .section-header h2 { font-size: 1.4rem; }
@@ -55,7 +69,6 @@
       .preview-layout { gap: 16px; }
       .preview-doc-col { display: flex; justify-content: center; }
       .preview-paper { max-width: 100%; border-radius: 8px; }
-      .preview-acoes-card { padding: 16px; border-radius: 12px; }
     }
   </style>
 </head>

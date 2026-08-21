@@ -63,8 +63,8 @@
       document.getElementById("btnCad").disabled = false;
 
       if (ok) {
-        App.mostrarAlerta("alert", data.message || "Conta criada!", "success");
-        setTimeout(() => (window.location.href = "/modelos"), 1800);
+        document.getElementById("cadForm").style.display = "none";
+        App.mostrarAlerta("alert", data.message || "Conta criada! Enviamos um link de confirmação para o seu e-mail. Clique nele para liberar o acesso.", "success");
       } else {
         App.mostrarAlerta("alert", data.error || "Erro ao criar conta.", "error");
       }

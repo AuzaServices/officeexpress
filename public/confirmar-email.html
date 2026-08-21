@@ -12,23 +12,38 @@
   <div class="auth-page">
     <div class="auth-card" style="text-align:center">
       <div class="auth-logo"><img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" /></div>
-      <h1>Confirmação de e-mail</h1>
-      <div id="msg" style="margin:24px 0;color:var(--text-secondary)">Confirmando...</div>
-      <a href="/login" class="btn btn-primary" id="btnIr" style="display:none">Ir para o login</a>
+      <h1 id="titulo">Confirmando seu e-mail…</h1>
+      <p class="subtitle" id="texto">Aguarde um instante.</p>
+      <div id="alert" class="alert"></div>
+      <div class="auth-links" id="links" style="display:none">
+        <p><a href="/login">Ir para o login</a></p>
+      </div>
     </div>
   </div>
 
   <script src="/assets/app.js"></script>
   <script>
-    const token = new URLSearchParams(window.location.search).get("token");
-    const msg = document.getElementById("msg");
-    const btn = document.getElementById("btnIr");
-    (async () => {
-      if (!token) { msg.textContent = "Link inválido ou ausente."; btn.style.display = "inline-flex"; return; }
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (!token) {
+        document.getElementById("titulo").textContent = "Link inválido";
+        document.getElementById("texto").textContent = "Nenhum token de confirmação foi informado.";
+        document.getElementById("links").style.display = "block";
+        return;
+      }
       const { ok, data } = await App.api("/api/auth/confirmar?token=" + encodeURIComponent(token));
-      msg.textContent = ok ? (data.message || "E-mail confirmado com sucesso!") : (data.error || "Link inválido ou expirado.");
-      btn.style.display = "inline-flex";
-      btn.textContent = ok ? "Ir para o login" : "Voltar ao login";
+      if (ok) {
+        document.getElementById("titulo").textContent = "E-mail confirmado!";
+        document.getElementById("texto").textContent = "Redirecionando para a escolha de modelos…";
+        App.mostrarAlerta("alert", "Tudo certo! Você já pode escolher seu modelo de currículo.", "success");
+        setTimeout(function () { window.location.href = "/modelos"; }, 1500);
+      } else {
+        document.getElementById("titulo").textContent = "Não foi possível confirmar";
+        document.getElementById("texto").textContent = "";
+        App.mostrarAlerta("alert", data.error || "Link inválido ou expirado.", "error");
+        document.getElementById("links").style.display = "block";
+      }
     })();
   </script>
 </body>

@@ -17,7 +17,9 @@
     .etapa.ativa { display: block; animation: fadeInUp .3s ease; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     .info-banner { background: rgba(255,136,0,0.12); border: 1px solid rgba(255,136,0,0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; color: var(--text-secondary); font-size: .9rem; }
-    .btn-visualizar { display: none; }
+    .btn-visualizar { display: none; align-items: center; justify-content: center; }
+    .btn-visualizar svg { width: 20px; height: 20px; }
+    .btn-visualizar.oculto-etapa-final { display: none !important; }
 
     /* Folha A4 em tempo real (desktop) — renderiza o MESMO template do PDF */
     .folha-a4 {
@@ -26,7 +28,7 @@
       max-width: 100%; overflow: hidden;
     }
     .folha-a4 .preview-doc { width: 794px; transform-origin: top left; background: #fff; }
-    .folha-a4 .preview-doc .page { width: 794px; min-height: 1123px; }
+    .folha-a4 .preview-doc .page { width: 794px; min-height: 0; }
 
     /* Modal mobile */
     .preview-modal {
@@ -47,6 +49,7 @@
 
     @media (max-width: 992px) {
       .editor-layout { flex-direction: column; }
+      .editor-form { flex-basis: auto; width: 100%; }
       .editor-preview-col { display: none; }
       .btn-visualizar { display: inline-flex; margin-top: 12px; }
     }
@@ -182,7 +185,9 @@
         <button class="btn btn-primary" id="btnNext" onclick="irProximo()">Continuar</button>
       </div>
 
-          <button class="btn btn-secondary btn-visualizar" onclick="abrirPreviewMobile()">Visualizar folha</button>
+          <button class="btn btn-secondary btn-visualizar" id="btnVisualizar" onclick="abrirPreviewMobile()" aria-label="Visualizar folha">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div><!-- /editor-form -->
 
         <div class="editor-preview-col">
@@ -226,6 +231,8 @@
       for (var i = 0; i < totalEtapas; i++) document.getElementById("etapa" + i).classList.toggle("ativa", i === n);
       document.getElementById("btnPrev").style.visibility = n === 0 ? "hidden" : "visible";
       document.getElementById("btnNext").textContent = n === totalEtapas - 1 ? "Ver prévia" : "Continuar";
+      var btnVis = document.getElementById("btnVisualizar");
+      if (btnVis) btnVis.classList.toggle("oculto-etapa-final", n === totalEtapas - 1);
       renderSteps();
     }
     window.irAnterior = function () { if (etapaAtual > 0) { etapaAtual--; showEtapa(etapaAtual); } };
@@ -257,12 +264,47 @@
       }
     }
 
+    // Máscaras
+    function mascaraTelefone(v) {
+      v = v.replace(/\D/g, "").slice(0, 11);
+      if (v.length > 10) return v.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3").replace(/-$/, "");
+      if (v.length > 5) return v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3").replace(/-$/, "");
+      if (v.length > 2) return v.replace(/(\d{2})(\d{0,5})/, "($1) $2");
+      if (v.length > 0) return v.replace(/(\d{0,2})/, "($1");
+      return v;
+    }
+    function mascaraData(v) {
+      v = v.replace(/\D/g, "").slice(0, 8);
+      if (v.length > 4) return v.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3").replace(/\/$/, "");
+      if (v.length > 2) return v.replace(/(\d{2})(\d{0,2})/, "$1/$2");
+      return v;
+    }
+    function ligarMascaraTelefone(input) {
+      input.addEventListener("input", function () {
+        var pos = input.selectionStart;
+        var antes = input.value.length;
+        input.value = mascaraTelefone(input.value);
+        var depois = input.value.length;
+        input.selectionStart = input.selectionEnd = Math.max(0, pos + (depois - antes));
+      });
+    }
+    function ligarMascaraData(input) {
+      input.addEventListener("input", function () {
+        var pos = input.selectionStart;
+        var antes = input.value.length;
+        input.value = mascaraData(input.value);
+        var depois = input.value.length;
+        input.selectionStart = input.selectionEnd = Math.max(0, pos + (depois - antes));
+      });
+    }
+
     // Telefones
     function addTelefone(val) {
       var d = document.createElement("div");
       d.style.marginBottom = "10px";
-      d.innerHTML = '<input type="tel" class="tel" placeholder="(11) 99999-9999" value="' + (val || "") + '" />';
+      d.innerHTML = '<input type="tel" class="tel" placeholder="(11) 99999-9999" maxlength="15" value="' + (val || "") + '" />';
       document.getElementById("telefones").appendChild(d);
+      ligarMascaraTelefone(d.querySelector(".tel"));
     }
     window.addTelefone = addTelefone;
 
@@ -271,7 +313,7 @@
       var d = document.createElement("div");
       d.className = "repeat-item";
       d.innerHTML =
-        '<button type="button" class="remover" onclick="this.parentElement.remove()">&#10005; Remover</button>' +
+        '<button type="button" class="remover" onclick="removerItem(this)">&#10005; Remover</button>' +
         '<div class="campo"><label>Curso *</label><input class="c-curso" placeholder="Pacote Office" /></div>' +
         '<div class="campo"><label>Instituição</label><input class="c-inst" placeholder="SENAI" /></div>' +
         '<div class="campo"><label>Carga horária</label><input class="c-carga" placeholder="40h" /></div>';
@@ -284,17 +326,25 @@
       var d = document.createElement("div");
       d.className = "repeat-item";
       d.innerHTML =
-        '<button type="button" class="remover" onclick="this.parentElement.remove()">&#10005; Remover</button>' +
+        '<button type="button" class="remover" onclick="removerItem(this)">&#10005; Remover</button>' +
         '<div class="campo"><label>Empresa *</label><input class="e-empresa" placeholder="Nome da empresa" /></div>' +
         '<div class="campo"><label>Cargo</label><input class="e-cargo" placeholder="Analista" /></div>' +
         '<div class="campo" style="display:flex;gap:12px">' +
-        '  <div style="flex:1"><label>Início</label><input class="e-inicio" placeholder="01/2020" /></div>' +
-        '  <div style="flex:1"><label>Fim</label><input class="e-fim" placeholder="01/2023" /></div>' +
+        '  <div style="flex:1"><label>Início</label><input class="e-inicio" placeholder="01/01/2020" maxlength="10" /></div>' +
+        '  <div style="flex:1"><label>Fim</label><input class="e-fim" placeholder="01/01/2023" maxlength="10" /></div>' +
         '</div>' +
         '<div class="campo"><label>Atividades</label><textarea class="e-ativ" placeholder="Descreva suas principais atividades"></textarea></div>';
       document.getElementById("experiencias").appendChild(d);
+      ligarMascaraData(d.querySelector(".e-inicio"));
+      ligarMascaraData(d.querySelector(".e-fim"));
     }
     window.addExperiencia = addExperiencia;
+
+    // Remove um item repetível e atualiza o preview instantaneamente
+    window.removerItem = function (btn) {
+      btn.parentElement.remove();
+      agendarAtualizacao();
+    };
 
     document.getElementById("primeiroEmprego").addEventListener("change", function (e) {
       var disabled = e.target.checked;
@@ -359,6 +409,8 @@
       if (!el) return;
       var doc = el.querySelector(".preview-doc");
       if (!doc) return;
+      doc.style.transform = "none";
+      doc.style.height = "";
       var largura = el.clientWidth || 794;
       var escala = largura / 794;
       doc.style.transform = "scale(" + escala + ")";
@@ -400,9 +452,12 @@
 
     // Modal mobile
     window.abrirPreviewMobile = function () {
-      atualizarFolhas();
       document.getElementById("previewModal").classList.add("aberto");
       document.body.style.overflow = "hidden";
+      atualizarFolhas();
+      requestAnimationFrame(function () {
+        dimensionarFolha(document.getElementById("folhaA4Modal"));
+      });
     };
     window.fecharPreviewMobile = function () {
       document.getElementById("previewModal").classList.remove("aberto");
