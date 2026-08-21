@@ -146,10 +146,13 @@
             children: [
               new window.docx.Paragraph({
                 alignment: window.docx.AlignmentType.CENTER,
+                spacing: { before: 0, after: 0, line: 0 },
                 children: [
                   new window.docx.ImageRun({
                     data: bytes,
-                    transformation: { width: 595, height: 842, type: "px" },
+                    // A4 em pontos (595x842) com proporção exata da folha —
+                    // a imagem preenche 100% da página, sem margens nem espaços.
+                    transformation: { width: 595, height: 842, type: "pt" },
                     type: "png",
                   }),
                 ],
