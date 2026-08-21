@@ -67,8 +67,8 @@ header.cabecalho {
   background: rgba(0, 31, 51, 0.92); backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
-.cabecalho .wrap { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; gap: 16px; }
-.logo { height: 56px; width: auto; display: block; }
+.cabecalho .wrap { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; gap: 16px; }
+.logo { height: 88px; width: auto; display: block; }
 nav.menu { display: flex; align-items: center; gap: 0; margin-left: auto; }
 nav.menu a:not(.btn-login) { margin-left: 24px; text-decoration: none; font-weight: 600; color: #ffffff; transition: var(--transition); padding: 8px 0; position: relative; }
 nav.menu a:not(.btn-login)::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--brand); transition: width 0.3s ease; }
@@ -204,7 +204,7 @@ nav.menu a.ativo::after { width: 100%; }
 .auth-card h1 { font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 8px; }
 .auth-card .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 28px; font-size: 0.95rem; }
 .auth-logo { text-align: center; margin-bottom: 20px; }
-.auth-logo img { height: 46px; }
+.auth-logo img { height: 68px; }
 .auth-links { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); }
 .auth-links a { color: var(--brand); text-decoration: none; }
 .auth-links a:hover { text-decoration: underline; }
@@ -298,7 +298,7 @@ table.tabela tr:hover td { background: #f4f9ff; }
 .footer-col p { margin: 0 0 12px; line-height: 1.6; color: #94a3b8; font-size: .88rem; }
 .footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .footer-col ul a { font-size: .88rem; }
-.footer-logo { height: 40px; width: auto; margin-bottom: 14px; display: block; }
+.footer-logo { height: 60px; width: auto; margin-bottom: 14px; display: block; }
 .footer-social { display: flex; gap: 10px; margin-top: 16px; }
 .footer-social a {
   width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08);
@@ -326,8 +326,8 @@ table.tabela tr:hover td { background: #f4f9ff; }
 @media (max-width: 768px) {
   nav.menu { display: none; }
   .hamburguer { display: block; margin-right: 4px; }
-  .cabecalho .wrap { padding: 10px 0; }
-  .logo { height: 44px; }
+  .cabecalho .wrap { padding: 6px 0; }
+  .logo { height: 68px; }
   .auth-card { padding: 28px 20px; }
   .preview-paper { padding: 28px; }
 }
