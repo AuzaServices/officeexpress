@@ -10,6 +10,7 @@
   <script src="/curriculo-render.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
   <style>
     /* Preview escondido usado apenas para capturar a imagem exata no download */
     #previewCaptura {
@@ -86,29 +87,34 @@
         '<div class="modelo-' + dadosPedido.modelo + '">' + pageEl.outerHTML + "</div>";
     }
 
-    // Gera o PDF a partir da IMAGEM do preview (html2canvas) — fidelidade total.
-    async function baixarPDF() {
-      if (!pedidoId) return alert("Pedido não identificado.");
+    // Captura a imagem do preview (html2canvas) e devolve { canvas, dataUrlPng }.
+    async function capturarImagem() {
       if (!dadosPedido) {
         await carregarPedido();
-        if (!dadosPedido) return alert("Não foi possível carregar o pedido. Tente novamente.");
+        if (!dadosPedido) return null;
         renderizarPreview();
       }
       var alvo = document.getElementById("previewCaptura");
       var page = alvo && alvo.querySelector(".page");
-      if (!page) return alert("Pré-visualização não disponível. Tente novamente.");
+      if (!page) return null;
+      var canvas = await html2canvas(page, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: page.offsetWidth,
+        height: page.offsetHeight,
+      });
+      return { canvas: canvas, dataUrlPng: canvas.toDataURL("image/png") };
+    }
 
+    // Gera o PDF a partir da IMAGEM do preview (html2canvas) — fidelidade total.
+    async function baixarPDF() {
+      if (!pedidoId) return alert("Pedido não identificado.");
       try {
-        var canvas = await html2canvas(page, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          width: page.offsetWidth,
-          height: page.offsetHeight,
-        });
-        var imgData = canvas.toDataURL("image/jpeg", 0.95);
+        var img = await capturarImagem();
+        if (!img) return alert("Pré-visualização não disponível. Tente novamente.");
         var pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
-        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+        pdf.addImage(img.dataUrlPng, "PNG", 0, 0, 210, 297);
         var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
         pdf.save(nome + ".pdf");
       } catch (err) {
@@ -117,10 +123,53 @@
       }
     }
 
-    // DOCX continua sendo gerado no servidor (com fallback sem Chromium).
-    function baixarDOCX() {
+    // Gera o DOCX embutindo a IMAGEM do preview (biblioteca "docx" no navegador).
+    async function baixarDOCX() {
       if (!pedidoId) return alert("Pedido não identificado.");
-      window.open("/api/pedidos/" + pedidoId + "/download?formato=docx", "_blank");
+      try {
+        var img = await capturarImagem();
+        if (!img) return alert("Pré-visualização não disponível. Tente novamente.");
+
+        // Converte o dataURL PNG em bytes (Uint8Array) para o ImageRun.
+        var bin = atob(img.dataUrlPng.split(",")[1]);
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+        var doc = new window.docx.Document({
+          sections: [{
+            properties: {
+              page: {
+                size: { width: 11906, height: 16838 },
+                margin: { top: 0, right: 0, bottom: 0, left: 0 },
+              },
+            },
+            children: [
+              new window.docx.Paragraph({
+                alignment: window.docx.AlignmentType.CENTER,
+                children: [
+                  new window.docx.ImageRun({
+                    data: bytes,
+                    transformation: { width: 595, height: 842, type: "px" },
+                    type: "png",
+                  }),
+                ],
+              }),
+            ],
+          }],
+        });
+        var blob = await window.docx.Packer.toBlob(doc);
+        var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = nome + ".docx";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 2000);
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao gerar o Word. Tente novamente.");
+      }
     }
 
     function baixar(formato) {
