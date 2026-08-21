@@ -390,6 +390,20 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
   }
 });
 
+// Retorna modelo + dados do pedido pago para o cliente gerar o PDF/DOCX
+// a partir da IMAGEM do preview (html2canvas) — sem depender do Chromium
+// no servidor.
+app.get("/api/pedidos/:id/dados", async (req, res) => {
+  const { id } = req.params;
+  const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
+  if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
+  const pedido = rows[0];
+  if (pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
+  let dados;
+  try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
+  res.json({ modelo: pedido.modelo, dados });
+});
+
 // ---------------------------------------------------------------------------
 // Painel admin
 // ---------------------------------------------------------------------------

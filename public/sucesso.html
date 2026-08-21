@@ -7,6 +7,21 @@
   <link rel="icon" href="/imagens/icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
+  <script src="/curriculo-render.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Preview escondido usado apenas para capturar a imagem exata no download */
+    #previewCaptura {
+      position: fixed;
+      left: -10000px;
+      top: 0;
+      width: 794px;
+      background: #fff;
+      z-index: -1;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
   <header class="cabecalho">
@@ -32,6 +47,8 @@
     </div>
   </div>
 
+  <div id="previewCaptura"></div>
+
   <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
 
   <script src="/assets/app.js"></script>
@@ -40,11 +57,79 @@
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("sucesso");
 
-    function baixar(formato) {
+    var dadosPedido = null;
+
+    // Busca modelo + dados do pedido pago e renderiza o preview (escondido)
+    // para capturar a imagem EXATA na hora do download.
+    function carregarPedido() {
+      if (!pedidoId) return Promise.resolve();
+      return App.api("/api/pedidos/" + pedidoId + "/dados").then(function (r) {
+        if (!r.ok) {
+          dadosPedido = null;
+          return;
+        }
+        dadosPedido = r.data;
+        renderizarPreview();
+      });
+    }
+
+    function renderizarPreview() {
+      var alvo = document.getElementById("previewCaptura");
+      if (!dadosPedido || !window.renderCurriculo) return;
+      var html = window.renderCurriculo.gerarHTML(dadosPedido.modelo, dadosPedido.dados);
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var styleEl = doc.querySelector("style");
+      var pageEl = doc.querySelector(".page");
+      if (!pageEl) return;
+      alvo.innerHTML =
+        (styleEl ? styleEl.outerHTML : "") +
+        '<div class="modelo-' + dadosPedido.modelo + '">' + pageEl.outerHTML + "</div>";
+    }
+
+    // Gera o PDF a partir da IMAGEM do preview (html2canvas) — fidelidade total.
+    async function baixarPDF() {
       if (!pedidoId) return alert("Pedido não identificado.");
-      window.open("/api/pedidos/" + pedidoId + "/download?formato=" + formato, "_blank");
+      if (!dadosPedido) {
+        await carregarPedido();
+        if (!dadosPedido) return alert("Não foi possível carregar o pedido. Tente novamente.");
+        renderizarPreview();
+      }
+      var alvo = document.getElementById("previewCaptura");
+      var page = alvo && alvo.querySelector(".page");
+      if (!page) return alert("Pré-visualização não disponível. Tente novamente.");
+
+      try {
+        var canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          width: page.offsetWidth,
+          height: page.offsetHeight,
+        });
+        var imgData = canvas.toDataURL("image/jpeg", 0.95);
+        var pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+        var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+        pdf.save(nome + ".pdf");
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao gerar o PDF. Tente novamente.");
+      }
+    }
+
+    // DOCX continua sendo gerado no servidor (com fallback sem Chromium).
+    function baixarDOCX() {
+      if (!pedidoId) return alert("Pedido não identificado.");
+      window.open("/api/pedidos/" + pedidoId + "/download?formato=docx", "_blank");
+    }
+
+    function baixar(formato) {
+      if (formato === "pdf") return baixarPDF();
+      return baixarDOCX();
     }
     window.baixar = baixar;
+
+    carregarPedido();
   </script>
 </body>
 </html>
