@@ -50,18 +50,9 @@
 
     /* Cabeçalho da página de pagamento */
     .seg-topo {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: center;
       gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
     }
-    .seg-topo .titulo { display: flex; align-items: center; gap: 14px; }
-    .seg-topo .icone-cadeado {
-      width: 46px; height: 46px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-      color: #001f33; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 8px 20px var(--brand-glow); flex-shrink: 0;
-    }
-    .seg-topo h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-primary); }
-    .seg-topo .sub { margin: 2px 0 0; color: var(--text-muted); font-size: .9rem; }
 
     .selo-mp {
       display: flex; align-items: center; gap: 12px;
@@ -205,20 +196,23 @@
       .barra-confianca .carrossel-track {
         display: flex; width: 300%; transition: transform .5s ease;
       }
-      .barra-confianca .item {
+      .barra-confianca .carrossel-slide {
         width: 33.3333%; flex-shrink: 0; box-sizing: border-box;
-        margin: 18px 26px; border-radius: 12px;
+        display: flex; justify-content: center; padding: 18px 26px;
       }
+      .barra-confianca .item { width: 100%; max-width: 280px; border-radius: 12px; margin: 0; justify-content: center; }
       .resumo-pedido { padding: 18px 20px; }
       .tabs, .aba { padding-left: 20px; padding-right: 20px; }
     }
     @media (min-width: 761px) {
       .barra-confianca .carrossel-track { display: contents; }
+      .barra-confianca .carrossel-slide { display: contents; }
     }
     @media (max-width: 560px) {
       .pix-qr { flex: 1 1 100%; }
       .pix-qr .qr-box { max-width: 240px; margin: 0 auto; }
-      .seg-topo { flex-direction: column; align-items: flex-start; }
+      .seg-topo { flex-direction: column; align-items: center; }
+      .selo-mp { width: 80%; justify-content: center; text-align: center; }
       .resumo-pedido .rp-item.expira { text-align: left; }
     }
   </style>
@@ -238,15 +232,6 @@
 
       <div class="pagamento-seguro">
         <div class="seg-topo">
-        <div class="titulo">
-          <div class="icone-cadeado">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </div>
-          <div>
-            <h2>Pagamento Seguro</h2>
-            <p class="sub">Transação protegida e processada pelo Mercado Pago</p>
-          </div>
-        </div>
         <div class="selo-mp" title="Processado por Mercado Pago">
           <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:42px;width:auto" />
           <span class="txt">Pagamento processado<br />com segurança pelo<br /><b style="color:var(--brand-dark)">Mercado Pago</b></span>
@@ -267,24 +252,24 @@
 
         <div class="barra-confianca" id="barraConfianca">
           <div class="carrossel-track" id="carrosselTrack">
-          <div class="item">
+          <div class="carrossel-slide"><div class="item">
             <div class="ico">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
             <div class="lbl">Ambiente 100% seguro<small>Proteção total dos dados</small></div>
-          </div>
-          <div class="item">
+          </div></div>
+          <div class="carrossel-slide"><div class="item">
             <div class="ico">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <div class="lbl">Dados criptografados<small>Conexão segura e sigilosa</small></div>
-          </div>
-          <div class="item">
+          </div></div>
+          <div class="carrossel-slide"><div class="item">
             <div class="ico">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             </div>
             <div class="lbl" id="tempoInfo">Liberação automática<small>Currículo liberado na hora</small></div>
-          </div>
+          </div></div>
           </div>
         </div>
 
@@ -372,7 +357,48 @@
 
   <div class="copiado-feedback" id="copiadoFeedback">Código Pix copiado!</div>
 
-  <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <div class="footer-social">
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://wa.me/55" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 1 1-3.8-7.1"/><path d="M21 11.5c0 4.7-3.8 8.5-8.5 8.5a8.4 8.4 0 0 1-4.3-1.2L3 20l1.2-5.1A8.5 8.5 0 0 1 12.5 3c2.3 0 4.4.9 6 2.5"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/modelos">Modelos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="/contato">Fale com a gente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="/assets/app.js"></script>
   <script src="/curriculo-render.js"></script>

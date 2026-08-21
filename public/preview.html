@@ -55,7 +55,10 @@
         padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
         background: var(--card); border-top: 1px solid var(--border);
         box-shadow: 0 -10px 30px var(--shadow-lg);
+        transform: translateY(100%); opacity: 0;
+        transition: transform .45s cubic-bezier(.22,1,.36,1), opacity .35s ease;
       }
+      .preview-acoes-col.mostrar { transform: translateY(0); opacity: 1; }
       .preview-acoes-card { max-width: 794px; margin: 0 auto; padding: 0; background: transparent; border: none; box-shadow: none; border-radius: 0; }
       .preview-acoes-card h3, .preview-acoes-card .sub { display: none; }
       .preview-page { padding-bottom: 150px; }
@@ -116,7 +119,48 @@
     </div>
   </div>
 
-  <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <div class="footer-social">
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://wa.me/55" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 1 1-3.8-7.1"/><path d="M21 11.5c0 4.7-3.8 8.5-8.5 8.5a8.4 8.4 0 0 1-4.3-1.2L3 20l1.2-5.1A8.5 8.5 0 0 1 12.5 3c2.3 0 4.4.9 6 2.5"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/modelos">Modelos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="/contato">Fale com a gente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="/assets/app.js"></script>
   <script>
@@ -153,7 +197,10 @@
         (styleEl ? styleEl.outerHTML : "") +
         '<div class="modelo-' + modelo + '"><div class="page">' + pageEl.innerHTML + '</div></div>' +
         '</div>';
+      larguraAnterior = preview.clientWidth;
       dimensionarPreview();
+      var acoesCol = document.querySelector(".preview-acoes-col");
+      if (acoesCol) requestAnimationFrame(function () { acoesCol.classList.add("mostrar"); });
     }
 
     // Escala o documento A4 (794px) para caber na largura disponível.
@@ -161,13 +208,23 @@
       var preview = document.getElementById("preview");
       var doc = preview.querySelector(".preview-doc");
       if (!doc) return;
+      doc.style.transform = "none";
+      doc.style.height = "";
       var largura = preview.clientWidth || 794;
       var escala = largura / 794;
       doc.style.transform = "scale(" + escala + ")";
       doc.style.height = (doc.offsetHeight * escala) + "px";
       doc.style.transformOrigin = "top left";
     }
-    window.addEventListener("resize", dimensionarPreview);
+    var larguraAnterior = 0;
+    window.addEventListener("resize", function () {
+      var preview = document.getElementById("preview");
+      if (!preview) return;
+      var larguraAtual = preview.clientWidth;
+      if (larguraAtual === larguraAnterior) return; // ignora resize disparado por scroll/teclado no mobile
+      larguraAnterior = larguraAtual;
+      dimensionarPreview();
+    });
 
     async function irPagamento() {
       var btn = document.getElementById("btnIrPag");
