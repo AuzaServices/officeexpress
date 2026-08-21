@@ -25,23 +25,33 @@
     .seg-topo .sub { margin: 2px 0 0; color: var(--text-muted); font-size: .9rem; }
 
     .selo-mp {
-      display: flex; align-items: center; gap: 10px;
-      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-      padding: 8px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.05);
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+      padding: 10px 18px; box-shadow: 0 6px 18px rgba(0,0,0,.06);
     }
-    .selo-mp img { height: 26px; width: auto; }
-    .selo-mp .txt { font-size: .75rem; color: var(--text-muted); line-height: 1.25; }
+    .selo-mp svg { height: 40px; width: auto; }
+    .selo-mp .txt { font-size: .8rem; color: var(--text-muted); line-height: 1.3; font-weight: 600; }
 
     .pagamento-card { overflow: hidden; }
 
     .barra-confianca {
-      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-      background: linear-gradient(135deg, #0a7a3d, #14b866);
-      color: #fff; padding: 14px 20px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      background: linear-gradient(135deg, #0a7a3d, #0e9e52);
+      padding: 18px 20px;
     }
-    .barra-confianca .bloco { display: flex; align-items: center; gap: 10px; font-size: .85rem; font-weight: 600; }
-    .barra-confianca .bloco svg { width: 20px; height: 20px; flex-shrink: 0; }
-    .barra-confianca .sep { width: 1px; height: 22px; background: rgba(255,255,255,.35); }
+    .barra-confianca .item {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .barra-confianca .item .ico {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,.2); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .barra-confianca .item .ico svg { width: 19px; height: 19px; }
+    .barra-confianca .item .lbl { color: #fff; font-size: .82rem; font-weight: 700; line-height: 1.25; }
+    .barra-confianca .item .lbl small { display: block; font-weight: 500; font-size: .72rem; opacity: .9; }
 
     .tabs { display: flex; gap: 8px; padding: 20px 20px 0; }
     .tab {
@@ -133,6 +143,9 @@
     }
     .copiado-feedback.mostrar { opacity: 1; }
 
+    @media (max-width: 760px) {
+      .barra-confianca { grid-template-columns: 1fr; }
+    }
     @media (max-width: 560px) {
       .pix-qr { flex: 1 1 100%; }
       .pix-qr .qr-box { max-width: 240px; margin: 0 auto; }
@@ -163,26 +176,30 @@
           </div>
         </div>
         <div class="selo-mp" title="Processado por Mercado Pago">
-          <img src="https://http2.mlstatic.com/frontend-assets/dx-widgets-mp/MP_Logo_horizontal_3x.png" alt="Mercado Pago" onerror="this.style.display='none'" />
-          <span class="txt">Pagamento<br />processado com<br />segurança</span>
+          <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:42px;width:auto" />
+          <span class="txt">Pagamento processado<br />com segurança pelo<br /><b style="color:#0a7a3d">Mercado Pago</b></span>
         </div>
       </div>
 
       <div class="pagamento-card card">
         <div class="barra-confianca">
-          <div class="bloco">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span>Ambiente 100% seguro</span>
+          <div class="item">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="lbl">Ambiente 100% seguro<small>Proteção total dos dados</small></div>
           </div>
-          <div class="sep"></div>
-          <div class="bloco">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>Dados criptografados</span>
+          <div class="item">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="lbl">Dados criptografados<small>Conexão segura e sigilosa</small></div>
           </div>
-          <div class="sep"></div>
-          <div class="bloco">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            <span id="tempoInfo">Liberação automática</span>
+          <div class="item">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="lbl" id="tempoInfo">Liberação automática<small>Currículo liberado na hora</small></div>
           </div>
         </div>
 
@@ -226,8 +243,8 @@
                 Copiar código Pix
               </button>
               <div class="selo-mp-pix">
-                <img src="https://http2.mlstatic.com/frontend-assets/dx-widgets-mp/MP_Logo_horizontal_3x.png" alt="Mercado Pago" onerror="this.style.display='none'" />
-                <span>Pix processado com segurança pelo Mercado Pago</span>
+                <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:26px;width:auto" />
+                <span>Pix processado com segurança pelo <b>Mercado Pago</b></span>
               </div>
             </div>
           </div>
