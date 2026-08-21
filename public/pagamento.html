@@ -9,15 +9,15 @@
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
     .pagamento-layout {
-      display: grid; grid-template-columns: 320px 1fr; gap: 28px;
-      align-items: start; max-width: 1080px; margin: 0 auto;
+      display: grid; grid-template-columns: 600px 1fr; gap: 36px;
+      align-items: start; max-width: 1240px; margin: 0 auto;
     }
     .pagamento-seguro { min-width: 0; }
 
     /* Prévia do currículo — somente desktop */
     .previa-col { display: none; }
     @media (min-width: 993px) {
-      .previa-col { display: block; position: sticky; top: 90px; }
+      .previa-col { display: block; }
     }
     .previa-col .card-titulo {
       display: flex; align-items: center; justify-content: space-between;
@@ -28,7 +28,7 @@
       font-size: .72rem; font-weight: 700; color: #0a7a3d;
       background: #e7f6ec; border: 1px solid #bfe6cd; border-radius: 20px; padding: 3px 10px;
     }
-    .previa-paper { padding: 0; overflow: hidden; border-radius: 6px; background: #fff; }
+    .previa-paper { padding: 0; overflow: auto; border-radius: 6px; background: #fff; max-height: 70vh; }
     .previa-doc { width: 794px; transform-origin: top left; background: #fff; }
     .previa-doc .page { width: 794px; min-height: 1123px; }
     .previa-carregando { padding: 60px 16px; text-align: center; color: var(--text-muted); font-size: .85rem; }
