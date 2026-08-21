@@ -8,102 +8,127 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
+    .pagamento-secao { padding: 48px 0 80px; }
+
     .pagamento-layout {
-      display: grid; grid-template-columns: 600px 1fr; gap: 36px;
-      align-items: start; max-width: 1240px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 420px; gap: 32px;
+      align-items: start; max-width: 1180px; margin: 0 auto;
     }
     .pagamento-seguro { min-width: 0; }
 
     /* Prévia do currículo — somente desktop */
     .previa-col { display: none; }
     @media (min-width: 993px) {
-      .previa-col { display: block; }
+      .previa-col { display: block; position: sticky; top: 96px; }
+    }
+    .previa-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      padding: 18px; box-shadow: 0 20px 45px var(--shadow-lg);
     }
     .previa-col .card-titulo {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px; gap: 10px;
     }
-    .previa-col .card-titulo h3 { margin: 0; font-size: 1.05rem; }
+    .previa-col .card-titulo h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
     .previa-col .badge-preview {
-      font-size: .72rem; font-weight: 700; color: #0a7a3d;
-      background: #e7f6ec; border: 1px solid #bfe6cd; border-radius: 20px; padding: 3px 10px;
+      font-size: .7rem; font-weight: 700; color: var(--success);
+      background: #dcfce7; border: 1px solid rgba(22,163,74,.25); border-radius: 20px; padding: 3px 10px;
+      text-transform: uppercase; letter-spacing: .02em;
     }
-    .previa-paper { padding: 0; overflow: hidden; border-radius: 6px; background: #fff; }
+    .previa-paper {
+      padding: 0; overflow: hidden; border-radius: 10px; background: #fff;
+      border: 1px solid var(--border);
+    }
     .previa-doc { width: 794px; transform-origin: top left; background: #fff; }
     .previa-doc .page { width: 794px; min-height: 1123px; }
     .previa-carregando { padding: 60px 16px; text-align: center; color: var(--text-muted); font-size: .85rem; }
+    .previa-selo {
+      display: flex; align-items: center; gap: 8px; margin-top: 14px;
+      font-size: .78rem; color: var(--text-muted);
+    }
+    .previa-selo svg { width: 15px; height: 15px; color: var(--success); flex-shrink: 0; }
 
+    /* Cabeçalho da página de pagamento */
     .seg-topo {
       display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
     }
-    .seg-topo .titulo { display: flex; align-items: center; gap: 12px; }
+    .seg-topo .titulo { display: flex; align-items: center; gap: 14px; }
     .seg-topo .icone-cadeado {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: linear-gradient(135deg, #0a7a3d, #14b866);
-      color: #fff; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 8px 20px rgba(10,122,61,.28); flex-shrink: 0;
+      width: 46px; height: 46px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      color: #001f33; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 20px var(--brand-glow); flex-shrink: 0;
     }
-    .seg-topo h2 { margin: 0; font-size: 1.45rem; }
+    .seg-topo h2 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-primary); }
     .seg-topo .sub { margin: 2px 0 0; color: var(--text-muted); font-size: .9rem; }
 
     .selo-mp {
       display: flex; align-items: center; gap: 12px;
-      background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
-      padding: 10px 18px; box-shadow: 0 6px 18px rgba(0,0,0,.06);
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 10px 18px; box-shadow: 0 6px 18px var(--shadow);
     }
     .selo-mp svg { height: 40px; width: auto; }
-    .selo-mp .txt { font-size: .8rem; color: var(--text-muted); line-height: 1.3; font-weight: 600; }
+    .selo-mp .txt { font-size: .78rem; color: var(--text-muted); line-height: 1.3; font-weight: 600; }
 
-    .pagamento-card { overflow: hidden; }
+    .pagamento-card {
+      overflow: hidden; padding: 0; border-radius: 18px;
+      box-shadow: 0 20px 45px var(--shadow-lg);
+    }
+
+    /* Resumo do pedido no topo do card */
+    .resumo-pedido {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+      padding: 22px 26px; background: var(--card-hover);
+      border-bottom: 1px solid var(--border);
+    }
+    .resumo-pedido .rp-item .rotulo { font-size: .76rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+    .resumo-pedido .rp-valor { font-size: 1.7rem; font-weight: 800; color: var(--text-primary); margin-top: 2px; }
+    .resumo-pedido .rp-item.expira { text-align: right; }
+    .resumo-pedido .rp-expira-valor { font-weight: 700; color: var(--brand-dark); font-size: 1rem; margin-top: 2px; }
 
     .barra-confianca {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-      background: linear-gradient(135deg, #0a7a3d, #0e9e52);
-      padding: 18px 20px;
+      padding: 18px 26px; background: var(--card);
+      border-bottom: 1px solid var(--border);
     }
     .barra-confianca .item {
       display: flex; align-items: center; gap: 12px;
-      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+      background: var(--card-hover); border: 1px solid var(--border);
       border-radius: 12px; padding: 12px 14px;
     }
     .barra-confianca .item .ico {
       width: 34px; height: 34px; border-radius: 50%;
-      background: rgba(255,255,255,.2); flex-shrink: 0;
+      background: rgba(255,136,0,.12); flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
+      color: var(--brand-dark);
     }
-    .barra-confianca .item .ico svg { width: 19px; height: 19px; }
-    .barra-confianca .item .lbl { color: #fff; font-size: .82rem; font-weight: 700; line-height: 1.25; }
-    .barra-confianca .item .lbl small { display: block; font-weight: 500; font-size: .72rem; opacity: .9; }
+    .barra-confianca .item .ico svg { width: 18px; height: 18px; }
+    .barra-confianca .item .lbl { color: var(--text-primary); font-size: .82rem; font-weight: 700; line-height: 1.25; }
+    .barra-confianca .item .lbl small { display: block; font-weight: 500; font-size: .72rem; color: var(--text-muted); }
 
-    .tabs { display: flex; gap: 8px; padding: 20px 20px 0; }
+    .tabs { display: flex; gap: 8px; padding: 22px 26px 0; }
     .tab {
-      flex: 1; padding: 13px; border: 1px solid var(--border, #e5e7eb);
-      border-radius: 12px; background: #fafafa; cursor: pointer;
+      flex: 1; padding: 13px; border: 1px solid var(--border);
+      border-radius: 12px; background: var(--card-hover); cursor: pointer;
       font-weight: 700; font-size: .95rem; color: var(--text-muted);
-      transition: all .2s ease;
+      transition: var(--transition);
     }
+    .tab:hover { border-color: var(--border-hover); color: var(--text-secondary); }
     .tab.active {
-      background: #fff; border-color: var(--brand, #ff8800);
-      color: var(--brand, #ff8800); box-shadow: 0 6px 16px rgba(255,136,0,.14);
+      background: #fff; border-color: var(--brand);
+      color: var(--brand-dark); box-shadow: 0 6px 16px var(--brand-glow);
     }
 
-    .aba { padding: 20px; }
+    .aba { padding: 22px 26px 26px; }
 
     /* PIX */
-    .pix-resumo {
-      display: flex; align-items: center; justify-content: space-between;
-      background: #f6f9ff; border: 1px solid #dfe8ff; border-radius: 12px;
-      padding: 14px 18px; margin-bottom: 18px;
-    }
-    .pix-resumo .rotulo { font-size: .82rem; color: var(--text-muted); }
-    .pix-resumo .valor { font-size: 1.5rem; font-weight: 800; color: #0a7a3d; }
-
-    .pix-grid { display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap; }
+    .pix-grid { display: flex; gap: 24px; align-items: stretch; flex-wrap: wrap; }
     .pix-qr { flex: 0 0 240px; text-align: center; }
     .pix-qr .qr-box {
-      background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
-      padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      background: #fff; border: 1px solid var(--border); border-radius: 16px;
+      padding: 14px; box-shadow: 0 10px 30px var(--shadow);
     }
     .qr-img { width: 100%; height: auto; display: block; border-radius: 8px; }
     .pix-qr .qr-hint { font-size: .8rem; color: var(--text-muted); margin-top: 10px; }
@@ -113,25 +138,25 @@
     .pix-copia .rotulo { font-size: .85rem; font-weight: 700; color: var(--text-secondary); display:flex; align-items:center; gap:8px; }
     .pix-copia textarea {
       width: 100%; min-height: 96px; resize: none;
-      border: 1px solid #d1d5db; border-radius: 12px; padding: 12px;
-      font-family: 'Courier New', monospace; font-size: .8rem; color: #111827;
-      background: #fafbfc; line-height: 1.5; word-break: break-all;
+      border: 2px solid var(--border); border-radius: 12px; padding: 12px;
+      font-family: 'Courier New', monospace; font-size: .8rem; color: var(--text-primary);
+      background: var(--card-hover); line-height: 1.5; word-break: break-all;
     }
     .btn-copiar {
-      width: 100%; padding: 14px; border: none; border-radius: 12px;
-      background: linear-gradient(135deg, #0a7a3d, #14b866); color: #fff;
+      width: 100%; padding: 14px; border: none; border-radius: 50px;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); color: #001f33;
       font-weight: 800; font-size: 1rem; cursor: pointer; display: flex;
       align-items: center; justify-content: center; gap: 10px;
-      box-shadow: 0 8px 20px rgba(10,122,61,.28); transition: transform .15s ease;
+      box-shadow: 0 4px 20px var(--brand-glow); transition: var(--transition);
     }
-    .btn-copiar:hover { transform: translateY(-1px); }
-    .btn-copiar.copiado { background: #0a7a3d; }
+    .btn-copiar:hover { background: linear-gradient(135deg, var(--brand-light) 0%, var(--brand) 100%); transform: translateY(-2px); }
+    .btn-copiar.copiado { background: var(--success); box-shadow: none; }
     .btn-copiar svg { width: 20px; height: 20px; }
 
     .selo-mp-pix {
       display: flex; align-items: center; gap: 10px;
-      border: 1px dashed #c7d2fe; background: #eef2ff; border-radius: 12px;
-      padding: 10px 14px; font-size: .8rem; color: #3730a3;
+      border: 1px dashed var(--border-hover); background: var(--card-hover); border-radius: 12px;
+      padding: 10px 14px; font-size: .8rem; color: var(--text-secondary);
     }
     .selo-mp-pix img { height: 18px; width: auto; }
 
@@ -140,39 +165,44 @@
       margin-top: 16px; padding: 12px 16px; border-radius: 12px;
       font-size: .88rem; font-weight: 600; display: none;
     }
-    .status-pag.aguardando { display: flex; align-items: center; gap: 12px; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-    .status-pag.erro { display: block; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .status-pag.aguardando { display: flex; align-items: center; gap: 12px; background: #fff7ed; color: #9a3412; border: 1px solid rgba(255,136,0,.35); }
+    .status-pag.erro { display: block; background: #fee2e2; color: #991b1b; border: 1px solid rgba(220,38,38,.35); }
     .spinner {
-      width: 20px; height: 20px; border: 3px solid #fcd34d; border-top-color: #b45309;
+      width: 20px; height: 20px; border: 3px solid var(--brand-glow); border-top-color: var(--brand-dark);
       border-radius: 50%; animation: girar 1s linear infinite; flex-shrink: 0;
     }
     @keyframes girar { to { transform: rotate(360deg); } }
 
     /* CARTÃO */
     .cartao-linha { display: flex; gap: 12px; }
-    .campo { margin-bottom: 14px; }
     .cartao-aviso {
       display: flex; align-items: center; gap: 10px; font-size: .8rem;
-      color: var(--text-muted); background: #f6f9ff; border: 1px solid #dfe8ff;
-      border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;
+      color: var(--text-muted); background: var(--card-hover); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; margin-bottom: 18px;
     }
     .cartao-aviso img { height: 18px; width: auto; }
 
     .copiado-feedback {
       position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
-      background: #111827; color: #fff; padding: 12px 20px; border-radius: 12px;
-      font-size: .9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      background: var(--text-primary); color: #fff; padding: 12px 20px; border-radius: 12px;
+      font-size: .9rem; font-weight: 600; box-shadow: 0 10px 30px var(--shadow-lg);
       opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 5000;
     }
     .copiado-feedback.mostrar { opacity: 1; }
 
+    @media (max-width: 992px) {
+      .pagamento-layout { grid-template-columns: 1fr; }
+    }
     @media (max-width: 760px) {
       .barra-confianca { grid-template-columns: 1fr; }
+      .resumo-pedido { padding: 18px 20px; }
+      .tabs, .aba { padding-left: 20px; padding-right: 20px; }
     }
     @media (max-width: 560px) {
       .pix-qr { flex: 1 1 100%; }
       .pix-qr .qr-box { max-width: 240px; margin: 0 auto; }
       .seg-topo { flex-direction: column; align-items: flex-start; }
+      .resumo-pedido .rp-item.expira { text-align: left; }
     }
   </style>
 </head>
@@ -186,21 +216,8 @@
   </header>
   <div id="mobileMenu"></div>
 
-  <section class="section container">
+  <section class="section pagamento-secao container">
     <div class="pagamento-layout">
-
-      <!-- Prévia do currículo (somente desktop) -->
-      <aside class="previa-col">
-        <div class="card" style="padding:16px">
-          <div class="card-titulo">
-            <h3>Seu currículo</h3>
-            <span class="badge-preview">Prévia</span>
-          </div>
-          <div class="previa-paper" id="previaCurriculo">
-            <div class="previa-carregando">Carregando prévia…</div>
-          </div>
-        </div>
-      </aside>
 
       <div class="pagamento-seguro">
         <div class="seg-topo">
@@ -215,11 +232,22 @@
         </div>
         <div class="selo-mp" title="Processado por Mercado Pago">
           <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:42px;width:auto" />
-          <span class="txt">Pagamento processado<br />com segurança pelo<br /><b style="color:#0a7a3d">Mercado Pago</b></span>
+          <span class="txt">Pagamento processado<br />com segurança pelo<br /><b style="color:var(--brand-dark)">Mercado Pago</b></span>
         </div>
       </div>
 
       <div class="pagamento-card card">
+        <div class="resumo-pedido">
+          <div class="rp-item">
+            <div class="rotulo">Valor a pagar (PDF + Word)</div>
+            <div class="rp-valor" id="resumo">—</div>
+          </div>
+          <div class="rp-item expira">
+            <div class="rotulo">Expira em</div>
+            <div class="rp-expira-valor" id="expiraTxt">—</div>
+          </div>
+        </div>
+
         <div class="barra-confianca">
           <div class="item">
             <div class="ico">
@@ -241,7 +269,7 @@
           </div>
         </div>
 
-        <div id="alert" class="alert"></div>
+        <div id="alert" class="alert" style="margin:20px 26px 0"></div>
 
         <div class="tabs">
           <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
@@ -250,17 +278,6 @@
 
         <!-- PIX -->
         <div id="abaPix" class="aba">
-          <div class="pix-resumo">
-            <div>
-              <div class="rotulo">Valor a pagar (PDF + Word)</div>
-              <div class="valor" id="resumo">—</div>
-            </div>
-            <div style="text-align:right">
-              <div class="rotulo">Expira em</div>
-              <div id="expiraTxt" style="font-weight:700;color:#0a7a3d;font-size:1rem">—</div>
-            </div>
-          </div>
-
           <div class="pix-grid">
             <div class="pix-qr">
               <div class="qr-box">
@@ -312,6 +329,23 @@
         </div>
       </div>
       </div>
+
+      <!-- Prévia do currículo (somente desktop) -->
+      <aside class="previa-col">
+        <div class="previa-card">
+          <div class="card-titulo">
+            <h3>Seu currículo</h3>
+            <span class="badge-preview">Prévia</span>
+          </div>
+          <div class="previa-paper" id="previaCurriculo">
+            <div class="previa-carregando">Carregando prévia…</div>
+          </div>
+          <div class="previa-selo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Liberado para download assim que o pagamento for confirmado
+          </div>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -373,7 +407,7 @@
 
     if (!pedidoId) {
       App.mostrarAlerta("alert", "Pedido não identificado. Por favor, refaça a seleção do currículo.", "error");
-      document.querySelector(".pix-resumo .valor").textContent = "—";
+      document.getElementById("resumo").textContent = "—";
     }
 
     // Config pública (chave do Mercado Pago + preço)
