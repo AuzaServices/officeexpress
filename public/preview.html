@@ -19,12 +19,12 @@
 
     .preview-doc-col { min-width: 0; }
     .preview-paper {
-      padding: 0; overflow: hidden; max-width: none; margin: 0;
+      padding: 0; overflow: hidden; max-width: none; margin: 0; min-height: 0;
       border-radius: 10px; border: 1px solid var(--border);
       box-shadow: 0 20px 50px var(--shadow-lg);
     }
     .preview-doc { width: 794px; transform-origin: top left; background: #fff; }
-    .preview-doc .page { width: 794px; min-height: 1123px; }
+    .preview-doc .page { width: 794px; min-height: 0; }
 
     /* Coluna de ações */
     .preview-acoes-col { position: static; }
@@ -43,12 +43,19 @@
     .preview-acoes .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
     @media (max-width: 992px) {
-      .preview-layout { grid-template-columns: 1fr; }
+      .preview-layout { grid-template-columns: 1fr; gap: 20px; }
       .preview-acoes-card { max-width: 794px; margin: 0 auto; }
     }
     @media (max-width: 600px) {
-      .preview-page { padding: 32px 0 56px; }
-      .preview-acoes-card { padding: 18px; border-radius: 14px; }
+      .preview-page { padding: 20px 0 40px; }
+      .preview-page .container { padding: 0 14px; }
+      .section-header { margin-bottom: 20px; }
+      .section-header h2 { font-size: 1.4rem; }
+      .section-header p { font-size: .85rem; }
+      .preview-layout { gap: 16px; }
+      .preview-doc-col { display: flex; justify-content: center; }
+      .preview-paper { max-width: 100%; border-radius: 8px; }
+      .preview-acoes-card { padding: 16px; border-radius: 12px; }
     }
   </style>
 </head>
@@ -57,7 +64,7 @@
     <div class="container wrap">
       <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
       <nav class="menu" id="navMenu"></nav>
-      <button class="hamburguer" id="hamburguer">&#9776;</button>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
   </header>
   <div id="mobileMenu"></div>

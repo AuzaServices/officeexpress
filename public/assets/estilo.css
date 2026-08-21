@@ -67,18 +67,107 @@ header.cabecalho {
   background: rgba(0, 31, 51, 0.92); backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
-.cabecalho .wrap { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; gap: 16px; }
-.logo { height: 38px; width: auto; display: block; }
-nav.menu { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-nav.menu a { margin-left: 20px; text-decoration: none; font-weight: 600; color: #ffffff; transition: var(--transition); padding: 8px 0; position: relative; }
-nav.menu a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--brand); transition: width 0.3s ease; }
-nav.menu a:hover { color: var(--brand); }
-nav.menu a:hover::after { width: 100%; }
-.hamburguer { display: none; background: transparent; border: none; color: #ffffff; font-size: 1.8rem; cursor: pointer; }
-#mobileMenu { display: none; flex-direction: column; gap: 12px; padding: 16px 24px; background: rgba(0,31,51,0.98); border-bottom: 1px solid rgba(255,255,255,0.1); }
-#mobileMenu.open { display: flex; }
-#mobileMenu a { color: #ffffff; text-decoration: none; font-weight: 600; padding: 10px; border-radius: 8px; }
-#mobileMenu a:hover { background: rgba(255,136,0,0.1); color: var(--brand); }
+.cabecalho .wrap { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; gap: 16px; }
+.logo { height: 48px; width: auto; display: block; }
+nav.menu { display: flex; align-items: center; gap: 0; margin-left: auto; }
+nav.menu a:not(.btn-login) { margin-left: 24px; text-decoration: none; font-weight: 600; color: #ffffff; transition: var(--transition); padding: 8px 0; position: relative; }
+nav.menu a:not(.btn-login)::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--brand); transition: width 0.3s ease; }
+nav.menu a:not(.btn-login):hover { color: var(--brand); }
+nav.menu a:not(.btn-login):hover::after { width: 100%; }
+nav.menu a.ativo { color: var(--brand); }
+nav.menu a.ativo::after { width: 100%; }
+
+/* Botão Login (destaque minimalista) */
+.btn-login {
+  margin-left: 24px; text-decoration: none; font-weight: 700; font-size: 0.92rem;
+  color: #ffffff; border: 1.5px solid rgba(255,255,255,0.35); border-radius: 50px;
+  padding: 8px 20px; transition: var(--transition); white-space: nowrap;
+}
+.btn-login:hover { border-color: var(--brand); color: var(--brand); background: rgba(255,136,0,0.08); }
+
+/* Dropdown de usuário (desktop) */
+.user-menu { position: relative; margin-left: 24px; }
+.user-menu-btn {
+  display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 50px; padding: 6px 14px 6px 6px;
+  cursor: pointer; transition: var(--transition); color: #ffffff; font-family: inherit;
+}
+.user-menu-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.28); }
+.user-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: #001f33; font-weight: 800; font-size: 0.78rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.user-nome { font-weight: 600; font-size: 0.9rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.user-caret { transition: transform 0.2s ease; flex-shrink: 0; }
+.user-menu.open .user-caret { transform: rotate(180deg); }
+.user-dropdown {
+  position: absolute; top: calc(100% + 10px); right: 0; min-width: 190px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25); padding: 8px; z-index: 1100;
+  opacity: 0; visibility: hidden; transform: translateY(-8px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+.user-menu.open .user-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+.user-dropdown a, .user-dropdown-sair {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  padding: 10px 12px; border-radius: 10px; font-weight: 600; font-size: 0.9rem;
+  color: var(--text-primary); text-decoration: none; background: transparent; border: none;
+  cursor: pointer; font-family: inherit; transition: var(--transition);
+}
+.user-dropdown a:hover { background: var(--card-hover); color: var(--brand-dark); }
+.user-dropdown-sair { color: var(--danger); }
+.user-dropdown-sair:hover { background: rgba(220,38,38,0.08); }
+
+/* Hamburguer (mobile) */
+.hamburguer {
+  display: none; position: relative; width: 34px; height: 34px;
+  background: transparent; border: none; cursor: pointer; flex-shrink: 0;
+}
+.hamburguer span {
+  position: absolute; left: 6px; right: 6px; height: 2px; background: #ffffff;
+  border-radius: 2px; transition: transform 0.25s ease, opacity 0.25s ease, top 0.25s ease;
+}
+.hamburguer span:nth-child(1) { top: 10px; }
+.hamburguer span:nth-child(2) { top: 17px; }
+.hamburguer span:nth-child(3) { top: 24px; }
+.hamburguer.aberto span:nth-child(1) { top: 17px; transform: rotate(45deg); }
+.hamburguer.aberto span:nth-child(2) { opacity: 0; }
+.hamburguer.aberto span:nth-child(3) { top: 17px; transform: rotate(-45deg); }
+
+/* Menu mobile */
+#mobileMenu {
+  display: none; max-height: 0; overflow: hidden;
+  background: rgba(0,31,51,0.98); border-bottom: 1px solid rgba(255,255,255,0.1);
+  transition: max-height 0.3s ease;
+}
+#mobileMenu.open { display: block; max-height: calc(100vh - 62px); overflow-y: auto; }
+.mobile-menu-inner { display: flex; flex-direction: column; gap: 4px; padding: 12px 20px 20px; }
+#mobileMenu a:not(.btn-login-mobile) {
+  color: #ffffff; text-decoration: none; font-weight: 600; padding: 13px 12px;
+  border-radius: 10px; font-size: 1rem;
+}
+#mobileMenu a:not(.btn-login-mobile):hover, #mobileMenu a:not(.btn-login-mobile).ativo {
+  background: rgba(255,136,0,0.1); color: var(--brand);
+}
+.btn-login-mobile {
+  margin-top: 8px; text-align: center; text-decoration: none; font-weight: 700;
+  color: #001f33; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  border-radius: 50px; padding: 13px; box-shadow: 0 4px 20px var(--brand-glow);
+}
+.mobile-user {
+  display: flex; align-items: center; gap: 12px; padding: 12px;
+  margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.12); border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.mobile-user .user-avatar { width: 38px; height: 38px; font-size: 0.9rem; }
+.mobile-user .user-nome { color: #ffffff; font-weight: 700; font-size: 0.98rem; max-width: none; }
+.mobile-sair {
+  display: flex; align-items: center; gap: 10px; margin-top: 4px; text-align: left;
+  background: transparent; border: none; color: #fca5a5; font-weight: 600; font-size: 1rem;
+  padding: 13px 12px; border-radius: 10px; cursor: pointer; font-family: inherit;
+}
+.mobile-sair:hover { background: rgba(220,38,38,0.12); }
 
 /* Cards */
 .card {
