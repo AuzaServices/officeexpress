@@ -3,14 +3,141 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pagamento - Office Express</title>
+  <title>Pagamento Seguro - Office Express</title>
   <link rel="icon" href="/imagens/icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
-    .qr-img { max-width: 230px; margin: 16px auto; display: none; background: #fff; padding: 10px; border-radius: 12px; }
-    .copiar-pix { display: flex; gap: 8px; margin-top: 12px; }
-    .copiar-pix input { flex: 1; }
+    .pagamento-seguro { max-width: 720px; margin: 0 auto; }
+
+    .seg-topo {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+    }
+    .seg-topo .titulo { display: flex; align-items: center; gap: 12px; }
+    .seg-topo .icone-cadeado {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, #0a7a3d, #14b866);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 20px rgba(10,122,61,.28); flex-shrink: 0;
+    }
+    .seg-topo h2 { margin: 0; font-size: 1.45rem; }
+    .seg-topo .sub { margin: 2px 0 0; color: var(--text-muted); font-size: .9rem; }
+
+    .selo-mp {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 8px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.05);
+    }
+    .selo-mp img { height: 26px; width: auto; }
+    .selo-mp .txt { font-size: .75rem; color: var(--text-muted); line-height: 1.25; }
+
+    .pagamento-card { overflow: hidden; }
+
+    .barra-confianca {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      background: linear-gradient(135deg, #0a7a3d, #14b866);
+      color: #fff; padding: 14px 20px;
+    }
+    .barra-confianca .bloco { display: flex; align-items: center; gap: 10px; font-size: .85rem; font-weight: 600; }
+    .barra-confianca .bloco svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .barra-confianca .sep { width: 1px; height: 22px; background: rgba(255,255,255,.35); }
+
+    .tabs { display: flex; gap: 8px; padding: 20px 20px 0; }
+    .tab {
+      flex: 1; padding: 13px; border: 1px solid var(--border, #e5e7eb);
+      border-radius: 12px; background: #fafafa; cursor: pointer;
+      font-weight: 700; font-size: .95rem; color: var(--text-muted);
+      transition: all .2s ease;
+    }
+    .tab.active {
+      background: #fff; border-color: var(--brand, #ff8800);
+      color: var(--brand, #ff8800); box-shadow: 0 6px 16px rgba(255,136,0,.14);
+    }
+
+    .aba { padding: 20px; }
+
+    /* PIX */
+    .pix-resumo {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #f6f9ff; border: 1px solid #dfe8ff; border-radius: 12px;
+      padding: 14px 18px; margin-bottom: 18px;
+    }
+    .pix-resumo .rotulo { font-size: .82rem; color: var(--text-muted); }
+    .pix-resumo .valor { font-size: 1.5rem; font-weight: 800; color: #0a7a3d; }
+
+    .pix-grid { display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap; }
+    .pix-qr { flex: 0 0 240px; text-align: center; }
+    .pix-qr .qr-box {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
+      padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+    .qr-img { width: 100%; height: auto; display: block; border-radius: 8px; }
+    .pix-qr .qr-hint { font-size: .8rem; color: var(--text-muted); margin-top: 10px; }
+    .carregando-qr { padding: 60px 20px; color: var(--text-muted); font-size: .9rem; }
+
+    .pix-copia { flex: 1 1 280px; display: flex; flex-direction: column; gap: 14px; }
+    .pix-copia .rotulo { font-size: .85rem; font-weight: 700; color: var(--text-secondary); display:flex; align-items:center; gap:8px; }
+    .pix-copia textarea {
+      width: 100%; min-height: 96px; resize: none;
+      border: 1px solid #d1d5db; border-radius: 12px; padding: 12px;
+      font-family: 'Courier New', monospace; font-size: .8rem; color: #111827;
+      background: #fafbfc; line-height: 1.5; word-break: break-all;
+    }
+    .btn-copiar {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #0a7a3d, #14b866); color: #fff;
+      font-weight: 800; font-size: 1rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 8px 20px rgba(10,122,61,.28); transition: transform .15s ease;
+    }
+    .btn-copiar:hover { transform: translateY(-1px); }
+    .btn-copiar.copiado { background: #0a7a3d; }
+    .btn-copiar svg { width: 20px; height: 20px; }
+
+    .selo-mp-pix {
+      display: flex; align-items: center; gap: 10px;
+      border: 1px dashed #c7d2fe; background: #eef2ff; border-radius: 12px;
+      padding: 10px 14px; font-size: .8rem; color: #3730a3;
+    }
+    .selo-mp-pix img { height: 18px; width: auto; }
+
+    /* status */
+    .status-pag {
+      margin-top: 16px; padding: 12px 16px; border-radius: 12px;
+      font-size: .88rem; font-weight: 600; display: none;
+    }
+    .status-pag.aguardando { display: flex; align-items: center; gap: 12px; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .status-pag.erro { display: block; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .spinner {
+      width: 20px; height: 20px; border: 3px solid #fcd34d; border-top-color: #b45309;
+      border-radius: 50%; animation: girar 1s linear infinite; flex-shrink: 0;
+    }
+    @keyframes girar { to { transform: rotate(360deg); } }
+
+    /* CARTÃO */
+    .cartao-linha { display: flex; gap: 12px; }
+    .campo { margin-bottom: 14px; }
+    .cartao-aviso {
+      display: flex; align-items: center; gap: 10px; font-size: .8rem;
+      color: var(--text-muted); background: #f6f9ff; border: 1px solid #dfe8ff;
+      border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;
+    }
+    .cartao-aviso img { height: 18px; width: auto; }
+
+    .copiado-feedback {
+      position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
+      background: #111827; color: #fff; padding: 12px 20px; border-radius: 12px;
+      font-size: .9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 5000;
+    }
+    .copiado-feedback.mostrar { opacity: 1; }
+
+    @media (max-width: 560px) {
+      .pix-qr { flex: 1 1 100%; }
+      .pix-qr .qr-box { max-width: 240px; margin: 0 auto; }
+      .seg-topo { flex-direction: column; align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -24,47 +151,115 @@
   <div id="mobileMenu"></div>
 
   <section class="section container">
-    <div class="section-header">
-      <h2>Pagamento</h2>
-      <p id="resumo"></p>
-    </div>
-
-    <div class="pagamento-card card">
-      <div id="alert" class="alert"></div>
-
-      <div class="tabs">
-        <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
-        <button class="tab" id="tabCard" onclick="ativarAba('card')">Cartão de crédito</button>
-      </div>
-
-      <!-- PIX -->
-      <div id="abaPix" class="pix-box">
-        <p>Escaneie o QR Code ou copie o código Pix para pagar. O currículo é liberado automaticamente após a confirmação.</p>
-        <img id="qrImg" class="qr-img" alt="QR Code Pix" />
-        <div class="copiar-pix" id="copiarArea" style="display:none">
-          <input type="text" id="pixCode" readonly />
-          <button class="btn btn-secondary" onclick="copiarPix()">Copiar</button>
-        </div>
-        <button class="btn btn-primary" id="btnGerarPix" onclick="gerarPix()">Gerar Pix</button>
-        <div class="status-pag" id="statusPix"></div>
-      </div>
-
-      <!-- CARTÃO -->
-      <div id="abaCard" style="display:none">
-        <p style="color:var(--text-muted);margin-bottom:16px">Preencha os dados do cartão. Seus dados são processados com segurança pelo Mercado Pago.</p>
-        <div id="cardForm">
-          <div class="campo"><label>Número do cartão</label><input id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" /></div>
-          <div class="campo"><label>Nome no cartão</label><input id="cardHolder" placeholder="Como está no cartão" /></div>
-          <div class="campo" style="display:flex;gap:12px">
-            <div style="flex:1"><label>Validade</label><input id="cardExp" placeholder="MM/AA" /></div>
-            <div style="flex:1"><label>CVV</label><input id="cardCvv" inputmode="numeric" placeholder="123" /></div>
+    <div class="pagamento-seguro">
+      <div class="seg-topo">
+        <div class="titulo">
+          <div class="icone-cadeado">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
-          <button class="btn btn-primary btn-block" id="btnPagarCard" onclick="pagarCartao()">Pagar</button>
+          <div>
+            <h2>Pagamento Seguro</h2>
+            <p class="sub">Transação protegida e processada pelo Mercado Pago</p>
+          </div>
         </div>
-        <div class="status-pag" id="statusCard"></div>
+        <div class="selo-mp" title="Processado por Mercado Pago">
+          <img src="https://http2.mlstatic.com/frontend-assets/dx-widgets-mp/MP_Logo_horizontal_3x.png" alt="Mercado Pago" onerror="this.style.display='none'" />
+          <span class="txt">Pagamento<br />processado com<br />segurança</span>
+        </div>
+      </div>
+
+      <div class="pagamento-card card">
+        <div class="barra-confianca">
+          <div class="bloco">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Ambiente 100% seguro</span>
+          </div>
+          <div class="sep"></div>
+          <div class="bloco">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Dados criptografados</span>
+          </div>
+          <div class="sep"></div>
+          <div class="bloco">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span id="tempoInfo">Liberação automática</span>
+          </div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="tabs">
+          <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
+          <button class="tab" id="tabCard" onclick="ativarAba('card')">Cartão de crédito</button>
+        </div>
+
+        <!-- PIX -->
+        <div id="abaPix" class="aba">
+          <div class="pix-resumo">
+            <div>
+              <div class="rotulo">Valor a pagar (PDF + Word)</div>
+              <div class="valor" id="resumo">—</div>
+            </div>
+            <div style="text-align:right">
+              <div class="rotulo">Expira em</div>
+              <div id="expiraTxt" style="font-weight:700;color:#0a7a3d;font-size:1rem">—</div>
+            </div>
+          </div>
+
+          <div class="pix-grid">
+            <div class="pix-qr">
+              <div class="qr-box">
+                <div id="qrCarregando" class="carregando-qr">Gerando seu Pix…</div>
+                <img id="qrImg" class="qr-img" alt="QR Code Pix" style="display:none" />
+              </div>
+              <div class="qr-hint">Aponte a câmera do seu banco<br />para o QR Code e pague</div>
+            </div>
+
+            <div class="pix-copia">
+              <div class="rotulo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Código Pix (Copie e Cole)
+              </div>
+              <textarea id="pixCode" readonly placeholder="Seu código Pix aparecerá aqui automaticamente…"></textarea>
+              <button class="btn-copiar" id="btnCopiarPix" onclick="copiarPix()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copiar código Pix
+              </button>
+              <div class="selo-mp-pix">
+                <img src="https://http2.mlstatic.com/frontend-assets/dx-widgets-mp/MP_Logo_horizontal_3x.png" alt="Mercado Pago" onerror="this.style.display='none'" />
+                <span>Pix processado com segurança pelo Mercado Pago</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="status-pag aguardando" id="statusPix">
+            <div class="spinner"></div>
+            <span>Aguardando confirmação do pagamento… O currículo é liberado automaticamente.</span>
+          </div>
+        </div>
+
+        <!-- CARTÃO -->
+        <div id="abaCard" class="aba" style="display:none">
+          <div class="cartao-aviso">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Seus dados são processados com segurança pelo Mercado Pago.
+          </div>
+          <div id="cardForm">
+            <div class="campo"><label>Número do cartão</label><input id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" /></div>
+            <div class="campo"><label>Nome no cartão</label><input id="cardHolder" placeholder="Como está no cartão" /></div>
+            <div class="cartao-linha">
+              <div class="campo" style="flex:1"><label>Validade</label><input id="cardExp" placeholder="MM/AA" /></div>
+              <div class="campo" style="flex:1"><label>CVV</label><input id="cardCvv" inputmode="numeric" placeholder="123" /></div>
+            </div>
+            <button class="btn btn-primary btn-block" id="btnPagarCard" onclick="pagarCartao()">Pagar com cartão</button>
+          </div>
+          <div class="status-pag" id="statusCard"></div>
+        </div>
       </div>
     </div>
   </section>
+
+  <div class="copiado-feedback" id="copiadoFeedback">Código Pix copiado!</div>
 
   <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
 
@@ -76,21 +271,29 @@
     var preco = 0;
     var mp = null;
     var pollTimer = null;
+    var pagamentoAtual = null;
 
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("pagamento");
 
-    if (!pedidoId) { App.mostrarAlerta("alert", "Pedido não identificado.", "error"); }
+    if (!pedidoId) {
+      App.mostrarAlerta("alert", "Pedido não identificado. Por favor, refaça a seleção do currículo.", "error");
+      document.querySelector(".pix-resumo .valor").textContent = "—";
+    }
 
-    // Config
+    // Config pública (chave do Mercado Pago + preço)
     App.api("/api/config/pagamento").then(function (r) {
       if (r.ok) {
         publicKey = r.data.publicKey;
         preco = r.data.preco;
-        document.getElementById("resumo").textContent = "Valor a pagar: " + App.formatarPreco(preco) + " (PDF + Word)";
+        document.getElementById("resumo").textContent = App.formatarPreco(preco);
         if (window.MercadoPago && publicKey) {
           mp = new MercadoPago(publicKey, { locale: "pt-BR" });
         }
+        // Gera o Pix automaticamente assim que a página carrega
+        if (pedidoId) gerarPix();
+      } else {
+        App.mostrarAlerta("alert", "Não foi possível carregar os dados do pagamento. Tente novamente.", "error");
       }
     });
 
@@ -102,31 +305,62 @@
     }
     window.ativarAba = ativarAba;
 
-    // ---------- PIX ----------
+    // ---------- PIX (gerado automaticamente) ----------
     async function gerarPix() {
       App.limparAlerta("alert");
-      var btn = document.getElementById("btnGerarPix");
-      btn.disabled = true; btn.textContent = "Gerando...";
-      var { ok, data } = await App.api("/api/pagamento/pix", { method: "POST", body: JSON.stringify({ pedidoId: Number(pedidoId) }) });
-      btn.disabled = false; btn.textContent = "Gerar Pix";
-      if (!ok) { App.mostrarAlerta("alert", data.error || "Erro ao gerar Pix.", "error"); return; }
+      document.getElementById("qrCarregando").style.display = "block";
+      document.getElementById("qrImg").style.display = "none";
+      document.getElementById("statusPix").style.display = "flex";
+      document.getElementById("statusPix").classList.add("aguardando");
+      document.getElementById("statusPix").innerHTML = '<div class="spinner"></div><span>Gerando seu Pix…</span>';
+
+      var { ok, data } = await App.api("/api/pagamento/pix", {
+        method: "POST",
+        body: JSON.stringify({ pedidoId: Number(pedidoId) }),
+      });
+      if (!ok) {
+        document.getElementById("qrCarregando").textContent = "Não foi possível gerar o Pix.";
+        document.getElementById("statusPix").classList.remove("aguardando");
+        document.getElementById("statusPix").classList.add("erro");
+        document.getElementById("statusPix").innerHTML = (data.error || "Erro ao gerar o Pix.") + " Recarregue a página ou entre em contato.";
+        App.mostrarAlerta("alert", data.error || "Erro ao gerar o Pix.", "error");
+        return;
+      }
+      pagamentoAtual = data;
       if (data.qr_code_base64) {
         document.getElementById("qrImg").src = "data:image/png;base64," + data.qr_code_base64;
+        document.getElementById("qrImg").style.display = "block";
+        document.getElementById("qrCarregando").style.display = "none";
+      } else {
+        document.getElementById("qrCarregando").textContent = "Use o código Pix abaixo para pagar.";
       }
-      document.getElementById("qrImg").style.display = "block";
       document.getElementById("pixCode").value = data.qr_code || "";
-      document.getElementById("copiarArea").style.display = "flex";
-      document.getElementById("statusPix").textContent = "Aguardando pagamento...";
+      document.getElementById("statusPix").innerHTML = '<div class="spinner"></div><span>Aguardando confirmação do pagamento… O currículo é liberado automaticamente.</span>';
       iniciarPolling(data.id);
     }
-    window.gerarPix = gerarPix;
 
     function copiarPix() {
       var el = document.getElementById("pixCode");
-      el.select(); document.execCommand("copy");
-      alert("Código Pix copiado!");
+      if (!el.value) return;
+      var done = function () {
+        var fb = document.getElementById("copiadoFeedback");
+        fb.classList.add("mostrar");
+        setTimeout(function () { fb.classList.remove("mostrar"); }, 2200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).then(done).catch(function () { copiarFallback(el); done(); });
+      } else {
+        copiarFallback(el); done();
+      }
     }
     window.copiarPix = copiarPix;
+
+    function copiarFallback(el) {
+      el.removeAttribute("readonly");
+      el.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      el.setAttribute("readonly", "readonly");
+    }
 
     function iniciarPolling(pagamentoId) {
       if (pollTimer) clearInterval(pollTimer);
@@ -138,7 +372,10 @@
           window.location.href = "/sucesso?pedido=" + pedidoId;
         } else if (data.status === "rejected" || data.status === "cancelled") {
           clearInterval(pollTimer);
-          document.getElementById("statusPix").textContent = "Pagamento não concluído. Tente novamente.";
+          var st = document.getElementById("statusPix");
+          st.classList.remove("aguardando");
+          st.classList.add("erro");
+          st.innerHTML = "Pagamento não concluído. Gere um novo Pix recarregando a página.";
         }
       }, 4000);
     }
@@ -150,6 +387,7 @@
       var statusCard = document.getElementById("statusCard");
       var btn = document.getElementById("btnPagarCard");
       btn.disabled = true; statusCard.textContent = "Processando...";
+      statusCard.classList.remove("aguardando"); statusCard.classList.add("erro"); statusCard.style.display = "block";
 
       var formData = {
         cardNumber: document.getElementById("cardNumber").value.replace(/\s/g, ""),
@@ -167,11 +405,12 @@
           method: "POST",
           body: JSON.stringify({ pedidoId: Number(pedidoId), card_token: token.id, email: "" }),
         });
-        if (ok && (data.status === "approved")) {
+        if (ok && data.status === "approved") {
           await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(data.id), tipo: "card" }) });
           window.location.href = "/sucesso?pedido=" + pedidoId;
         } else {
           statusCard.textContent = "";
+          statusCard.style.display = "none";
           App.mostrarAlerta("alert", (data && data.error) || "Pagamento não aprovado. Verifique os dados do cartão.", "error");
         }
       } catch (err) {
