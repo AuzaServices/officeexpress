@@ -8,7 +8,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
-    .pagamento-seguro { max-width: 720px; margin: 0 auto; }
+    .pagamento-layout {
+      display: grid; grid-template-columns: 320px 1fr; gap: 28px;
+      align-items: start; max-width: 1080px; margin: 0 auto;
+    }
+    .pagamento-seguro { min-width: 0; }
+
+    /* Prévia do currículo — somente desktop */
+    .previa-col { display: none; }
+    @media (min-width: 993px) {
+      .previa-col { display: block; position: sticky; top: 90px; }
+    }
+    .previa-col .card-titulo {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; gap: 10px;
+    }
+    .previa-col .card-titulo h3 { margin: 0; font-size: 1.05rem; }
+    .previa-col .badge-preview {
+      font-size: .72rem; font-weight: 700; color: #0a7a3d;
+      background: #e7f6ec; border: 1px solid #bfe6cd; border-radius: 20px; padding: 3px 10px;
+    }
+    .previa-paper { padding: 0; overflow: hidden; border-radius: 6px; background: #fff; }
+    .previa-doc { width: 794px; transform-origin: top left; background: #fff; }
+    .previa-doc .page { width: 794px; min-height: 1123px; }
+    .previa-carregando { padding: 60px 16px; text-align: center; color: var(--text-muted); font-size: .85rem; }
 
     .seg-topo {
       display: flex; align-items: center; justify-content: space-between;
@@ -164,8 +187,23 @@
   <div id="mobileMenu"></div>
 
   <section class="section container">
-    <div class="pagamento-seguro">
-      <div class="seg-topo">
+    <div class="pagamento-layout">
+
+      <!-- Prévia do currículo (somente desktop) -->
+      <aside class="previa-col">
+        <div class="card" style="padding:16px">
+          <div class="card-titulo">
+            <h3>Seu currículo</h3>
+            <span class="badge-preview">Prévia</span>
+          </div>
+          <div class="previa-paper" id="previaCurriculo">
+            <div class="previa-carregando">Carregando prévia…</div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="pagamento-seguro">
+        <div class="seg-topo">
         <div class="titulo">
           <div class="icone-cadeado">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -273,6 +311,7 @@
           <div class="status-pag" id="statusCard"></div>
         </div>
       </div>
+      </div>
     </div>
   </section>
 
@@ -281,6 +320,7 @@
   <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
 
   <script src="/assets/app.js"></script>
+  <script src="/curriculo-render.js"></script>
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script>
     var pedidoId = new URLSearchParams(window.location.search).get("pedido");
@@ -292,6 +332,44 @@
 
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("pagamento");
+
+    // ---- Prévia do currículo (coluna esquerda, somente desktop) ----
+    var modeloPrev = localStorage.getItem("modeloSelecionado") || "classico";
+    var dadosPrev = {};
+    try { dadosPrev = JSON.parse(localStorage.getItem("curriculo") || "{}"); } catch (e) {}
+
+    function renderPrevia() {
+      var pv = document.getElementById("previaCurriculo");
+      if (!pv) return;
+      if (!window.renderCurriculo) {
+        pv.innerHTML = '<div class="previa-carregando">Carregando prévia…</div>';
+        return;
+      }
+      var html = window.renderCurriculo.gerarHTML(modeloPrev, dadosPrev);
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var styleEl = doc.querySelector("style");
+      var pageEl = doc.querySelector(".page");
+      if (!pageEl) { pv.innerHTML = '<div class="previa-carregando">Sem dados para prévia.</div>'; return; }
+      pv.innerHTML =
+        '<div class="previa-doc">' +
+        (styleEl ? styleEl.outerHTML : "") +
+        '<div class="modelo-' + modeloPrev + '"><div class="page">' + pageEl.innerHTML + '</div></div>' +
+        '</div>';
+      dimensionarPrevia();
+    }
+    function dimensionarPrevia() {
+      var pv = document.getElementById("previaCurriculo");
+      if (!pv) return;
+      var doc = pv.querySelector(".previa-doc");
+      if (!doc) return;
+      var largura = pv.clientWidth || 320;
+      var escala = largura / 794;
+      doc.style.transform = "scale(" + escala + ")";
+      doc.style.height = (doc.offsetHeight * escala) + "px";
+      doc.style.transformOrigin = "top left";
+    }
+    window.addEventListener("resize", dimensionarPrevia);
+    renderPrevia();
 
     if (!pedidoId) {
       App.mostrarAlerta("alert", "Pedido não identificado. Por favor, refaça a seleção do currículo.", "error");
