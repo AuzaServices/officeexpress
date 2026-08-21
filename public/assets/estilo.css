@@ -331,8 +331,8 @@ table.tabela tr:hover td { background: #f4f9ff; }
 
 @media (max-width: 768px) {
   nav.menu { display: none; }
-  .cabecalho .wrap { padding: 10px 0; flex-direction: row-reverse; justify-content: space-between; }
-  .hamburguer { display: block; margin-right: 0; margin-left: 4px; }
+  .cabecalho .wrap { padding: 10px 24px; justify-content: space-between; }
+  .hamburguer { display: block; margin-right: 0; }
   .logo { height: 44px; }
   .auth-card { padding: 28px 20px; }
   .preview-paper { padding: 28px; }
