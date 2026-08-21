@@ -453,6 +453,18 @@ app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "index.ht
 app.get("/confirmar-email", (req, res) => res.sendFile(path.join(__dirname, "public", "confirmar-email.html")));
 app.get("/recuperar-senha", (req, res) => res.sendFile(path.join(__dirname, "public", "recuperar-senha.html")));
 
+// Fluxo antigo removido — redireciona para o fluxo atual (seleção de modelo).
+// Essas rotas apontavam para páginas legadas (curriculo, visualizar, loading,
+// carrinho e pagamentos antigos) que foram removidas em favor do fluxo
+// editor -> preview -> /api/pedidos -> pagamento -> sucesso.
+const ROTAS_ANTIGAS = [
+  "/curriculo", "/visualizar", "/loading", "/carrinho",
+  "/pagamentototal", "/pagamentoanalise", "/pagamentototalanalise",
+];
+ROTAS_ANTIGAS.forEach((rota) => {
+  app.get(rota, (req, res) => res.redirect("/modelos"));
+});
+
 // Serve páginas estáticas com extensão .html automaticamente
 app.get("/:page", (req, res) => {
   if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Rota não encontrada" });
