@@ -29,6 +29,7 @@ const dados = {
 const MODELOS = [
   "classico", "moderno", "minimal", "profissional", "executivo",
   "cronologico", "funcional", "compacto", "soberio", "tecnico",
+  "elegante", "criativo", "limpo", "tradicional", "contemporaneo",
 ];
 
 const OUT_DIR = path.join(__dirname, "public", "imagens", "miniaturas");
