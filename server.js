@@ -232,9 +232,13 @@ app.post("/api/pedidos", async (req, res) => {
   if (!modelo || !MODELOS.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
   if (!dados || !dados.nome) return res.status(400).json({ error: "Dados do currículo incompletos." });
   const valor = await getPreco();
+  // Garante que a foto (base64) nunca seja persistida no banco — além de
+  // não ser mais usada no currículo, ela inchava a tabela pedidos.
+  const dadosLimpos = { ...(dados || {}) };
+  if (typeof dadosLimpos === "object" && "foto" in dadosLimpos) delete dadosLimpos.foto;
   const [result] = await pool.query(
     "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor) VALUES (?, ?, ?, ?)",
-    [usuarioDaSessao(req), modelo, JSON.stringify(dados), valor]
+    [usuarioDaSessao(req), modelo, JSON.stringify(dadosLimpos), valor]
   );
   res.json({ pedido: { id: result.insertId, modelo, valor } });
 });
