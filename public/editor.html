@@ -16,7 +16,6 @@
     .etapa { display: none; }
     .etapa.ativa { display: block; animation: fadeInUp .3s ease; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-    .foto-preview { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid var(--brand); margin-top: 8px; display: none; }
     .info-banner { background: rgba(255,136,0,0.12); border: 1px solid rgba(255,136,0,0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; color: var(--text-secondary); font-size: .9rem; }
     .btn-visualizar { display: none; }
 
@@ -82,11 +81,6 @@
         <div class="campo">
           <label for="nome">Nome completo *</label>
           <input type="text" id="nome" placeholder="Maria da Silva" />
-        </div>
-        <div class="campo">
-          <label for="foto">Foto (opcional)</label>
-          <input type="file" id="foto" accept="image/*" />
-          <img id="fotoPreview" class="foto-preview" alt="Pré-visualização da foto" />
         </div>
         <div class="campo">
           <label for="idade">Idade (opcional)</label>
@@ -260,34 +254,6 @@
       else salvarEIrPreview();
     };
 
-    // Foto (redimensionada/compactada para caber no localStorage)
-    var fotoReduzida = "";
-    document.getElementById("foto").addEventListener("change", function (e) {
-      var file = e.target.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function (ev) {
-        var img = new Image();
-        img.onload = function () {
-          // Redimensiona para no máximo 300px e converte para JPEG (qualidade 0.8)
-          var max = 300;
-          var escala = Math.min(1, max / Math.max(img.width, img.height));
-          var w = Math.round(img.width * escala);
-          var h = Math.round(img.height * escala);
-          var canvas = document.createElement("canvas");
-          canvas.width = w; canvas.height = h;
-          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-          fotoReduzida = canvas.toDataURL("image/jpeg", 0.8);
-          var preview = document.getElementById("fotoPreview");
-          preview.src = fotoReduzida;
-          preview.style.display = "block";
-          if (typeof atualizarFolhas === "function") atualizarFolhas();
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
     // Telefones
     function addTelefone(val) {
       var d = document.createElement("div");
@@ -362,8 +328,7 @@
         cargo: getArray(".e-cargo"),
         periodo_inicio: getArray(".e-inicio"),
         periodo_fim: getArray(".e-fim"),
-        atividades: getArray(".e-ativ"),
-        foto: fotoReduzida || document.getElementById("fotoPreview").src || ""
+        atividades: getArray(".e-ativ")
       };
     }
 
@@ -486,7 +451,6 @@
         it.querySelector(".e-fim").value = (prev.periodo_fim && prev.periodo_fim[i]) || "";
         it.querySelector(".e-ativ").value = (prev.atividades && prev.atividades[i]) || "";
       });
-      if (prev.foto) { fotoReduzida = prev.foto; document.getElementById("fotoPreview").src = prev.foto; document.getElementById("fotoPreview").style.display = "block"; }
       document.getElementById("primeiroEmprego").dispatchEvent(new Event("change"));
     } catch (e) {}
 

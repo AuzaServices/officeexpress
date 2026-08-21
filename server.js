@@ -29,8 +29,8 @@ app.get("/curriculo-render.js", (req, res) => {
   res.setHeader("Content-Type", "application/javascript; charset=utf-8");
   res.sendFile(path.join(__dirname, "lib", "renderHTML.js"));
 });
-// Body parser com limite maior para aceitar currículos que incluem
-// foto em base64 (o default de 100kb gera PayloadTooLargeError).
+// Body parser com limite maior para aceitar currículos extensos
+// (o default de 100kb pode gerar PayloadTooLargeError).
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
