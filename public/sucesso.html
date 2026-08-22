@@ -154,11 +154,40 @@
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     }
 
+    // Navegadores in-app (Instagram, Facebook, TikTok, etc.) usam um WebView
+    // restrito que bloqueia downloads de blob e popups — não é algo que o
+    // nosso código consiga contornar 100%, então detectamos e avisamos o
+    // usuário a abrir no navegador padrão (Safari/Chrome) para baixar.
+    function isWebViewInApp() {
+      var ua = navigator.userAgent || "";
+      return /Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|TikTok|Snapchat|Pinterest/i.test(ua);
+    }
+
+    function abrirNoNavegador() {
+      var url = window.location.href;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url);
+        }
+      } catch (e) {}
+      alert(
+        "Para baixar o arquivo, abra esta página no navegador do seu celular " +
+        "(Safari ou Chrome), não dentro do app.\n\n" +
+        "Toque nos 3 pontinhos (⋮) ou no ícone de compartilhar no topo da tela " +
+        "e escolha \"Abrir no navegador\".\n\n" +
+        "O link desta página já foi copiado para você colar lá."
+      );
+    }
+
     // Baixa um Blob de forma compatível com Android/desktop e iOS/Safari.
     // No iOS o atributo "download" é ignorado pelo Safari, então abrimos o
     // arquivo numa nova aba via FileReader (data URI), permitindo que o
     // usuário use "Compartilhar > Salvar em Arquivos".
     function salvarBlob(blob, nomeArquivo) {
+      if (isWebViewInApp()) {
+        abrirNoNavegador();
+        return;
+      }
       if (isIOS()) {
         var reader = new FileReader();
         reader.onload = function () {
