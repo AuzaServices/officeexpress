@@ -77,7 +77,7 @@ window.App = (function () {
                 '<button type="button" class="user-dropdown-sair" onclick="App.logout();return false;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Sair</button>' +
               '</div>' +
             '</div>'
-          : '';
+          : '<a href="/login" class="btn-login">Login</a>';
         nav.innerHTML = linksComuns + areaConta;
       }
 
@@ -89,7 +89,7 @@ window.App = (function () {
             '</div>' +
             '<a href="/minha-conta">Minha conta</a>' +
             '<button type="button" class="mobile-sair" onclick="App.logout();return false;">Sair</button>'
-          : '';
+          : '<a href="/login" class="btn-login-mobile">Login</a>';
         mobile.innerHTML = '<div class="mobile-menu-inner">' + linksComuns + areaContaMobile + '</div>';
       }
 
