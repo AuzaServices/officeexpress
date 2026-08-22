@@ -260,7 +260,6 @@ nav.menu a.ativo::after { width: 100%; }
 .preview-acoes { max-width: 794px; margin: 24px auto 0; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
 /* Pagamento */
-.pagamento-card { max-width: 620px; margin: 0 auto; }
 .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
 .tab { flex: 1; padding: 12px; text-align: center; border-radius: 10px; border: 2px solid var(--border); cursor: pointer; font-weight: 600; background: transparent; color: var(--text-secondary); transition: var(--transition); }
 .tab.active { border-color: var(--brand); color: var(--brand); background: rgba(255,136,0,0.1); }
