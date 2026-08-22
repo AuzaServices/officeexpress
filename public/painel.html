@@ -44,7 +44,12 @@
 
       <!-- Pedidos -->
       <div class="card" style="margin-bottom:32px">
-        <h3 style="margin-bottom:16px">Pedidos recentes</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Pedidos recentes</h3>
+          <button type="button" class="btn-icone-lixeira" id="btnLimparPedidos" title="Apagar todos os pedidos" aria-label="Apagar todos os pedidos" onclick="limparPedidos()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
         <div class="tabela-wrap">
           <table class="tabela">
             <thead><tr><th>#</th><th>Usuário</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Pago via</th><th>Data</th></tr></thead>
@@ -58,13 +63,32 @@
         <h3 style="margin-bottom:16px">Usuários cadastrados</h3>
         <div class="tabela-wrap">
           <table class="tabela">
-            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>E-mail confirmado</th><th>Data</th></tr></thead>
+            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>E-mail confirmado</th><th>Data</th><th></th></tr></thead>
             <tbody id="tbodyUsuarios"></tbody>
           </table>
         </div>
       </div>
     </div>
   </section>
+
+  <style>
+    .btn-icone-lixeira {
+      display: flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border);
+      background: rgba(255,68,68,.08); color: var(--danger, #ff4444); cursor: pointer;
+      transition: background .15s, transform .15s; flex-shrink: 0;
+    }
+    .btn-icone-lixeira:hover { background: rgba(255,68,68,.18); transform: scale(1.05); }
+    .btn-icone-lixeira svg { width: 18px; height: 18px; }
+    .btn-icone-lixeira-linha {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: rgba(255,68,68,.08); color: var(--danger, #ff4444); cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-icone-lixeira-linha:hover { background: rgba(255,68,68,.18); }
+    .btn-icone-lixeira-linha svg { width: 16px; height: 16px; display: block; }
+  </style>
 
   <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
 
@@ -134,10 +158,37 @@
           "<td>" + u.nome + "</td>" +
           "<td>" + u.email + "</td>" +
           "<td>" + (u.email_confirmado ? '<span class="badge badge-pago">Sim</span>' : '<span class="badge badge-pendente">Não</span>') + "</td>" +
-          "<td>" + (u.created_at ? new Date(u.created_at).toLocaleString("pt-BR") : "-") + "</td>";
+          "<td>" + (u.created_at ? new Date(u.created_at).toLocaleString("pt-BR") : "-") + "</td>" +
+          '<td><button type="button" class="btn-icone-lixeira-linha" title="Excluir usuário" aria-label="Excluir usuário" onclick="excluirUsuario(' + u.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button></td>';
         tbu.appendChild(tr);
       });
     }
+
+    window.limparPedidos = async function () {
+      if (!confirm("Tem certeza que deseja apagar TODOS os pedidos? Esta ação não pode ser desfeita.")) return;
+      var { ok, data } = await App.api("/api/admin/pedidos", { method: "DELETE" });
+      if (ok) {
+        document.getElementById("msg").style.color = "var(--success)";
+        document.getElementById("msg").textContent = "Todos os pedidos foram apagados.";
+        carregar();
+      } else {
+        document.getElementById("msg").style.color = "var(--danger)";
+        document.getElementById("msg").textContent = data.error || "Erro ao apagar pedidos.";
+      }
+    };
+
+    window.excluirUsuario = async function (id) {
+      if (!confirm("Tem certeza que deseja excluir este usuário? Seus pedidos também serão apagados. Esta ação não pode ser desfeita.")) return;
+      var { ok, data } = await App.api("/api/admin/usuarios/" + id, { method: "DELETE" });
+      if (ok) {
+        document.getElementById("msg").style.color = "var(--success)";
+        document.getElementById("msg").textContent = "Usuário excluído.";
+        carregar();
+      } else {
+        document.getElementById("msg").style.color = "var(--danger)";
+        document.getElementById("msg").textContent = data.error || "Erro ao excluir usuário.";
+      }
+    };
 
     window.salvarPreco = async function () {
       var v = document.getElementById("precoInput").value;

@@ -453,6 +453,21 @@ app.get("/api/admin/usuarios", protegerAdmin, async (req, res) => {
   res.json({ usuarios: rows });
 });
 
+app.delete("/api/admin/pedidos", protegerAdmin, async (req, res) => {
+  await pool.query("DELETE FROM pedidos");
+  res.json({ success: true });
+});
+
+app.delete("/api/admin/usuarios/:id", protegerAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: "Usuário inválido." });
+  await pool.query("DELETE FROM pedidos WHERE usuario_id = ?", [id]);
+  await pool.query("DELETE FROM email_tokens WHERE usuario_id = ?", [id]);
+  const [result] = await pool.query("DELETE FROM usuarios WHERE id = ?", [id]);
+  if (!result.affectedRows) return res.status(404).json({ error: "Usuário não encontrado." });
+  res.json({ success: true });
+});
+
 app.put("/api/admin/preco", protegerAdmin, async (req, res) => {
   const { preco } = req.body || {};
   const v = parseFloat(preco);
