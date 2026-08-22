@@ -223,7 +223,7 @@
         var pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
         pdf.addImage(img.dataUrlPng, "PNG", 0, 0, 210, 297);
         var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
-        if (isIOS()) {
+        if (isWebViewInApp() || isIOS()) {
           salvarBlob(pdf.output("blob"), nome + ".pdf");
         } else {
           pdf.save(nome + ".pdf");
