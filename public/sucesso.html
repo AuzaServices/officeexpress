@@ -283,16 +283,11 @@
             return alert("Pré-visualização não disponível. Tente novamente.");
           }
 
-// Converte o PNG em bytes (como já está no seu código)
 var bin = atob(img.dataUrlPng.split(",")[1]);
 var bytes = new Uint8Array(bin.length);
 for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
 
-// A4 em EMUs: 1 pixel ≈ 9525 EMUs
 // A4 em pixels a 96 dpi ≈ 793 x 1122 px
-var larguraEMU = 793 * 9525;
-var alturaEMU = 1122 * 9525;
-
 var doc = new window.docx.Document({
   sections: [{
     properties: {
@@ -303,11 +298,11 @@ var doc = new window.docx.Document({
     },
     children: [
       new window.docx.Paragraph({
-        alignment: window.docx.AlignmentType.LEFT, // evita centralização com offset
+        alignment: window.docx.AlignmentType.LEFT,
         children: [
           new window.docx.ImageRun({
             data: bytes,
-            transformation: { width: larguraEMU, height: alturaEMU }, // ocupa 100% da página
+            transformation: { width: 793, height: 1122, type: "px" }, // usa px
             type: "png",
           }),
         ],
