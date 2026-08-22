@@ -8,7 +8,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
-    .pagamento-secao { padding: 48px 0 80px; }
+    .pagamento-secao { padding: 0 0 80px; }
+
+    .seg-topo-full {
+      width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 16px calc(50vw - 590px); margin-bottom: 40px; box-sizing: border-box;
+    }
 
     .pagamento-layout {
       display: grid; grid-template-columns: 1fr 420px; gap: 32px;
@@ -51,13 +57,12 @@
     /* Cabeçalho da página de pagamento */
     .seg-topo {
       display: flex; align-items: center; justify-content: center;
-      gap: 16px; flex-wrap: wrap; margin-bottom: 26px;
+      gap: 16px; flex-wrap: wrap;
     }
 
     .selo-mp {
-      display: flex; align-items: center; gap: 12px;
-      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-      padding: 10px 18px; box-shadow: 0 6px 18px var(--shadow);
+      display: flex; align-items: center; gap: 12px; justify-content: center;
+      width: 100%; max-width: 640px;
     }
     .selo-mp svg { height: 40px; width: auto; }
     .selo-mp .txt { font-size: .78rem; color: var(--text-muted); line-height: 1.3; font-weight: 600; }
@@ -138,7 +143,7 @@
       white-space: nowrap; overflow-x: auto; text-overflow: ellipsis;
     }
     .btn-copiar {
-      width: 100%; padding: 14px; border: none; border-radius: 50px;
+      width: 100%; padding: 14px; border: none; border-radius: 14px;
       background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); color: #001f33;
       font-weight: 800; font-size: 1rem; cursor: pointer; display: flex;
       align-items: center; justify-content: center; gap: 10px;
@@ -198,9 +203,10 @@
       }
       .barra-confianca .carrossel-slide {
         width: 33.3333%; flex-shrink: 0; box-sizing: border-box;
-        display: flex; justify-content: center; padding: 18px 26px;
+        display: flex; justify-content: center; align-items: center; padding: 18px 36px;
+        overflow: hidden;
       }
-      .barra-confianca .item { width: 100%; max-width: 280px; border-radius: 12px; margin: 0; justify-content: center; }
+      .barra-confianca .item { width: 100%; max-width: 260px; border-radius: 12px; margin: 0; justify-content: center; }
       .resumo-pedido { padding: 18px 20px; }
       .tabs, .aba { padding-left: 20px; padding-right: 20px; }
     }
@@ -212,7 +218,7 @@
       .pix-qr { flex: 1 1 100%; }
       .pix-qr .qr-box { max-width: 240px; margin: 0 auto; }
       .seg-topo { flex-direction: column; align-items: center; }
-      .selo-mp { width: 80%; justify-content: center; text-align: center; }
+      .selo-mp { width: 100%; justify-content: center; text-align: center; }
       .resumo-pedido .rp-item.expira { text-align: left; }
     }
   </style>
@@ -227,16 +233,17 @@
   </header>
   <div id="mobileMenu"></div>
 
+  <div class="seg-topo-full">
+    <div class="seg-topo">
+      <div class="selo-mp" title="Processado por Mercado Pago">
+        <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:42px;width:auto" />
+        <span class="txt">Pagamento processado<br />com segurança pelo<br /><b style="color:var(--brand-dark)">Mercado Pago</b></span>
+      </div>
+    </div>
+  </div>
+
   <section class="section pagamento-secao container">
     <div class="pagamento-layout">
-
-      <div class="pagamento-seguro">
-        <div class="seg-topo">
-        <div class="selo-mp" title="Processado por Mercado Pago">
-          <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:42px;width:auto" />
-          <span class="txt">Pagamento processado<br />com segurança pelo<br /><b style="color:var(--brand-dark)">Mercado Pago</b></span>
-        </div>
-      </div>
 
       <div class="pagamento-card card">
         <div class="resumo-pedido">
@@ -333,7 +340,6 @@
           </div>
           <div class="status-pag" id="statusCard"></div>
         </div>
-      </div>
       </div>
 
       <!-- Prévia do currículo (somente desktop) -->
@@ -461,7 +467,7 @@
         if (window.innerWidth > 760) { track.style.transform = "translateX(0)"; idx = 0; return; }
         idx = (idx + 1) % 3;
         track.style.transform = "translateX(-" + (idx * 33.3333) + "%)";
-      }, 3000);
+      }, 500);
     })();
 
     // ---- Contador "Expira em" (Pix expira em 5 minutos) ----

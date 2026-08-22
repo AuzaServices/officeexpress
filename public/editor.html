@@ -18,25 +18,27 @@
     .etapa.ativa { display: block; animation: fadeInUp .3s ease; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     .info-banner { background: rgba(255,136,0,0.12); border: 1px solid rgba(255,136,0,0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; color: var(--text-secondary); font-size: .9rem; }
+    @media (min-width: 993px) {
+      .info-banner { margin: 0 0 24px; border-radius: 0; border-left: none; border-right: none; border-top: none; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; padding: 14px calc(50vw - 590px); box-sizing: border-box; }
+    }
     @media (max-width: 992px) {
       .info-banner { margin: 0 0 16px; border-radius: 0; border-left: none; border-right: none; border-top: none; }
     }
     .btn-visualizar {
-      display: flex; align-items: center; justify-content: center;
+      display: none; align-items: center; justify-content: center;
       position: fixed; right: 20px; bottom: 20px; z-index: 500;
       width: 54px; height: 54px; border-radius: 50%; padding: 0;
-      background: rgba(255,136,0,0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-      box-shadow: 0 8px 24px var(--brand-glow); border: 1px solid rgba(255,255,255,0.25);
-      opacity: .55; transition: var(--transition);
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
     }
-    .btn-visualizar:hover { opacity: 1; }
-    .btn-visualizar svg { width: 22px; height: 22px; }
+    .btn-visualizar .fundo-blur {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(255,136,0,0.18); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .btn-visualizar svg { width: 22px; height: 22px; position: relative; z-index: 1; opacity: 1; color: var(--brand-dark); }
     .btn-visualizar.oculto-etapa-final { display: none !important; }
     @media (max-width: 992px) {
-      .btn-visualizar {
-        background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-        backdrop-filter: none; -webkit-backdrop-filter: none; opacity: 1; border: none;
-      }
+      .btn-visualizar { display: flex; }
     }
 
     /* Chips selecionáveis (hobbies/habilidades) */
@@ -264,6 +266,7 @@
       </div>
 
           <button class="btn btn-secondary btn-visualizar" id="btnVisualizar" onclick="abrirPreviewMobile()" aria-label="Visualizar folha">
+            <span class="fundo-blur"></span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div><!-- /editor-form -->
@@ -804,6 +807,9 @@
         return '<button type="button" onclick="selecionarProfissaoObjetivo(\'' + p.replace(/'/g, "\\'") + '\')">' + p + '</button>';
       }).join("");
       dropdown.innerHTML = htmlAleatorio + htmlProfissoes;
+      // Move o dropdown para o body: garante que "position: fixed" funcione mesmo
+      // dentro de ancestrais com transform/animação (que criam containing block).
+      document.body.appendChild(dropdown);
     })();
     var profissaoObjetivoAtual = "__ALEATORIO__";
     window.toggleDropdownProfissoes = function (ev) {
@@ -813,8 +819,13 @@
       if (abrir) {
         var btn = ev.currentTarget;
         var r = btn.getBoundingClientRect();
-        dropdown.style.top = (r.bottom + 8) + "px";
-        dropdown.style.left = Math.max(8, r.right - 260) + "px";
+        var alturaDropdown = 280;
+        var larguraDropdown = 260;
+        var top = r.bottom + 8;
+        if (top + alturaDropdown > window.innerHeight) top = Math.max(8, r.top - alturaDropdown - 8);
+        var left = Math.min(window.innerWidth - larguraDropdown - 8, Math.max(8, r.right - larguraDropdown));
+        dropdown.style.top = top + "px";
+        dropdown.style.left = left + "px";
       }
       dropdown.classList.toggle("aberto", abrir);
     };

@@ -233,7 +233,7 @@
       // Exige login
       var u = await App.authMe();
       if (!u) {
-        localStorage.setItem("redirectAposLogin", "/preview");
+        localStorage.setItem("redirectAposLogin", "/preview?autopagamento=1");
         window.location.href = "/login";
         return;
       }
@@ -251,6 +251,16 @@
     window.irPagamento = irPagamento;
 
     render();
+
+    // Se veio do fluxo login/cadastro com intenção de pagamento, avança direto
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get("autopagamento") === "1") {
+        App.authMe().then(function (u) {
+          if (u) irPagamento();
+        });
+      }
+    })();
   </script>
 </body>
 </html>

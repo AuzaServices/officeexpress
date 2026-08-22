@@ -37,7 +37,11 @@
         document.getElementById("titulo").textContent = "E-mail confirmado!";
         document.getElementById("texto").textContent = "Redirecionando para a escolha de modelos…";
         App.mostrarAlerta("alert", "Tudo certo! Você já pode escolher seu modelo de currículo.", "success");
-        setTimeout(function () { window.location.href = "/modelos"; }, 1500);
+        setTimeout(function () {
+          var destino = localStorage.getItem("redirectAposLogin");
+          localStorage.removeItem("redirectAposLogin");
+          window.location.href = destino || "/modelos";
+        }, 1500);
       } else {
         document.getElementById("titulo").textContent = "Não foi possível confirmar";
         document.getElementById("texto").textContent = "";
