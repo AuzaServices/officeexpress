@@ -12,14 +12,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
   <style>
-    /* Preview escondido usado apenas para capturar a imagem exata no download */
+    /* Preview escondido usado apenas para capturar a imagem exata no download.
+       Evita "position: fixed" + "z-index: -1" fora da tela: no Safari/iOS
+       essa combinação pode fazer o html2canvas capturar o elemento em branco. */
     #previewCaptura {
-      position: fixed;
-      left: -10000px;
-      top: 0;
+      position: absolute;
+      left: 0;
+      top: -10000px;
       width: 794px;
       background: #fff;
-      z-index: -1;
       pointer-events: none;
     }
   </style>
@@ -183,21 +184,29 @@
     // No iOS o atributo "download" é ignorado pelo Safari, então abrimos o
     // arquivo numa nova aba via FileReader (data URI), permitindo que o
     // usuário use "Compartilhar > Salvar em Arquivos".
-    function salvarBlob(blob, nomeArquivo) {
+    // IMPORTANTE: no Safari/iOS o window.open() só funciona se for chamado de
+    // forma SÍNCRONA dentro do gesto de clique do usuário — por isso a aba
+    // (janelaAntecipada) já deve vir aberta de fora desta função, antes de
+    // qualquer "await" (html2canvas etc.), senão o popup é bloqueado em
+    // silêncio e nada acontece.
+    function salvarBlob(blob, nomeArquivo, janelaAntecipada) {
       if (isWebViewInApp()) {
+        if (janelaAntecipada) janelaAntecipada.close();
         abrirNoNavegador();
         return;
       }
       if (isIOS()) {
         var reader = new FileReader();
         reader.onload = function () {
-          var win = window.open();
-          if (win) {
+          var win = janelaAntecipada || window.open();
+          if (win && !win.closed) {
+            win.document.open();
             win.document.write(
               '<html><head><title>' + nomeArquivo + '</title></head><body style="margin:0">' +
               '<iframe src="' + reader.result + '" style="width:100%;height:100vh;border:none"></iframe>' +
               '</body></html>'
             );
+            win.document.close();
           } else {
             window.location.href = reader.result;
           }
@@ -205,6 +214,7 @@
         reader.readAsDataURL(blob);
         return;
       }
+      if (janelaAntecipada) janelaAntecipada.close();
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url;
@@ -215,69 +225,103 @@
     }
 
     // Gera o PDF a partir da IMAGEM do preview (html2canvas) — fidelidade total.
-    async function baixarPDF() {
+    function baixarPDF() {
       if (!pedidoId) return alert("Pedido não identificado.");
-      try {
-        var img = await capturarImagem();
-        if (!img) return alert("Pré-visualização não disponível. Tente novamente.");
-        var pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
-        pdf.addImage(img.dataUrlPng, "PNG", 0, 0, 210, 297);
-        var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
-        if (isWebViewInApp() || isIOS()) {
-          salvarBlob(pdf.output("blob"), nome + ".pdf");
-        } else {
-          pdf.save(nome + ".pdf");
+      // Precisa ser aberta AGORA (síncrono, dentro do clique) para o Safari/iOS
+      // não bloquear o popup — o conteúdo real é escrito depois, quando pronto.
+      var janelaAntecipada = null;
+      if (isIOS() && !isWebViewInApp()) {
+        janelaAntecipada = window.open("about:blank");
+        if (janelaAntecipada) {
+          janelaAntecipada.document.write(
+            '<html><head><title>Gerando PDF...</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666"><p>Gerando seu PDF, aguarde...</p></body></html>'
+          );
         }
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao gerar o PDF. Tente novamente.");
       }
+      (async function () {
+        try {
+          var img = await capturarImagem();
+          if (!img) {
+            if (janelaAntecipada) janelaAntecipada.close();
+            return alert("Pré-visualização não disponível. Tente novamente.");
+          }
+          var pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+          pdf.addImage(img.dataUrlPng, "PNG", 0, 0, 210, 297);
+          var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+          if (isWebViewInApp() || isIOS()) {
+            salvarBlob(pdf.output("blob"), nome + ".pdf", janelaAntecipada);
+          } else {
+            pdf.save(nome + ".pdf");
+          }
+        } catch (err) {
+          console.error(err);
+          if (janelaAntecipada) janelaAntecipada.close();
+          alert("Erro ao gerar o PDF. Tente novamente.");
+        }
+      })();
     }
 
     // Gera o DOCX embutindo a IMAGEM do preview (biblioteca "docx" no navegador).
-    async function baixarDOCX() {
+    function baixarDOCX() {
       if (!pedidoId) return alert("Pedido não identificado.");
-      try {
-        var img = await capturarImagem();
-        if (!img) return alert("Pré-visualização não disponível. Tente novamente.");
-
-        // Converte o dataURL PNG em bytes (Uint8Array) para o ImageRun.
-        var bin = atob(img.dataUrlPng.split(",")[1]);
-        var bytes = new Uint8Array(bin.length);
-        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
-        var doc = new window.docx.Document({
-          sections: [{
-            properties: {
-              page: {
-                size: { width: 11906, height: 16838 },
-                margin: { top: 0, right: 0, bottom: 0, left: 0 },
-              },
-            },
-            children: [
-              new window.docx.Paragraph({
-                alignment: window.docx.AlignmentType.CENTER,
-                spacing: { before: 0, after: 0, line: 0 },
-                children: [
-                  new window.docx.ImageRun({
-                    data: bytes,
-                    // A4 em pontos (595x842) com proporção exata da folha —
-                    // a imagem preenche 100% da página, sem margens nem espaços.
-                    transformation: { width: 595, height: 842, type: "pt" },
-                    type: "png",
-                  }),
-                ],
-              }),
-            ],
-          }],
-        });
-        var blob = await window.docx.Packer.toBlob(doc);
-        var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
-        salvarBlob(blob, nome + ".docx");
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao gerar o Word. Tente novamente.");
+      // Mesma técnica do PDF: abre a aba AGORA (síncrono, dentro do clique)
+      // para o Safari/iOS não bloquear o popup — conteúdo é escrito depois.
+      var janelaAntecipada = null;
+      if (isIOS() && !isWebViewInApp()) {
+        janelaAntecipada = window.open("about:blank");
+        if (janelaAntecipada) {
+          janelaAntecipada.document.write(
+            '<html><head><title>Gerando Word...</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666"><p>Gerando seu Word, aguarde...</p></body></html>'
+          );
+        }
       }
+      (async function () {
+        try {
+          var img = await capturarImagem();
+          if (!img) {
+            if (janelaAntecipada) janelaAntecipada.close();
+            return alert("Pré-visualização não disponível. Tente novamente.");
+          }
+
+          // Converte o dataURL PNG em bytes (Uint8Array) para o ImageRun.
+          var bin = atob(img.dataUrlPng.split(",")[1]);
+          var bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+          var doc = new window.docx.Document({
+            sections: [{
+              properties: {
+                page: {
+                  size: { width: 11906, height: 16838 },
+                  margin: { top: 0, right: 0, bottom: 0, left: 0 },
+                },
+              },
+              children: [
+                new window.docx.Paragraph({
+                  alignment: window.docx.AlignmentType.CENTER,
+                  spacing: { before: 0, after: 0, line: 0 },
+                  children: [
+                    new window.docx.ImageRun({
+                      data: bytes,
+                      // A4 em pontos (595x842) com proporção exata da folha —
+                      // a imagem preenche 100% da página, sem margens nem espaços.
+                      transformation: { width: 595, height: 842, type: "pt" },
+                      type: "png",
+                    }),
+                  ],
+                }),
+              ],
+            }],
+          });
+          var blob = await window.docx.Packer.toBlob(doc);
+          var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+          salvarBlob(blob, nome + ".docx", janelaAntecipada);
+        } catch (err) {
+          console.error(err);
+          if (janelaAntecipada) janelaAntecipada.close();
+          alert("Erro ao gerar o Word. Tente novamente.");
+        }
+      })();
     }
 
     function baixar(formato) {
