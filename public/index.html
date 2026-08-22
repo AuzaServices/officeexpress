@@ -269,10 +269,18 @@
             localStorage.setItem("curriculoUpload", JSON.stringify(dados));
             localStorage.setItem("curriculoUploadPendente", "1");
           } catch (e) {}
-          setStatus("Dados identificados! Redirecionando para o cadastro...");
-          setTimeout(function () {
-            window.location.href = "/cadastro?origem=upload";
-          }, 700);
+          App.authMe().then(function (usuario) {
+            if (usuario) {
+              setStatus("Dados identificados! Redirecionando para os modelos...");
+              setTimeout(function () { window.location.href = "/modelos"; }, 700);
+            } else {
+              setStatus("Dados identificados! Redirecionando para o cadastro...");
+              setTimeout(function () { window.location.href = "/cadastro?origem=upload"; }, 700);
+            }
+          }).catch(function () {
+            setStatus("Dados identificados! Redirecionando para o cadastro...");
+            setTimeout(function () { window.location.href = "/cadastro?origem=upload"; }, 700);
+          });
         }).catch(function (err) {
           setStatus("Não foi possível processar este arquivo. Tente novamente.");
           uploadLabel.classList.remove("processando");

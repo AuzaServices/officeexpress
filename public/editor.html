@@ -601,31 +601,38 @@
       window.location.href = "/preview";
     }
 
-    // Importa dados do upload inteligente de currículo (feito na página inicial), se pendente
+    // Importa dados do upload inteligente de currículo (feito na página inicial), se pendente.
+    // Quando há upload pendente, os dados do upload têm prioridade total sobre
+    // qualquer rascunho salvo anteriormente em "curriculo" — o rascunho antigo
+    // fica intacto em "curriculoRascunhoStandby" (não é perdido, só sai de cena)
+    // e só volta a ser usado quando o usuário criar um currículo sem upload.
     try {
       if (localStorage.getItem("curriculoUploadPendente") === "1") {
         var up = JSON.parse(localStorage.getItem("curriculoUpload") || "{}");
-        var base = {};
-        try { base = JSON.parse(localStorage.getItem("curriculo") || "{}"); } catch (e2) {}
-        if (up.pessoal) {
-          if (up.pessoal.nome) base.nome = base.nome || up.pessoal.nome;
-          if (up.pessoal.email) base.email = base.email || up.pessoal.email;
-          if (up.pessoal.telefone) base.telefone = (base.telefone && base.telefone.length) ? base.telefone : [up.pessoal.telefone];
-          if (up.pessoal.cidade) base.cidade = base.cidade || up.pessoal.cidade;
-          if (up.pessoal.uf) base.estado = base.estado || up.pessoal.uf;
+        var rascunhoAnterior = localStorage.getItem("curriculo");
+        if (rascunhoAnterior) {
+          localStorage.setItem("curriculoRascunhoStandby", rascunhoAnterior);
         }
-        if (up.objetivo) base.objetivo = base.objetivo || up.objetivo;
-        if (up.habilidades) base.habilidades = base.habilidades || up.habilidades;
-        if (up.hobbies) base.hobbies = base.hobbies || up.hobbies;
-        if (up.formacoes && up.formacoes.length && !base.formacao) {
+        var base = {};
+        if (up.pessoal) {
+          if (up.pessoal.nome) base.nome = up.pessoal.nome;
+          if (up.pessoal.email) base.email = up.pessoal.email;
+          if (up.pessoal.telefone) base.telefone = [up.pessoal.telefone];
+          if (up.pessoal.cidade) base.cidade = up.pessoal.cidade;
+          if (up.pessoal.uf) base.estado = up.pessoal.uf;
+        }
+        if (up.objetivo) base.objetivo = up.objetivo;
+        if (up.habilidades) base.habilidades = up.habilidades;
+        if (up.hobbies) base.hobbies = up.hobbies;
+        if (up.formacoes && up.formacoes.length) {
           base.formacao = up.formacoes.map(function (f) { return f.descricao || f.curso || ""; }).filter(Boolean).join("\n");
         }
-        if (up.cursos && up.cursos.length && (!base.curso || !base.curso.length)) {
+        if (up.cursos && up.cursos.length) {
           base.curso = up.cursos.map(function (c) { return c.nome || ""; });
           base.instituicao = up.cursos.map(function (c) { return c.instituicao || ""; });
           base.carga = up.cursos.map(function (c) { return c.carga || ""; });
         }
-        if (up.experiencias && up.experiencias.length && (!base.empresa || !base.empresa.length)) {
+        if (up.experiencias && up.experiencias.length) {
           base.empresa = up.experiencias.map(function (e) { return e.empresa || ""; });
           base.cargo = up.experiencias.map(function (e) { return e.cargo || ""; });
           base.periodo_inicio = up.experiencias.map(function (e) { return e.periodo || ""; });
@@ -634,6 +641,14 @@
         }
         localStorage.setItem("curriculo", JSON.stringify(base));
         localStorage.removeItem("curriculoUploadPendente");
+        localStorage.removeItem("curriculoUpload");
+      } else {
+        // Fluxo normal (sem upload): se havia um rascunho em standby de uma
+        // sessão de upload anterior e nenhum rascunho ativo, ele volta a valer.
+        if (!localStorage.getItem("curriculo") && localStorage.getItem("curriculoRascunhoStandby")) {
+          localStorage.setItem("curriculo", localStorage.getItem("curriculoRascunhoStandby"));
+          localStorage.removeItem("curriculoRascunhoStandby");
+        }
       }
     } catch (e) {}
 
