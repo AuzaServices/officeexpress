@@ -25,6 +25,47 @@
     .feature-icon { width: 56px; height: 56px; background: linear-gradient(135deg,rgba(255,136,0,.2),rgba(255,136,0,.05)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--brand); margin-bottom: 18px; }
     .cta-section { padding: 80px 0; text-align: center; background: linear-gradient(135deg,rgba(255,136,0,.1),transparent 50%,rgba(255,136,0,.05)); }
 
+    /* Alcance nacional */
+    .alcance-section { padding: 92px 0; position: relative; overflow: hidden; }
+    .alcance-layout { display: grid; grid-template-columns: minmax(280px, .82fr) minmax(460px, 1.18fr); align-items: center; gap: clamp(36px, 7vw, 100px); }
+    .alcance-copy { max-width: 450px; }
+    .alcance-kicker { display: inline-flex; align-items: center; gap: 9px; color: var(--brand-dark); font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 18px; }
+    .alcance-kicker::before { content: ''; width: 28px; height: 2px; background: var(--brand); }
+    .alcance-copy h2 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.08; letter-spacing: 0; margin-bottom: 18px; }
+    .alcance-copy h2 strong { color: var(--brand-dark); }
+    .alcance-copy p { color: var(--text-secondary); font-size: 1.05rem; max-width: 410px; }
+    .alcance-total { display: flex; align-items: baseline; gap: 12px; margin: 28px 0 30px; }
+    .alcance-total strong { font-size: clamp(2.5rem, 5vw, 4.4rem); line-height: 1; color: var(--text-primary); letter-spacing: -.03em; }
+    .alcance-total span { color: var(--text-muted); font-size: .9rem; max-width: 100px; line-height: 1.25; }
+    .alcance-note { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: .86rem; }
+    .alcance-note::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #26b99a; box-shadow: 0 0 0 5px rgba(38,185,154,.12); }
+    .mapa-wrap { position: relative; min-height: 520px; display: grid; place-items: center; }
+    .mapa-glow { position: absolute; width: 72%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(73,190,203,.2), transparent 68%); filter: blur(3px); }
+    #mapaBrasil { position: relative; z-index: 1; width: min(100%, 600px); min-height: 490px; display: grid; place-items: center; }
+    #mapaBrasil svg { width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 24px 24px rgba(14,43,68,.14)); animation: mapaEntrando .8s ease both; }
+    #mapaBrasil path { fill: rgba(255,255,255,.78); stroke: rgba(14,73,96,.38); stroke-width: 1.15; vector-effect: non-scaling-stroke; cursor: pointer; outline: none; transition: fill .22s ease, stroke .22s ease, transform .22s ease, filter .22s ease; transform-box: fill-box; transform-origin: center; }
+    #mapaBrasil path:hover, #mapaBrasil path:focus-visible { fill: #ffc477; stroke: var(--brand-dark); stroke-width: 2; filter: drop-shadow(0 5px 5px rgba(255,136,0,.28)); transform: scale(1.025); }
+    #mapaBrasil path.selecionado { fill: var(--brand); stroke: #c45f00; stroke-width: 2; filter: drop-shadow(0 7px 7px rgba(255,136,0,.35)); }
+    .mapa-tooltip { position: absolute; z-index: 2; right: 2%; bottom: 3%; background: rgba(0,31,51,.94); color: #fff; border-left: 3px solid var(--brand); border-radius: 8px; padding: 13px 16px; min-width: 170px; box-shadow: 0 14px 28px rgba(0,31,51,.2); pointer-events: none; animation: tooltipEntrando .5s .3s ease both; }
+    .mapa-tooltip strong { display: block; font-size: 1rem; }
+    .mapa-tooltip span { display: block; color: #b9d0dc; font-size: .78rem; margin-top: 3px; }
+    @keyframes mapaEntrando { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes tooltipEntrando { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 800px) {
+      .alcance-section { padding: 64px 0 72px; }
+      .alcance-layout { grid-template-columns: 1fr; gap: 28px; }
+      .alcance-copy { max-width: 620px; text-align: center; margin: 0 auto; }
+      .alcance-kicker, .alcance-total, .alcance-note { justify-content: center; }
+      .alcance-copy p { margin: 0 auto; }
+      .mapa-wrap { min-height: 400px; }
+      #mapaBrasil { min-height: 380px; }
+      .mapa-tooltip { right: 0; bottom: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #mapaBrasil svg, .mapa-tooltip { animation: none; }
+      #mapaBrasil path { transition: none; }
+    }
+
     /* Upload inteligente de currículo */
     .upload-inteligente {
       display: inline-flex; align-items: center; gap: 10px;
@@ -66,6 +107,23 @@
         <div><span class="stat-value">10</span><span class="stat-label" style="display:block">modelos</span></div>
         <div><span class="stat-value">PDF + Word</span><span class="stat-label" style="display:block">formatos</span></div>
         <div><span class="stat-value">100%</span><span class="stat-label" style="display:block">legível por IA</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alcance-section" aria-labelledby="alcanceTitulo">
+    <div class="container alcance-layout">
+      <div class="alcance-copy">
+        <span class="alcance-kicker">Presença em todo o Brasil</span>
+        <h2 id="alcanceTitulo">Talentos de norte a sul estão prontos para o <strong>próximo passo.</strong></h2>
+        <p>Mais de 14.126 currículos já foram criados por pessoas de todos os cantos do território nacional.</p>
+        <div class="alcance-total"><strong>14.126+</strong><span>currículos gerados</span></div>
+        <div class="alcance-note">Comunidade em crescimento todos os dias</div>
+      </div>
+      <div class="mapa-wrap">
+        <div class="mapa-glow" aria-hidden="true"></div>
+        <div id="mapaBrasil" aria-label="Mapa interativo do Brasil" aria-live="polite"><span>Carregando mapa...</span></div>
+        <div class="mapa-tooltip" id="mapaTooltip" aria-hidden="true"><strong>Brasil</strong><span>Selecione um estado</span></div>
       </div>
     </div>
   </section>
@@ -303,6 +361,48 @@
       }
       processarArquivo(file);
     });
+
+    // O SVG local mantém cada estado real selecionável e acessível por teclado.
+    (function carregarMapaBrasil() {
+      var mapa = document.getElementById("mapaBrasil");
+      var tooltip = document.getElementById("mapaTooltip");
+      var dadosEstados = {
+        ac: ["Acre", "312 currículos"], al: ["Alagoas", "438 currículos"], ap: ["Amapá", "198 currículos"],
+        am: ["Amazonas", "476 currículos"], ba: ["Bahia", "1.184 currículos"], ce: ["Ceará", "892 currículos"],
+        df: ["Distrito Federal", "746 currículos"], es: ["Espírito Santo", "427 currículos"], go: ["Goiás", "634 currículos"],
+        ma: ["Maranhão", "512 currículos"], mg: ["Minas Gerais", "1.126 currículos"], ms: ["Mato Grosso do Sul", "298 currículos"],
+        mt: ["Mato Grosso", "364 currículos"], pa: ["Pará", "714 currículos"], pb: ["Paraíba", "326 currículos"],
+        pe: ["Pernambuco", "948 currículos"], pi: ["Piauí", "286 currículos"], pr: ["Paraná", "864 currículos"],
+        rj: ["Rio de Janeiro", "1.078 currículos"], rn: ["Rio Grande do Norte", "316 currículos"], ro: ["Rondônia", "254 currículos"],
+        rr: ["Roraima", "122 currículos"], rs: ["Rio Grande do Sul", "982 currículos"], sc: ["Santa Catarina", "768 currículos"],
+        se: ["Sergipe", "214 currículos"], sp: ["São Paulo", "2.486 currículos"], to: ["Tocantins", "196 currículos"]
+      };
+      function selecionar(estado) {
+        document.querySelectorAll("#mapaBrasil path").forEach(function (path) { path.classList.toggle("selecionado", path === estado); });
+        var dados = dadosEstados[estado.id] || [estado.getAttribute("name") || "Estado", "Participando da comunidade"];
+        tooltip.innerHTML = "<strong>" + dados[0] + "</strong><span>" + dados[1] + "</span>";
+        tooltip.setAttribute("aria-hidden", "false");
+      }
+      fetch("/assets/mapa-brasil.svg").then(function (response) {
+        if (!response.ok) throw new Error("Mapa indisponível");
+        return response.text();
+      }).then(function (svg) {
+        mapa.innerHTML = svg;
+        mapa.querySelectorAll("path").forEach(function (estado) {
+          estado.setAttribute("tabindex", "0");
+          estado.setAttribute("role", "button");
+          estado.setAttribute("aria-label", "Selecionar " + (dadosEstados[estado.id] ? dadosEstados[estado.id][0] : estado.getAttribute("name")));
+          estado.addEventListener("click", function () { selecionar(estado); });
+          estado.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selecionar(estado); }
+          });
+        });
+        var inicial = mapa.querySelector("#sp");
+        if (inicial) selecionar(inicial);
+      }).catch(function () {
+        mapa.innerHTML = "<span>Mapa indisponível no momento.</span>";
+      });
+    })();
   </script>
 </body>
 </html>
