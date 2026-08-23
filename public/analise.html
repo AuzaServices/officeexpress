@@ -112,6 +112,9 @@
     .previa-docx table { border-collapse: collapse; width: 100%; }
     .previa-docx td, .previa-docx th { border: 1px solid #ddd; padding: 6px 8px; }
     .previa-carregando { display: flex; align-items: center; justify-content: center; min-height: 300px; color: #777; font-size: 15px; }
+    .previa-paper, .previa-docx { word-wrap: break-word; overflow-wrap: break-word; }
+    .previa-paper img, .previa-docx img, .previa-docx table { max-width: 100% !important; height: auto; }
+    .previa-docx table { display: block; overflow-x: auto; }
     .previa-topo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
     @media (max-width: 560px) {
       .previa-topo { flex-direction: column; align-items: flex-start; }
@@ -981,7 +984,12 @@
             // DOCX: exibe o documento ORIGINAL de forma fiel via visualizador do
             // Office da Microsoft. Se a URL pública ainda não estiver pronta,
             // usa o render em HTML (mammoth) como fallback.
-            if (urlOriginalDoc) {
+            // O visualizador do Office exige que o documento esteja acessível
+            // por uma URL pública (não funciona em localhost). Em produção usa o
+            // visualizador (fiel ao original); em localhost usa o render em HTML.
+            var hostAtual = window.location.hostname;
+            var ehLocal = hostAtual === "localhost" || hostAtual === "127.0.0.1";
+            if (urlOriginalDoc && !ehLocal) {
               var urlAbs = window.location.origin + urlOriginalDoc;
               paper.innerHTML = '<iframe class="previa-doc-original" src="https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(urlAbs) + '"></iframe>';
             } else {
