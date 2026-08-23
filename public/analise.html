@@ -100,6 +100,31 @@
     .previa-paper ul { margin: 4px 0; padding-left: 18px; }
     .previa-doc-original { width: 100%; height: 100%; min-height: 540px; border: none; background: #fafafa; }
     .previa-paper iframe { width: 100%; height: 100%; min-height: 540px; border: none; }
+    .previa-docx {
+      background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
+      padding: 28px 34px; font-family: Calibri, Arial, sans-serif;
+      font-size: 14px; line-height: 1.5; color: #1a1a1a; min-height: 540px; box-sizing: border-box;
+      overflow: auto;
+    }
+    .previa-docx h1, .previa-docx h2, .previa-docx h3, .previa-docx h4 { margin: 12px 0 6px; color: #111; }
+    .previa-docx p { margin: 4px 0; }
+    .previa-docx ul, .previa-docx ol { margin: 6px 0; padding-left: 22px; }
+    .previa-docx table { border-collapse: collapse; width: 100%; }
+    .previa-docx td, .previa-docx th { border: 1px solid #ddd; padding: 6px 8px; }
+    .previa-carregando { display: flex; align-items: center; justify-content: center; min-height: 300px; color: #777; font-size: 15px; }
+    .previa-topo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+    @media (max-width: 560px) {
+      .previa-topo { flex-direction: column; align-items: flex-start; }
+    }
+    /* Evolução gradual do painel */
+    @keyframes animaEntrada {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+    .score-card, .ponto-lista li, .previa-col .card {
+      opacity: 0;
+      animation: animaEntrada .55s ease forwards;
+    }
 
     .cta-pagamento {
       text-align: center; margin-top: 24px; padding: 24px; border-radius: 16px;
@@ -141,10 +166,6 @@
     <div class="analise-resultado" id="resultado">
       <div class="painel-topo">
         <h2 style="margin:0">Diagnóstico do seu currículo</h2>
-        <div class="toggle-origem" id="toggleOrigem">
-          <button type="button" id="btnOriginal" class="ativo">Original</button>
-          <button type="button" id="btnOffice">Office Express</button>
-        </div>
       </div>
 
       <div class="anel-wrap">
@@ -166,7 +187,13 @@
 
       <div class="previa-col">
         <div class="card">
-          <h3 style="margin-top:0" id="previaTitulo">Seu currículo original</h3>
+          <div class="previa-topo">
+            <h3 style="margin:0" id="previaTitulo">Seu currículo original</h3>
+            <div class="toggle-origem" id="toggleOrigem">
+              <button type="button" id="btnOriginal" class="ativo">Original</button>
+              <button type="button" id="btnOffice">Office Express</button>
+            </div>
+          </div>
           <div class="previa-paper" id="previaPaper"></div>
         </div>
       </div>
@@ -241,6 +268,7 @@
     var textoMelhorado = "";
     var blobUrlOriginal = null;
     var tipoArquivoOriginal = null;
+    var bufferOriginal = null; // ArrayBuffer do arquivo enviado (para renderizar DOCX na prévia)
     var modoAtual = "original";
     var pontuacao = {};
 
@@ -928,15 +956,17 @@
             // PDF é exibido nativamente no navegador via iframe
             paper.innerHTML = '<iframe class="previa-doc-original" src="' + blobUrlOriginal + '"></iframe>';
           } else {
-            // DOCX não tem visualizador nativo no navegador — colocar num iframe
-            // dispararia um download indesejado. Mostramos um aviso + botão para
-            // abrir o arquivo original.
-            paper.innerHTML =
-              '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;text-align:center;color:#555;gap:16px">' +
-              '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
-              '<p style="margin:0;max-width:340px">Este é um arquivo <b>Word (.docx)</b>, que não pode ser exibido dentro do navegador. Toque no botão abaixo para abrir o arquivo original enviado.</p>' +
-              '<a href="' + blobUrlOriginal + '" download="currículo-original.docx" class="btn btn-secondary" style="text-decoration:none">Abrir arquivo original</a>' +
-              '</div>';
+            // DOCX: renderiza o conteúdo em HTML usando mammoth — sem precisar baixar
+            paper.innerHTML = '<div class="previa-carregando">Renderizando o documento Word...</div>';
+            if (window.mammoth && bufferOriginal) {
+              window.mammoth.convertToHtml({ arrayBuffer: bufferOriginal }).then(function (r) {
+                paper.innerHTML = '<div class="previa-docx">' + (r.value || "") + "</div>";
+              }).catch(function () {
+                paper.innerHTML = '<p>Não foi possível exibir o documento Word.</p>';
+              });
+            } else {
+              paper.innerHTML = '<p>Documento original não disponível.</p>';
+            }
           }
         } else {
           paper.innerHTML = "<p>Documento original não disponível.</p>";
@@ -979,18 +1009,31 @@
       var res = analisar(dadosExtraidos, textoOriginal);
       document.getElementById("resultado").classList.add("visivel");
 
-      // Anel + score
+      // Anel + score (evolução gradual de 0 até o valor final)
       var scoreFinal = res.score;
       var anel = document.getElementById("anelScore");
-      anel.style.setProperty("--p", scoreFinal);
-      document.getElementById("scoreFinal").textContent = scoreFinal;
+      var numEl = document.getElementById("scoreFinal");
+      anel.style.setProperty("--p", 0);
+      numEl.textContent = "0";
+      var duracao = 1300; // ms
+      var inicioAnim = null;
+      function animarScore(t) {
+        if (!inicioAnim) inicioAnim = t;
+        var prog = Math.min((t - inicioAnim) / duracao, 1);
+        var atual = Math.round(prog * scoreFinal);
+        anel.style.setProperty("--p", atual);
+        numEl.textContent = atual;
+        if (prog < 1) requestAnimationFrame(animarScore);
+      }
+      requestAnimationFrame(animarScore);
 
       // Grid de detalhes
       var grid = document.getElementById("scoreGrid");
       grid.innerHTML = "";
-      res.detalhe.forEach(function (item) {
+      res.detalhe.forEach(function (item, idxCard) {
         var el = document.createElement("div");
         el.className = "score-card";
+        el.style.animationDelay = (idxCard * 0.07) + "s";
         el.innerHTML = '<div class="score-num">' + item.nota + '<small style="font-size:.9rem;color:var(--text-muted)">/' + item.max + '</small></div><div class="score-label">' + item.label + "</div>";
         grid.appendChild(el);
       });
@@ -1001,15 +1044,21 @@
       pf.innerHTML = "";
       pm.innerHTML = "";
       if (res.forte.length) {
-        res.forte.forEach(function (p) {
-          pf.innerHTML += '<li><span class="icone"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></span><div><b>' + esc(p.t) + '</b>' + esc(p.d) + "</div></li>";
+        res.forte.forEach(function (p, idxP) {
+          var li = document.createElement("li");
+          li.style.animationDelay = (idxP * 0.08) + "s";
+          li.innerHTML = '<span class="icone"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></span><div><b>' + esc(p.t) + '</b>' + esc(p.d) + "</div>";
+          pf.appendChild(li);
         });
       } else {
         pf.innerHTML = "<li>Nenhum ponto forte identificado automaticamente.</li>";
       }
       if (res.melhorar.length) {
-        res.melhorar.forEach(function (p) {
-          pm.innerHTML += '<li><span class="icone"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><div><b>' + esc(p.t) + '</b>' + esc(p.d) + "</div></li>";
+        res.melhorar.forEach(function (p, idxM) {
+          var li = document.createElement("li");
+          li.style.animationDelay = (idxM * 0.08) + "s";
+          li.innerHTML = '<span class="icone"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><div><b>' + esc(p.t) + '</b>' + esc(p.d) + "</div>";
+          pm.appendChild(li);
         });
       } else {
         pm.innerHTML = "<li>Excelente! Nenhum ponto crítico de melhoria identificado.</li>";
@@ -1025,6 +1074,7 @@
       var leitor = new FileReader();
       leitor.onload = function () {
         var buffer = leitor.result;
+        bufferOriginal = buffer; // guarda para renderizar o DOCX na prévia
         // Guarda o documento ORIGINAL enviado (como Blob) para exibir na prévia
         // "Original" — a prévia deve ser o próprio arquivo, não o texto extraído.
         try {
