@@ -98,6 +98,8 @@
     .previa-paper h2 { font-size: 1.05rem; margin: 16px 0 6px; color: #222; border-bottom: 2px solid #eee; padding-bottom: 4px; }
     .previa-paper p { margin: 4px 0; color: #333; }
     .previa-paper ul { margin: 4px 0; padding-left: 18px; }
+    .previa-doc-original { width: 100%; height: 100%; min-height: 540px; border: none; background: #fafafa; }
+    .previa-paper iframe { width: 100%; height: 100%; min-height: 540px; border: none; }
 
     .cta-pagamento {
       text-align: center; margin-top: 24px; padding: 24px; border-radius: 16px;
@@ -183,6 +185,7 @@
     </div>
   </footer>
 
+  <script src="/curriculo-render.js"></script>
   <script src="/assets/app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -198,6 +201,8 @@
     var dadosExtraidos = null;
     var textoOriginal = "";
     var textoMelhorado = "";
+    var blobUrlOriginal = null;
+    var tipoArquivoOriginal = null;
     var modoAtual = "original";
     var pontuacao = {};
 
@@ -432,12 +437,64 @@
       var paper = document.getElementById("previaPaper");
       var titulo = document.getElementById("previaTitulo");
       if (modoAtual === "office") {
-        titulo.textContent = "Seu currículo otimizado pela Office Express";
-        paper.innerHTML = textoMelhorado || "<p>Preencha os dados no editor para visualizar.</p>";
+        titulo.textContent = "Seu currículo otimizado pela Office Express (modelo Cronológico)";
+        if (window.renderCurriculo && dadosExtraidos && dadosExtraidos.pessoal && dadosExtraidos.pessoal.nome) {
+          // Monta os dados no formato esperado pelo renderCurriculo e gera o
+          // currículo no modelo CRONOLÓGICO.
+          var dadosCrono = montarDadosCronologico(dadosExtraidos);
+          var html = window.renderCurriculo.gerarHTML("cronologico", dadosCrono);
+          var doc = new DOMParser().parseFromString(html, "text/html");
+          var styleEl = doc.querySelector("style");
+          var pageEl = doc.querySelector(".page");
+          if (pageEl) {
+            paper.innerHTML =
+              (styleEl ? styleEl.outerHTML : "") +
+              '<div class="modelo-cronologico"><div class="page">' + pageEl.innerHTML + "</div></div>";
+            return;
+          }
+          paper.innerHTML = html;
+        } else {
+          paper.innerHTML = textoMelhorado || "<p>Preencha os dados no editor para visualizar.</p>";
+        }
       } else {
-        titulo.textContent = "Seu currículo original (como enviado)";
-        paper.innerHTML = "<pre style='white-space:pre-wrap;font-family:inherit;margin:0'>" + esc(textoOriginal) + "</pre>";
+        titulo.textContent = "Seu currículo original (documento enviado)";
+        if (blobUrlOriginal) {
+          paper.innerHTML = '<iframe class="previa-doc-original" src="' + blobUrlOriginal + '"></iframe>';
+        } else {
+          paper.innerHTML = "<p>Documento original não disponível.</p>";
+        }
       }
+    }
+
+    // Converte os dados extraídos para o formato esperado pelo renderCurriculo
+    // (modelo Cronológico usa nome, email, telefone, cidade, estado, objetivo,
+    // formacao, experiencias com empresa/cargo/periodo, habilidades, etc.)
+    function montarDadosCronologico(d) {
+      d = d || {};
+      var p = d.pessoal || {};
+      var dados = {
+        nome: p.nome || "",
+        email: p.email || "",
+        telefone: p.telefone ? [p.telefone] : [],
+        cidade: p.cidade || "",
+        estado: p.uf || "",
+        objetivo: d.objetivo || "",
+        formacao: (d.formacoes || []).map(function (f) { return f.descricao || f.curso || ""; }).filter(Boolean).join("\n"),
+        habilidades: d.habilidades || "",
+        hobbies: d.hobbies || "",
+        idiomas: d.idiomas || "",
+        empresa: (d.experiencias || []).map(function (e) { return e.empresa || ""; }),
+        cargo: (d.experiencias || []).map(function (e) { return e.cargo || ""; }),
+        periodo_inicio: (d.experiencias || []).map(function (e) { return e.periodo || ""; }),
+        periodo_fim: (d.experiencias || []).map(function () { return ""; }),
+        atividades: (d.experiencias || []).map(function (e) { return e.descricao || ""; }),
+        curso: (d.cursos || []).map(function (c) { return c.nome || ""; }),
+        instituicao: (d.cursos || []).map(function (c) { return c.instituicao || ""; }),
+        carga: (d.cursos || []).map(function (c) { return c.carga || ""; }),
+        infoAdicional: "",
+        primeiroEmprego: false
+      };
+      return dados;
     }
 
     function mostrarResultado() {
@@ -490,6 +547,13 @@
       var leitor = new FileReader();
       leitor.onload = function () {
         var buffer = leitor.result;
+        // Guarda o documento ORIGINAL enviado (como Blob) para exibir na prévia
+        // "Original" — a prévia deve ser o próprio arquivo, não o texto extraído.
+        try {
+          if (blobUrlOriginal) URL.revokeObjectURL(blobUrlOriginal);
+          tipoArquivoOriginal = ext;
+          blobUrlOriginal = URL.createObjectURL(new Blob([buffer], { type: ext === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
+        } catch (e) { blobUrlOriginal = null; }
         var promessa = ext === "pdf" ? extrairTextoPDF(buffer) : extrairTextoDOCX(buffer);
         promessa.then(function (texto) {
           if (!texto || texto.trim().length < 20) {
@@ -554,13 +618,39 @@
 
     // Botão pagamento
     document.getElementById("btnPagamento").addEventListener("click", function () {
-      App.authMe().then(function (usuario) {
-        if (usuario) {
-          window.location.href = "/modelos?origem=analise";
+      var btn = this;
+      if (!dadosExtraidos || !dadosExtraidos.pessoal || !dadosExtraidos.pessoal.nome) {
+        alert("Analise um currículo antes de continuar.");
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Preparando pagamento...";
+
+      // Dados no formato do editor (modelo Cronológico)
+      var dadosCrono = montarDadosCronologico(dadosExtraidos);
+
+      // Prepara localStorage para o pagamento renderizar a prévia correta
+      try {
+        localStorage.setItem("modeloSelecionado", "cronologico");
+        localStorage.setItem("curriculo", JSON.stringify(dadosCrono));
+      } catch (e) {}
+
+      // Cria o pedido (modelo Cronológico) e vai direto ao pagamento
+      App.api("/api/pedidos", {
+        method: "POST",
+        body: JSON.stringify({ modelo: "cronologico", dados: dadosCrono, tipo: "curriculo" }),
+      }).then(function (r) {
+        btn.disabled = false;
+        btn.textContent = "Melhorar meu currículo agora";
+        if (r.ok && r.data && r.data.pedido && r.data.pedido.id) {
+          window.location.href = "/pagamento?pedido=" + r.data.pedido.id;
         } else {
-          localStorage.setItem("redirectAposLogin", "/modelos?origem=analise");
-          window.location.href = "/login";
+          alert((r.data && r.data.error) || "Não foi possível criar o pedido. Tente novamente.");
         }
+      }).catch(function () {
+        btn.disabled = false;
+        btn.textContent = "Melhorar meu currículo agora";
+        alert("Erro ao criar o pedido. Tente novamente.");
       });
     });
   </script>
