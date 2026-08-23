@@ -200,13 +200,22 @@
         reader.onload = function () {
           var win = janelaAntecipada || window.open();
           if (win && !win.closed) {
-            win.document.open();
-            win.document.write(
-              '<html><head><title>' + nomeArquivo + '</title></head><body style="margin:0">' +
-              '<iframe src="' + reader.result + '" style="width:100%;height:100vh;border:none"></iframe>' +
-              '</body></html>'
-            );
-            win.document.close();
+            if (/\.pdf$/i.test(nomeArquivo)) {
+              // PDF: navega a própria aba para o data URI — o Safari abre o
+              // visualizador NATIVO de PDF (com botão de compartilhar/salvar
+              // no topo), igual a quando se abre um PDF recebido por e-mail.
+              // Um <iframe> aqui não mostra esses controles nativos.
+              win.location.href = reader.result;
+            } else {
+              win.document.open();
+              win.document.write(
+                '<html><head><title>' + nomeArquivo + '</title></head><body style="margin:0;font-family:sans-serif">' +
+                '<div style="padding:16px;text-align:center;color:#555">Toque no ícone de compartilhar (□↑) no topo da tela e escolha "Salvar em Arquivos" para guardar o arquivo <b>' + nomeArquivo + '</b>.</div>' +
+                '<iframe src="' + reader.result + '" style="width:100%;height:85vh;border:none"></iframe>' +
+                '</body></html>'
+              );
+              win.document.close();
+            }
           } else {
             window.location.href = reader.result;
           }
