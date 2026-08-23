@@ -136,6 +136,21 @@ nav.menu a:not(.btn-login):hover { color: var(--brand); }
 nav.menu a:not(.btn-login):hover::after { width: 100%; }
 nav.menu a.ativo { color: var(--brand); }
 nav.menu a.ativo::after { width: 100%; }
+.nav-dropdown { position: relative; margin-left: 24px; }
+.nav-dropdown-trigger { display: inline-flex !important; align-items: center; gap: 6px; margin-left: 0 !important; }
+.nav-dropdown-trigger svg { transition: transform .2s ease; }
+.nav-dropdown:hover .nav-dropdown-trigger svg, .nav-dropdown:focus-within .nav-dropdown-trigger svg { transform: rotate(180deg); }
+.nav-dropdown-menu { position: absolute; top: calc(100% + 10px); left: -12px; min-width: 230px; padding: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 18px 36px rgba(0,0,0,.18); opacity: 0; visibility: hidden; transform: translateY(-8px); transition: opacity .18s ease, transform .18s ease, visibility .18s; }
+.nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown:focus-within .nav-dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+.nav-dropdown-menu a { display: block; margin: 0 !important; padding: 10px 12px !important; color: var(--text-primary) !important; border-radius: 7px; white-space: nowrap; }
+.nav-dropdown-menu a:hover { background: var(--card-hover); color: var(--brand-dark) !important; }
+@media (max-width: 768px) {
+  .mobile-nav-group { margin: 0; }
+  .mobile-nav-group > .nav-dropdown-trigger { width: 100%; }
+  .mobile-nav-group .nav-dropdown-trigger { color: #fff !important; }
+  .mobile-nav-group .mobile-nav-sub { position: static; min-width: 0; padding: 0 0 4px 16px; opacity: 1; visibility: visible; transform: none; background: transparent; border: 0; box-shadow: none; }
+  .mobile-nav-group .mobile-nav-sub a { color: #b9d0dc !important; }
+}
 
 /* Botão Login (destaque minimalista) */
 .btn-login {
@@ -211,6 +226,9 @@ nav.menu a.ativo::after { width: 100%; }
 #mobileMenu a:not(.btn-login-mobile):hover, #mobileMenu a:not(.btn-login-mobile).ativo {
   background: rgba(255,136,0,0.1); color: var(--brand);
 }
+.mobile-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.mobile-nav-group > a { display: flex; align-items: center; justify-content: space-between; }
+.mobile-nav-sub { padding-left: 24px !important; font-size: .92rem !important; color: #b9d0dc !important; }
 .btn-login-mobile {
   margin-top: 8px; text-align: center; text-decoration: none; font-weight: 700;
   color: #001f33; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);

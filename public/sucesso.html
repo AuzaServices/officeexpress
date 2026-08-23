@@ -39,7 +39,7 @@
     <div class="pagamento-card card" style="text-align:center;padding:48px">
       <div style="font-size:64px;color:var(--success)">&#10003;</div>
       <h2 style="margin:16px 0 8px">Pagamento confirmado!</h2>
-      <p style="color:var(--text-muted);margin-bottom:32px">Seu currículo está pronto. Escolha o formato para baixar agora:</p>
+      <p style="color:var(--text-muted);margin-bottom:32px">Seu documento está pronto. Escolha o formato para baixar agora:</p>
 
       <div class="preview-acoes" style="justify-content:center">
         <button class="btn btn-primary" onclick="baixar('pdf')">Baixar PDF</button>
@@ -101,6 +101,7 @@
     App.carregarHeader("sucesso");
 
     var dadosPedido = null;
+    var tipoPedido = "curriculo";
 
     // Busca modelo + dados do pedido pago e renderiza o preview (escondido)
     // para capturar a imagem EXATA na hora do download.
@@ -112,6 +113,7 @@
           return;
         }
         dadosPedido = r.data;
+        tipoPedido = r.data.tipo || "curriculo";
         renderizarPreview();
       });
     }
@@ -236,6 +238,10 @@
     // Gera o PDF a partir da IMAGEM do preview (html2canvas) — fidelidade total.
     function baixarPDF() {
       if (!pedidoId) return alert("Pedido não identificado.");
+      if (tipoPedido === "carta") {
+        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
+        return;
+      }
       // Safari/iOS não deve gerar o PDF a partir de canvas/data URI: esse
       // caminho pode ficar pendurado ou ser recusado por limite de memória.
       // O servidor já gera o documento e entrega um PDF nativo.
@@ -280,6 +286,10 @@
     // Gera o DOCX embutindo a IMAGEM do preview (biblioteca "docx" no navegador).
     function baixarDOCX() {
       if (!pedidoId) return alert("Pedido não identificado.");
+      if (tipoPedido === "carta") {
+        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
+        return;
+      }
       // Mesma técnica do PDF: abre a aba AGORA (síncrono, dentro do clique)
       // para o Safari/iOS não bloquear o popup — conteúdo é escrito depois.
       var janelaAntecipada = null;

@@ -47,13 +47,17 @@ window.App = (function () {
   }
 
   function linksBase(ativo) {
-    return [
+    const links = [
       { href: "/", label: "Início" },
-      { href: "/modelos", label: "Modelos" },
-    ].map((l) => {
+      { href: "/modelos", label: "Curriculum", dropdown: [{ href: "/modelos", label: "Modelos" }] },
+      { href: "#", label: "Ferramentas", dropdown: [{ href: "/cartas", label: "Gerar carta de apresentação" }] },
+    ];
+    return links.map((l) => {
       const cls = ativo && l.href !== "/" && l.href.indexOf(ativo) !== -1 ? ' class="ativo"' : "";
       const clsHome = ativo === "" && l.href === "/" ? ' class="ativo"' : "";
-      return '<a href="' + l.href + '"' + (cls || clsHome) + ">" + l.label + "</a>";
+      if (!l.dropdown) return '<a href="' + l.href + '"' + (cls || clsHome) + ">" + l.label + "</a>";
+      const dropdown = l.dropdown.map((item) => '<a href="' + item.href + '">' + item.label + '</a>').join("");
+      return '<div class="nav-dropdown"><a href="' + l.href + '" class="nav-dropdown-trigger' + ((cls || clsHome).replace(' class="', ' ' ).replace('"', '')) + '">' + l.label + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a><div class="nav-dropdown-menu">' + dropdown + '</div></div>';
     }).join("");
   }
 
@@ -82,6 +86,7 @@ window.App = (function () {
       }
 
       if (mobile) {
+        const linksMobile = linksBase(ativo).replace(/<div class="nav-dropdown">/g, '<div class="mobile-nav-group">').replace(/<div class="nav-dropdown-menu">/g, '<div class="mobile-nav-sub">');
         const areaContaMobile = usuario
           ? '<div class="mobile-user">' +
               '<span class="user-avatar">' + iniciais(usuario.nome) + '</span>' +
@@ -90,7 +95,7 @@ window.App = (function () {
             '<a href="/minha-conta">Minha conta</a>' +
             '<button type="button" class="mobile-sair" onclick="App.logout();return false;">Sair</button>'
           : '<a href="/login" class="btn-login-mobile">Login</a>';
-        mobile.innerHTML = '<div class="mobile-menu-inner">' + linksComuns + areaContaMobile + '</div>';
+        mobile.innerHTML = '<div class="mobile-menu-inner">' + linksMobile + areaContaMobile + '</div>';
       }
 
       setupUserDropdown();

@@ -7,6 +7,7 @@ const path = require("path");
 const { MercadoPagoConfig, Payment } = require("mercadopago");
 const { pool, garantirSchema, getPreco } = require("./lib/db");
 const { MODELOS, gerarPDF, gerarDOCX } = require("./lib/modelos");
+const { CARTAS, gerarCartaPDF, gerarCartaDOCX } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao } = require("./lib/email");
 
 require("dotenv").config();
@@ -218,6 +219,11 @@ app.get("/api/modelos", async (req, res) => {
   res.json({ modelos: MODELOS, preco });
 });
 
+app.get("/api/cartas", async (req, res) => {
+  const preco = await getPreco();
+  res.json({ cartas: CARTAS, preco });
+});
+
 // Configuração pública de pagamento (public key do MP + preço)
 app.get("/api/config/pagamento", async (req, res) => {
   const preco = await getPreco();
@@ -228,8 +234,9 @@ app.get("/api/config/pagamento", async (req, res) => {
 // Pedidos
 // ---------------------------------------------------------------------------
 app.post("/api/pedidos", async (req, res) => {
-  const { modelo, dados } = req.body || {};
-  if (!modelo || !MODELOS.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
+  const { modelo, dados, tipo = "curriculo" } = req.body || {};
+  const catalogo = tipo === "carta" ? CARTAS : MODELOS;
+  if (!modelo || !catalogo.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
   if (!dados || !dados.nome) return res.status(400).json({ error: "Dados do currículo incompletos." });
   const valor = await getPreco();
   // Garante que a foto (base64) nunca seja persistida no banco — além de
@@ -238,9 +245,9 @@ app.post("/api/pedidos", async (req, res) => {
   if (typeof dadosLimpos === "object" && "foto" in dadosLimpos) delete dadosLimpos.foto;
   const [result] = await pool.query(
     "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor) VALUES (?, ?, ?, ?)",
-    [usuarioDaSessao(req), modelo, JSON.stringify(dadosLimpos), valor]
+    [usuarioDaSessao(req), modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), valor]
   );
-  res.json({ pedido: { id: result.insertId, modelo, valor } });
+  res.json({ pedido: { id: result.insertId, modelo, tipo, valor } });
 });
 
 app.get("/api/pedidos/meus", async (req, res) => {
@@ -374,13 +381,14 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
   const arquivoNome = (dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
 
   try {
+    const tipoPedido = dados._tipo || "curriculo";
     if (formato === "docx") {
-      const buffer = await gerarDOCX(pedido.modelo, dados);
+      const buffer = tipoPedido === "carta" ? await gerarCartaDOCX(pedido.modelo, dados) : await gerarDOCX(pedido.modelo, dados);
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
       res.setHeader("Content-Disposition", `attachment; filename="${arquivoNome}.docx"`);
       return res.send(buffer);
     }
-    const buffer = await gerarPDF(pedido.modelo, dados);
+    const buffer = tipoPedido === "carta" ? await gerarCartaPDF(pedido.modelo, dados) : await gerarPDF(pedido.modelo, dados);
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${arquivoNome}.pdf"`);
     res.send(buffer);
@@ -401,7 +409,7 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   if (pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
-  res.json({ modelo: pedido.modelo, dados });
+  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", dados });
 });
 
 // ---------------------------------------------------------------------------
