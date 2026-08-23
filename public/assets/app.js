@@ -120,6 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const paginaPainel = /(^|\/)painel(?:\.html)?(?:$|\?)/i.test(window.location.pathname + window.location.search);
   if (!paginaPainel) {
     document.body.classList.add("page-enter");
+    document.body.classList.add("motion-ready");
     requestAnimationFrame(function () {
       requestAnimationFrame(function () { document.body.classList.add("carregada"); });
     });
