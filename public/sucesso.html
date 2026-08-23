@@ -242,13 +242,11 @@
         window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
         return;
       }
-      // Safari/iOS não deve gerar o PDF a partir de canvas/data URI: esse
-      // caminho pode ficar pendurado ou ser recusado por limite de memória.
-      // O servidor já gera o documento e entrega um PDF nativo.
-      if (isIOS()) {
-        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
-        return;
-      }
+      // O PDF é gerado no cliente a partir da IMAGEM do preview (html2canvas),
+      // garantindo que o arquivo baixado tenha o MESMO template visual do
+      // preview em qualquer dispositivo — inclusive iOS/Safari, que abre o
+      // visualizador nativo via salvarBlob(). Evita o caminho do servidor, que
+      // baixa o PDF sem o modelo (texto puro).
       // Precisa ser aberta AGORA (síncrono, dentro do clique) para o Safari/iOS
       // não bloquear o popup — o conteúdo real é escrito depois, quando pronto.
       var janelaAntecipada = null;
