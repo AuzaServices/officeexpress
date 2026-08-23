@@ -2,17 +2,9 @@
 body:not(.pagina-painel) {
   opacity: 1;
   transform: none;
-  transition: opacity .65s ease, transform .65s ease;
 }
-body:not(.pagina-painel).motion-ready { opacity: 0; }
-body:not(.pagina-painel).motion-ready.carregada { opacity: 1; transform: none; }
-body:not(.pagina-painel).motion-ready [data-reveal] {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity .72s ease, transform .72s cubic-bezier(.22,1,.36,1);
-  will-change: opacity, transform;
-}
-body:not(.pagina-painel).motion-ready [data-reveal].revelado { opacity: 1; transform: none; }
+body:not(.pagina-painel) [data-reveal] { opacity: 1; transform: none; }
+body:not(.pagina-painel) [data-reveal].revelado { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   body:not(.pagina-painel), body:not(.pagina-painel) [data-reveal] {
     opacity: 1;

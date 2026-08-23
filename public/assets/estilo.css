@@ -86,30 +86,17 @@ body:not(.pagina-painel) > main + section::before {
   background: linear-gradient(180deg, transparent, rgba(237,245,248,.32));
 }
 
-body:not(.pagina-painel).motion-ready [data-reveal] {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity .72s ease, transform .72s cubic-bezier(.22,1,.36,1);
-  will-change: opacity, transform;
-}
-body:not(.pagina-painel).motion-ready [data-reveal].revelado {
-  opacity: 1;
+body:not(.pagina-painel) [data-reveal] {
   transform: none;
+  transition: transform .72s cubic-bezier(.22,1,.36,1);
 }
-body:not(.pagina-painel).motion-ready.page-enter {
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity .65s ease, transform .65s ease;
-}
-body:not(.pagina-painel).motion-ready.page-enter.carregada {
-  opacity: 1;
-  transform: none;
-}
+body:not(.pagina-painel) [data-reveal].revelado { transform: none; }
+body:not(.pagina-painel).page-enter { transform: none; }
+body:not(.pagina-painel).page-enter.carregada { transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  body:not(.pagina-painel).motion-ready [data-reveal],
-  body:not(.pagina-painel).motion-ready.page-enter {
-    opacity: 1;
+  body:not(.pagina-painel) [data-reveal],
+  body:not(.pagina-painel).page-enter {
     transform: none;
     transition: none;
   }
