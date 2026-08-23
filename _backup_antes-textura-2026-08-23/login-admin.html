@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Admin - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo"><img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" /></div>
+      <h1>Área restrita</h1>
+      <p class="subtitle">Acesso exclusivo para administração.</p>
+      <div id="alert" class="alert"></div>
+      <form id="form">
+        <div class="campo"><label for="username">Usuário</label><input type="text" id="username" required autocomplete="username" /></div>
+        <div class="campo"><label for="password">Senha</label><input type="password" id="password" required autocomplete="current-password" /></div>
+        <button type="submit" class="btn btn-primary btn-block" id="btn">Entrar</button>
+      </form>
+      <div class="auth-links"><p><a href="/">Voltar ao site</a></p></div>
+    </div>
+  </div>
+  <script src="/assets/app.js"></script>
+  <script>
+    document.getElementById("form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      App.limparAlerta("alert");
+      var username = document.getElementById("username").value;
+      var password = document.getElementById("password").value;
+      document.getElementById("btn").disabled = true;
+      var { ok, data } = await App.api("/api/admin/login", { method: "POST", body: JSON.stringify({ username, password }) });
+      document.getElementById("btn").disabled = false;
+      if (ok) window.location.href = "/painel";
+      else App.mostrarAlerta("alert", data.error || "Credenciais inválidas.", "error");
+    });
+  </script>
+</body>
+</html>

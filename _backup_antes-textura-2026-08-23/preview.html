@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pré-visualização - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <script src="/curriculo-render.js"></script>
+  <style>
+    /* O preview renderiza o MESMO HTML/CSS do PDF (Opção C), escalado para caber. */
+    .preview-page { padding: 48px 0 80px; }
+
+    .preview-layout {
+      display: grid; grid-template-columns: 1fr 300px; gap: 32px;
+      align-items: start; max-width: 1180px; margin: 0 auto;
+    }
+
+    .preview-doc-col { min-width: 0; }
+    .preview-paper {
+      padding: 0; overflow: hidden; max-width: none; margin: 0; min-height: 0;
+      border-radius: 10px; border: 1px solid var(--border);
+      box-shadow: 0 20px 50px var(--shadow-lg);
+    }
+    .preview-doc { width: 794px; transform-origin: top left; background: #fff; }
+    .preview-doc .page { width: 794px; min-height: 1123px; box-sizing: border-box; }
+
+    /* Coluna de ações */
+    .preview-acoes-col { position: static; }
+    @media (min-width: 993px) {
+      .preview-acoes-col { position: sticky; top: 96px; }
+    }
+    .preview-acoes-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      padding: 22px; box-shadow: 0 20px 45px var(--shadow-lg);
+    }
+    .preview-acoes-card h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+    .preview-acoes-card .sub { margin: 0 0 20px; color: var(--text-muted); font-size: .85rem; }
+
+    .preview-acoes { max-width: none; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+    .preview-acoes .btn { width: 100%; justify-content: center; }
+    .preview-acoes .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    @media (max-width: 992px) {
+      .preview-acoes { flex-direction: row; gap: 8px; }
+      .preview-acoes .btn { padding: 12px 6px; font-size: .72rem; gap: 4px; line-height: 1.2; flex-direction: column; }
+      .preview-acoes .btn svg { width: 20px; height: 20px; }
+    }
+
+    @media (max-width: 992px) {
+      .preview-layout { grid-template-columns: 1fr; gap: 20px; }
+      .preview-acoes-col {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
+        padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+        background: var(--card); border-top: 1px solid var(--border);
+        box-shadow: 0 -10px 30px var(--shadow-lg);
+        transform: translateY(100%); opacity: 0;
+        transition: transform .45s cubic-bezier(.22,1,.36,1), opacity .35s ease;
+      }
+      .preview-acoes-col.mostrar { transform: translateY(0); opacity: 1; }
+      .preview-acoes-card { max-width: 794px; margin: 0 auto; padding: 0; background: transparent; border: none; box-shadow: none; border-radius: 0; }
+      .preview-acoes-card h3, .preview-acoes-card .sub { display: none; }
+      .preview-page { padding-bottom: 150px; }
+    }
+    @media (max-width: 600px) {
+      .preview-page { padding: 20px 0 150px; }
+      .preview-page .container { padding: 0 14px; }
+      .section-header { margin-bottom: 20px; }
+      .section-header h2 { font-size: 1.4rem; }
+      .section-header p { font-size: .85rem; }
+      .preview-layout { gap: 16px; }
+      .preview-doc-col { display: flex; justify-content: center; }
+      .preview-paper { max-width: 100%; border-radius: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <div class="preview-page container">
+    <div class="section-header">
+      <p>Esta é uma prévia do seu currículo no modelo <strong id="modeloNome"></strong>. Após o pagamento, você recebe o arquivo em <strong>PDF e Word</strong>.</p>
+    </div>
+
+    <div class="preview-layout">
+      <div class="preview-doc-col">
+        <div class="preview-paper" id="preview"></div>
+      </div>
+
+      <aside class="preview-acoes-col">
+        <div class="preview-acoes-card">
+          <h3>O que deseja fazer?</h3>
+          <p class="sub">Revise seu currículo antes de continuar.</p>
+          <div class="preview-acoes">
+            <button class="btn btn-ghost" onclick="history.back()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              Editar
+            </button>
+            <button class="btn btn-ghost" onclick="window.location.href='/modelos'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+              Trocar modelo
+            </button>
+            <button class="btn btn-primary" id="btnIrPag" onclick="irPagamento()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+              Continuar para pagamento
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <div class="footer-social">
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://x.com" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.2-6.8L4.9 22H2l7.7-8.8L1.5 2h6.7l4.7 6.2L18.9 2Zm-2.3 18h1.8L7.5 3.9H5.6L16.6 20Z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/modelos">Modelos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="/contato">Fale com a gente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("preview");
+
+    var modelo = localStorage.getItem("modeloSelecionado") || "classico";
+    var dados = {};
+    try { dados = JSON.parse(localStorage.getItem("curriculo") || "{}"); } catch (e) {}
+
+    App.api("/api/modelos").then(function (r) {
+      if (r.ok) {
+        var m = r.data.modelos.find(function (x) { return x.id === modelo; });
+        document.getElementById("modeloNome").textContent = m ? m.nome : "Clássico";
+      }
+    });
+
+    // Renderiza usando o MESMO template do PDF (fonte única de verdade).
+    function render() {
+      var preview = document.getElementById("preview");
+      if (!window.renderCurriculo) {
+        preview.innerHTML = '<p>Carregando pré-visualização…</p>';
+        return;
+      }
+      var html = window.renderCurriculo.gerarHTML(modelo, dados);
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var styleEl = doc.querySelector("style");
+      var pageEl = doc.querySelector(".page");
+      if (!pageEl) return;
+      // O CSS de cada modelo é escopado por ".modelo-<id>" (ex.: .modelo-moderno .lateral).
+      // Mantemos essa classe no wrapper para o preview aplicar EXATAMENTE o estilo do modelo.
+      preview.innerHTML =
+        '<div class="preview-doc">' +
+        (styleEl ? styleEl.outerHTML : "") +
+        '<div class="modelo-' + modelo + '"><div class="page">' + pageEl.innerHTML + '</div></div>' +
+        '</div>';
+      larguraAnterior = preview.clientWidth;
+      dimensionarPreview();
+      var acoesCol = document.querySelector(".preview-acoes-col");
+      if (acoesCol) requestAnimationFrame(function () { acoesCol.classList.add("mostrar"); });
+    }
+
+    // Escala o documento A4 (794px) para caber na largura disponível.
+    function dimensionarPreview() {
+      var preview = document.getElementById("preview");
+      var doc = preview.querySelector(".preview-doc");
+      if (!doc) return;
+      doc.style.transform = "none";
+      doc.style.height = "";
+      var largura = preview.clientWidth || 794;
+      var escala = largura / 794;
+      var alturaReal = Math.max(doc.offsetHeight, 1123);
+      doc.style.transform = "scale(" + escala + ")";
+      doc.style.height = (alturaReal * escala) + "px";
+      doc.style.transformOrigin = "top left";
+      preview.style.height = (alturaReal * escala) + "px";
+    }
+    var larguraAnterior = 0;
+    window.addEventListener("resize", function () {
+      var preview = document.getElementById("preview");
+      if (!preview) return;
+      var larguraAtual = preview.clientWidth;
+      if (larguraAtual === larguraAnterior) return; // ignora resize disparado por scroll/teclado no mobile
+      larguraAnterior = larguraAtual;
+      dimensionarPreview();
+    });
+
+    async function irPagamento() {
+      var btn = document.getElementById("btnIrPag");
+      btn.disabled = true;
+      // Exige login
+      var u = await App.authMe();
+      if (!u) {
+        localStorage.setItem("redirectAposLogin", "/preview?autopagamento=1");
+        window.location.href = "/login";
+        return;
+      }
+      var { ok, data } = await App.api("/api/pedidos", {
+        method: "POST",
+        body: JSON.stringify({ modelo: modelo, dados: dados }),
+      });
+      if (ok) {
+        window.location.href = "/pagamento?pedido=" + data.pedido.id;
+      } else {
+        alert(data.error || "Erro ao criar o pedido.");
+        btn.disabled = false;
+      }
+    }
+    window.irPagamento = irPagamento;
+
+    render();
+
+    // Se veio do fluxo login/cadastro com intenção de pagamento, avança direto
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get("autopagamento") === "1") {
+        App.authMe().then(function (u) {
+          if (u) irPagamento();
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

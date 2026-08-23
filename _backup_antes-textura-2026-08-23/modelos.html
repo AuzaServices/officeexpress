@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escolha seu modelo - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    .hero-modelos { padding: 60px 24px 20px; text-align: center; }
+    .hero-modelos h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; }
+    .hero-modelos p { color: var(--text-muted); max-width: 620px; margin: 12px auto 0; }
+    .preco-badge { display: inline-block; margin-top: 16px; background: rgba(255,136,0,0.15); border: 1px solid rgba(255,136,0,0.4); color: var(--brand-light); padding: 8px 20px; border-radius: 50px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <div class="hero-modelos container">
+    <h1>Escolha o modelo do seu currículo</h1>
+    <p>Todos os modelos são <strong>formais e minimalistas</strong>, otimizados para serem lidos 100% por sistemas de IA de contratação (ATS). Seu currículo é gerado em <strong>PDF e Word (DOCX)</strong>.</p>
+  </div>
+
+  <section class="section container">
+    <div class="modelos-grid" id="grid"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <div class="footer-social">
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://x.com" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.2-6.8L4.9 22H2l7.7-8.8L1.5 2h6.7l4.7 6.2L18.9 2Zm-2.3 18h1.8L7.5 3.9H5.6L16.6 20Z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/modelos">Modelos</a></li>
+            <li><a href="/login">Login</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="/contato">Fale com a gente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("modelos");
+
+    App.api("/api/modelos").then(function (r) {
+      if (!r.ok) return;
+      var grid = document.getElementById("grid");
+      r.data.modelos.forEach(function (m) {
+        var div = document.createElement("div");
+        div.className = "card modelo-card";
+        div.innerHTML =
+          '<div class="preview-box mini"><img class="mini-img" src="/imagens/miniaturas/' + m.id + '.png" alt="Modelo ' + m.nome + '"></div>' +
+          '<div class="modelo-nome">' + m.nome + '</div>' +
+          '<div class="modelo-desc">' + m.descricao + '</div>' +
+          '<button class="btn btn-primary btn-block">Usar este modelo</button>';
+        div.addEventListener("click", function () {
+          localStorage.setItem("modeloSelecionado", m.id);
+          window.location.href = "/editor";
+        });
+        grid.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>

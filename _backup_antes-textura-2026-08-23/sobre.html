@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sobre | Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root {
+      --bg-1: #001f33;
+      --bg-2: #00324a;
+      --text-primary: #ffffff;
+      --text-secondary: #e0e6eb;
+      --text-muted: #94a3b8;
+      --brand: #ff8800;
+      --brand-dark: #e67300;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #E6F0FA;
+      margin: 0;
+      padding-top: 80px;
+      min-height: 100vh;
+      color: #e0e6eb;
+    }
+
+    .sobre-nos {
+      padding: clamp(40px, 8vw, 80px) 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      animation: fadeIn 1s ease-out;
+    }
+    .sobre-nos-container {
+      display: flex;
+      gap: clamp(30px, 8vw, 60px);
+      align-items: center;
+    }
+    .sobre-nos-imagem {
+      flex: 1;
+    }
+    .sobre-nos-imagem img {
+      width: 100%;
+      height: auto;
+      border-radius: 24px;
+    }
+    .sobre-nos-texto {
+      flex: 1;
+    }
+    .sobre-nos-texto h1 {
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      background:#ff8800;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: clamp(20px, 4vw, 32px);
+      line-height: 1.1;
+    }
+    .sobre-nos-texto p {
+      font-size: clamp(1rem, 3vw, 1.15rem);
+      line-height: 1.75;
+      margin-bottom: 24px;
+      color: #001f33;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 850px) {
+      .sobre-nos-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 40px;
+      }
+    }
+    @media (max-width: 480px) {
+      .sobre-nos {
+        padding: 40px 16px;
+      }
+    }
+  </style>
+
+</head>
+<body style="padding-top: 80px;">
+
+  <!-- HEADER -->
+  <header class="cabecalho">
+    <div class="container">
+      <div class="wrap">
+        <a href="/" class="logo-link" aria-label="Voltar para o inicio">
+          <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        </a>
+        <nav class="menu">
+          <a href="/contato">Contato</a>
+          <a href="/sobre">Sobre nos</a>
+        </nav>
+        <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE MENU -->
+  <div id="mobileMenu">
+    <div>
+      <a href="/contato">Contato</a>
+      <a href="/sobre">Sobre nos</a>
+    </div>
+  </div>
+
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- HEADER -->
+  
+<!-- MOBILE MENU -->
+  </div>
+
+<!-- MOBILE MENU -->
+  </div>
+
+<section class="sobre-nos">
+      <div class="sobre-nos-container">
+        <!-- Imagem -->
+        <div class="sobre-nos-imagem">
+          <img src="/imagens/sobre.png" alt="Equipe Office Express" />
+        </div>
+
+        <!-- Texto lateral -->
+        <div class="sobre-nos-texto">
+          <h1>Sobre Nós</h1>
+          <p>
+            A Office Express nasceu com o propósito de transformar a forma como
+            as pessoas se apresentam no mercado de trabalho. Sabemos que um
+            currículo bem estruturado pode ser decisivo para conquistar uma
+            oportunidade, e por isso desenvolvemos uma plataforma que une
+            tecnologia e inteligência artificial para criar currículos
+            profissionais de maneira prática, rápida e acessível.
+          </p>
+          <p>
+            Nossa equipe é formada por especialistas em design, recursos humanos
+            e tecnologia, que trabalham juntos para oferecer soluções inovadoras
+            e eficazes. Acreditamos que cada pessoa tem uma história única e
+            merece uma ferramenta que destaque suas habilidades e conquistas de
+            forma clara e impactante.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  <!-- FOOTER -->
+  
+<script>
+    // Mobile menu toggle
+    const btnMenu = document.getElementById('btnMenu');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    if (btnMenu && mobileMenu) {
+      btnMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isOpen = mobileMenu.classList.toggle('open');
+        btnMenu.setAttribute('aria-expanded', isOpen);
+        btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+      });
+
+      let lastScroll = 0;
+      window.addEventListener('scroll', function() {
+        const currentScroll = window.pageYOffset;
+        if (currentScroll > lastScroll && currentScroll > 150) {
+          mobileMenu.classList.remove('open');
+          btnMenu.setAttribute('aria-expanded', 'false');
+          btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+        lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+      }, { passive: true });
+    }
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- Footer -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  
+<script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="https://i.imgur.com/HjzGCoA.png" alt="Office Express" class="logo" />
+        <p>A Office Express e uma plataforma digital que usa inteligencia artificial para criar curriculos profissionais, ajudando pessoas a se destacar no mercado de trabalho.</p>
+        <div class="social-links">
+          <a href="https://wa.me/5585991340658" target="_blank" aria-label="WhatsApp" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" aria-label="Instagram" rel="noopener">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" aria-label="X/Twitter" rel="noopener">
+            <i class="fab fa-x-twitter"></i>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" aria-label="Facebook" rel="noopener">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h4>Menu Rapido</h4>
+        <ul>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/modelos">Criar Curriculo</a></li>
+          <li><a href="/contato">Contato</a></li>
+          <li><a href="/sobre">Sobre Nos</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Servicos</h4>
+        <ul>
+          <li><a href="/modelos">Curriculo Profissional</a></li>
+          <li><a href="/indicacao">Indique e Ganhe</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Institucional</h4>
+        <ul>
+          <li><a href="/politica" target="_blank">Politica de Privacidade</a></li>
+          <li><a href="/termos" target="_blank">Termos de Uso</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+        <p>2026 <a href="/">Office Express</a>. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+
+  <script>
+    (function() {
+      var btnMenu = document.getElementById('btnMenu');
+      var mobileMenu = document.getElementById('mobileMenu');
+      
+      if (btnMenu && mobileMenu) {
+        btnMenu.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var isOpen = mobileMenu.classList.toggle('open');
+          btnMenu.setAttribute('aria-expanded', isOpen);
+          btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+
+        var lastScroll = 0;
+        window.addEventListener('scroll', function() {
+          var currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+          if (currentScroll > lastScroll && currentScroll > 150) {
+            mobileMenu.classList.remove('open');
+            btnMenu.setAttribute('aria-expanded', 'false');
+            btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+          lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+        }, { passive: true });
+      }
+    })();
+  </script>
+
+</body>
+</html>

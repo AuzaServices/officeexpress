@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo"><img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" /></div>
+      <h1>Bem-vindo de volta</h1>
+      <p class="subtitle">Acesse sua conta para gerenciar seus currículos.</p>
+
+      <div id="alert" class="alert"></div>
+
+      <form id="loginForm">
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" required placeholder="voce@email.com" autocomplete="email" />
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" required placeholder="Sua senha" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="btnEntrar">Entrar</button>
+      </form>
+
+      <div class="auth-links">
+        <p><a href="/esqueci-senha">Esqueci minha senha</a></p>
+        <p style="margin-top:10px">Ainda não tem conta? <a href="/cadastro">Criar conta</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      App.limparAlerta("alert");
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
+      document.getElementById("btnEntrar").disabled = true;
+
+      const { ok, data } = await App.api("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, senha }),
+      });
+      document.getElementById("btnEntrar").disabled = false;
+
+      if (ok) {
+        if (!data.usuario.email_confirmado) {
+          App.mostrarAlerta("alert", "Confirme seu e-mail antes de continuar. Verifique o link enviado para sua caixa de entrada.", "error");
+          return;
+        }
+        var destino = localStorage.getItem("redirectAposLogin");
+        localStorage.removeItem("redirectAposLogin");
+        window.location.href = destino || "/modelos";
+      } else {
+        App.mostrarAlerta("alert", data.error || "Falha no login.", "error");
+      }
+    });
+  </script>
+</body>
+</html>

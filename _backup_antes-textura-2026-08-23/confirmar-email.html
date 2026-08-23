@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirmar e-mail - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card" style="text-align:center">
+      <div class="auth-logo"><img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" /></div>
+      <h1 id="titulo">Confirmando seu e-mail…</h1>
+      <p class="subtitle" id="texto">Aguarde um instante.</p>
+      <div id="alert" class="alert"></div>
+      <div class="auth-links" id="links" style="display:none">
+        <p><a href="/login">Ir para o login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      if (!token) {
+        document.getElementById("titulo").textContent = "Link inválido";
+        document.getElementById("texto").textContent = "Nenhum token de confirmação foi informado.";
+        document.getElementById("links").style.display = "block";
+        return;
+      }
+      const { ok, data } = await App.api("/api/auth/confirmar?token=" + encodeURIComponent(token));
+      if (ok) {
+        document.getElementById("titulo").textContent = "E-mail confirmado!";
+        document.getElementById("texto").textContent = "Redirecionando para a escolha de modelos…";
+        App.mostrarAlerta("alert", "Tudo certo! Você já pode escolher seu modelo de currículo.", "success");
+        setTimeout(function () {
+          var destino = localStorage.getItem("redirectAposLogin");
+          localStorage.removeItem("redirectAposLogin");
+          window.location.href = destino || "/modelos";
+        }, 1500);
+      } else {
+        document.getElementById("titulo").textContent = "Não foi possível confirmar";
+        document.getElementById("texto").textContent = "";
+        App.mostrarAlerta("alert", data.error || "Link inválido ou expirado.", "error");
+        document.getElementById("links").style.display = "block";
+      }
+    })();
+  </script>
+</body>
+</html>

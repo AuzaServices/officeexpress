@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento confirmado - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <script src="/curriculo-render.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
+  <style>
+    /* Preview escondido usado apenas para capturar a imagem exata no download.
+       Evita "position: fixed" + "z-index: -1" fora da tela: no Safari/iOS
+       essa combinação pode fazer o html2canvas capturar o elemento em branco. */
+    #previewCaptura {
+      position: absolute;
+      left: 0;
+      top: -10000px;
+      width: 794px;
+      background: #fff;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <div class="preview-page container">
+    <div class="pagamento-card card" style="text-align:center;padding:48px">
+      <div style="font-size:64px;color:var(--success)">&#10003;</div>
+      <h2 style="margin:16px 0 8px">Pagamento confirmado!</h2>
+      <p style="color:var(--text-muted);margin-bottom:32px">Seu currículo está pronto. Escolha o formato para baixar agora:</p>
+
+      <div class="preview-acoes" style="justify-content:center">
+        <button class="btn btn-primary" onclick="baixar('pdf')">Baixar PDF</button>
+        <button class="btn btn-secondary" onclick="baixar('docx')">Baixar Word (DOCX)</button>
+      </div>
+      <p style="margin-top:24px;color:var(--text-muted);font-size:.9rem">O download é liberado no momento da compra. <a href="/minha-conta" style="color:var(--brand)">Ver meus documentos</a></p>
+    </div>
+  </div>
+
+  <div id="previewCaptura"></div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <div class="footer-social">
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://x.com" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.2-6.8L4.9 22H2l7.7-8.8L1.5 2h6.7l4.7 6.2L18.9 2Zm-2.3 18h1.8L7.5 3.9H5.6L16.6 20Z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/modelos">Modelos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="/contato">Fale com a gente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    var pedidoId = new URLSearchParams(window.location.search).get("pedido");
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("sucesso");
+
+    var dadosPedido = null;
+
+    // Busca modelo + dados do pedido pago e renderiza o preview (escondido)
+    // para capturar a imagem EXATA na hora do download.
+    function carregarPedido() {
+      if (!pedidoId) return Promise.resolve();
+      return App.api("/api/pedidos/" + pedidoId + "/dados").then(function (r) {
+        if (!r.ok) {
+          dadosPedido = null;
+          return;
+        }
+        dadosPedido = r.data;
+        renderizarPreview();
+      });
+    }
+
+    function renderizarPreview() {
+      var alvo = document.getElementById("previewCaptura");
+      if (!dadosPedido || !window.renderCurriculo) return;
+      var html = window.renderCurriculo.gerarHTML(dadosPedido.modelo, dadosPedido.dados);
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var styleEl = doc.querySelector("style");
+      var pageEl = doc.querySelector(".page");
+      if (!pageEl) return;
+      alvo.innerHTML =
+        (styleEl ? styleEl.outerHTML : "") +
+        '<div class="modelo-' + dadosPedido.modelo + '">' + pageEl.outerHTML + "</div>";
+    }
+
+    // Captura a imagem do preview (html2canvas) e devolve { canvas, dataUrlPng }.
+    async function capturarImagem() {
+      if (!dadosPedido) {
+        await carregarPedido();
+        if (!dadosPedido) return null;
+        renderizarPreview();
+      }
+      var alvo = document.getElementById("previewCaptura");
+      var page = alvo && alvo.querySelector(".page");
+      if (!page) return null;
+      var canvas = await html2canvas(page, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: page.offsetWidth,
+        height: page.offsetHeight,
+      });
+      return { canvas: canvas, dataUrlPng: canvas.toDataURL("image/png") };
+    }
+
+    // Detecta iOS/Safari (inclusive iPadOS que se identifica como Mac com touch).
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    // Navegadores in-app (Instagram, Facebook, TikTok, etc.) usam um WebView
+    // restrito que bloqueia downloads de blob e popups — não é algo que o
+    // nosso código consiga contornar 100%, então detectamos e avisamos o
+    // usuário a abrir no navegador padrão (Safari/Chrome) para baixar.
+    function isWebViewInApp() {
+      var ua = navigator.userAgent || "";
+      return /Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|TikTok|Snapchat|Pinterest/i.test(ua);
+    }
+
+    function abrirNoNavegador() {
+      var url = window.location.href;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url);
+        }
+      } catch (e) {}
+      alert(
+        "Para baixar o arquivo, abra esta página no navegador do seu celular " +
+        "(Safari ou Chrome), não dentro do app.\n\n" +
+        "Toque nos 3 pontinhos (⋮) ou no ícone de compartilhar no topo da tela " +
+        "e escolha \"Abrir no navegador\".\n\n" +
+        "O link desta página já foi copiado para você colar lá."
+      );
+    }
+
+    // Baixa um Blob de forma compatível com Android/desktop e iOS/Safari.
+    // No iOS o atributo "download" é ignorado pelo Safari, então abrimos o
+    // arquivo numa nova aba via FileReader (data URI), permitindo que o
+    // usuário use "Compartilhar > Salvar em Arquivos".
+    // IMPORTANTE: no Safari/iOS o window.open() só funciona se for chamado de
+    // forma SÍNCRONA dentro do gesto de clique do usuário — por isso a aba
+    // (janelaAntecipada) já deve vir aberta de fora desta função, antes de
+    // qualquer "await" (html2canvas etc.), senão o popup é bloqueado em
+    // silêncio e nada acontece.
+    function salvarBlob(blob, nomeArquivo, janelaAntecipada) {
+      if (isWebViewInApp()) {
+        if (janelaAntecipada) janelaAntecipada.close();
+        abrirNoNavegador();
+        return;
+      }
+      if (isIOS()) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          var win = janelaAntecipada || window.open();
+          if (win && !win.closed) {
+            if (/\.pdf$/i.test(nomeArquivo)) {
+              // PDF: navega a própria aba para o data URI — o Safari abre o
+              // visualizador NATIVO de PDF (com botão de compartilhar/salvar
+              // no topo), igual a quando se abre um PDF recebido por e-mail.
+              // Um <iframe> aqui não mostra esses controles nativos.
+              win.location.href = reader.result;
+            } else {
+              win.document.open();
+              win.document.write(
+                '<html><head><title>' + nomeArquivo + '</title></head><body style="margin:0;font-family:sans-serif">' +
+                '<div style="padding:16px;text-align:center;color:#555">Toque no ícone de compartilhar (□↑) no topo da tela e escolha "Salvar em Arquivos" para guardar o arquivo <b>' + nomeArquivo + '</b>.</div>' +
+                '<iframe src="' + reader.result + '" style="width:100%;height:85vh;border:none"></iframe>' +
+                '</body></html>'
+              );
+              win.document.close();
+            }
+          } else {
+            window.location.href = reader.result;
+          }
+        };
+        reader.readAsDataURL(blob);
+        return;
+      }
+      if (janelaAntecipada) janelaAntecipada.close();
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 2000);
+    }
+
+    // Gera o PDF a partir da IMAGEM do preview (html2canvas) — fidelidade total.
+    function baixarPDF() {
+      if (!pedidoId) return alert("Pedido não identificado.");
+      // Safari/iOS não deve gerar o PDF a partir de canvas/data URI: esse
+      // caminho pode ficar pendurado ou ser recusado por limite de memória.
+      // O servidor já gera o documento e entrega um PDF nativo.
+      if (isIOS()) {
+        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
+        return;
+      }
+      // Precisa ser aberta AGORA (síncrono, dentro do clique) para o Safari/iOS
+      // não bloquear o popup — o conteúdo real é escrito depois, quando pronto.
+      var janelaAntecipada = null;
+      if (isIOS() && !isWebViewInApp()) {
+        janelaAntecipada = window.open("about:blank");
+        if (janelaAntecipada) {
+          janelaAntecipada.document.write(
+            '<html><head><title>Gerando PDF...</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666"><p>Gerando seu PDF, aguarde...</p></body></html>'
+          );
+        }
+      }
+      (async function () {
+        try {
+          var img = await capturarImagem();
+          if (!img) {
+            if (janelaAntecipada) janelaAntecipada.close();
+            return alert("Pré-visualização não disponível. Tente novamente.");
+          }
+          var pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+          pdf.addImage(img.dataUrlPng, "PNG", 0, 0, 210, 297);
+          var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+          if (isWebViewInApp() || isIOS()) {
+            salvarBlob(pdf.output("blob"), nome + ".pdf", janelaAntecipada);
+          } else {
+            pdf.save(nome + ".pdf");
+          }
+        } catch (err) {
+          console.error(err);
+          if (janelaAntecipada) janelaAntecipada.close();
+          alert("Erro ao gerar o PDF. Tente novamente.");
+        }
+      })();
+    }
+
+    // Gera o DOCX embutindo a IMAGEM do preview (biblioteca "docx" no navegador).
+    function baixarDOCX() {
+      if (!pedidoId) return alert("Pedido não identificado.");
+      // Mesma técnica do PDF: abre a aba AGORA (síncrono, dentro do clique)
+      // para o Safari/iOS não bloquear o popup — conteúdo é escrito depois.
+      var janelaAntecipada = null;
+      if (isIOS() && !isWebViewInApp()) {
+        janelaAntecipada = window.open("about:blank");
+        if (janelaAntecipada) {
+          janelaAntecipada.document.write(
+            '<html><head><title>Gerando Word...</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666"><p>Gerando seu Word, aguarde...</p></body></html>'
+          );
+        }
+      }
+      (async function () {
+        try {
+          var img = await capturarImagem();
+          if (!img) {
+            if (janelaAntecipada) janelaAntecipada.close();
+            return alert("Pré-visualização não disponível. Tente novamente.");
+          }
+
+var bin = atob(img.dataUrlPng.split(",")[1]);
+var bytes = new Uint8Array(bin.length);
+for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+// A4 em pixels a 96 dpi ≈ 793 x 1122 px
+var doc = new window.docx.Document({
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 11906, height: 16838 }, // A4 em twips
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      },
+    },
+    children: [
+      new window.docx.Paragraph({
+        alignment: window.docx.AlignmentType.LEFT,
+        children: [
+          new window.docx.ImageRun({
+            data: bytes,
+            transformation: { width: 793, height: 1122, type: "px" }, // usa px
+            type: "png",
+          }),
+        ],
+      }),
+    ],
+  }],
+});
+
+          var blob = await window.docx.Packer.toBlob(doc);
+          var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+          salvarBlob(blob, nome + ".docx", janelaAntecipada);
+        } catch (err) {
+          console.error(err);
+          if (janelaAntecipada) janelaAntecipada.close();
+          alert("Erro ao gerar o Word. Tente novamente.");
+        }
+      })();
+    }
+
+    function baixar(formato) {
+      if (formato === "pdf") return baixarPDF();
+      return baixarDOCX();
+    }
+    window.baixar = baixar;
+
+    carregarPedido();
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Criar conta - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo"><img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" /></div>
+      <h1>Crie sua conta</h1>
+      <p class="subtitle">Crie currículos profissionais e tenha tudo salvo na sua conta.</p>
+
+      <div id="alert" class="alert"></div>
+
+      <form id="cadForm">
+        <div class="campo">
+          <label for="nome">Nome completo</label>
+          <input type="text" id="nome" required placeholder="Seu nome" autocomplete="name" />
+        </div>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" required placeholder="voce@email.com" autocomplete="email" />
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" required placeholder="Mínimo 8 caracteres com letras e números" autocomplete="new-password" />
+        </div>
+        <div class="campo">
+          <label for="senha2">Confirmar senha</label>
+          <input type="password" id="senha2" required placeholder="Repita a senha" autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="btnCad">Criar conta</button>
+      </form>
+
+      <div class="auth-links">
+        <p>Já tem conta? <a href="/login">Entrar</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    document.getElementById("cadForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      App.limparAlerta("alert");
+      const nome = document.getElementById("nome").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
+      const senha2 = document.getElementById("senha2").value;
+
+      if (senha !== senha2) return App.mostrarAlerta("alert", "As senhas não coincidem.", "error");
+
+      document.getElementById("btnCad").disabled = true;
+      const { ok, data } = await App.api("/api/auth/registrar", {
+        method: "POST",
+        body: JSON.stringify({ nome, email, senha }),
+      });
+      document.getElementById("btnCad").disabled = false;
+
+      if (ok) {
+        document.getElementById("cadForm").style.display = "none";
+        App.mostrarAlerta("alert", data.message || "Conta criada! Enviamos um link de confirmação para o seu e-mail. Clique nele para liberar o acesso.", "success");
+      } else {
+        App.mostrarAlerta("alert", data.error || "Erro ao criar conta.", "error");
+      }
+    });
+  </script>
+</body>
+</html>

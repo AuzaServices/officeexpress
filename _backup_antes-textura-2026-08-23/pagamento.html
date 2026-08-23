@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento Seguro - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    .pagamento-secao { padding: 0 0 80px; }
+
+    .seg-topo-full {
+      width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 16px calc(50vw - 590px); margin-bottom: 40px; box-sizing: border-box;
+    }
+
+    .pagamento-layout {
+      display: grid; grid-template-columns: 1fr 420px; gap: 32px;
+      align-items: start; max-width: 1180px; margin: 0 auto;
+    }
+    .pagamento-seguro { min-width: 0; }
+
+    /* Prévia do currículo — somente desktop */
+    .previa-col { display: none; }
+    @media (min-width: 993px) {
+      .previa-col { display: block; position: sticky; top: 96px; }
+    }
+    .previa-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      padding: 18px; box-shadow: 0 20px 45px var(--shadow-lg);
+    }
+    .previa-col .card-titulo {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; gap: 10px;
+    }
+    .previa-col .card-titulo h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+    .previa-col .badge-preview {
+      font-size: .7rem; font-weight: 700; color: var(--success);
+      background: #dcfce7; border: 1px solid rgba(22,163,74,.25); border-radius: 20px; padding: 3px 10px;
+      text-transform: uppercase; letter-spacing: .02em;
+    }
+    .previa-paper {
+      padding: 0; overflow: hidden; border-radius: 10px; background: #fff;
+      border: 1px solid var(--border);
+    }
+    .previa-doc { width: 794px; transform-origin: top left; background: #fff; }
+    .previa-doc .page { width: 794px; min-height: 1123px; }
+    .previa-carregando { padding: 60px 16px; text-align: center; color: var(--text-muted); font-size: .85rem; }
+    .previa-selo {
+      display: flex; align-items: center; gap: 8px; margin-top: 14px;
+      font-size: .78rem; color: var(--text-muted);
+    }
+    .previa-selo svg { width: 15px; height: 15px; color: var(--success); flex-shrink: 0; }
+
+    /* Cabeçalho da página de pagamento */
+    .seg-topo {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; flex-wrap: wrap;
+    }
+
+    .selo-mp {
+      display: flex; align-items: center; gap: 12px; justify-content: center;
+      width: 100%; max-width: 640px;
+    }
+    .selo-mp svg { height: 40px; width: auto; }
+    .selo-mp .txt { font-size: .78rem; color: var(--text-muted); line-height: 1.3; font-weight: 600; }
+
+    .pagamento-card {
+      overflow: hidden; padding: 0; border-radius: 18px; min-width: 0;
+      box-shadow: 0 20px 45px var(--shadow-lg);
+    }
+
+    /* Resumo do pedido no topo do card */
+    .resumo-pedido {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+      padding: 22px 26px; background: var(--card-hover);
+      border-bottom: 1px solid var(--border);
+    }
+    .resumo-pedido .rp-item .rotulo { font-size: .76rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+    .resumo-pedido .rp-valor { font-size: 1.7rem; font-weight: 800; color: var(--text-primary); margin-top: 2px; }
+    .resumo-pedido .rp-item.expira { text-align: right; }
+    .resumo-pedido .rp-expira-valor { font-weight: 700; color: var(--brand-dark); font-size: 1rem; margin-top: 2px; }
+
+    .barra-confianca {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      padding: 18px 26px; background: var(--card);
+      border-bottom: 1px solid var(--border);
+    }
+    .barra-confianca .item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card-hover); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .barra-confianca .item .ico {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,136,0,.12); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--brand-dark);
+    }
+    .barra-confianca .item .ico svg { width: 18px; height: 18px; }
+    .barra-confianca .item .lbl { color: var(--text-primary); font-size: .82rem; font-weight: 700; line-height: 1.25; }
+    .barra-confianca .item .lbl small { display: block; font-weight: 500; font-size: .72rem; color: var(--text-muted); }
+
+    .tabs { display: flex; gap: 8px; padding: 22px 26px 0; }
+    .tab {
+      flex: 1; padding: 13px; border: 1px solid var(--border);
+      border-radius: 12px; background: var(--card-hover); cursor: pointer;
+      font-weight: 700; font-size: .95rem; color: var(--text-muted);
+      transition: var(--transition);
+    }
+    .tab:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+    .tab.active {
+      background: #fff; border-color: var(--brand);
+      color: var(--brand-dark); box-shadow: 0 6px 16px var(--brand-glow);
+    }
+
+    .aba { padding: 22px 26px 26px; }
+
+    /* PIX */
+    .pix-grid { display: flex; gap: 24px; align-items: stretch; flex-wrap: wrap; }
+    .pix-qr { flex: 0 0 240px; text-align: center; }
+    .pix-qr .qr-box {
+      background: #fff; border: 1px solid var(--border); border-radius: 16px;
+      padding: 14px; box-shadow: 0 10px 30px var(--shadow);
+    }
+    .qr-img { width: 100%; height: auto; display: block; border-radius: 8px; }
+    .pix-qr .qr-hint { font-size: .8rem; color: var(--text-muted); margin-top: 10px; }
+    .carregando-qr { padding: 60px 20px; color: var(--text-muted); font-size: .9rem; }
+
+    .pix-copia { flex: 1 1 280px; display: flex; flex-direction: column; gap: 14px; }
+    .pix-copia .rotulo { font-size: .85rem; font-weight: 700; color: var(--text-secondary); display:flex; align-items:center; gap:8px; }
+    .pix-code-linha {
+      display: flex; align-items: center; gap: 8px;
+      border: 2px solid var(--border); border-radius: 12px; padding: 4px 4px 4px 12px;
+      background: var(--card-hover);
+    }
+    .pix-code-linha input {
+      flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+      font-family: 'Courier New', monospace; font-size: .8rem; color: var(--text-primary);
+      white-space: nowrap; overflow-x: auto; text-overflow: ellipsis;
+    }
+    .btn-copiar {
+      width: 100%; padding: 14px; border: none; border-radius: 14px;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%); color: #001f33;
+      font-weight: 800; font-size: 1rem; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 4px 20px var(--brand-glow); transition: var(--transition);
+    }
+    .btn-copiar:hover { background: linear-gradient(135deg, var(--brand-light) 0%, var(--brand) 100%); transform: translateY(-2px); }
+    .btn-copiar.copiado { background: var(--success); box-shadow: none; }
+    .btn-copiar svg { width: 20px; height: 20px; }
+
+    .selo-mp-pix {
+      display: flex; align-items: center; gap: 10px;
+      border: 1px dashed var(--border-hover); background: var(--card-hover); border-radius: 12px;
+      padding: 10px 14px; font-size: .8rem; color: var(--text-secondary);
+    }
+    .selo-mp-pix img { height: 18px; width: auto; }
+
+    /* status */
+    .status-pag {
+      margin-top: 16px; padding: 12px 16px; border-radius: 12px;
+      font-size: .88rem; font-weight: 600; display: none;
+    }
+    .status-pag.aguardando { display: flex; align-items: center; gap: 12px; background: #fff7ed; color: #9a3412; border: 1px solid rgba(255,136,0,.35); }
+    .status-pag.erro { display: block; background: #fee2e2; color: #991b1b; border: 1px solid rgba(220,38,38,.35); }
+    .spinner {
+      width: 20px; height: 20px; border: 3px solid var(--brand-glow); border-top-color: var(--brand-dark);
+      border-radius: 50%; animation: girar 1s linear infinite; flex-shrink: 0;
+    }
+    @keyframes girar { to { transform: rotate(360deg); } }
+
+    /* CARTÃO */
+    .cartao-linha { display: flex; gap: 12px; }
+    .cartao-aviso {
+      display: flex; align-items: center; gap: 10px; font-size: .8rem;
+      color: var(--text-muted); background: var(--card-hover); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; margin-bottom: 18px;
+    }
+    .cartao-aviso img { height: 18px; width: auto; }
+
+    .copiado-feedback {
+      position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
+      background: var(--text-primary); color: #fff; padding: 12px 20px; border-radius: 12px;
+      font-size: .9rem; font-weight: 600; box-shadow: 0 10px 30px var(--shadow-lg);
+      opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 5000;
+    }
+    .copiado-feedback.mostrar { opacity: 1; }
+
+    @media (max-width: 992px) {
+      .pagamento-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .barra-confianca {
+        display: block; position: relative; overflow: hidden;
+        padding: 0; border-bottom: 1px solid var(--border);
+      }
+      .barra-confianca .carrossel-track {
+        display: flex; width: 300%; transition: transform .5s ease;
+      }
+      .barra-confianca .carrossel-slide {
+        width: 33.3333%; flex-shrink: 0; box-sizing: border-box;
+        display: flex; justify-content: center; align-items: center; padding: 18px 36px;
+        overflow: hidden;
+      }
+      .barra-confianca .item { width: 100%; max-width: 260px; border-radius: 12px; margin: 0; justify-content: center; }
+      .resumo-pedido { padding: 18px 20px; }
+      .tabs, .aba { padding-left: 20px; padding-right: 20px; }
+    }
+    @media (min-width: 761px) {
+      .barra-confianca .carrossel-track { display: contents; }
+      .barra-confianca .carrossel-slide { display: contents; }
+    }
+    @media (max-width: 560px) {
+      .pix-qr { flex: 1 1 100%; }
+      .pix-qr .qr-box { max-width: 240px; margin: 0 auto; }
+      .seg-topo { flex-direction: column; align-items: center; }
+      .selo-mp { width: 100%; justify-content: center; text-align: center; }
+      .resumo-pedido .rp-item.expira { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <div class="seg-topo-full">
+    <div class="seg-topo">
+      <div class="selo-mp" title="Processado por Mercado Pago">
+        <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:42px;width:auto" />
+        <span class="txt">Pagamento processado<br />com segurança pelo<br /><b style="color:var(--brand-dark)">Mercado Pago</b></span>
+      </div>
+    </div>
+  </div>
+
+  <section class="section pagamento-secao container">
+    <div class="pagamento-layout">
+
+      <div class="pagamento-card card">
+        <div class="resumo-pedido">
+          <div class="rp-item">
+            <div class="rotulo">Valor a pagar (PDF + Word)</div>
+            <div class="rp-valor" id="resumo">—</div>
+          </div>
+          <div class="rp-item expira">
+            <div class="rotulo">Expira em</div>
+            <div class="rp-expira-valor" id="expiraTxt">—</div>
+          </div>
+        </div>
+
+        <div class="barra-confianca" id="barraConfianca">
+          <div class="carrossel-track" id="carrosselTrack">
+          <div class="carrossel-slide"><div class="item">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="lbl">Ambiente 100% seguro<small>Proteção total dos dados</small></div>
+          </div></div>
+          <div class="carrossel-slide"><div class="item">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="lbl">Dados criptografados<small>Conexão segura e sigilosa</small></div>
+          </div></div>
+          <div class="carrossel-slide"><div class="item">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="lbl" id="tempoInfo">Liberação automática<small>Currículo liberado na hora</small></div>
+          </div></div>
+          </div>
+        </div>
+
+        <div id="alert" class="alert" style="margin:20px 26px 0"></div>
+
+        <div class="tabs">
+          <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
+          <button class="tab" id="tabCard" onclick="ativarAba('card')">Cartão de crédito</button>
+        </div>
+
+        <!-- PIX -->
+        <div id="abaPix" class="aba">
+          <div class="pix-grid">
+            <div class="pix-qr">
+              <div class="qr-box">
+                <div id="qrCarregando" class="carregando-qr">Gerando seu Pix…</div>
+                <img id="qrImg" class="qr-img" alt="QR Code Pix" style="display:none" />
+              </div>
+              <div class="qr-hint">Aponte a câmera do seu banco<br />para o QR Code e pague</div>
+            </div>
+
+            <div class="pix-copia">
+              <div class="rotulo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Código Pix (Copie e Cole)
+              </div>
+              <div class="pix-code-linha">
+                <input id="pixCode" readonly placeholder="Seu código Pix aparecerá aqui automaticamente…" />
+              </div>
+              <button class="btn-copiar" id="btnCopiarPix" onclick="copiarPix()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copiar código Pix
+              </button>
+              <div class="selo-mp-pix">
+                <img src="/imagens/mp-simbolo.svg" alt="Mercado Pago" style="height:26px;width:auto" />
+                <span>Pix processado com segurança pelo <b>Mercado Pago</b></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="status-pag aguardando" id="statusPix">
+            <div class="spinner"></div>
+            <span>Aguardando confirmação do pagamento… O currículo é liberado automaticamente.</span>
+          </div>
+        </div>
+
+        <!-- CARTÃO -->
+        <div id="abaCard" class="aba" style="display:none">
+          <div class="cartao-aviso">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Seus dados são processados com segurança pelo Mercado Pago.
+          </div>
+          <div id="cardForm">
+            <div class="campo"><label>Número do cartão</label><input id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" /></div>
+            <div class="campo"><label>Nome no cartão</label><input id="cardHolder" placeholder="Como está no cartão" /></div>
+            <div class="cartao-linha">
+              <div class="campo" style="flex:1"><label>Validade</label><input id="cardExp" placeholder="MM/AA" /></div>
+              <div class="campo" style="flex:1"><label>CVV</label><input id="cardCvv" inputmode="numeric" placeholder="123" /></div>
+            </div>
+            <button class="btn btn-primary btn-block" id="btnPagarCard" onclick="pagarCartao()">Pagar com cartão</button>
+          </div>
+          <div class="status-pag" id="statusCard"></div>
+        </div>
+      </div>
+
+      <!-- Prévia do currículo (somente desktop) -->
+      <aside class="previa-col">
+        <div class="previa-card">
+          <div class="card-titulo">
+            <h3>Seu currículo</h3>
+            <span class="badge-preview">Prévia</span>
+          </div>
+          <div class="previa-paper" id="previaCurriculo">
+            <div class="previa-carregando">Carregando prévia…</div>
+          </div>
+          <div class="previa-selo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Liberado para download assim que o pagamento for confirmado
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div class="copiado-feedback" id="copiadoFeedback">Código Pix copiado!</div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <div class="footer-social">
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://x.com" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.2-6.8L4.9 22H2l7.7-8.8L1.5 2h6.7l4.7 6.2L18.9 2Zm-2.3 18h1.8L7.5 3.9H5.6L16.6 20Z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/modelos">Modelos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="/contato">Fale com a gente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+  <script src="/curriculo-render.js"></script>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script>
+    var pedidoId = new URLSearchParams(window.location.search).get("pedido");
+    var publicKey = "";
+    var preco = 0;
+    var mp = null;
+    var pollTimer = null;
+    var pagamentoAtual = null;
+
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("pagamento");
+
+    // ---- Prévia do currículo (coluna esquerda, somente desktop) ----
+    var modeloPrev = localStorage.getItem("modeloSelecionado") || "classico";
+    var dadosPrev = {};
+    try { dadosPrev = JSON.parse(localStorage.getItem("curriculo") || "{}"); } catch (e) {}
+
+    function renderPrevia() {
+      var pv = document.getElementById("previaCurriculo");
+      if (!pv) return;
+      if (!window.renderCurriculo) {
+        pv.innerHTML = '<div class="previa-carregando">Carregando prévia…</div>';
+        return;
+      }
+      var html = window.renderCurriculo.gerarHTML(modeloPrev, dadosPrev);
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var styleEl = doc.querySelector("style");
+      var pageEl = doc.querySelector(".page");
+      if (!pageEl) { pv.innerHTML = '<div class="previa-carregando">Sem dados para prévia.</div>'; return; }
+      pv.innerHTML =
+        '<div class="previa-doc">' +
+        (styleEl ? styleEl.outerHTML : "") +
+        '<div class="modelo-' + modeloPrev + '"><div class="page">' + pageEl.innerHTML + '</div></div>' +
+        '</div>';
+      dimensionarPrevia();
+    }
+    function dimensionarPrevia() {
+      var pv = document.getElementById("previaCurriculo");
+      if (!pv) return;
+      var doc = pv.querySelector(".previa-doc");
+      if (!doc) return;
+      var largura = pv.clientWidth || 320;
+      var escala = largura / 794;
+      doc.style.transform = "scale(" + escala + ")";
+      doc.style.height = (doc.offsetHeight * escala) + "px";
+      doc.style.transformOrigin = "top left";
+    }
+    window.addEventListener("resize", dimensionarPrevia);
+    renderPrevia();
+
+    // ---- Carrossel automático (mobile) dos cards de confiança ----
+    (function () {
+      var track = document.getElementById("carrosselTrack");
+      if (!track) return;
+      var idx = 0;
+      setInterval(function () {
+        if (window.innerWidth > 760) { track.style.transform = "translateX(0)"; idx = 0; return; }
+        idx = (idx + 1) % 3;
+        track.style.transform = "translateX(-" + (idx * 33.3333) + "%)";
+      }, 3000);
+    })();
+
+    // ---- Contador "Expira em" (Pix expira em 5 minutos) ----
+    var expiraEm = null;
+    var expiraTimer = null;
+    function iniciarContadorExpiracao() {
+      expiraEm = Date.now() + 5 * 60 * 1000;
+      if (expiraTimer) clearInterval(expiraTimer);
+      atualizarContadorExpiracao();
+      expiraTimer = setInterval(atualizarContadorExpiracao, 1000);
+    }
+    function atualizarContadorExpiracao() {
+      var restante = Math.max(0, expiraEm - Date.now());
+      var min = Math.floor(restante / 60000);
+      var seg = Math.floor((restante % 60000) / 1000);
+      document.getElementById("expiraTxt").textContent =
+        (min < 10 ? "0" : "") + min + ":" + (seg < 10 ? "0" : "") + seg;
+      if (restante <= 0) {
+        clearInterval(expiraTimer);
+        var st = document.getElementById("statusPix");
+        if (st) {
+          st.classList.remove("aguardando");
+          st.classList.add("erro");
+          st.innerHTML = "O código Pix expirou. Recarregue a página para gerar um novo.";
+        }
+      }
+    }
+
+    if (!pedidoId) {
+      App.mostrarAlerta("alert", "Pedido não identificado. Por favor, refaça a seleção do currículo.", "error");
+      document.getElementById("resumo").textContent = "—";
+    }
+
+    // Config pública (chave do Mercado Pago + preço)
+    App.api("/api/config/pagamento").then(function (r) {
+      if (r.ok) {
+        publicKey = r.data.publicKey;
+        preco = r.data.preco;
+        document.getElementById("resumo").textContent = App.formatarPreco(preco);
+        if (window.MercadoPago && publicKey) {
+          mp = new MercadoPago(publicKey, { locale: "pt-BR" });
+        }
+        // Gera o Pix automaticamente assim que a página carrega
+        if (pedidoId) gerarPix();
+      } else {
+        App.mostrarAlerta("alert", "Não foi possível carregar os dados do pagamento. Tente novamente.", "error");
+      }
+    });
+
+    function ativarAba(aba) {
+      document.getElementById("abaPix").style.display = aba === "pix" ? "block" : "none";
+      document.getElementById("abaCard").style.display = aba === "card" ? "block" : "none";
+      document.getElementById("tabPix").classList.toggle("active", aba === "pix");
+      document.getElementById("tabCard").classList.toggle("active", aba === "card");
+    }
+    window.ativarAba = ativarAba;
+
+    // ---------- PIX (gerado automaticamente) ----------
+    async function gerarPix() {
+      App.limparAlerta("alert");
+      document.getElementById("qrCarregando").style.display = "block";
+      document.getElementById("qrImg").style.display = "none";
+      document.getElementById("statusPix").style.display = "flex";
+      document.getElementById("statusPix").classList.add("aguardando");
+      document.getElementById("statusPix").innerHTML = '<div class="spinner"></div><span>Gerando seu Pix…</span>';
+
+      var { ok, data } = await App.api("/api/pagamento/pix", {
+        method: "POST",
+        body: JSON.stringify({ pedidoId: Number(pedidoId) }),
+      });
+      if (!ok) {
+        document.getElementById("qrCarregando").textContent = "Não foi possível gerar o Pix.";
+        document.getElementById("statusPix").classList.remove("aguardando");
+        document.getElementById("statusPix").classList.add("erro");
+        document.getElementById("statusPix").innerHTML = (data.error || "Erro ao gerar o Pix.") + " Recarregue a página ou entre em contato.";
+        App.mostrarAlerta("alert", data.error || "Erro ao gerar o Pix.", "error");
+        return;
+      }
+      pagamentoAtual = data;
+      if (data.qr_code_base64) {
+        document.getElementById("qrImg").src = "data:image/png;base64," + data.qr_code_base64;
+        document.getElementById("qrImg").style.display = "block";
+        document.getElementById("qrCarregando").style.display = "none";
+      } else {
+        document.getElementById("qrCarregando").textContent = "Use o código Pix abaixo para pagar.";
+      }
+      document.getElementById("pixCode").value = data.qr_code || "";
+      document.getElementById("statusPix").innerHTML = '<div class="spinner"></div><span>Aguardando confirmação do pagamento… O currículo é liberado automaticamente.</span>';
+      iniciarContadorExpiracao();
+      iniciarPolling(data.id);
+    }
+
+    function copiarPix() {
+      var el = document.getElementById("pixCode");
+      if (!el.value) return;
+      var done = function () {
+        var fb = document.getElementById("copiadoFeedback");
+        fb.classList.add("mostrar");
+        setTimeout(function () { fb.classList.remove("mostrar"); }, 2200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).then(done).catch(function () { copiarFallback(el); done(); });
+      } else {
+        copiarFallback(el); done();
+      }
+    }
+    window.copiarPix = copiarPix;
+
+    function copiarFallback(el) {
+      el.removeAttribute("readonly");
+      el.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      el.setAttribute("readonly", "readonly");
+    }
+
+    function iniciarPolling(pagamentoId) {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async function () {
+        var { ok, data } = await App.api("/api/pagamento/status/" + pagamentoId);
+        if (ok && data.status === "approved") {
+          clearInterval(pollTimer);
+          await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(pagamentoId), tipo: "pix" }) });
+          window.location.href = "/sucesso?pedido=" + pedidoId;
+        } else if (data.status === "rejected" || data.status === "cancelled") {
+          clearInterval(pollTimer);
+          var st = document.getElementById("statusPix");
+          st.classList.remove("aguardando");
+          st.classList.add("erro");
+          st.innerHTML = "Pagamento não concluído. Gere um novo Pix recarregando a página.";
+        }
+      }, 4000);
+    }
+
+    // ---------- CARTÃO ----------
+    async function pagarCartao() {
+      App.limparAlerta("alert");
+      if (!mp) { App.mostrarAlerta("alert", "Erro ao carregar o processador de cartão. Tente o Pix.", "error"); return; }
+      var statusCard = document.getElementById("statusCard");
+      var btn = document.getElementById("btnPagarCard");
+      btn.disabled = true; statusCard.textContent = "Processando...";
+      statusCard.classList.remove("aguardando"); statusCard.classList.add("erro"); statusCard.style.display = "block";
+
+      var formData = {
+        cardNumber: document.getElementById("cardNumber").value.replace(/\s/g, ""),
+        cardExpirationMonth: document.getElementById("cardExp").value.split("/")[0],
+        cardExpirationYear: "20" + document.getElementById("cardExp").value.split("/")[1],
+        cardholderName: document.getElementById("cardHolder").value,
+        securityCode: document.getElementById("cardCvv").value,
+        identificationType: "CPF",
+        identificationNumber: "00000000000"
+      };
+
+      try {
+        var token = await mp.fields.createCardToken(formData);
+        var { ok, data } = await App.api("/api/pagamento/cartao", {
+          method: "POST",
+          body: JSON.stringify({ pedidoId: Number(pedidoId), card_token: token.id, email: "" }),
+        });
+        if (ok && data.status === "approved") {
+          await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(data.id), tipo: "card" }) });
+          window.location.href = "/sucesso?pedido=" + pedidoId;
+        } else {
+          statusCard.textContent = "";
+          statusCard.style.display = "none";
+          App.mostrarAlerta("alert", (data && data.error) || "Pagamento não aprovado. Verifique os dados do cartão.", "error");
+        }
+      } catch (err) {
+        App.mostrarAlerta("alert", "Erro ao processar o cartão: " + (err.message || "verifique os dados."), "error");
+      }
+      btn.disabled = false;
+    }
+    window.pagarCartao = pagarCartao;
+  </script>
+</body>
+</html>
