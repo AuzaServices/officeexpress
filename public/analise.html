@@ -181,7 +181,45 @@
 
   <footer class="footer">
     <div class="container">
-      <p>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</p>
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <div class="footer-social">
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+            <a href="https://x.com" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.2-6.8L4.9 22H2l7.7-8.8L1.5 2h6.7l4.7 6.2L18.9 2Zm-2.3 18h1.8L7.5 3.9H5.6L16.6 20Z"/></svg></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/modelos">Modelos</a></li>
+            <li><a href="/analise">Análise de Currículo</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="/contato">Fale com a gente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
     </div>
   </footer>
 
@@ -259,9 +297,9 @@
 
       var secoes = {
         objetivo: /objetivo|resumo profissional|perfil profissional|sobre mim/i,
-        experiencia: /experi[eê]ncias?\s+profission|experi[eê]ncia\s+de\s+trabalho|hist[oó]rico\s+profissional/i,
-        formacao: /forma[çc][ãa]o\s+acad[eê]mica|escolaridade|educa[çc][ãa]o/i,
-        cursos: /cursos?\s+(complementares|extras|e\s+certifica)/i,
+        experiencia: /experi[eê]ncias?\s+profission|experi[eê]ncias?\s+de\s+trabalho|hist[oó]rico\s+profissional|experi[eê]ncias?\s+profissionais|trajet[oó]ria\s+profissional|experi[eê]ncia\s+relevante/i,
+        formacao: /forma[çc][ãa]o\s+acad[eê]mica|escolaridade|educa[çc][ãa]o|forma[çc][ãa]o\s+profissional/i,
+        cursos: /cursos?\s+(complementares|extras|e\s+certifica)|certifica[çc][õo]es/i,
         habilidades: /habilidades|compet[eê]ncias/i,
         idiomas: /idiomas/i,
         hobbies: /hobbies|interesses/i
@@ -285,6 +323,43 @@
         if (item.chave === "formacao" && !dados.formacoes.length) dados.formacoes.push({ curso: "", instituicao: "", periodo: "", descricao: bloco.slice(0, 400) });
         if (item.chave === "cursos" && !dados.cursos.length) dados.cursos.push({ nome: bloco.split("\n")[0] || "", instituicao: "", carga: "" });
       });
+
+      // Fallback de experiência: se nenhuma seção de experiência foi detectada,
+      // tenta identificar linhas de empregos no texto (padrões com cargo/empresa
+      // e períodos, ex: "Analista - Empresa X (2020-2023)" ou "Analista na Empresa X").
+      if (!dados.experiencias.length) {
+        var reCargoEmpresa = /^([A-ZÀ-Ú][A-Za-zÀ-ú\s]{2,50}?)\s*(?:[-–—|]\s*|\s+(?:na|em|no|na\s+empresa|na\s+empresa\s+))\s*([A-ZÀ-Ú][A-Za-zÀ-ú0-9&.\-\s]{2,60})/;
+        var rePeriodo = /(19\d{2}|20\d{2})\s*[-–—aà]\s*(19\d{2}|20\d{2}|atual|presente|hoje)/i;
+        linhas.forEach(function (l) {
+          if (dados.experiencias.length >= 6) return;
+          // Linha curta (até 90 chars) que parece um cargo/empresa, com ou sem período
+          if (l.length <= 90 && /[a-zà-ú]{3}/i.test(l) && reCargoEmpresa.test(l) && !/habilidades|idiomas|forma[çc][ãa]o|objetivo/i.test(l)) {
+            var m = l.match(reCargoEmpresa);
+            if (m) {
+              var cargo = m[1].trim();
+              var empresa = m[2].trim();
+              var periodoMatch = l.match(rePeriodo);
+              var periodo = periodoMatch ? periodoMatch[0] : "";
+              // evita duplicar a primeira linha (nome) e linhas de seção
+              if (cargo.toLowerCase() !== (dados.pessoal.nome || "").toLowerCase()) {
+                dados.experiencias.push({ cargo: cargo, empresa: empresa, periodo: periodo, descricao: "" });
+              }
+            }
+          }
+        });
+        // Se ainda não encontrou no formato cargo-empresa, busca por linhas com
+        // cargo + período seguidos de descrição (formato comum de currículos).
+        if (!dados.experiencias.length) {
+          var reCargoSo = /^([A-ZÀ-Ú][A-Za-zÀ-ú\s]{2,40})\s+[-–—]\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4}|(19\d{2}|20\d{2}))/;
+          for (var ei = 0; ei < linhas.length; ei++) {
+            var cm = linhas[ei].match(reCargoSo);
+            if (cm && linhas[ei].length <= 90 && dados.experiencias.length < 6) {
+              dados.experiencias.push({ cargo: cm[1].trim(), empresa: "", periodo: cm[2], descricao: (linhas[ei + 1] || "").slice(0, 400) });
+            }
+          }
+        }
+      }
+
       return dados;
     }
 
@@ -459,7 +534,20 @@
       } else {
         titulo.textContent = "Seu currículo original (documento enviado)";
         if (blobUrlOriginal) {
-          paper.innerHTML = '<iframe class="previa-doc-original" src="' + blobUrlOriginal + '"></iframe>';
+          if (tipoArquivoOriginal === "pdf") {
+            // PDF é exibido nativamente no navegador via iframe
+            paper.innerHTML = '<iframe class="previa-doc-original" src="' + blobUrlOriginal + '"></iframe>';
+          } else {
+            // DOCX não tem visualizador nativo no navegador — colocar num iframe
+            // dispararia um download indesejado. Mostramos um aviso + botão para
+            // abrir o arquivo original.
+            paper.innerHTML =
+              '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;text-align:center;color:#555;gap:16px">' +
+              '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
+              '<p style="margin:0;max-width:340px">Este é um arquivo <b>Word (.docx)</b>, que não pode ser exibido dentro do navegador. Toque no botão abaixo para abrir o arquivo original enviado.</p>' +
+              '<a href="' + blobUrlOriginal + '" download="currículo-original.docx" class="btn btn-secondary" style="text-decoration:none">Abrir arquivo original</a>' +
+              '</div>';
+          }
         } else {
           paper.innerHTML = "<p>Documento original não disponível.</p>";
         }
