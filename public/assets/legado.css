@@ -36,6 +36,9 @@ body:not(.pagina-painel) .cabecalho .wrap { min-height: 64px; }
 body:not(.pagina-painel) .cabecalho .logo { height: 44px; }
 body:not(.pagina-painel) nav.menu a { color: #fff !important; }
 body:not(.pagina-painel) nav.menu a:hover { color: var(--brand) !important; }
+body:not(.pagina-painel) > #mobileMenu:not(:first-of-type) { display: none !important; }
+body:not(.pagina-painel) .container#mobileMenu { display: none; }
+body:not(.pagina-painel) .container#mobileMenu.open { display: block; }
 
 /* Conteúdo institucional */
 body:not(.pagina-painel) main {
@@ -80,6 +83,17 @@ body:not(.pagina-painel) .contact-card h3 { color: var(--text-primary); }
 body:not(.pagina-painel) .contact-card p { color: var(--text-muted); }
 body:not(.pagina-painel) .contact-card a { background: var(--brand); color: #001f33; }
 body:not(.pagina-painel) .social-section { background: rgba(255, 255, 255, .58); border-top: 1px solid var(--border); }
+
+/* O conteúdo legado usa nomes próprios, mas segue a mesma escala da home. */
+body:not(.pagina-painel) .section-indicacao .card h1,
+body:not(.pagina-painel) .section-indicacao .card h2 { color: var(--text-primary) !important; }
+body:not(.pagina-painel) .section-indicacao .card p,
+body:not(.pagina-painel) .section-indicacao .card label { color: var(--text-secondary); }
+body:not(.pagina-painel) .institucional-section,
+body:not(.pagina-painel) .social-section { margin-top: 0; }
+body:not(.pagina-painel) .institucional-grid { max-width: 1200px; }
+body:not(.pagina-painel) .modal-content,
+body:not(.pagina-painel) .modal-card { border-radius: 12px; box-shadow: 0 24px 60px rgba(0,31,51,.24); }
 
 /* Sobre */
 body:not(.pagina-painel) .sobre-nos { padding: 112px 20px 72px !important; background: transparent !important; }
