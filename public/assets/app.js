@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const elementosRevelaveis = document.querySelectorAll(
-      "body > section, body > main, body > .auth-page, body > .container-form"
+      "body > section, body > main, body > main > section, body > .auth-page, body > .container-form"
     );
     elementosRevelaveis.forEach(function (elemento) { elemento.setAttribute("data-reveal", ""); });
 
