@@ -4,6 +4,7 @@ const MySQLStore = require("express-mysql-session")(session);
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const path = require("path");
+const fs = require("fs");
 const { MercadoPagoConfig, Payment } = require("mercadopago");
 const { pool, garantirSchema, getPreco } = require("./lib/db");
 const { MODELOS, gerarPDF, gerarDOCX } = require("./lib/modelos");
@@ -483,6 +484,28 @@ app.put("/api/admin/preco", protegerAdmin, async (req, res) => {
   const { setPreco } = require("./lib/db");
   await setPreco(v);
   res.json({ success: true, preco: v });
+});
+
+// Upload temporário do currículo enviado na página de análise, para que a
+// prévia "Original" exiba o documento de forma fiel (via visualizador do
+// Office para DOCX). O arquivo é recebido em base64 via JSON.
+app.post("/api/upload-curriculo", async (req, res) => {
+  try {
+    const { nome, base64 } = req.body || {};
+    if (!nome || !base64) return res.status(400).json({ error: "Dados inválidos." });
+    const ext = path.extname(nome).toLowerCase();
+    if (ext !== ".pdf" && ext !== ".docx") return res.status(400).json({ error: "Formato não suportado." });
+    const dir = path.join(__dirname, "public", "uploads");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const arquivoNome = "curriculo_" + Date.now() + Math.random().toString(36).slice(2, 6) + ext;
+    const buffer = Buffer.from(base64, "base64");
+    if (!buffer.length) return res.status(400).json({ error: "Arquivo vazio." });
+    fs.writeFileSync(path.join(dir, arquivoNome), buffer);
+    res.json({ url: "/uploads/" + arquivoNome });
+  } catch (e) {
+    console.error("Erro no upload de currículo:", e);
+    res.status(500).json({ error: "Erro ao salvar o arquivo." });
+  }
 });
 
 // ---------------------------------------------------------------------------

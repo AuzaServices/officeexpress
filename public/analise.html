@@ -135,6 +135,27 @@
     .cta-pagamento p { color: var(--text-secondary); margin: 0 0 16px; }
     .cta-pagamento .btn { min-width: 220px; }
     .spacer { height: 12px; }
+
+    /* Responsividade mobile */
+    @media (max-width: 560px) {
+      .analise-hero h1 { font-size: 1.55rem; }
+      .upload-area { padding: 26px 14px; }
+      .toggle-origem { width: 100%; }
+      .toggle-origem button { flex: 1; padding: 9px 10px; font-size: .82rem; white-space: nowrap; }
+      .painel-topo h2 { font-size: 1.25rem; }
+      .score-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .anel { width: 148px; height: 148px; }
+      .anel .anel-num { font-size: 2.4rem; }
+      .previa-paper { padding: 16px 12px; font-size: .8rem; }
+      .previa-docx { padding: 16px 14px; font-size: 13px; }
+      .previa-doc-original, .previa-paper iframe { min-height: 420px; }
+      .previa-col .card { padding: 12px; }
+      .analise-cols { gap: 8px; }
+      .cta-pagamento .btn { min-width: 100%; width: 100%; }
+    }
+    @media (max-width: 380px) {
+      .score-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -269,6 +290,7 @@
     var blobUrlOriginal = null;
     var tipoArquivoOriginal = null;
     var bufferOriginal = null; // ArrayBuffer do arquivo enviado (para renderizar DOCX na prévia)
+    var urlOriginalDoc = null; // URL pública do arquivo enviado (para o viewer do Office)
     var modoAtual = "original";
     var pontuacao = {};
 
@@ -956,16 +978,23 @@
             // PDF é exibido nativamente no navegador via iframe
             paper.innerHTML = '<iframe class="previa-doc-original" src="' + blobUrlOriginal + '"></iframe>';
           } else {
-            // DOCX: renderiza o conteúdo em HTML usando mammoth — sem precisar baixar
-            paper.innerHTML = '<div class="previa-carregando">Renderizando o documento Word...</div>';
-            if (window.mammoth && bufferOriginal) {
-              window.mammoth.convertToHtml({ arrayBuffer: bufferOriginal }).then(function (r) {
-                paper.innerHTML = '<div class="previa-docx">' + (r.value || "") + "</div>";
-              }).catch(function () {
-                paper.innerHTML = '<p>Não foi possível exibir o documento Word.</p>';
-              });
+            // DOCX: exibe o documento ORIGINAL de forma fiel via visualizador do
+            // Office da Microsoft. Se a URL pública ainda não estiver pronta,
+            // usa o render em HTML (mammoth) como fallback.
+            if (urlOriginalDoc) {
+              var urlAbs = window.location.origin + urlOriginalDoc;
+              paper.innerHTML = '<iframe class="previa-doc-original" src="https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(urlAbs) + '"></iframe>';
             } else {
-              paper.innerHTML = '<p>Documento original não disponível.</p>';
+              paper.innerHTML = '<div class="previa-carregando">Renderizando o documento Word...</div>';
+              if (window.mammoth && bufferOriginal) {
+                window.mammoth.convertToHtml({ arrayBuffer: bufferOriginal }).then(function (r) {
+                  paper.innerHTML = '<div class="previa-docx">' + (r.value || "") + "</div>";
+                }).catch(function () {
+                  paper.innerHTML = '<p>Não foi possível exibir o documento Word.</p>';
+                });
+              } else {
+                paper.innerHTML = '<p>Documento original não disponível.</p>';
+              }
             }
           }
         } else {
@@ -1082,6 +1111,30 @@
           tipoArquivoOriginal = ext;
           blobUrlOriginal = URL.createObjectURL(new Blob([buffer], { type: ext === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
         } catch (e) { blobUrlOriginal = null; }
+        // Para DOCX, envia ao servidor para obter uma URL pública e exibir a
+        // prévia "Original" de forma fiel (via visualizador do Office).
+        if (ext === "docx") {
+          (function () {
+            var bytes = new Uint8Array(buffer);
+            var binario = "";
+            for (var k = 0; k < bytes.length; k++) binario += String.fromCharCode(bytes[k]);
+            var b64;
+            try { b64 = btoa(binario); } catch (e2) { b64 = ""; }
+            if (b64) {
+              App.api("/api/upload-curriculo", {
+                method: "POST",
+                body: JSON.stringify({ nome: file.name, base64: b64 })
+              }).then(function (r) {
+                if (r.ok && r.data && r.data.url) {
+                  urlOriginalDoc = r.data.url;
+                  if (modoAtual === "original") renderizarPrevia();
+                } else {
+                  urlOriginalDoc = null;
+                }
+              }).catch(function () { urlOriginalDoc = null; });
+            }
+          })();
+        }
         var promessa = ext === "pdf" ? extrairTextoPDF(buffer) : extrairTextoDOCX(buffer);
         promessa.then(function (texto) {
           if (!texto || texto.trim().length < 20) {
