@@ -1,0 +1,21 @@
+/* Movimento compartilhado das páginas públicas. O painel não carrega esta folha. */
+body:not(.pagina-painel) {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .65s ease, transform .65s ease;
+}
+body:not(.pagina-painel).carregada { opacity: 1; transform: none; }
+body:not(.pagina-painel) [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .72s ease, transform .72s cubic-bezier(.22,1,.36,1);
+  will-change: opacity, transform;
+}
+body:not(.pagina-painel) [data-reveal].revelado { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  body:not(.pagina-painel), body:not(.pagina-painel) [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

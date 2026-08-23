@@ -117,6 +117,32 @@ window.App = (function () {
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
+  const paginaPainel = /(^|\/)painel(?:\.html)?(?:$|\?)/i.test(window.location.pathname + window.location.search);
+  if (!paginaPainel) {
+    document.body.classList.add("page-enter");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { document.body.classList.add("carregada"); });
+    });
+
+    const elementosRevelaveis = document.querySelectorAll(
+      "body > section, body > main, body > .auth-page, body > .container-form"
+    );
+    elementosRevelaveis.forEach(function (elemento) { elemento.setAttribute("data-reveal", ""); });
+
+    if ("IntersectionObserver" in window) {
+      const observador = new IntersectionObserver(function (entradas, observer) {
+        entradas.forEach(function (entrada) {
+          if (!entrada.isIntersecting) return;
+          entrada.target.classList.add("revelado");
+          observer.unobserve(entrada.target);
+        });
+      }, { threshold: 0.08, rootMargin: "0px 0px -8% 0px" });
+      elementosRevelaveis.forEach(function (elemento) { observador.observe(elemento); });
+    } else {
+      elementosRevelaveis.forEach(function (elemento) { elemento.classList.add("revelado"); });
+    }
+  }
+
   // Menu mobile
   const h = document.getElementById("hamburguer");
   const mobileMenu = document.getElementById("mobileMenu");

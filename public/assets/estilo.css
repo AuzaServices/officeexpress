@@ -44,6 +44,77 @@ body {
   min-height: 100vh;
 }
 
+/* Atmosfera contínua entre as seções, sem faixas de fundo abruptas. */
+body:not(.pagina-painel) {
+  position: relative;
+  background-image:
+    linear-gradient(rgba(14, 73, 96, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 73, 96, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 8% 12%, rgba(73, 190, 203, 0.22) 0, transparent 30%),
+    radial-gradient(circle at 92% 82%, rgba(255, 136, 0, 0.12) 0, transparent 28%),
+    linear-gradient(180deg, #edf5f8 0%, #e7f2f4 48%, #f4f7f5 100%);
+  background-size: 48px 48px, 48px 48px, auto, auto, 100% 100%;
+  background-repeat: repeat, repeat, no-repeat, no-repeat, no-repeat;
+}
+
+body:not(.pagina-painel)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.2) 52%, rgba(255,255,255,.04));
+}
+
+body:not(.pagina-painel) > section,
+body:not(.pagina-painel) > main,
+body:not(.pagina-painel) > .auth-page,
+body:not(.pagina-painel) > .container-form {
+  position: relative;
+}
+
+/* As seções compartilham o mesmo fundo; blocos especiais fazem uma fusão suave. */
+body:not(.pagina-painel) > section + section::before,
+body:not(.pagina-painel) > main + section::before {
+  content: '';
+  position: absolute;
+  top: -72px;
+  right: 0;
+  left: 0;
+  height: 72px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(237,245,248,.32));
+}
+
+body:not(.pagina-painel) [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .72s ease, transform .72s cubic-bezier(.22,1,.36,1);
+  will-change: opacity, transform;
+}
+body:not(.pagina-painel) [data-reveal].revelado {
+  opacity: 1;
+  transform: none;
+}
+body:not(.pagina-painel) .page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .65s ease, transform .65s ease;
+}
+body:not(.pagina-painel) .page-enter.carregada {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.pagina-painel) [data-reveal],
+  body:not(.pagina-painel) .page-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
 /* Botões */
