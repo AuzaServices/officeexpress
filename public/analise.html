@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Análise de Currículo - Office Express</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    .analise-page { padding-top: 8px; }
+    .analise-hero { text-align: center; padding: 32px 0 8px; }
+    .analise-hero h1 { font-size: 2rem; margin-bottom: 8px; }
+    .analise-hero p { color: var(--text-secondary); max-width: 640px; margin: 0 auto; }
+
+    /* Upload */
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: 16px;
+      padding: 34px 20px; text-align: center; cursor: pointer;
+      background: rgba(255,255,255,.03); transition: border-color .15s, background .15s;
+    }
+    .upload-area:hover { border-color: var(--brand); background: rgba(255,136,0,.04); }
+    .upload-area.dragover { border-color: var(--brand); background: rgba(255,136,0,.08); }
+    .upload-area svg { width: 42px; height: 42px; color: var(--brand); margin-bottom: 12px; }
+    .upload-area h3 { margin: 0 0 4px; font-size: 1.05rem; }
+    .upload-area p { margin: 0; color: var(--text-muted); font-size: .88rem; }
+    .upload-status { margin-top: 12px; font-size: .85rem; color: var(--text-muted); min-height: 18px; }
+    .upload-status.erro { color: var(--danger); }
+    .upload-status.ok { color: var(--success); }
+
+    /* Painel de resultados */
+    .analise-resultado { display: none; margin-top: 24px; }
+    .analise-resultado.visivel { display: block; }
+
+    .painel-topo {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .toggle-origem {
+      display: inline-flex; background: rgba(0,0,0,.2); border-radius: 40px; padding: 4px;
+      gap: 4px; border: 1px solid var(--border);
+    }
+    .toggle-origem button {
+      border: none; background: transparent; color: var(--text-muted);
+      padding: 10px 22px; border-radius: 36px; font-weight: 700; cursor: pointer;
+      font-size: .9rem; transition: background .15s, color .15s;
+    }
+    .toggle-origem button.ativo { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; }
+
+    .score-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .score-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px; text-align: center;
+    }
+    .score-card .score-num { font-size: 2.2rem; font-weight: 900; color: var(--brand); }
+    .score-card .score-label { color: var(--text-muted); font-size: .82rem; margin-top: 2px; }
+
+    /* Anel de score */
+    .anel-wrap { display: flex; align-items: center; justify-content: center; margin: 8px 0 24px; }
+    .anel {
+      --p: 0; width: 180px; height: 180px; border-radius: 50%;
+      background: conic-gradient(var(--brand) calc(var(--p)*1%), rgba(255,255,255,.08) 0);
+      display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .anel::before {
+      content: ""; position: absolute; inset: 14px; background: var(--card);
+      border-radius: 50%; border: 1px solid var(--border);
+    }
+    .anel .anel-num { position: relative; font-size: 3rem; font-weight: 900; color: var(--text-primary); }
+    .anel .anel-num small { font-size: 1.1rem; color: var(--text-muted); }
+
+    .analise-cols {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;
+    }
+    @media (max-width: 760px) { .analise-cols { grid-template-columns: 1fr; } }
+    .ponto-lista { list-style: none; padding: 0; margin: 0; }
+    .ponto-lista li {
+      display: flex; gap: 10px; align-items: flex-start; padding: 10px 0;
+      border-bottom: 1px solid var(--border); font-size: .92rem;
+    }
+    .ponto-lista li:last-child { border-bottom: none; }
+    .ponto-lista .icone { flex-shrink: 0; margin-top: 1px; }
+    .forte .icone { color: var(--success); }
+    .melhorar .icone { color: var(--danger); }
+    .ponto-lista li b { display: block; margin-bottom: 2px; }
+
+    /* Prévia do currículo */
+    .previa-col { margin-top: 24px; }
+    .previa-col .card { padding: 16px; }
+    .previa-paper {
+      background: #fff; color: #111; border-radius: 10px; padding: 28px;
+      max-height: 560px; overflow: auto; font-size: .85rem; line-height: 1.55;
+    }
+    .previa-paper h1 { font-size: 1.5rem; margin: 0 0 4px; color: #111; }
+    .previa-paper h2 { font-size: 1.05rem; margin: 16px 0 6px; color: #222; border-bottom: 2px solid #eee; padding-bottom: 4px; }
+    .previa-paper p { margin: 4px 0; color: #333; }
+    .previa-paper ul { margin: 4px 0; padding-left: 18px; }
+
+    .cta-pagamento {
+      text-align: center; margin-top: 24px; padding: 24px; border-radius: 16px;
+      background: linear-gradient(135deg, rgba(255,136,0,.12), rgba(255,136,0,.04));
+      border: 1px solid rgba(255,136,0,.3);
+    }
+    .cta-pagamento h3 { margin: 0 0 6px; }
+    .cta-pagamento p { color: var(--text-secondary); margin: 0 0 16px; }
+    .cta-pagamento .btn { min-width: 220px; }
+    .spacer { height: 12px; }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <section class="section analise-page container">
+    <div class="analise-hero">
+      <h1>Análise Inteligente de <span style="color:var(--brand-dark)">Currículo</span></h1>
+      <p>Envie seu currículo em PDF ou Word e receba um diagnóstico completo: pontuação, pontos fortes, pontos a melhorar e uma versão otimizada pela Office Express — 100% gratuito.</p>
+    </div>
+
+    <div id="etapaUpload">
+      <label class="upload-area" id="uploadArea">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+        <h3>Envie seu currículo para análise</h3>
+        <p>Arraste o arquivo aqui ou clique para selecionar (PDF ou DOCX)</p>
+        <input type="file" id="uploadInput" accept=".pdf,.docx" hidden />
+      </label>
+      <div class="upload-status" id="uploadStatus"></div>
+    </div>
+
+    <div class="analise-resultado" id="resultado">
+      <div class="painel-topo">
+        <h2 style="margin:0">Diagnóstico do seu currículo</h2>
+        <div class="toggle-origem" id="toggleOrigem">
+          <button type="button" id="btnOriginal" class="ativo">Original</button>
+          <button type="button" id="btnOffice">Office Express</button>
+        </div>
+      </div>
+
+      <div class="anel-wrap">
+        <div class="anel" id="anelScore" style="--p:0"><span class="anel-num"><span id="scoreFinal">0</span><small>/100</small></span></div>
+      </div>
+
+      <div class="score-grid" id="scoreGrid"></div>
+
+      <div class="analise-cols">
+        <div class="card">
+          <h3 style="margin-top:0;color:var(--success)">Pontos fortes</h3>
+          <ul class="ponto-lista forte" id="pontosFortes"></ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0;color:var(--danger)">Pontos a melhorar</h3>
+          <ul class="ponto-lista melhorar" id="pontosMelhorar"></ul>
+        </div>
+      </div>
+
+      <div class="previa-col">
+        <div class="card">
+          <h3 style="margin-top:0" id="previaTitulo">Seu currículo original</h3>
+          <div class="previa-paper" id="previaPaper"></div>
+        </div>
+      </div>
+
+      <div class="cta-pagamento">
+        <h3>Gostou da versão melhorada?</h3>
+        <p>Receba seu currículo <b>corrigido, reescrito e modernizado</b> em PDF e Word, pronto para os sistemas de IA de recrutamento (ATS).</p>
+        <button class="btn btn-primary" id="btnPagamento">Melhorar meu currículo agora</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script>
+    if (window["pdfjs-dist/build/pdf"]) { window.pdfjsLib = window["pdfjs-dist/build/pdf"]; }
+    if (window.pdfjsLib) { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }
+    document.getElementById("ano").textContent = new Date().getFullYear();
+    App.carregarHeader("analise");
+
+    var uploadArea = document.getElementById("uploadArea");
+    var uploadInput = document.getElementById("uploadInput");
+    var uploadStatus = document.getElementById("uploadStatus");
+    var dadosExtraidos = null;
+    var textoOriginal = "";
+    var textoMelhorado = "";
+    var modoAtual = "original";
+    var pontuacao = {};
+
+    function setStatus(msg, tipo) {
+      uploadStatus.textContent = msg || "";
+      uploadStatus.className = "upload-status" + (tipo ? " " + tipo : "");
+    }
+
+    function limparEspacos(s) { return (s || "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim(); }
+
+    function extrairTextoPDF(arrayBuffer) {
+      return window.pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(function (pdf) {
+        var paginas = []; var i = 1;
+        function lerPagina() {
+          if (i > pdf.numPages) return Promise.resolve(paginas.join("\n"));
+          return pdf.getPage(i).then(function (page) {
+            return page.getTextContent().then(function (tc) {
+              paginas.push(tc.items.map(function (it) { return it.str; }).join(" "));
+              i++; return lerPagina();
+            });
+          });
+        }
+        return lerPagina();
+      });
+    }
+
+    function extrairTextoDOCX(arrayBuffer) {
+      return window.mammoth.extractRawText({ arrayBuffer: arrayBuffer }).then(function (r) { return r.value; });
+    }
+
+    // ---- Motor de extração de dados (heurística) ----
+    function extrairDadosDoTexto(textoOriginal) {
+      var texto = limparEspacos(textoOriginal);
+      var linhas = texto.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+      var dados = { pessoal: {}, objetivo: "", experiencias: [], formacoes: [], cursos: [], habilidades: "", hobbies: "", idiomas: "" };
+
+      var reEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+      var reTelefone = /(?:\()?\d{2}(?:\))?[\s.-]?\d{4,5}[\s.-]?\d{4}/;
+      var reCidadeUF = /([A-ZÀ-Ú][a-zà-ú]+(?:\s[A-ZÀ-Ú][a-zà-ú]+)*)\s*[-,/]\s*([A-Z]{2})\b/;
+
+      var emailMatch = texto.match(reEmail);
+      if (emailMatch) dados.pessoal.email = emailMatch[0];
+      var telMatch = texto.match(reTelefone);
+      if (telMatch) dados.pessoal.telefone = telMatch[0].replace(/\D/g, "");
+      var cidadeMatch = texto.match(reCidadeUF);
+      if (cidadeMatch) { dados.pessoal.cidade = cidadeMatch[1]; dados.pessoal.uf = cidadeMatch[2]; }
+
+      for (var n = 0; n < Math.min(linhas.length, 6); n++) {
+        var cand = linhas[n];
+        if (cand.length >= 4 && cand.length <= 60 && !/[@0-9]/.test(cand) && cand.split(" ").length >= 2 && cand.split(" ").length <= 6) {
+          dados.pessoal.nome = cand; break;
+        }
+      }
+
+      var secoes = {
+        objetivo: /objetivo|resumo profissional|perfil profissional|sobre mim/i,
+        experiencia: /experi[eê]ncias?\s+profission|experi[eê]ncia\s+de\s+trabalho|hist[oó]rico\s+profissional/i,
+        formacao: /forma[çc][ãa]o\s+acad[eê]mica|escolaridade|educa[çc][ãa]o/i,
+        cursos: /cursos?\s+(complementares|extras|e\s+certifica)/i,
+        habilidades: /habilidades|compet[eê]ncias/i,
+        idiomas: /idiomas/i,
+        hobbies: /hobbies|interesses/i
+      };
+      var indices = [];
+      linhas.forEach(function (l, idx) {
+        Object.keys(secoes).forEach(function (chave) {
+          if (secoes[chave].test(l) && l.length < 50) indices.push({ chave: chave, idx: idx });
+        });
+      });
+      indices.sort(function (a, b) { return a.idx - b.idx; });
+      indices.forEach(function (item, i2) {
+        var fim = i2 + 1 < indices.length ? indices[i2 + 1].idx : linhas.length;
+        var bloco = linhas.slice(item.idx + 1, fim).join("\n").trim();
+        if (!bloco) return;
+        if (item.chave === "objetivo" && !dados.objetivo) dados.objetivo = bloco;
+        if (item.chave === "habilidades" && !dados.habilidades) dados.habilidades = bloco.replace(/\n/g, ", ");
+        if (item.chave === "idiomas" && !dados.idiomas) dados.idiomas = bloco.replace(/\n/g, ", ");
+        if (item.chave === "hobbies" && !dados.hobbies) dados.hobbies = bloco.replace(/\n/g, ", ");
+        if (item.chave === "experiencia" && !dados.experiencias.length) dados.experiencias.push({ cargo: "", empresa: "", periodo: "", descricao: bloco.slice(0, 600) });
+        if (item.chave === "formacao" && !dados.formacoes.length) dados.formacoes.push({ curso: "", instituicao: "", periodo: "", descricao: bloco.slice(0, 400) });
+        if (item.chave === "cursos" && !dados.cursos.length) dados.cursos.push({ nome: bloco.split("\n")[0] || "", instituicao: "", carga: "" });
+      });
+      return dados;
+    }
+
+    // ---- Motor de análise de qualidade ----
+    function analisar(dados, texto) {
+      var t = (texto || "").toLowerCase();
+      var d = dados || {};
+      var pts = 0;
+      var max = 100;
+      var forte = [];
+      var melhorar = [];
+      var pesos = {};
+
+      // 1. Nome (10)
+      if (d.pessoal && d.pessoal.nome && d.pessoal.nome.split(" ").length >= 2) {
+        pts += 10; forte.push({ t: "Nome completo", d: "Seu nome completo está presente." });
+      } else {
+        melhorar.push({ t: "Nome completo", d: "Adicione seu nome completo e bem formatado." });
+      }
+      pesos.nome = 10;
+
+      // 2. Contato (15)
+      var temEmail = !!(d.pessoal && d.pessoal.email);
+      var temTel = !!(d.pessoal && d.pessoal.telefone);
+      var contatoPts = 0;
+      if (temEmail) { contatoPts += 8; }
+      else { melhorar.push({ t: "E-mail", d: "Inclua um e-mail profissional." }); }
+      if (temTel) { contatoPts += 7; }
+      else { melhorar.push({ t: "Telefone", d: "Inclua um telefone para contato." }); }
+      pts += contatoPts;
+      if (temEmail && temTel) forte.push({ t: "Informações de contato", d: "E-mail e telefone completos." });
+
+      // 3. Objetivo/Resumo (15)
+      if (d.objetivo && d.objetivo.length >= 20) {
+        pts += 15; forte.push({ t: "Objetivo profissional", d: "Seu resumo/objetivo está bem descrito." });
+      } else if (d.objetivo && d.objetivo.length > 0) {
+        pts += 8; melhorar.push({ t: "Objetivo profissional", d: "Seu objetivo é curto — descreva suas metas em 2-3 frases." });
+      } else {
+        melhorar.push({ t: "Objetivo profissional", d: "Não foi identificado um objetivo/resumo profissional." });
+      }
+
+      // 4. Experiência (20)
+      if (d.experiencias && d.experiencias.length) {
+        var expLen = (d.experiencias[0].descricao || "").length;
+        if (expLen >= 80) { pts += 20; forte.push({ t: "Experiência profissional", d: "Suas experiências estão detalhadas." }); }
+        else if (expLen > 0) { pts += 12; melhorar.push({ t: "Experiência profissional", d: "Detalhe mais suas responsabilidades e resultados." }); }
+      } else {
+        melhorar.push({ t: "Experiência profissional", d: "Não foi possível identificar suas experiências de trabalho." });
+      }
+
+      // 5. Formação (10)
+      if (d.formacoes && d.formacoes.length) { pts += 10; forte.push({ t: "Formação acadêmica", d: "Sua formação está listada." }); }
+      else { melhorar.push({ t: "Formação acadêmica", d: "Inclua sua formação acadêmica." }); }
+
+      // 6. Habilidades (15)
+      if (d.habilidades && d.habilidades.split(",").filter(Boolean).length >= 3) {
+        pts += 15; forte.push({ t: "Habilidades", d: "Boas habilidades listadas." });
+      } else if (d.habilidades) {
+        pts += 8; melhorar.push({ t: "Habilidades", d: "Liste ao menos 3-5 habilidades relevantes." });
+      } else {
+        melhorar.push({ t: "Habilidades", d: "Não foram identificadas habilidades." });
+      }
+
+      // 7. Comprimento total (10)
+      if (t.length >= 600 && t.length <= 4000) { pts += 10; forte.push({ t: "Conteúdo", d: "Seu currículo tem um bom volume de conteúdo." }); }
+      else if (t.length >= 400) { pts += 5; melhorar.push({ t: "Conteúdo", d: "Seu currículo pode ser mais completo — considere adicionar mais informações." }); }
+      else { melhorar.push({ t: "Conteúdo", d: "Seu currículo está muito curto. Adicione mais detalhes." }); }
+
+      // 8. Palavras-chave de ação (5)
+      var acoes = ["desenvolvi", "gerenciei", "criei", "implementei", "lider", "responsável", "resultado", "aumento", "redução", "melhorei", "coordenei", "planejei", "organizei"];
+      var qtdAcoes = acoes.filter(function (a) { return t.indexOf(a) !== -1; }).length;
+      if (qtdAcoes >= 3) { pts += 5; forte.push({ t: "Verbos de ação", d: "Você usa verbos de ação e resultados." }); }
+      else if (qtdAcoes >= 1) { pts += 2; melhorar.push({ t: "Verbos de ação", d: "Use mais verbos de ação (ex.: desenvolvi, gerenciei, implementei)." }); }
+      else { melhorar.push({ t: "Verbos de ação", d: "Use verbos de ação para descrever suas realizações." }); }
+
+      pts = Math.max(0, Math.min(100, Math.round(pts)));
+
+      return {
+        score: pts,
+        forte: forte,
+        melhorar: melhorar,
+        detalhe: [
+          { label: "Identificação", nota: d.pessoal && d.pessoal.nome ? 10 : 0, max: 10 },
+          { label: "Contato", nota: contatoPts, max: 15 },
+          { label: "Objetivo", nota: d.objetivo && d.objetivo.length >= 20 ? 15 : (d.objetivo ? 8 : 0), max: 15 },
+          { label: "Experiência", nota: d.experiencias && d.experiencias.length ? (d.experiencias[0].descricao || "").length >= 80 ? 20 : 12 : 0, max: 20 },
+          { label: "Formação", nota: d.formacoes && d.formacoes.length ? 10 : 0, max: 10 },
+          { label: "Habilidades", nota: d.habilidades && d.habilidades.split(",").filter(Boolean).length >= 3 ? 15 : (d.habilidades ? 8 : 0), max: 15 },
+          { label: "Conteúdo", nota: t.length >= 600 ? 10 : (t.length >= 400 ? 5 : 0), max: 10 },
+          { label: "Verbos de ação", nota: qtdAcoes >= 3 ? 5 : (qtdAcoes >= 1 ? 2 : 0), max: 5 },
+        ]
+      };
+    }
+
+    // ---- Gera o texto/currículo melhorado (versão Office Express) ----
+    function gerarMelhorado(dados) {
+      var d = dados || { pessoal: {} };
+      var linhas = [];
+      if (d.pessoal && d.pessoal.nome) linhas.push("<h1>" + esc(d.pessoal.nome) + "</h1>");
+      var contato = [];
+      if (d.pessoal && d.pessoal.email) contato.push(esc(d.pessoal.email));
+      if (d.pessoal && d.pessoal.telefone) contato.push("(" + esc(d.pessoal.telefone.slice(0,2)) + ") " + esc(d.pessoal.telefone.slice(2)));
+      if (d.pessoal && d.pessoal.cidade) contato.push(esc(d.pessoal.cidade) + (d.pessoal.uf ? "/" + esc(d.pessoal.uf) : ""));
+      if (contato.length) linhas.push("<p style='color:#555'>" + contato.join("  |  ") + "</p>");
+
+      linhas.push("<h2>Resumo Profissional</h2>");
+      var obj = (d.objetivo || "").trim();
+      linhas.push("<p>" + (obj ? esc(obj) : "Profissional em busca de novos desafios, com foco em resultados, organização e trabalho em equipe. Capaz de contribuir ativamente para o crescimento da empresa, aplicando minhas competências com dedicação e comprometimento.") + "</p>");
+
+      if (d.experiencias && d.experiencias.length) {
+        linhas.push("<h2>Experiência Profissional</h2>");
+        d.experiencias.forEach(function (e) {
+          linhas.push("<p><b>" + (esc(e.cargo) || "Experiência") + (e.empresa ? " — " + esc(e.empresa) : "") + "</b></p>");
+          linhas.push("<ul><li>" + (esc(e.descricao) || "Atividades voltadas para o alcance de metas e melhoria contínua dos processos.") + "</li></ul>");
+        });
+      }
+
+      if (d.formacoes && d.formacoes.length) {
+        linhas.push("<h2>Formação Acadêmica</h2>");
+        d.formacoes.forEach(function (f) {
+          linhas.push("<p>" + (esc(f.curso) || esc(f.descricao) || "Formação") + "</p>");
+        });
+      }
+
+      if (d.cursos && d.cursos.length) {
+        linhas.push("<h2>Cursos e Certificações</h2>");
+        d.cursos.forEach(function (c) { linhas.push("<ul><li>" + (esc(c.nome) || "Curso") + "</li></ul>"); });
+      }
+
+      if (d.habilidades) {
+        linhas.push("<h2>Habilidades</h2>");
+        linhas.push("<p>" + esc(d.habilidades) + "</p>");
+      }
+
+      if (d.idiomas) {
+        linhas.push("<h2>Idiomas</h2>");
+        linhas.push("<p>" + esc(d.idiomas) + "</p>");
+      }
+
+      return linhas.join("");
+    }
+
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function renderizarPrevia() {
+      var paper = document.getElementById("previaPaper");
+      var titulo = document.getElementById("previaTitulo");
+      if (modoAtual === "office") {
+        titulo.textContent = "Seu currículo otimizado pela Office Express";
+        paper.innerHTML = textoMelhorado || "<p>Preencha os dados no editor para visualizar.</p>";
+      } else {
+        titulo.textContent = "Seu currículo original (como enviado)";
+        paper.innerHTML = "<pre style='white-space:pre-wrap;font-family:inherit;margin:0'>" + esc(textoOriginal) + "</pre>";
+      }
+    }
+
+    function mostrarResultado() {
+      var res = analisar(dadosExtraidos, textoOriginal);
+      document.getElementById("resultado").classList.add("visivel");
+
+      // Anel + score
+      var scoreFinal = res.score;
+      var anel = document.getElementById("anelScore");
+      anel.style.setProperty("--p", scoreFinal);
+      document.getElementById("scoreFinal").textContent = scoreFinal;
+
+      // Grid de detalhes
+      var grid = document.getElementById("scoreGrid");
+      grid.innerHTML = "";
+      res.detalhe.forEach(function (item) {
+        var el = document.createElement("div");
+        el.className = "score-card";
+        el.innerHTML = '<div class="score-num">' + item.nota + '<small style="font-size:.9rem;color:var(--text-muted)">/' + item.max + '</small></div><div class="score-label">' + item.label + "</div>";
+        grid.appendChild(el);
+      });
+
+      // Pontos fortes e melhorar
+      var pf = document.getElementById("pontosFortes");
+      var pm = document.getElementById("pontosMelhorar");
+      pf.innerHTML = "";
+      pm.innerHTML = "";
+      if (res.forte.length) {
+        res.forte.forEach(function (p) {
+          pf.innerHTML += '<li><span class="icone"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></span><div><b>' + esc(p.t) + '</b>' + esc(p.d) + "</div></li>";
+        });
+      } else {
+        pf.innerHTML = "<li>Nenhum ponto forte identificado automaticamente.</li>";
+      }
+      if (res.melhorar.length) {
+        res.melhorar.forEach(function (p) {
+          pm.innerHTML += '<li><span class="icone"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><div><b>' + esc(p.t) + '</b>' + esc(p.d) + "</div></li>";
+        });
+      } else {
+        pm.innerHTML = "<li>Excelente! Nenhum ponto crítico de melhoria identificado.</li>";
+      }
+
+      renderizarPrevia();
+    }
+
+    // ---- Fluxo de arquivo ----
+    function processarArquivo(file) {
+      setStatus("Lendo e analisando seu currículo...");
+      var ext = file.name.split(".").pop().toLowerCase();
+      var leitor = new FileReader();
+      leitor.onload = function () {
+        var buffer = leitor.result;
+        var promessa = ext === "pdf" ? extrairTextoPDF(buffer) : extrairTextoDOCX(buffer);
+        promessa.then(function (texto) {
+          if (!texto || texto.trim().length < 20) {
+            setStatus("Não conseguimos ler o conteúdo do arquivo. Tente outro arquivo.", "erro");
+            return;
+          }
+          textoOriginal = texto;
+          dadosExtraidos = extrairDadosDoTexto(texto);
+          textoMelhorado = gerarMelhorado(dadosExtraidos);
+          setStatus("Análise concluída com sucesso!", "ok");
+          document.getElementById("etapaUpload").style.display = "none";
+          mostrarResultado();
+          // Salva os dados extraídos para o fluxo de pagamento/editor
+          try {
+            localStorage.setItem("curriculoUpload", JSON.stringify(dadosExtraidos));
+            localStorage.setItem("curriculoUploadPendente", "1");
+          } catch (e) {}
+        }).catch(function () {
+          setStatus("Não foi possível processar este arquivo. Tente novamente.", "erro");
+        });
+      };
+      leitor.onerror = function () { setStatus("Erro ao ler o arquivo.", "erro"); };
+      leitor.readAsArrayBuffer(file);
+    }
+
+    uploadInput.addEventListener("change", function () {
+      var file = uploadInput.files && uploadInput.files[0];
+      if (!file) return;
+      var ext = file.name.split(".").pop().toLowerCase();
+      if (ext !== "pdf" && ext !== "docx") { setStatus("Envie um arquivo PDF ou DOCX.", "erro"); return; }
+      processarArquivo(file);
+    });
+
+    ["dragenter", "dragover"].forEach(function (ev) {
+      uploadArea.addEventListener(ev, function (e) { e.preventDefault(); uploadArea.classList.add("dragover"); });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      uploadArea.addEventListener(ev, function (e) { e.preventDefault(); uploadArea.classList.remove("dragover"); });
+    });
+    uploadArea.addEventListener("drop", function (e) {
+      var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) {
+        var ext = file.name.split(".").pop().toLowerCase();
+        if (ext !== "pdf" && ext !== "docx") { setStatus("Envie um arquivo PDF ou DOCX.", "erro"); return; }
+        processarArquivo(file);
+      }
+    });
+
+    // Toggle Original / Office Express
+    document.getElementById("btnOriginal").addEventListener("click", function () {
+      modoAtual = "original";
+      document.getElementById("btnOriginal").classList.add("ativo");
+      document.getElementById("btnOffice").classList.remove("ativo");
+      renderizarPrevia();
+    });
+    document.getElementById("btnOffice").addEventListener("click", function () {
+      modoAtual = "office";
+      document.getElementById("btnOffice").classList.add("ativo");
+      document.getElementById("btnOriginal").classList.remove("ativo");
+      renderizarPrevia();
+    });
+
+    // Botão pagamento
+    document.getElementById("btnPagamento").addEventListener("click", function () {
+      App.authMe().then(function (usuario) {
+        if (usuario) {
+          window.location.href = "/modelos?origem=analise";
+        } else {
+          localStorage.setItem("redirectAposLogin", "/modelos?origem=analise");
+          window.location.href = "/login";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
