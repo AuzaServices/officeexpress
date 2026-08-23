@@ -236,6 +236,13 @@
     // Gera o PDF a partir da IMAGEM do preview (html2canvas) — fidelidade total.
     function baixarPDF() {
       if (!pedidoId) return alert("Pedido não identificado.");
+      // Safari/iOS não deve gerar o PDF a partir de canvas/data URI: esse
+      // caminho pode ficar pendurado ou ser recusado por limite de memória.
+      // O servidor já gera o documento e entrega um PDF nativo.
+      if (isIOS()) {
+        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
+        return;
+      }
       // Precisa ser aberta AGORA (síncrono, dentro do clique) para o Safari/iOS
       // não bloquear o popup — o conteúdo real é escrito depois, quando pronto.
       var janelaAntecipada = null;
