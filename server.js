@@ -1,3 +1,31 @@
+// ─────────────────────────────────────────────────────────────
+// Auto-reparo de dependências (serverless / Render).
+// Em deploys com cache de build corrompido, o pacote `express` pode chegar
+// incompleto (faltando `lib/router`, que `application.js` carrega via
+// `require('./router')`), o que derruba o servidor com
+// "Cannot find module './router'" na subida. Este bloco roda ANTES de
+// qualquer require de módulo npm (usa apenas built-ins do Node) e reinstala
+// o express se a estrutura essencial estiver faltando. A instalação é
+// pequena e só acontece quando o problema é detectado.
+try {
+  const _fs = require("fs");
+  const _path = require("path");
+  const { execSync } = require("child_process");
+  const _expressDir = _path.dirname(require.resolve("express/package.json"));
+  const _routerIndex = _path.join(_expressDir, "lib", "router", "index.js");
+  if (!_fs.existsSync(_routerIndex)) {
+    console.log("⚠️ express incompleto (faltando lib/router) — reinstalando express...");
+    _fs.rmSync(_expressDir, { recursive: true, force: true });
+    execSync("npm install express --no-save --no-audit --no-fund", {
+      stdio: "inherit",
+      cwd: __dirname,
+    });
+    console.log("✅ express reinstalado.");
+  }
+} catch (_e) {
+  console.error("⚠️ Aviso: não foi possível verificar/reparar o express:", _e && _e.message);
+}
+
 const express = require("express");
 const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
