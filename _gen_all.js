@@ -1,4 +1,4 @@
-const { gerarDOCX, gerarPDF } = require("./lib/modelos");
+const { gerarPDF } = require("./lib/modelos");
 const fs = require("fs");
 const dados = {
   nome: "Maria da Silva", email: "m@x.com", telefone: ["(11) 99999-9999"], objetivo: "Objetivo profissional.",
@@ -12,12 +12,10 @@ const modelos = ["classico","moderno","minimal","profissional","executivo","cron
   let allOk = true;
   for (const m of modelos) {
     try {
-      const d = await gerarDOCX(m, dados);
       const p = await gerarPDF(m, dados);
-      const dok = Buffer.isBuffer(d) && d.slice(0, 2).toString() === "PK";
       const pok = Buffer.isBuffer(p) && p.slice(0, 5).toString() === "%PDF-";
-      console.log("OK", m, "docx=" + d.length, "pdf=" + p.length, (dok ? "zip" : "NOZIP"), (pok ? "pdf" : "NOPDF"));
-      if (!dok || !pok) allOk = false;
+      console.log("OK", m, "pdf=" + p.length, (pok ? "pdf" : "NOPDF"));
+      if (!pok) allOk = false;
     } catch (e) {
       allOk = false;
       console.log("FAIL", m, e.message);

@@ -10,7 +10,6 @@
   <script src="/curriculo-render.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.iife.js"></script>
   <style>
     /* Preview escondido usado apenas para capturar a imagem exata no download.
        Evita "position: fixed" + "z-index: -1" fora da tela: no Safari/iOS
@@ -39,11 +38,10 @@
     <div class="pagamento-card card" style="text-align:center;padding:48px">
       <div style="font-size:64px;color:var(--success)">&#10003;</div>
       <h2 style="margin:16px 0 8px">Pagamento confirmado!</h2>
-      <p style="color:var(--text-muted);margin-bottom:32px">Seu documento está pronto. Escolha o formato para baixar agora:</p>
+      <p style="color:var(--text-muted);margin-bottom:32px">Seu documento está pronto. Baixe agora:</p>
 
       <div class="preview-acoes" style="justify-content:center">
         <button class="btn btn-primary" onclick="baixar('pdf')">Baixar PDF</button>
-        <button class="btn btn-secondary" onclick="baixar('docx')">Baixar Word (DOCX)</button>
       </div>
       <p style="margin-top:24px;color:var(--text-muted);font-size:.9rem">O download é liberado no momento da compra. <a href="/minha-conta" style="color:var(--brand)">Ver meus documentos</a></p>
     </div>
@@ -56,7 +54,7 @@
       <div class="footer-grid">
         <div class="footer-col">
           <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
-          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <p>Currículos profissionais em minutos, prontos em PDF, com modelos otimizados para sistemas de recrutamento (ATS).</p>
           <div class="footer-social">
             <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
             <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
@@ -301,86 +299,8 @@
       })();
     }
 
-    // Gera o DOCX embutindo a IMAGEM do preview (biblioteca "docx" no navegador).
-    function baixarDOCX() {
-      if (!pedidoId) return alert("Pedido não identificado.");
-      if (tipoPedido === "carta") {
-        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
-        return;
-      }
-      // No iOS/Safari o html2canvas estoura a memória e trava. O caminho
-      // garantido no iPhone é o servidor, que gera o DOCX com o modelo.
-      if (isIOS()) {
-        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
-        return;
-      }
-      // Desktop: mesma técnica do PDF — abre a aba AGORA (síncrono, dentro do
-      // clique) para não ser bloqueado; conteúdo é escrito depois.
-      var janelaAntecipada = null;
-      if (isIOS() && !isWebViewInApp()) {
-        janelaAntecipada = window.open("about:blank");
-        if (janelaAntecipada) {
-          janelaAntecipada.document.write(
-            '<html><head><title>Gerando Word...</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666"><p>Gerando seu Word, aguarde...</p></body></html>'
-          );
-        }
-      }
-      (async function () {
-        try {
-          var img = await capturarImagem();
-          if (!img) {
-            // A captura falhou ou estourou o tempo limite. Em vez de deixar o
-            // usuário preso em "Gerando PDF...", cai no servidor, que entrega
-            // o PDF nativo (com o modelo, quando o Chromium estiver disponível
-            // no ambiente de produção).
-            if (janelaAntecipada) janelaAntecipada.close();
-            window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
-            return;
-          }
-
-var bin = atob(img.dataUrlPng.split(",")[1]);
-var bytes = new Uint8Array(bin.length);
-for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
-// A4 em pixels a 96 dpi ≈ 793 x 1122 px
-var doc = new window.docx.Document({
-  sections: [{
-    properties: {
-      page: {
-        size: { width: 11906, height: 16838 }, // A4 em twips
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      },
-    },
-    children: [
-      new window.docx.Paragraph({
-        alignment: window.docx.AlignmentType.LEFT,
-        children: [
-          new window.docx.ImageRun({
-            data: bytes,
-            transformation: { width: 793, height: 1122, type: "px" }, // usa px
-            type: "png",
-          }),
-        ],
-      }),
-    ],
-  }],
-});
-
-          var blob = await window.docx.Packer.toBlob(doc);
-          var nome = (dadosPedido.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
-          salvarBlob(blob, nome + ".docx", janelaAntecipada);
-        } catch (err) {
-          console.error(err);
-          if (janelaAntecipada) janelaAntecipada.close();
-          // Em caso de erro na geração no cliente, entrega o DOCX do servidor.
-          window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
-        }
-      })();
-    }
-
     function baixar(formato) {
-      if (formato === "pdf") return baixarPDF();
-      return baixarDOCX();
+      baixarPDF();
     }
     window.baixar = baixar;
 

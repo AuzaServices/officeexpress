@@ -93,19 +93,19 @@
   <section class="hero">
     <div class="hero-content">
       <h1>Crie um currículo profissional em minutos</h1>
-      <p class="lead">Escolha entre 10 modelos formais e minimalistas, preencha seus dados e receba seu currículo em <strong>PDF e Word</strong> — otimizado para ser lido 100% pelos sistemas de IA de contratação.</p>
+      <p class="lead">Escolha entre 10 modelos formais e minimalistas, preencha seus dados e receba seu currículo em <strong>PDF</strong> — otimizado para ser lido 100% pelos sistemas de IA de contratação.</p>
       <div class="ctas">
         <a href="/modelos" class="btn btn-primary">Criar meu currículo</a>
         <label class="upload-inteligente" id="uploadLabel">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <span id="uploadLabelTxt">Já tenho um currículo (enviar arquivo)</span>
-          <input type="file" id="uploadInput" accept=".pdf,.docx" hidden />
+          <input type="file" id="uploadInput" accept=".pdf" hidden />
         </label>
       </div>
       <div class="upload-status" id="uploadStatus"></div>
       <div class="hero-stats">
         <div><span class="stat-value">10</span><span class="stat-label" style="display:block">modelos</span></div>
-        <div><span class="stat-value">PDF + Word</span><span class="stat-label" style="display:block">formatos</span></div>
+        <div><span class="stat-value">PDF</span><span class="stat-label" style="display:block">formato</span></div>
         <div><span class="stat-value">100%</span><span class="stat-label" style="display:block">legível por IA</span></div>
       </div>
     </div>
@@ -136,7 +136,7 @@
     <div class="features-grid">
       <div class="card feature-card"><div class="feature-icon"><i class="fas fa-layer-group"></i></div><h3>10 modelos minimalistas</h3><p>Layouts formais e elegantes, do clássico ao técnico, todos com visual profissional.</p></div>
       <div class="card feature-card"><div class="feature-icon"><i class="fas fa-robot"></i></div><h3>Otimizado para IA de RH</h3><p>Texto selecionável, hierarquia clara e sem elementos que confundem os sistemas ATS.</p></div>
-      <div class="card feature-card"><div class="feature-icon"><i class="fas fa-file-pdf"></i></div><h3>PDF + Word</h3><p>Baixe em PDF e também em DOCX (Word), os dois formatos mais aceitos pelos recrutadores.</p></div>
+      <div class="card feature-card"><div class="feature-icon"><i class="fas fa-file-pdf"></i></div><h3>PDF</h3><p>Baixe em PDF, o formato mais aceito pelos recrutadores.</p></div>
       <div class="card feature-card"><div class="feature-icon"><i class="fas fa-eye"></i></div><h3>Prévia antes de pagar</h3><p>Visualize seu currículo pronto antes de efetuar o pagamento, sem surpresas.</p></div>
       <div class="card feature-card"><div class="feature-icon"><i class="fas fa-lock"></i></div><h3>Conta segura</h3><p>Cadastro com confirmação de e-mail e recuperação de senha para sua segurança.</p></div>
       <div class="card feature-card"><div class="feature-icon"><i class="fas fa-credit-card"></i></div><h3>Pix e cartão</h3><p>Pagamento rápido e seguro via Mercado Pago, com Pix ou cartão de crédito.</p></div>
@@ -156,7 +156,7 @@
       <div class="footer-grid">
         <div class="footer-col">
           <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
-          <p>Currículos profissionais em minutos, prontos em PDF e Word, com modelos otimizados para sistemas de recrutamento (ATS).</p>
+          <p>Currículos profissionais em minutos, prontos em PDF, com modelos otimizados para sistemas de recrutamento (ATS).</p>
           <div class="footer-social">
             <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
             <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
@@ -198,7 +198,6 @@
 
   <script src="/assets/app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script>document.getElementById("ano").textContent = new Date().getFullYear();</script>
   <script>
     if (window["pdfjs-dist/build/pdf"]) {
@@ -231,10 +230,6 @@
         }
         return lerPagina();
       });
-    }
-
-    function extrairTextoDOCX(arrayBuffer) {
-      return window.mammoth.extractRawText({ arrayBuffer: arrayBuffer }).then(function (r) { return r.value; });
     }
 
     function limparEspacos(s) { return (s || "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim(); }
@@ -315,7 +310,7 @@
       var leitor = new FileReader();
       leitor.onload = function () {
         var buffer = leitor.result;
-        var promessa = ext === "pdf" ? extrairTextoPDF(buffer) : extrairTextoDOCX(buffer);
+        var promessa = extrairTextoPDF(buffer);
         promessa.then(function (texto) {
           if (!texto || texto.trim().length < 20) {
             setStatus("Não conseguimos ler o conteúdo do arquivo. Tente outro arquivo.");
@@ -355,8 +350,8 @@
       var file = uploadInput.files && uploadInput.files[0];
       if (!file) return;
       var ext = file.name.split(".").pop().toLowerCase();
-      if (ext !== "pdf" && ext !== "docx") {
-        setStatus("Envie um arquivo PDF ou DOCX.");
+      if (ext !== "pdf") {
+        setStatus("Envie um arquivo PDF.");
         return;
       }
       processarArquivo(file);

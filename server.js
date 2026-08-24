@@ -7,8 +7,8 @@ const path = require("path");
 const fs = require("fs");
 const { MercadoPagoConfig, Payment } = require("mercadopago");
 const { pool, garantirSchema, getPreco } = require("./lib/db");
-const { MODELOS, gerarPDF, gerarDOCX } = require("./lib/modelos");
-const { CARTAS, gerarCartaPDF, gerarCartaDOCX } = require("./lib/cartas");
+const { MODELOS, gerarPDF } = require("./lib/modelos");
+const { CARTAS, gerarCartaPDF } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao } = require("./lib/email");
 
 require("dotenv").config();
@@ -366,11 +366,10 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Download (só após pagamento; gera PDF/DOCX na hora)
+// Download (só após pagamento; gera o PDF na hora)
 // ---------------------------------------------------------------------------
 app.get("/api/pedidos/:id/download", async (req, res) => {
   const { id } = req.params;
-  const formato = (req.query.formato || "pdf").toLowerCase();
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
@@ -383,12 +382,6 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
 
   try {
     const tipoPedido = dados._tipo || "curriculo";
-    if (formato === "docx") {
-      const buffer = tipoPedido === "carta" ? await gerarCartaDOCX(pedido.modelo, dados) : await gerarDOCX(pedido.modelo, dados);
-      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-      res.setHeader("Content-Disposition", `attachment; filename="${arquivoNome}.docx"`);
-      return res.send(buffer);
-    }
     const buffer = tipoPedido === "carta" ? await gerarCartaPDF(pedido.modelo, dados) : await gerarPDF(pedido.modelo, dados);
     res.setHeader("Content-Type", "application/pdf");
     // No iOS/Safari, "attachment" abre pelo Quick Look, que renderiza o PDF de
@@ -405,7 +398,7 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
   }
 });
 
-// Retorna modelo + dados do pedido pago para o cliente gerar o PDF/DOCX
+// Retorna modelo + dados do pedido pago para o cliente gerar o PDF
 // a partir da IMAGEM do preview (html2canvas) — sem depender do Chromium
 // no servidor.
 app.get("/api/pedidos/:id/dados", async (req, res) => {
@@ -493,14 +486,14 @@ app.put("/api/admin/preco", protegerAdmin, async (req, res) => {
 });
 
 // Upload temporário do currículo enviado na página de análise, para que a
-// prévia "Original" exiba o documento de forma fiel (via visualizador do
-// Office para DOCX). O arquivo é recebido em base64 via JSON.
+// prévia "Original" exiba o documento de forma fiel. O arquivo é recebido em
+// base64 via JSON.
 app.post("/api/upload-curriculo", async (req, res) => {
   try {
     const { nome, base64 } = req.body || {};
     if (!nome || !base64) return res.status(400).json({ error: "Dados inválidos." });
     const ext = path.extname(nome).toLowerCase();
-    if (ext !== ".pdf" && ext !== ".docx") return res.status(400).json({ error: "Formato não suportado." });
+    if (ext !== ".pdf") return res.status(400).json({ error: "Formato não suportado." });
     const dir = path.join(__dirname, "public", "uploads");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const arquivoNome = "curriculo_" + Date.now() + Math.random().toString(36).slice(2, 6) + ext;
