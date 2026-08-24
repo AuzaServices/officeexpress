@@ -252,12 +252,30 @@
         window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
         return;
       }
-      // No iOS/Safari o html2canvas estoura a memória e trava (não é
-      // confiável). O caminho garantido no iPhone é o servidor, que gera o PDF
-      // com o modelo via Chromium (lib/pdf.js) — evita travar em
-      // "Gerando PDF...".
+      // No iOS/Safari o html2canvas estoura a memória e trava. Buscamos o PDF
+      // do servidor (que já tem o modelo) e abrimos no visualizador nativo do
+      // Safari via salvarBlob (data URI) — evita o Quick Look de attachment,
+      // que no iPhone renderiza errado o PDF.
       if (isIOS()) {
-        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
+        var winIOS = window.open("about:blank");
+        if (winIOS) {
+          winIOS.document.write(
+            '<html><head><title>Gerando PDF...</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#666"><p>Gerando seu PDF, aguarde...</p></body></html>'
+          );
+        }
+        fetch("/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf")
+          .then(function (resp) {
+            if (!resp.ok) throw new Error("Falha ao gerar o PDF.");
+            return resp.blob();
+          })
+          .then(function (blob) {
+            var nomeArq = ((dadosPedido && dadosPedido.dados && dadosPedido.dados.nome) || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+            salvarBlob(blob, nomeArq + ".pdf", winIOS);
+          })
+          .catch(function () {
+            if (winIOS) winIOS.close();
+            window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
+          });
         return;
       }
       // Desktop: gera no cliente a partir da imagem do preview (html2canvas),
