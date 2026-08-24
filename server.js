@@ -486,14 +486,14 @@ app.put("/api/admin/preco", protegerAdmin, async (req, res) => {
 });
 
 // Upload temporário do currículo enviado na página de análise, para que a
-// prévia "Original" exiba o documento de forma fiel. O arquivo é recebido em
-// base64 via JSON.
+// prévia "Original" exiba o documento de forma fiel (via visualizador do
+// Office para DOCX). O arquivo é recebido em base64 via JSON.
 app.post("/api/upload-curriculo", async (req, res) => {
   try {
     const { nome, base64 } = req.body || {};
     if (!nome || !base64) return res.status(400).json({ error: "Dados inválidos." });
     const ext = path.extname(nome).toLowerCase();
-    if (ext !== ".pdf") return res.status(400).json({ error: "Formato não suportado." });
+    if (ext !== ".pdf" && ext !== ".docx") return res.status(400).json({ error: "Formato não suportado." });
     const dir = path.join(__dirname, "public", "uploads");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const arquivoNome = "curriculo_" + Date.now() + Math.random().toString(36).slice(2, 6) + ext;

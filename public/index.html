@@ -99,7 +99,7 @@
         <label class="upload-inteligente" id="uploadLabel">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <span id="uploadLabelTxt">Já tenho um currículo (enviar arquivo)</span>
-          <input type="file" id="uploadInput" accept=".pdf" hidden />
+          <input type="file" id="uploadInput" accept=".pdf,.docx" hidden />
         </label>
       </div>
       <div class="upload-status" id="uploadStatus"></div>
@@ -198,6 +198,7 @@
 
   <script src="/assets/app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script>document.getElementById("ano").textContent = new Date().getFullYear();</script>
   <script>
     if (window["pdfjs-dist/build/pdf"]) {
@@ -230,6 +231,10 @@
         }
         return lerPagina();
       });
+    }
+
+    function extrairTextoDOCX(arrayBuffer) {
+      return window.mammoth.extractRawText({ arrayBuffer: arrayBuffer }).then(function (r) { return r.value; });
     }
 
     function limparEspacos(s) { return (s || "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim(); }
@@ -310,7 +315,7 @@
       var leitor = new FileReader();
       leitor.onload = function () {
         var buffer = leitor.result;
-        var promessa = extrairTextoPDF(buffer);
+        var promessa = ext === "pdf" ? extrairTextoPDF(buffer) : extrairTextoDOCX(buffer);
         promessa.then(function (texto) {
           if (!texto || texto.trim().length < 20) {
             setStatus("Não conseguimos ler o conteúdo do arquivo. Tente outro arquivo.");
@@ -350,8 +355,8 @@
       var file = uploadInput.files && uploadInput.files[0];
       if (!file) return;
       var ext = file.name.split(".").pop().toLowerCase();
-      if (ext !== "pdf") {
-        setStatus("Envie um arquivo PDF.");
+      if (ext !== "pdf" && ext !== "docx") {
+        setStatus("Envie um arquivo PDF ou DOCX.");
         return;
       }
       processarArquivo(file);
