@@ -391,7 +391,13 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
     }
     const buffer = tipoPedido === "carta" ? await gerarCartaPDF(pedido.modelo, dados) : await gerarPDF(pedido.modelo, dados);
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${arquivoNome}.pdf"`);
+    // No iOS/Safari, "attachment" abre pelo Quick Look, que renderiza o PDF de
+    // forma errada. Para iOS usamos "inline", fazendo o Safari abrir no
+    // visualizador nativo e exibir o modelo corretamente (como no Android).
+    const ua = (req.headers["user-agent"] || "").toLowerCase();
+    const ehIOS = /iphone|ipad|ipod/.test(ua) || (ua.indexOf("macintosh") !== -1 && ua.indexOf("mobile") !== -1);
+    const disposicao = ehIOS ? "inline" : "attachment";
+    res.setHeader("Content-Disposition", `${disposicao}; filename="${arquivoNome}.pdf"`);
     res.send(buffer);
   } catch (err) {
     console.error("❌ Erro ao gerar arquivo:", err.message);
