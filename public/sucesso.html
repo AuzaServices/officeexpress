@@ -132,6 +132,10 @@
     }
 
     // Captura a imagem do preview (html2canvas) e devolve { canvas, dataUrlPng }.
+    // No iOS/Safari, um canvas grande (scale alto) estoura a memória e trava a
+    // promise para sempre. Aqui usamos escala reduzida no iOS e aplicamos um
+    // limite de tempo, garantindo que o download nunca fique preso em
+    // "Gerando PDF...".
     async function capturarImagem() {
       if (!dadosPedido) {
         await carregarPedido();
@@ -141,14 +145,20 @@
       var alvo = document.getElementById("previewCaptura");
       var page = alvo && alvo.querySelector(".page");
       if (!page) return null;
-      var canvas = await html2canvas(page, {
-        scale: 2,
+      var escala = isIOS() ? 1 : 2;
+      var captura = html2canvas(page, {
+        scale: escala,
         useCORS: true,
         backgroundColor: "#ffffff",
         width: page.offsetWidth,
         height: page.offsetHeight,
+      }).then(function (canvas) {
+        return { canvas: canvas, dataUrlPng: canvas.toDataURL("image/png") };
       });
-      return { canvas: canvas, dataUrlPng: canvas.toDataURL("image/png") };
+      var limite = new Promise(function (resolve) {
+        setTimeout(function () { resolve(null); }, 12000);
+      });
+      return Promise.race([captura, limite]);
     }
 
     // Detecta iOS/Safari (inclusive iPadOS que se identifica como Mac com touch).
@@ -262,8 +272,13 @@
         try {
           var img = await capturarImagem();
           if (!img) {
+            // A captura falhou ou estourou o tempo limite. Em vez de deixar o
+            // usuário preso em "Gerando PDF...", cai no servidor, que entrega
+            // o PDF nativo (com o modelo, quando o Chromium estiver disponível
+            // no ambiente de produção).
             if (janelaAntecipada) janelaAntecipada.close();
-            return alert("Pré-visualização não disponível. Tente novamente.");
+            window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
+            return;
           }
           var pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
           pdf.addImage(img.dataUrlPng, "PNG", 0, 0, 210, 297);
@@ -276,7 +291,9 @@
         } catch (err) {
           console.error(err);
           if (janelaAntecipada) janelaAntecipada.close();
-          alert("Erro ao gerar o PDF. Tente novamente.");
+          // Em caso de erro na geração no cliente, entrega o PDF do servidor em
+          // vez de deixar o usuário sem resposta.
+          window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
         }
       })();
     }
@@ -303,8 +320,13 @@
         try {
           var img = await capturarImagem();
           if (!img) {
+            // A captura falhou ou estourou o tempo limite. Em vez de deixar o
+            // usuário preso em "Gerando PDF...", cai no servidor, que entrega
+            // o PDF nativo (com o modelo, quando o Chromium estiver disponível
+            // no ambiente de produção).
             if (janelaAntecipada) janelaAntecipada.close();
-            return alert("Pré-visualização não disponível. Tente novamente.");
+            window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
+            return;
           }
 
 var bin = atob(img.dataUrlPng.split(",")[1]);
@@ -341,7 +363,8 @@ var doc = new window.docx.Document({
         } catch (err) {
           console.error(err);
           if (janelaAntecipada) janelaAntecipada.close();
-          alert("Erro ao gerar o Word. Tente novamente.");
+          // Em caso de erro na geração no cliente, entrega o DOCX do servidor.
+          window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
         }
       })();
     }
