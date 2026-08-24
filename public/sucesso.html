@@ -252,13 +252,17 @@
         window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
         return;
       }
-      // O PDF é gerado no cliente a partir da IMAGEM do preview (html2canvas),
-      // garantindo que o arquivo baixado tenha o MESMO template visual do
-      // preview em qualquer dispositivo — inclusive iOS/Safari, que abre o
-      // visualizador nativo via salvarBlob(). Evita o caminho do servidor, que
-      // baixa o PDF sem o modelo (texto puro).
-      // Precisa ser aberta AGORA (síncrono, dentro do clique) para o Safari/iOS
-      // não bloquear o popup — o conteúdo real é escrito depois, quando pronto.
+      // No iOS/Safari o html2canvas estoura a memória e trava (não é
+      // confiável). O caminho garantido no iPhone é o servidor, que gera o PDF
+      // com o modelo via Chromium (lib/pdf.js) — evita travar em
+      // "Gerando PDF...".
+      if (isIOS()) {
+        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=pdf";
+        return;
+      }
+      // Desktop: gera no cliente a partir da imagem do preview (html2canvas),
+      // mantendo o template. Precisa abrir a aba AGORA (síncrono, dentro do
+      // clique) para não ser bloqueado — o conteúdo é escrito depois.
       var janelaAntecipada = null;
       if (isIOS() && !isWebViewInApp()) {
         janelaAntecipada = window.open("about:blank");
@@ -305,8 +309,14 @@
         window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
         return;
       }
-      // Mesma técnica do PDF: abre a aba AGORA (síncrono, dentro do clique)
-      // para o Safari/iOS não bloquear o popup — conteúdo é escrito depois.
+      // No iOS/Safari o html2canvas estoura a memória e trava. O caminho
+      // garantido no iPhone é o servidor, que gera o DOCX com o modelo.
+      if (isIOS()) {
+        window.location.href = "/api/pedidos/" + encodeURIComponent(pedidoId) + "/download?formato=docx";
+        return;
+      }
+      // Desktop: mesma técnica do PDF — abre a aba AGORA (síncrono, dentro do
+      // clique) para não ser bloqueado; conteúdo é escrito depois.
       var janelaAntecipada = null;
       if (isIOS() && !isWebViewInApp()) {
         janelaAntecipada = window.open("about:blank");
