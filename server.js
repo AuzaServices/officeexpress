@@ -557,6 +557,10 @@ app.post("/api/analise-ia", async (req, res) => {
       "Você é um assistente especialista em leitura minuciosa de currículos. " +
       "Analise o currículo fornecido (na imagem e/ou no texto) com EXTREMO cuidado e atenção a TODOS os detalhes.\n\n" +
       "INSTRUÇÕES CRÍTICAS DE LEITURA:\n" +
+      "- Identifique o layout do currículo. Se ele tiver DUAS ou mais colunas (coluna lateral + coluna principal, ou duas colunas de conteúdo), leia CADA coluna separadamente, de cima a baixo, sem pular nenhuma.\n" +
+      "- NÃO leia apenas a coluna principal: a coluna lateral (esquerda ou direita) costuma conter dados de contato, habilidades e idiomas. Percorra TODO o documento, incluindo cabeçalho e rodapé.\n" +
+      "- Dados de contato (nome, e-mail, telefone, endereço, CEP, LinkedIn, GitHub, site, nascimento) podem estar no cabeçalho, no rodapé ou na coluna lateral, muitas vezes em fonte pequena. Procure-os em TODAS as partes e transcreva TODOS.\n" +
+      "- Dê atenção EXTRA ao e-mail e ao telefone: examine o documento inteiro até localizá-los, pois são os dados que mais se perdem. Se houver um e-mail em qualquer lugar, capture-o integralmente (ex.: nome@dominio.com).\n" +
       "- Leia a imagem inteira, linha por linha, de cima a baixo, da esquerda para a direita. Não pule nenhuma linha ou seção.\n" +
       "- Transcreva cada informação legível EXATAMENTE como aparece, incluindo acentos, maiúsculas, números e símbolos.\n" +
       "- Capture TODOS os itens de cada lista (todas as experiências, todas as formações, todos os cursos, todas as habilidades, todos os idiomas, todos os contatos).\n" +
@@ -621,11 +625,27 @@ app.post("/api/analise-ia", async (req, res) => {
       generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 4096 },
     };
 
-    // Retry com backoff para erros temporários (alta demanda, rate limit, etc.).
+    // Retry com backoff para erros temporários (alta demanda, rate limit, quota, etc.).
+    // Para 429 (quota/rate limit), aguarda o tempo sugerido pela própria API quando disponível.
     let resp = null;
-    const tentativas = [0, 1500, 3000];
-    for (let i = 0; i < tentativas.length; i++) {
-      if (i > 0) await new Promise((r) => setTimeout(r, tentativas[i]));
+    const maxTentativas = 4;
+    const backoffs = [0, 5000, 12000, 20000]; // backoff base (ms) para cada tentativa
+    for (let i = 0; i < maxTentativas; i++) {
+      if (i > 0) {
+        // Extrai o tempo de espera sugerido pela API no erro 429, se houver.
+        let espera = backoffs[i];
+        if (resp) {
+          try {
+            const corpo = await resp.text().catch(() => "");
+            const m = String(corpo).match(/retry in\s+([\d.]+)\s*s/i) || String(corpo).match(/retryDelay['":\s]+(\d+)/i);
+            if (m) {
+              const sugerido = m[1].indexOf(".") !== -1 ? Math.ceil(parseFloat(m[1]) * 1000) : parseInt(m[1], 10);
+              if (sugerido > espera) espera = sugerido;
+            }
+          } catch (e) { /* ignora */ }
+        }
+        await new Promise((r) => setTimeout(r, espera));
+      }
       try {
         resp = await fetch(url, {
           method: "POST",
