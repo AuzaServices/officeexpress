@@ -22,7 +22,6 @@
     .analise-hero-conteudo h1 { font-size: 2.3rem; margin-bottom: 14px; line-height: 1.2; }
     .analise-hero-conteudo p { color: var(--text-secondary); max-width: 560px; font-size: 1.02rem; }
     .analise-hero-imagem {
-      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -31,19 +30,6 @@
       width: 100%;
       max-width: 460px;
       height: auto;
-      border-radius: 20px;
-      box-shadow: 0 24px 60px var(--shadow-lg);
-      border: 1px solid var(--border);
-      background: var(--card);
-    }
-    .analise-hero-imagem::before {
-      content: "";
-      position: absolute;
-      inset: -18px;
-      border-radius: 28px;
-      background: linear-gradient(135deg, rgba(255,136,0,.16), rgba(73,190,203,.16));
-      filter: blur(6px);
-      z-index: -1;
     }
     @media (max-width: 900px) {
       .analise-hero-grid { grid-template-columns: 1fr; gap: 28px; text-align: center; }
