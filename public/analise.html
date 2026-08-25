@@ -408,9 +408,10 @@
       });
     }
 
-    // Redimensiona e compacta a imagem para enviar à IA (reduz payload e acelera).
+    // Redimensiona a imagem para enviar à IA. Usa PNG (lossless) em resolução
+    // alta para preservar o máximo de nitidez do texto pequeno.
     function prepararImagemBase64(arrayBuffer, mime, maxLargura) {
-      maxLargura = maxLargura || 1600;
+      maxLargura = maxLargura || 2200;
       return new Promise(function (resolve) {
         var blob = new Blob([arrayBuffer], { type: mime });
         var url = URL.createObjectURL(blob);
@@ -426,8 +427,11 @@
           canvas.width = largura;
           canvas.height = altura;
           var ctx = canvas.getContext("2d");
+          // Fundo branco evita que transparência interfira na leitura.
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, largura, altura);
           ctx.drawImage(img, 0, 0, largura, altura);
-          var dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          var dataUrl = canvas.toDataURL("image/png");
           URL.revokeObjectURL(url);
           resolve(dataUrl.split(",")[1] || "");
         };
@@ -1247,14 +1251,21 @@
           telefones: telefones,
           cidade: s(p.cidade),
           uf: s(p.uf),
-          linkedin: s(p.linkedin)
+          endereco: s(p.endereco),
+          cep: s(p.cep),
+          linkedin: s(p.linkedin),
+          github: s(p.github),
+          site: s(p.site),
+          nascimento: s(p.nascimento)
         },
         objetivo: s(d.objetivo),
+        resumo: s(d.resumo),
         experiencias: experiencias.map(function (e) {
           return {
             cargo: s(e.cargo),
             empresa: s(e.empresa),
             periodo: s(e.periodo),
+            local: s(e.local),
             descricao: s(e.descricao) || s(e.detalhes)
           };
         }),
@@ -1262,15 +1273,46 @@
           return {
             curso: s(f.curso) || s(f.nome),
             instituicao: s(f.instituicao) || s(f.nomeInstituicao),
-            periodo: s(f.periodo)
+            periodo: s(f.periodo),
+            status: s(f.status)
           };
         }),
         cursos: lista(d.cursos),
         habilidades: s(d.habilidades),
-        idiomas: s(d.idiomas),
+        idiomas: idiomasEmString(d.idiomas),
+        idiomasDetalhe: idiomasDetalhe(d.idiomas),
+        projetos: lista(d.projetos),
+        premios: lista(d.premios),
+        publicacoes: lista(d.publicacoes),
+        voluntariado: lista(d.voluntariado),
+        referencias: lista(d.referencias),
         infoAdicional: s(d.infoAdicional),
         hobbies: s(d.hobbies)
       };
+    }
+    // Converte idiomas (string ou lista de objetos) em uma string separada por vírgula.
+    function idiomasEmString(idiomas) {
+      if (idiomas == null) return "";
+      if (typeof idiomas === "string") return idiomas.trim();
+      if (Array.isArray(idiomas)) {
+        return idiomas.filter(function (i) {
+          return i != null && String(i).trim() !== "";
+        }).map(function (i) {
+          if (typeof i === "object") {
+            return (i.idioma || "") + (i.nivel ? " (" + i.nivel + ")" : "");
+          }
+          return String(i).trim();
+        }).filter(Boolean).join(", ");
+      }
+      return "";
+    }
+    function idiomasDetalhe(idiomas) {
+      if (!Array.isArray(idiomas)) return [];
+      return idiomas.filter(function (i) {
+        return i && typeof i === "object" && String(i.idioma || "").trim() !== "";
+      }).map(function (i) {
+        return { idioma: String(i.idioma).trim(), nivel: String(i.nivel || "").trim() };
+      });
     }
 
     function processarArquivo(file) {
@@ -1342,7 +1384,7 @@
             var payload = { texto: texto };
             if (b64Imagem) {
               payload.imagemBase64 = b64Imagem;
-              payload.mime = "image/jpeg";
+              payload.mime = "image/png";
             }
             App.api("/api/analise-ia", {
               method: "POST",

@@ -554,23 +554,40 @@ app.post("/api/analise-ia", async (req, res) => {
     }
 
     const prompt =
-      "Você é um assistente especializado em análise de currículos. " +
-      "Extraia as informações do currículo (da imagem e/ou do texto fornecidos) e devolva " +
-      "SOMENTE um objeto JSON válido, sem texto extra, seguindo exatamente esta estrutura:\n" +
+      "Você é um assistente especialista em leitura minuciosa de currículos. " +
+      "Analise o currículo fornecido (na imagem e/ou no texto) com EXTREMO cuidado e atenção a TODOS os detalhes.\n\n" +
+      "INSTRUÇÕES CRÍTICAS DE LEITURA:\n" +
+      "- Leia a imagem inteira, linha por linha, de cima a baixo, da esquerda para a direita. Não pule nenhuma linha ou seção.\n" +
+      "- Transcreva cada informação legível EXATAMENTE como aparece, incluindo acentos, maiúsculas, números e símbolos.\n" +
+      "- Capture TODOS os itens de cada lista (todas as experiências, todas as formações, todos os cursos, todas as habilidades, todos os idiomas, todos os contatos).\n" +
+      "- Nas experiências, transcreva TODAS as responsabilidades e realizações (não resuma nem trunque).\n" +
+      "- Não invente nem adivinhe informações que não estejam visíveis. Use null para campo ausente.\n" +
+      "- Se uma informação estiver parcialmente legível, registre a parte legível.\n" +
+      "- Preencha TODOS os campos da estrutura abaixo. Não omita nenhum campo do JSON.\n\n" +
+      "Devolva SOMENTE um objeto JSON válido, sem texto extra, seguindo exatamente esta estrutura:\n" +
       "{\n" +
-      '  "pessoal": { "nome": string|null, "email": string|null, "telefone": string|null, ' +
-      '"cidade": string|null, "uf": string|null, "linkedin": string|null },\n' +
+      '  "pessoal": { "nome": string|null, "email": string|null, "telefones": [ string ], ' +
+      '"cidade": string|null, "uf": string|null, "endereco": string|null, "cep": string|null, ' +
+      '"linkedin": string|null, "github": string|null, "site": string|null, "nascimento": string|null },\n' +
       '  "objetivo": string|null,\n' +
+      '  "resumo": string|null,\n' +
       '  "experiencias": [ { "cargo": string|null, "empresa": string|null, "periodo": string|null, ' +
-      '"descricao": string|null } ],\n' +
-      '  "formacoes": [ { "curso": string|null, "instituicao": string|null, "periodo": string|null } ],\n' +
+      '"local": string|null, "descricao": string|null } ],\n' +
+      '  "formacoes": [ { "curso": string|null, "instituicao": string|null, "periodo": string|null, ' +
+      '"status": string|null } ],\n' +
       '  "cursos": [ string ],\n' +
       '  "habilidades": string|null,\n' +
-      '  "idiomas": string|null,\n' +
+      '  "idiomas": [ { "idioma": string|null, "nivel": string|null } ],\n' +
+      '  "projetos": [ string ],\n' +
+      '  "premios": [ string ],\n' +
+      '  "publicacoes": [ string ],\n' +
+      '  "voluntariado": [ string ],\n' +
+      '  "referencias": [ string ],\n' +
       '  "infoAdicional": string|null\n' +
-      "}\n" +
-      "Preencha com os dados reais do currículo. Se um campo não existir, use null " +
-      "(ou array vazio no caso de listas). Liste habilidades e idiomas separados por vírgula.\n";
+      "}\n\n" +
+      "REGRA DE PREENCHIMENTO: se um campo não existir no currículo, use null (ou array vazio para listas). " +
+      "Preencha habilidades como string separada por vírgula (ex.: 'JavaScript, React, SQL'). " +
+      "Idiomas devem ser uma lista de objetos com idioma e nível. Capture o máximo de informação possível.\n";
 
     // Monta as partes do conteúdo: texto (se houver) e imagem (se houver).
     const parts = [{ text: prompt }];
