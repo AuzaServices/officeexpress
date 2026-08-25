@@ -9,9 +9,48 @@
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
     .analise-page { padding-top: 8px; }
-    .analise-hero { text-align: center; padding: 32px 0 8px; }
-    .analise-hero h1 { font-size: 2rem; margin-bottom: 8px; }
-    .analise-hero p { color: var(--text-secondary); max-width: 640px; margin: 0 auto; }
+
+    /* Hero em duas colunas: texto + upload à esquerda, imagem à direita */
+    .analise-hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 40px;
+      align-items: center;
+      padding: 44px 0 16px;
+    }
+    .analise-hero-conteudo { text-align: left; }
+    .analise-hero-conteudo h1 { font-size: 2.3rem; margin-bottom: 14px; line-height: 1.2; }
+    .analise-hero-conteudo p { color: var(--text-secondary); max-width: 560px; font-size: 1.02rem; }
+    .analise-hero-imagem {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .analise-hero-imagem img {
+      width: 100%;
+      max-width: 460px;
+      height: auto;
+      border-radius: 20px;
+      box-shadow: 0 24px 60px var(--shadow-lg);
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .analise-hero-imagem::before {
+      content: "";
+      position: absolute;
+      inset: -18px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(255,136,0,.16), rgba(73,190,203,.16));
+      filter: blur(6px);
+      z-index: -1;
+    }
+    @media (max-width: 900px) {
+      .analise-hero-grid { grid-template-columns: 1fr; gap: 28px; text-align: center; }
+      .analise-hero-conteudo { text-align: center; }
+      .analise-hero-conteudo p { margin: 0 auto; }
+      .analise-hero-imagem img { max-width: 360px; }
+    }
 
     /* Upload */
     .upload-area {
@@ -141,7 +180,8 @@
 
     /* Responsividade mobile */
     @media (max-width: 560px) {
-      .analise-hero h1 { font-size: 1.55rem; }
+      .analise-hero-conteudo h1 { font-size: 1.55rem; }
+      .analise-hero-imagem img { max-width: 300px; }
       .upload-area { padding: 26px 14px; }
       .toggle-origem { width: 100%; }
       .toggle-origem button { flex: 1; padding: 9px 10px; font-size: .82rem; white-space: nowrap; }
@@ -172,19 +212,25 @@
   <div id="mobileMenu"></div>
 
   <section class="section analise-page container">
-    <div class="analise-hero">
-      <h1>Análise Inteligente de <span style="color:var(--brand-dark)">Currículo</span></h1>
-      <p>Envie seu currículo em PDF ou Word e receba um diagnóstico completo: pontuação, pontos fortes, pontos a melhorar e uma versão otimizada pela Office Express — 100% gratuito.</p>
-    </div>
+    <div class="analise-hero-grid">
+      <div class="analise-hero-conteudo">
+        <h1>Análise Inteligente de <span style="color:var(--brand-dark)">Currículo</span></h1>
+        <p>Envie seu currículo em PDF ou Word e receba um diagnóstico completo: pontuação, pontos fortes, pontos a melhorar e uma versão otimizada pela Office Express — 100% gratuito.</p>
 
-    <div id="etapaUpload">
-      <label class="upload-area" id="uploadArea">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-        <h3>Envie seu currículo para análise</h3>
-        <p>Arraste o arquivo aqui ou clique para selecionar (PDF ou DOCX)</p>
-        <input type="file" id="uploadInput" accept=".pdf,.docx" hidden />
-      </label>
-      <div class="upload-status" id="uploadStatus"></div>
+        <div id="etapaUpload">
+          <label class="upload-area" id="uploadArea">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+            <h3>Envie seu currículo para análise</h3>
+            <p>Arraste o arquivo aqui ou clique para selecionar (PDF ou DOCX)</p>
+            <input type="file" id="uploadInput" accept=".pdf,.docx" hidden />
+          </label>
+          <div class="upload-status" id="uploadStatus"></div>
+        </div>
+      </div>
+
+      <div class="analise-hero-imagem">
+        <img src="/imagens/analise-hero.png" alt="Análise inteligente de currículo Office Express" onerror="this.style.display='none'" />
+      </div>
     </div>
 
     <div class="analise-resultado" id="resultado">
