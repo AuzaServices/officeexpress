@@ -145,6 +145,10 @@
     .previa-paper p { margin: 4px 0; color: #333; }
     .previa-paper ul { margin: 4px 0; padding-left: 18px; }
     .previa-doc-original { width: 100%; height: 100%; min-height: 540px; border: none; background: #fafafa; }
+    .previa-paper img.previa-doc-original {
+      width: 100%; height: auto; max-height: 560px; object-fit: contain;
+      display: block; margin: 0 auto; border-radius: 6px; background: #fafafa;
+    }
     .previa-paper iframe { width: 100%; height: 100%; min-height: 540px; border: none; }
     .previa-docx {
       background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
@@ -228,8 +232,8 @@
           <label class="upload-area" id="uploadArea">
             <span class="upload-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></span>
             <h3>Envie seu currículo para análise</h3>
-            <p>Arraste o arquivo aqui ou clique para selecionar (PDF ou DOCX)</p>
-            <input type="file" id="uploadInput" accept=".pdf,.docx" hidden />
+            <p>Arraste o arquivo aqui ou clique para selecionar (PDF, Word ou imagem)</p>
+            <input type="file" id="uploadInput" accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.bmp,.gif" hidden />
           </label>
           <div class="upload-status" id="uploadStatus"></div>
         </div>
@@ -331,6 +335,7 @@
   <script src="/assets/app.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script>
     if (window["pdfjs-dist/build/pdf"]) { window.pdfjsLib = window["pdfjs-dist/build/pdf"]; }
     if (window.pdfjsLib) { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }
@@ -375,6 +380,32 @@
 
     function extrairTextoDOCX(arrayBuffer) {
       return window.mammoth.extractRawText({ arrayBuffer: arrayBuffer }).then(function (r) { return r.value; });
+    }
+
+    // ---- OCR para currículos em imagem (JPG, PNG, etc.) ----
+    var EXTENSOES_IMAGEM = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", bmp: "image/bmp", gif: "image/gif" };
+    function ehImagem(ext) { return EXTENSOES_IMAGEM.hasOwnProperty(ext); }
+    function mimeDoArquivo(ext) {
+      if (ext === "pdf") return "application/pdf";
+      if (ext === "docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      return EXTENSOES_IMAGEM[ext] || "application/octet-stream";
+    }
+    function extrairTextoImagem(arrayBuffer, ext) {
+      // OCR via Tesseract.js (processamento local no navegador).
+      if (!window.Tesseract) return Promise.reject(new Error("OCR indisponível"));
+      var tipo = mimeDoArquivo(ext);
+      var blob = new Blob([arrayBuffer], { type: tipo });
+      setStatus("Lendo texto da imagem (OCR)... isso pode levar alguns segundos.");
+      return window.Tesseract.recognize(blob, "por", {
+        logger: function (m) {
+          if (m && m.status === "recognizing text" && typeof m.progress === "number") {
+            var pct = Math.round(m.progress * 100);
+            setStatus("Lendo texto da imagem (OCR)... " + pct + "%");
+          }
+        }
+      }).then(function (res) {
+        return (res && res.data && res.data.text) ? res.data.text : "";
+      });
     }
 
     // ---- Motor de extração de dados (robusto, multi-camada) ----
@@ -1033,6 +1064,9 @@
           if (tipoArquivoOriginal === "pdf") {
             // PDF é exibido nativamente no navegador via iframe
             paper.innerHTML = '<iframe class="previa-doc-original" src="' + blobUrlOriginal + '"></iframe>';
+          } else if (ehImagem(tipoArquivoOriginal)) {
+            // Imagem: exibe a foto do currículo enviado
+            paper.innerHTML = '<img class="previa-doc-original" src="' + blobUrlOriginal + '" alt="Currículo original enviado" />';
           } else {
             // DOCX: exibe o documento ORIGINAL de forma fiel via visualizador do
             // Office da Microsoft. Se a URL pública ainda não estiver pronta,
@@ -1170,7 +1204,7 @@
         try {
           if (blobUrlOriginal) URL.revokeObjectURL(blobUrlOriginal);
           tipoArquivoOriginal = ext;
-          blobUrlOriginal = URL.createObjectURL(new Blob([buffer], { type: ext === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
+          blobUrlOriginal = URL.createObjectURL(new Blob([buffer], { type: mimeDoArquivo(ext) }));
         } catch (e) { blobUrlOriginal = null; }
         // Para DOCX, envia ao servidor para obter uma URL pública e exibir a
         // prévia "Original" de forma fiel (via visualizador do Office).
@@ -1196,7 +1230,14 @@
             }
           })();
         }
-        var promessa = ext === "pdf" ? extrairTextoPDF(buffer) : extrairTextoDOCX(buffer);
+        var promessa;
+        if (ext === "pdf") {
+          promessa = extrairTextoPDF(buffer);
+        } else if (ext === "docx") {
+          promessa = extrairTextoDOCX(buffer);
+        } else {
+          promessa = extrairTextoImagem(buffer, ext);
+        }
         promessa.then(function (texto) {
           if (!texto || texto.trim().length < 20) {
             setStatus("Não conseguimos ler o conteúdo do arquivo. Tente outro arquivo.", "erro");
@@ -1225,7 +1266,7 @@
       var file = uploadInput.files && uploadInput.files[0];
       if (!file) return;
       var ext = file.name.split(".").pop().toLowerCase();
-      if (ext !== "pdf" && ext !== "docx") { setStatus("Envie um arquivo PDF ou DOCX.", "erro"); return; }
+      if (ext !== "pdf" && ext !== "docx" && !ehImagem(ext)) { setStatus("Envie um arquivo PDF, Word ou imagem.", "erro"); return; }
       processarArquivo(file);
     });
 
@@ -1239,7 +1280,7 @@
       var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
       if (file) {
         var ext = file.name.split(".").pop().toLowerCase();
-        if (ext !== "pdf" && ext !== "docx") { setStatus("Envie um arquivo PDF ou DOCX.", "erro"); return; }
+        if (ext !== "pdf" && ext !== "docx" && !ehImagem(ext)) { setStatus("Envie um arquivo PDF, Word ou imagem.", "erro"); return; }
         processarArquivo(file);
       }
     });
