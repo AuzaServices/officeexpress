@@ -1166,6 +1166,11 @@
 
     function mostrarResultado() {
       var res = analisar(dadosExtraidos, textoOriginal);
+      // Se a IA gerou diagnóstico (pontos/score), usa o da IA em vez das regras,
+      // garantindo coerência com o conteúdo realmente presente no currículo.
+      if (dadosExtraidos && dadosExtraidos.scoreIA != null) res.score = dadosExtraidos.scoreIA;
+      if (dadosExtraidos && dadosExtraidos.pontosFortesIA && dadosExtraidos.pontosFortesIA.length) res.forte = dadosExtraidos.pontosFortesIA;
+      if (dadosExtraidos && dadosExtraidos.pontosMelhorarIA && dadosExtraidos.pontosMelhorarIA.length) res.melhorar = dadosExtraidos.pontosMelhorarIA;
       document.getElementById("resultado").classList.add("visivel");
 
       // Anel + score (evolução gradual de 0 até o valor final)
@@ -1287,8 +1292,24 @@
         voluntariado: lista(d.voluntariado),
         referencias: lista(d.referencias),
         infoAdicional: s(d.infoAdicional),
-        hobbies: s(d.hobbies)
+        hobbies: s(d.hobbies),
+        // Diagnóstico gerado pela IA (coerente com o conteúdo real)
+        scoreIA: (typeof d.score === "number" && isFinite(d.score)) ? Math.max(0, Math.min(100, Math.round(d.score))) : null,
+        pontosFortesIA: pontosIA(d.pontosFortes),
+        pontosMelhorarIA: pontosIA(d.pontosMelhorar)
       };
+    }
+    // Normaliza os pontos (fortes/melhorar) retornados pela IA para o formato { t, d }.
+    function pontosIA(pontos) {
+      if (!Array.isArray(pontos)) return [];
+      return pontos.filter(function (p) {
+        return p && typeof p === "object" && String(p.titulo || p.t || "").trim() !== "";
+      }).map(function (p) {
+        return {
+          t: String(p.titulo || p.t || "").trim(),
+          d: String(p.descricao || p.d || "").trim()
+        };
+      });
     }
     // Converte idiomas (string ou lista de objetos) em uma string separada por vírgula.
     function idiomasEmString(idiomas) {

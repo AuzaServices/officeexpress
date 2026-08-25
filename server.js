@@ -583,11 +583,27 @@ app.post("/api/analise-ia", async (req, res) => {
       '  "publicacoes": [ string ],\n' +
       '  "voluntariado": [ string ],\n' +
       '  "referencias": [ string ],\n' +
-      '  "infoAdicional": string|null\n' +
+      '  "infoAdicional": string|null,\n' +
+      '  "score": number|null,\n' +
+      '  "pontosFortes": [ { "titulo": string, "descricao": string } ],\n' +
+      '  "pontosMelhorar": [ { "titulo": string, "descricao": string } ]\n' +
       "}\n\n" +
       "REGRA DE PREENCHIMENTO: se um campo não existir no currículo, use null (ou array vazio para listas). " +
       "Preencha habilidades como string separada por vírgula (ex.: 'JavaScript, React, SQL'). " +
-      "Idiomas devem ser uma lista de objetos com idioma e nível. Capture o máximo de informação possível.\n";
+      "Idiomas devem ser uma lista de objetos com idioma e nível. Capture o máximo de informação possível.\n\n" +
+      "AVALIAÇÃO (importante):\n" +
+      "- 'score' deve ser uma nota de 0 a 100 que reflete a QUALIDADE REAL do currículo, avaliando objetivamente:\n" +
+      "  presença de informações de contato completas, objetivo/resumo, experiência detalhada com resultados, formação, " +
+      "  habilidades, idiomas, organização e volume de conteúdo. Seja justo e criterioso.\n" +
+      "- 'pontosFortes': liste de 3 a 6 pontos positivos REAIS presentes no currículo. Cada item tem 'titulo' (curto) e " +
+      "  'descricao' (1 a 2 frases explicando por que é um ponto forte, citando o que está no currículo). " +
+      "  NÃO invente pontos que não existem no documento.\n" +
+      "- 'pontosMelhorar': liste de 2 a 5 sugestões REAIS de melhoria, baseadas APENAS no que está faltando ou fraco no " +
+      "  currículo (ex.: contato incompleto, sem objetivo, experiência sem resultados, sem idiomas, seções ausentes). " +
+      "  Cada item tem 'titulo' (curto) e 'descricao' (1 a 2 frases com sugestão concreta). Se o currículo estiver " +
+      "  completo e sem lacunas relevantes, devolva lista vazia.\n" +
+      "- Os pontos fortes e pontos a melhorar DEVEM ser coerentes com as informações realmente presentes no currículo, " +
+      "  nunca contradizendo os dados extraídos.\n";
 
     // Monta as partes do conteúdo: texto (se houver) e imagem (se houver).
     const parts = [{ text: prompt }];
@@ -602,18 +618,34 @@ app.post("/api/analise-ia", async (req, res) => {
     const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + apiKey;
     const body = {
       contents: [{ parts: parts }],
-      generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
+      generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 4096 },
     };
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    // Retry com backoff para erros temporários (alta demanda, rate limit, etc.).
+    let resp = null;
+    const tentativas = [0, 1500, 3000];
+    for (let i = 0; i < tentativas.length; i++) {
+      if (i > 0) await new Promise((r) => setTimeout(r, tentativas[i]));
+      try {
+        resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } catch (e) {
+        resp = null;
+      }
+      // Sucesso ou erro permanente: para. Se for erro temporário, tenta de novo.
+      if (resp && resp.ok) break;
+      const status = resp ? resp.status : 0;
+      const temporario = status === 429 || status === 500 || status === 502 || status === 503 || status === 504 || status === 0;
+      if (!temporario) break;
+      console.error("Erro temporário na API Gemini (tentativa " + (i + 1) + "): status " + status);
+    }
 
-    if (!resp.ok) {
-      const textoErro = await resp.text().catch(() => "");
-      console.error("Erro na API Gemini:", resp.status, textoErro.slice(0, 500));
+    if (!resp || !resp.ok) {
+      const textoErro = resp ? await resp.text().catch(() => "") : "sem resposta";
+      console.error("Erro na API Gemini:", resp ? resp.status : 0, textoErro.slice(0, 500));
       return res.json({ ok: false, disponivel: true, error: "Falha na API de IA." });
     }
 
