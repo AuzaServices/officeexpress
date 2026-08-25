@@ -41,35 +41,35 @@
     /* Upload */
     .upload-area {
       display: block;
-      border: 2px dashed rgba(14,43,68,.28);
-      border-radius: 16px;
-      padding: 36px 24px;
+      border: 1.5px dashed rgba(14,43,68,.18);
+      border-radius: 20px;
+      padding: 48px 28px;
       text-align: center;
       cursor: pointer;
-      background: rgba(255,255,255,.8);
-      box-shadow: 0 8px 24px rgba(14,43,68,.08);
-      transition: border-color .15s, background .15s, box-shadow .15s, transform .15s;
+      background: rgba(255,255,255,.5);
+      transition: border-color .2s, background .2s, transform .2s;
     }
     .upload-area:hover {
       border-color: var(--brand);
-      background: rgba(255,255,255,.96);
-      box-shadow: 0 12px 32px rgba(255,136,0,.18);
-      transform: translateY(-2px);
+      background: rgba(255,255,255,.85);
     }
     .upload-area.dragover {
       border-color: var(--brand);
-      background: rgba(255,136,0,.08);
-      box-shadow: 0 12px 32px rgba(255,136,0,.22);
-      transform: translateY(-2px);
+      background: rgba(255,136,0,.07);
     }
-    .upload-area svg {
-      width: 40px; height: 40px; color: var(--brand);
-      padding: 14px; margin-bottom: 14px;
-      background: rgba(255,136,0,.12);
-      border-radius: 14px;
+    .upload-icone {
+      width: 56px; height: 56px;
+      margin: 0 auto 18px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: rgba(255,136,0,.1);
+      color: var(--brand-dark);
+      transition: background .2s, transform .2s;
     }
-    .upload-area h3 { margin: 0 0 6px; font-size: 1.05rem; color: var(--text-primary); }
-    .upload-area p { margin: 0; color: var(--text-muted); font-size: .88rem; }
+    .upload-area:hover .upload-icone { background: rgba(255,136,0,.16); transform: translateY(-2px); }
+    .upload-area svg { width: 26px; height: 26px; }
+    .upload-area h3 { margin: 0 0 8px; font-size: 1.1rem; font-weight: 600; color: var(--text-primary); letter-spacing: -.01em; }
+    .upload-area p { margin: 0; color: var(--text-muted); font-size: .9rem; }
     .upload-status { margin-top: 12px; font-size: .85rem; color: var(--text-muted); min-height: 18px; }
     .upload-status.erro { color: var(--danger); }
     .upload-status.ok { color: var(--success); }
@@ -226,7 +226,7 @@
 
         <div id="etapaUpload">
           <label class="upload-area" id="uploadArea">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+            <span class="upload-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></span>
             <h3>Envie seu currículo para análise</h3>
             <p>Arraste o arquivo aqui ou clique para selecionar (PDF ou DOCX)</p>
             <input type="file" id="uploadInput" accept=".pdf,.docx" hidden />
