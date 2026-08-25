@@ -36,7 +36,7 @@ const fs = require("fs");
 const { MercadoPagoConfig, Payment } = require("mercadopago");
 const { pool, garantirSchema, getPreco } = require("./lib/db");
 const { MODELOS, gerarPDF } = require("./lib/modelos");
-const { CARTAS, gerarCartaPDF } = require("./lib/cartas");
+const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao } = require("./lib/email");
 
 require("dotenv").config();
@@ -251,6 +251,21 @@ app.get("/api/modelos", async (req, res) => {
 app.get("/api/cartas", async (req, res) => {
   const preco = await getPreco();
   res.json({ cartas: CARTAS, preco });
+});
+
+// Renderiza o HTML da prévia da carta aplicando o layout visual do modelo
+// escolhido, de forma consistente com o PDF gerado pelo servidor.
+app.post("/api/cartas/previa", (req, res) => {
+  const { modelo, dados } = req.body || {};
+  const valido = modelo && CARTAS.find((m) => m.id === modelo);
+  if (!valido) return res.status(400).json({ error: "Modelo inválido." });
+  try {
+    const html = montarCartaHTML(modelo, dados || {});
+    res.json({ ok: true, html });
+  } catch (e) {
+    console.error("Erro ao renderizar prévia da carta:", e);
+    res.status(500).json({ error: "Erro ao gerar a prévia." });
+  }
 });
 
 // Configuração pública de pagamento (public key do MP + preço)
