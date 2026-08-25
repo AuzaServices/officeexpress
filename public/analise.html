@@ -1192,6 +1192,56 @@
     }
 
     // ---- Fluxo de arquivo ----
+    // Normaliza os dados estruturados retornados pela IA (Gemini) para o
+    // formato esperado pelo restante do fluxo (gerarMelhorado, montarDadosCronologico, analisar).
+    function normalizarDadosIA(d) {
+      d = d || {};
+      function s(v) { return (v == null ? "" : String(v)).trim(); }
+      function lista(arr) {
+        if (!Array.isArray(arr)) return [];
+        return arr.filter(function (x) { return x != null && String(x).trim() !== ""; })
+                 .map(function (x) { return String(x).trim(); });
+      }
+      var p = (d.pessoal && typeof d.pessoal === "object") ? d.pessoal : {};
+      var telefones = lista(p.telefones);
+      var tel = s(p.telefone);
+      if (!telefones.length && tel) telefones = [tel];
+      var experiencias = Array.isArray(d.experiencias) ? d.experiencias.filter(function (x) { return x && typeof x === "object"; }) : [];
+      var formacoes = Array.isArray(d.formacoes) ? d.formacoes.filter(function (x) { return x && typeof x === "object"; }) : [];
+      return {
+        pessoal: {
+          nome: s(p.nome),
+          email: s(p.email),
+          telefone: tel,
+          telefones: telefones,
+          cidade: s(p.cidade),
+          uf: s(p.uf),
+          linkedin: s(p.linkedin)
+        },
+        objetivo: s(d.objetivo),
+        experiencias: experiencias.map(function (e) {
+          return {
+            cargo: s(e.cargo),
+            empresa: s(e.empresa),
+            periodo: s(e.periodo),
+            descricao: s(e.descricao) || s(e.detalhes)
+          };
+        }),
+        formacoes: formacoes.map(function (f) {
+          return {
+            curso: s(f.curso) || s(f.nome),
+            instituicao: s(f.instituicao) || s(f.nomeInstituicao),
+            periodo: s(f.periodo)
+          };
+        }),
+        cursos: lista(d.cursos),
+        habilidades: s(d.habilidades),
+        idiomas: s(d.idiomas),
+        infoAdicional: s(d.infoAdicional),
+        hobbies: s(d.hobbies)
+      };
+    }
+
     function processarArquivo(file) {
       setStatus("Lendo e analisando seu currículo...");
       var ext = file.name.split(".").pop().toLowerCase();
@@ -1244,16 +1294,33 @@
             return;
           }
           textoOriginal = texto;
-          dadosExtraidos = extrairDadosDoTexto(texto);
-          textoMelhorado = gerarMelhorado(dadosExtraidos);
-          setStatus("Análise concluída com sucesso!", "ok");
-          document.getElementById("etapaUpload").style.display = "none";
-          mostrarResultado();
-          // Salva os dados extraídos para o fluxo de pagamento/editor
-          try {
-            localStorage.setItem("curriculoUpload", JSON.stringify(dadosExtraidos));
-            localStorage.setItem("curriculoUploadPendente", "1");
-          } catch (e) {}
+          setStatus("Analisando seu currículo com inteligência artificial...");
+          function finalizarAnalise() {
+            textoMelhorado = gerarMelhorado(dadosExtraidos);
+            setStatus("Análise concluída com sucesso!", "ok");
+            document.getElementById("etapaUpload").style.display = "none";
+            mostrarResultado();
+            // Salva os dados extraídos para o fluxo de pagamento/editor
+            try {
+              localStorage.setItem("curriculoUpload", JSON.stringify(dadosExtraidos));
+              localStorage.setItem("curriculoUploadPendente", "1");
+            } catch (e) {}
+          }
+          // Tenta a IA (Gemini) primeiro; se não houver chave ou falhar, usa o parser local.
+          App.api("/api/analise-ia", {
+            method: "POST",
+            body: JSON.stringify({ texto: texto })
+          }).then(function (res) {
+            if (res.ok && res.data && res.data.ok && res.data.dados) {
+              dadosExtraidos = normalizarDadosIA(res.data.dados);
+            } else {
+              dadosExtraidos = extrairDadosDoTexto(texto);
+            }
+            finalizarAnalise();
+          }).catch(function () {
+            dadosExtraidos = extrairDadosDoTexto(texto);
+            finalizarAnalise();
+          });
         }).catch(function () {
           setStatus("Não foi possível processar este arquivo. Tente novamente.", "erro");
         });

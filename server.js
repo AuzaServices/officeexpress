@@ -536,6 +536,84 @@ app.post("/api/upload-curriculo", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Análise por IA (Gemini): extração estruturada das informações do currículo.
+// Se não houver chave configurada (GEMINI_API_KEY), o servidor responde
+// disponivel:false e o frontend usa o parser local como fallback.
+// ---------------------------------------------------------------------------
+app.post("/api/analise-ia", async (req, res) => {
+  try {
+    const { texto } = req.body || {};
+    if (!texto || !String(texto).trim()) {
+      return res.status(400).json({ error: "Texto vazio." });
+    }
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.json({ ok: false, disponivel: false, error: "IA não configurada." });
+    }
+
+    const prompt =
+      "Você é um assistente especializado em análise de currículos. " +
+      "Extraia as informações do currículo abaixo e devolva SOMENTE um objeto JSON válido, " +
+      "sem texto extra, seguindo exatamente esta estrutura:\n" +
+      "{\n" +
+      '  "pessoal": { "nome": string|null, "email": string|null, "telefone": string|null, ' +
+      '"cidade": string|null, "uf": string|null, "linkedin": string|null },\n' +
+      '  "objetivo": string|null,\n' +
+      '  "experiencias": [ { "cargo": string|null, "empresa": string|null, "periodo": string|null, ' +
+      '"descricao": string|null } ],\n' +
+      '  "formacoes": [ { "curso": string|null, "instituicao": string|null, "periodo": string|null } ],\n' +
+      '  "cursos": [ string ],\n' +
+      '  "habilidades": string|null,\n' +
+      '  "idiomas": string|null,\n' +
+      '  "infoAdicional": string|null\n' +
+      "}\n" +
+      "Preencha com os dados reais do currículo. Se um campo não existir, use null " +
+      "(ou array vazio no caso de listas). Liste habilidades e idiomas separados por vírgula.\n\n" +
+      "CURRÍCULO:\n" + String(texto).slice(0, 12000);
+
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + apiKey;
+    const body = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
+    };
+
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!resp.ok) {
+      const textoErro = await resp.text().catch(() => "");
+      console.error("Erro na API Gemini:", resp.status, textoErro.slice(0, 500));
+      return res.json({ ok: false, disponivel: true, error: "Falha na API de IA." });
+    }
+
+    const data = await resp.json();
+    const parte = data && data.candidates && data.candidates[0] && data.candidates[0].content;
+    const conteudo = parte && parte.parts && parte.parts[0] && parte.parts[0].text;
+    if (!conteudo) {
+      return res.json({ ok: false, disponivel: true, error: "Resposta vazia da IA." });
+    }
+
+    let dados = null;
+    try {
+      // Remove possíveis cercas de bloco ```json ... ```
+      const limpo = String(conteudo).replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+      dados = JSON.parse(limpo);
+    } catch (e) {
+      console.error("Erro ao interpretar JSON da IA:", e);
+      return res.json({ ok: false, disponivel: true, error: "Resposta inválida da IA." });
+    }
+
+    res.json({ ok: true, dados });
+  } catch (e) {
+    console.error("Erro na análise por IA:", e);
+    res.json({ ok: false, disponivel: true, error: "Erro interno na análise por IA." });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Páginas
 // ---------------------------------------------------------------------------
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
