@@ -408,6 +408,37 @@
       });
     }
 
+    // Redimensiona e compacta a imagem para enviar à IA (reduz payload e acelera).
+    function prepararImagemBase64(arrayBuffer, mime, maxLargura) {
+      maxLargura = maxLargura || 1600;
+      return new Promise(function (resolve) {
+        var blob = new Blob([arrayBuffer], { type: mime });
+        var url = URL.createObjectURL(blob);
+        var img = new Image();
+        img.onload = function () {
+          var largura = img.width;
+          var altura = img.height;
+          if (largura > maxLargura) {
+            altura = Math.round(altura * maxLargura / largura);
+            largura = maxLargura;
+          }
+          var canvas = document.createElement("canvas");
+          canvas.width = largura;
+          canvas.height = altura;
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, largura, altura);
+          var dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          URL.revokeObjectURL(url);
+          resolve(dataUrl.split(",")[1] || "");
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          resolve("");
+        };
+        img.src = url;
+      });
+    }
+
     // ---- Motor de extração de dados (robusto, multi-camada) ----
     function extrairDadosDoTexto(textoOriginal) {
       var texto = limparEspacos(textoOriginal || "");
@@ -1307,20 +1338,34 @@
             } catch (e) {}
           }
           // Tenta a IA (Gemini) primeiro; se não houver chave ou falhar, usa o parser local.
-          App.api("/api/analise-ia", {
-            method: "POST",
-            body: JSON.stringify({ texto: texto })
-          }).then(function (res) {
-            if (res.ok && res.data && res.data.ok && res.data.dados) {
-              dadosExtraidos = normalizarDadosIA(res.data.dados);
-            } else {
-              dadosExtraidos = extrairDadosDoTexto(texto);
+          function chamarIA(b64Imagem) {
+            var payload = { texto: texto };
+            if (b64Imagem) {
+              payload.imagemBase64 = b64Imagem;
+              payload.mime = "image/jpeg";
             }
-            finalizarAnalise();
-          }).catch(function () {
-            dadosExtraidos = extrairDadosDoTexto(texto);
-            finalizarAnalise();
-          });
+            App.api("/api/analise-ia", {
+              method: "POST",
+              body: JSON.stringify(payload)
+            }).then(function (res) {
+              if (res.ok && res.data && res.data.ok && res.data.dados) {
+                dadosExtraidos = normalizarDadosIA(res.data.dados);
+              } else {
+                dadosExtraidos = extrairDadosDoTexto(texto);
+              }
+              finalizarAnalise();
+            }).catch(function () {
+              dadosExtraidos = extrairDadosDoTexto(texto);
+              finalizarAnalise();
+            });
+          }
+          // Para imagens, envia também a imagem (compactada) para a IA analisar
+          // diretamente — muito mais preciso que o OCR em fotos tortas/iluminadas.
+          if (ehImagem(ext)) {
+            prepararImagemBase64(buffer, mimeDoArquivo(ext)).then(chamarIA);
+          } else {
+            chamarIA("");
+          }
         }).catch(function () {
           setStatus("Não foi possível processar este arquivo. Tente novamente.", "erro");
         });

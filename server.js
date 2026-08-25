@@ -542,9 +542,11 @@ app.post("/api/upload-curriculo", async (req, res) => {
 // ---------------------------------------------------------------------------
 app.post("/api/analise-ia", async (req, res) => {
   try {
-    const { texto } = req.body || {};
-    if (!texto || !String(texto).trim()) {
-      return res.status(400).json({ error: "Texto vazio." });
+    const { texto, imagemBase64, mime } = req.body || {};
+    const temTexto = texto && String(texto).trim();
+    const temImagem = imagemBase64 && String(imagemBase64).trim();
+    if (!temTexto && !temImagem) {
+      return res.status(400).json({ error: "Nenhum conteúdo enviado." });
     }
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -553,8 +555,8 @@ app.post("/api/analise-ia", async (req, res) => {
 
     const prompt =
       "Você é um assistente especializado em análise de currículos. " +
-      "Extraia as informações do currículo abaixo e devolva SOMENTE um objeto JSON válido, " +
-      "sem texto extra, seguindo exatamente esta estrutura:\n" +
+      "Extraia as informações do currículo (da imagem e/ou do texto fornecidos) e devolva " +
+      "SOMENTE um objeto JSON válido, sem texto extra, seguindo exatamente esta estrutura:\n" +
       "{\n" +
       '  "pessoal": { "nome": string|null, "email": string|null, "telefone": string|null, ' +
       '"cidade": string|null, "uf": string|null, "linkedin": string|null },\n' +
@@ -568,12 +570,21 @@ app.post("/api/analise-ia", async (req, res) => {
       '  "infoAdicional": string|null\n' +
       "}\n" +
       "Preencha com os dados reais do currículo. Se um campo não existir, use null " +
-      "(ou array vazio no caso de listas). Liste habilidades e idiomas separados por vírgula.\n\n" +
-      "CURRÍCULO:\n" + String(texto).slice(0, 12000);
+      "(ou array vazio no caso de listas). Liste habilidades e idiomas separados por vírgula.\n";
+
+    // Monta as partes do conteúdo: texto (se houver) e imagem (se houver).
+    const parts = [{ text: prompt }];
+    if (temImagem) {
+      const mimeValido = /^image\/(png|jpe?g|webp|bmp|gif)$/.test(String(mime || "")) ? String(mime) : "image/png";
+      parts.push({ inlineData: { mimeType: mimeValido, data: String(imagemBase64).trim() } });
+    }
+    if (temTexto) {
+      parts.push({ text: "TEXTO EXTRAÍDO DO CURRÍCULO:\n" + String(texto).slice(0, 12000) });
+    }
 
     const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + apiKey;
     const body = {
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts: parts }],
       generationConfig: { temperature: 0.2, responseMimeType: "application/json" },
     };
 
