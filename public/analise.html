@@ -187,6 +187,20 @@
     .cta-pagamento h3 { margin: 0 0 6px; }
     .cta-pagamento p { color: var(--text-secondary); margin: 0 0 16px; }
     .cta-pagamento .btn { min-width: 220px; }
+    .cta-acoes {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .btn-editar {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-width: 220px; padding: 14px 22px;
+      background: transparent; color: var(--text-primary);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-weight: 700; font-size: .95rem; cursor: pointer;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .btn-editar:hover { border-color: var(--brand); background: rgba(255,136,0,.08); color: var(--brand-dark); }
+    .btn-editar svg { width: 18px; height: 18px; flex-shrink: 0; }
     .spacer { height: 12px; }
 
     /* Responsividade mobile */
@@ -205,7 +219,8 @@
       .previa-doc-original, .previa-paper iframe { min-height: 420px; }
       .previa-col .card { padding: 12px; }
       .analise-cols { gap: 8px; }
-      .cta-pagamento .btn { min-width: 100%; width: 100%; }
+      .cta-pagamento .btn, .btn-editar { min-width: 100%; width: 100%; }
+      .cta-acoes { flex-direction: column; }
     }
     @media (max-width: 380px) {
       .score-grid { grid-template-columns: 1fr; }
@@ -282,7 +297,13 @@
       <div class="cta-pagamento">
         <h3>Gostou da versão melhorada?</h3>
         <p>Receba seu currículo <b>corrigido, reescrito e modernizado</b> em PDF, pronto para os sistemas de IA de recrutamento (ATS).</p>
-        <button class="btn btn-primary" id="btnPagamento">Melhorar meu currículo agora</button>
+        <div class="cta-acoes">
+          <button class="btn btn-primary" id="btnPagamento">Melhorar meu currículo agora</button>
+          <button class="btn btn-editar" id="btnEditar" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar currículo
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -1510,6 +1531,19 @@
         btn.textContent = "Melhorar meu currículo agora";
         alert("Erro ao criar o pedido. Tente novamente.");
       });
+    });
+
+    // Botão Editar: leva ao editor com todos os dados do currículo analisado.
+    document.getElementById("btnEditar").addEventListener("click", function () {
+      if (!dadosExtraidos || !dadosExtraidos.pessoal || !dadosExtraidos.pessoal.nome) {
+        alert("Analise um currículo antes de editar.");
+        return;
+      }
+      try {
+        localStorage.setItem("curriculoUpload", JSON.stringify(dadosExtraidos));
+        localStorage.setItem("curriculoUploadPendente", "1");
+      } catch (e) {}
+      window.location.href = "/editor";
     });
   </script>
 </body>

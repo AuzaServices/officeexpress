@@ -621,10 +621,26 @@
           if (up.pessoal.telefone) base.telefone = [up.pessoal.telefone];
           if (up.pessoal.cidade) base.cidade = up.pessoal.cidade;
           if (up.pessoal.uf) base.estado = up.pessoal.uf;
+          if (up.pessoal.endereco) {
+            // Separa rua, número e bairro quando possível (ex.: "Rua das Flores, 123 - Centro").
+            var end = String(up.pessoal.endereco);
+            var bairroParte = "";
+            var mBairro = end.match(/\s+[-–—]\s*(.+)$/);
+            if (mBairro) { bairroParte = mBairro[1].trim(); end = end.slice(0, mBairro.index).trim(); }
+            var mNum = end.match(/^(.*?)[,]\s*(\d+)\s*$/);
+            if (mNum) {
+              base.endereco = mNum[1].trim();
+              base.numero = mNum[2];
+            } else {
+              base.endereco = end;
+            }
+            if (bairroParte) base.bairro = bairroParte;
+          }
         }
         if (up.objetivo) base.objetivo = up.objetivo;
         if (up.habilidades) base.habilidades = up.habilidades;
         if (up.hobbies) base.hobbies = up.hobbies;
+        if (up.infoAdicional) base.infoAdicional = up.infoAdicional;
         if (up.formacoes && up.formacoes.length) {
           base.formacao = up.formacoes.map(function (f) { return f.descricao || f.curso || ""; }).filter(Boolean).join("\n");
         }
@@ -639,6 +655,8 @@
           base.periodo_inicio = up.experiencias.map(function (e) { return e.periodo || ""; });
           base.periodo_fim = up.experiencias.map(function () { return ""; });
           base.atividades = up.experiencias.map(function (e) { return e.descricao || ""; });
+        } else {
+          base.primeiroEmprego = true;
         }
         localStorage.setItem("curriculo", JSON.stringify(base));
         localStorage.removeItem("curriculoUploadPendente");
