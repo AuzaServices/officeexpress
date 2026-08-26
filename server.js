@@ -563,8 +563,28 @@ function gerarSessaoId() {
   return crypto.randomBytes(16).toString("hex");
 }
 
-// Endpoint de tracking: recebe pageviews e eventos de interação. Usado com
-// navigator.sendBeacon no frontend, por isso aceita tanto JSON quanto texto.
+// ---------------------------------------------------------------------------
+// "Online agora" em tempo real: sessões ativas mantidas em memória.
+// O frontend envia um heartbeat (sinal de vida) a cada poucos segundos e um
+// evento "sair" ao fechar a página. Assim a entrada aparece na hora e a saída
+// zera imediatamente (ou em até HEARTBEAT_TTL quando o navegador é fechado
+// sem avisar, como um crash).
+// ---------------------------------------------------------------------------
+const HEARTBEAT_TTL_MS = 40 * 1000;   // janela para considerar uma sessão online
+const sessoesOnline = new Map();      // sessao -> lastBeat (timestamp em ms)
+
+// Remove sessões que pararam de mandar heartbeat (navegador fechado/crash).
+function limparSessoesExpiradas() {
+  const agora = Date.now();
+  for (const [sessao, lastBeat] of sessoesOnline) {
+    if (agora - lastBeat > HEARTBEAT_TTL_MS) sessoesOnline.delete(sessao);
+  }
+  return sessoesOnline.size;
+}
+
+// Endpoint de tracking: recebe pageviews, heartbeats e eventos de interação.
+// Usado com navigator.sendBeacon no frontend, por isso aceita tanto JSON
+// quanto texto.
 app.post("/api/track", async (req, res) => {
   try {
     const body = req.body || {};
@@ -582,6 +602,22 @@ app.post("/api/track", async (req, res) => {
 
     if (!sessao) return res.status(400).json({ error: "Sessão ausente." });
 
+    // Heartbeat: mantém a sessão como "online agora" (sem gravar no banco).
+    if (tipo === "heartbeat") {
+      sessoesOnline.set(sessao, Date.now());
+      return res.json({ ok: true, online: sessoesOnline.size });
+    }
+
+    // Saída explícita: remove a sessão na hora (fechou a aba / navegou fora).
+    if (tipo === "sair") {
+      sessoesOnline.delete(sessao);
+      return res.json({ ok: true, online: sessoesOnline.size });
+    }
+
+    // Qualquer outro tipo (pageview, eventos de conversão) também marca a
+    // sessão como ativa, indicando entrada imediata do visitante.
+    sessoesOnline.set(sessao, Date.now());
+
     if (tipo === "pageview") {
       await pool.query(
         `INSERT INTO visitas
@@ -595,7 +631,7 @@ app.post("/api/track", async (req, res) => {
         [sessao, String(tipo).slice(0, 60), valor, pagina || path]
       );
     }
-    res.json({ ok: true });
+    res.json({ ok: true, online: sessoesOnline.size });
   } catch (e) {
     console.error("Erro no tracking:", e);
     // Nunca deixa o tracking quebrar a navegação do usuário.
@@ -609,10 +645,10 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
   try {
     const agora = Date.now();
 
-    // Visitantes online agora (pageview nos últimos 5 minutos).
-    const [online] = await pool.query(
-      "SELECT COUNT(DISTINCT sessao) AS c FROM visitas WHERE created_at >= (NOW() - INTERVAL 5 MINUTE)"
-    );
+    // Visitantes online agora (tempo real, em memória): sessões com heartbeat
+    // recente. Sessões que pararam de enviar (navegador fechado/crash) são
+    // removidas aqui, fazendo a contagem refletir a saída logo.
+    const onlineAgora = limparSessoesExpiradas();
 
     // Últimas 24h e últimos 7 dias. Cada usuário/sessão conta como UMA visita,
     // independentemente de quantas páginas visitou (não infla por pageview).
@@ -662,7 +698,7 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
       : 0;
 
     res.json({
-      onlineAgora: online[0].c || 0,
+      onlineAgora: onlineAgora,
       ultimas24h: { visitas: d24[0].c || 0 },
       ultimos7dias: { visitas: d7[0].c || 0 },
       taxaRejeicao,

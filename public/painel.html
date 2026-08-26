@@ -235,7 +235,7 @@
     function renderMetricas(m) {
       var status = document.getElementById("metricaStatus");
       if (status) {
-        status.textContent = "Atualizado " + new Date(m.geradoEm).toLocaleTimeString("pt-BR") + " · atualiza a cada 30s";
+        status.textContent = "Atualizado " + new Date(m.geradoEm).toLocaleTimeString("pt-BR") + " · online em tempo real";
         status.classList.add("live");
       }
       document.getElementById("metricaStats").innerHTML =
@@ -337,9 +337,9 @@
 
     carregar();
     carregarMetricas();
-    // Atualização em tempo real: métricas de tráfego a cada 30s e
-    // pedidos/usuários a cada 15s para acompanhar o fluxo ao vivo.
-    setInterval(function () { carregarMetricas(); }, 30000);
+    // Atualização em tempo real: métricas de tráfego a cada 10s (para o
+    // "online agora" refletir entrada/saída logo) e pedidos/usuários a cada 15s.
+    setInterval(function () { carregarMetricas(); }, 10000);
     setInterval(function () {
       var conteudo = document.getElementById("conteudo");
       if (conteudo && conteudo.style.display !== "none") carregar();

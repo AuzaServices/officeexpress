@@ -197,7 +197,33 @@ window.App = (function () {
     beacon({ tipo: tipo, valor: valor || "", pagina: window.location.pathname });
   }
 
-  return { api, authMe, mostrarAlerta, limparAlerta, logout, formatarPreco, carregarHeader, track: trackEvento, registrarPageview };
+  // ---------------------------------------------------------------------
+  // "Online agora" em tempo real: envia um heartbeat (sinal de vida) a cada
+  // poucos segundos e avisa o servidor quando a página é fechada, para que o
+  // contador de visitantes online suba na entrada e zere na saída.
+  // ---------------------------------------------------------------------
+  var heartbeatTimer = null;
+  function enviarHeartbeat() {
+    beacon({ tipo: "heartbeat" });
+  }
+  function sairDaSessao() {
+    try { navigator.sendBeacon("/api/track", new Blob([JSON.stringify({ tipo: "sair", sessao: sessaoAtual })], { type: "application/json" })); } catch (e) { /* ignora */ }
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+  }
+  function iniciarHeartbeat() {
+    enviarHeartbeat();
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(enviarHeartbeat, 15000);
+    // Detecta o fechamento da aba/navegação para remover a sessão na hora.
+    window.addEventListener("pagehide", sairDaSessao);
+    window.addEventListener("beforeunload", sairDaSessao);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") sairDaSessao();
+      else if (document.visibilityState === "visible") enviarHeartbeat();
+    });
+  }
+
+  return { api, authMe, mostrarAlerta, limparAlerta, logout, formatarPreco, carregarHeader, track: trackEvento, registrarPageview, iniciarHeartbeat };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -205,6 +231,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!paginaPainel) {
     // Registra a visita na página para as métricas de tráfego do painel.
     try { window.App.registrarPageview && window.App.registrarPageview(); } catch (e) { /* ignora */ }
+    // Mantém o visitante "online agora" em tempo real (heartbeat + saída).
+    try { window.App.iniciarHeartbeat && window.App.iniciarHeartbeat(); } catch (e) { /* ignora */ }
   }
   if (!paginaPainel) {
     document.body.classList.add("page-enter");
