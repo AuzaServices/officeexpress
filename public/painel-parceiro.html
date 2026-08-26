@@ -225,7 +225,7 @@
   </div>
 
   <!-- Gate de termos -->
-  <div class="overlay" id="termosOverlay" hidden>
+  <div class="overlay" id="termosOverlay" style="display:none">
     <div class="modal">
       <div class="modal-head">
         <h2>📋 Termos de Responsabilidade e Política de Privacidade</h2>
@@ -431,7 +431,7 @@
       document.getElementById("btnAceitar").disabled = true;
       App.api("/api/parceiro/aceitar-termos", { method: "POST", body: JSON.stringify({ termos: true, privacidade: true }) }).then(function (r) {
         if (r.ok) {
-          document.getElementById("termosOverlay").hidden = true;
+          document.getElementById("termosOverlay").style.display = "none";
           toast("Termos aceitos! Bem-vindo(a) 🎉");
         } else {
           document.getElementById("btnAceitar").disabled = false;
@@ -449,7 +449,7 @@
 
         // Se ainda não aceitou os termos, mostra o gate.
         if (!PARCEIRO.aceitou_termos) {
-          document.getElementById("termosOverlay").hidden = false;
+          document.getElementById("termosOverlay").style.display = "flex";
           ["checkTermos", "checkPrivacidade"].forEach(function (id) {
             document.getElementById(id).addEventListener("change", function () {
               var ok = document.getElementById("checkTermos").checked && document.getElementById("checkPrivacidade").checked;
