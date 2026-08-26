@@ -145,6 +145,26 @@
         </div>
       </div>
 
+      <!-- Parceiros (afiliados) -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Parceiros</h3>
+        <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">Cadastre parceiros que divulgarão o site pelo próprio link de compartilhamento. Cada venda feita por um cliente que entrou pelo link gera 40% de comissão, paga no dia combinado.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px">
+          <input type="text" id="parNome" placeholder="Nome do parceiro" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+          <input type="email" id="parEmail" placeholder="E-mail (login)" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+          <input type="text" id="parWhatsapp" placeholder="WhatsApp" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+          <input type="password" id="parSenha" placeholder="Senha de acesso" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+          <input type="number" id="parDia" min="1" max="28" value="5" title="Dia de pagamento" style="padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+          <button class="btn btn-primary" onclick="cadastrarParceiro()">Cadastrar parceiro</button>
+        </div>
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>Link</th><th>Comissão</th><th>Dia pag.</th><th>Termos</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbodyParceiros"><tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Segurança -->
       <div class="card" style="margin-bottom:32px">
         <h3 style="margin-bottom:16px">Segurança do administrador</h3>
@@ -377,6 +397,7 @@
       carregarFaturamento();
       carregarDesempenho();
       carregarAuditoria();
+      carregarParceiros();
     }
 
     window.aplicarFiltros = function () {
@@ -493,6 +514,71 @@
       });
       if (!data.logs || !data.logs.length) tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">Nenhuma ação registrada.</td></tr>';
     }
+
+    async function carregarParceiros() {
+      var { ok, data } = await App.api("/api/admin/parceiros");
+      if (!ok) return;
+      var tb = document.getElementById("tbodyParceiros");
+      tb.innerHTML = "";
+      var base = window.location.origin + "/?ref=";
+      (data.parceiros || []).forEach(function (p) {
+        var aceitou = p.aceitou_termos
+          ? '<span class="badge badge-pago" title="Aceito em ' + (p.termos_aceitos_em || "") + '">Aceito</span>'
+          : '<span class="badge badge-pendente">Pendente</span>';
+        var ativo = p.ativo
+          ? '<span class="badge badge-pago">Ativo</span>'
+          : '<span class="badge badge-cancelado">Inativo</span>';
+        var botao = p.ativo
+          ? '<button class="btn-acao vermelho" onclick="alternarStatusParceiro(' + p.id + ',false)">Desativar</button>'
+          : '<button class="btn-acao verde" onclick="alternarStatusParceiro(' + p.id + ',true)">Ativar</button>';
+        var link = base + p.codigo;
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + p.id + "</td>" +
+          "<td>" + (p.nome || "-") + "</td>" +
+          "<td>" + (p.email || "-") + "</td>" +
+          '<td style="max-width:220px;word-break:break-all;font-size:.78rem;color:var(--text-muted)">' + link + '</td>' +
+          "<td>" + (p.comissao != null ? p.comissao + "%" : "40%") + "</td>" +
+          "<td>dia " + (p.dia_pagamento || 5) + "</td>" +
+          "<td>" + aceitou + "</td>" +
+          "<td>" + ativo + "</td>" +
+          '<td><div class="acoes-linha">' +
+            '<button class="btn-acao" onclick="copiarLinkParceiro(\'' + link.replace(/'/g, "\\'") + '\')">Copiar link</button>' +
+            botao +
+          "</div></td>";
+        tb.appendChild(tr);
+      });
+      if (!data.parceiros || !data.parceiros.length) tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Nenhum parceiro cadastrado ainda.</td></tr>';
+    }
+
+    window.cadastrarParceiro = async function () {
+      var nome = document.getElementById("parNome").value.trim();
+      var email = document.getElementById("parEmail").value.trim();
+      var whatsapp = document.getElementById("parWhatsapp").value.trim();
+      var senha = document.getElementById("parSenha").value;
+      var dia = document.getElementById("parDia").value;
+      if (!nome || !email) { setMsg("Informe nome e e-mail do parceiro.", false); return; }
+      var { ok, data } = await App.api("/api/admin/parceiros", { method: "POST", body: JSON.stringify({ nome, email, whatsapp, senha, dia_pagamento: dia }) });
+      setMsg(ok ? "Parceiro cadastrado! Compartilhe o link com ele." : (data.error || "Erro."), ok);
+      if (ok) {
+        ["parNome", "parEmail", "parWhatsapp", "parSenha"].forEach(function (id) { document.getElementById(id).value = ""; });
+        carregarParceiros();
+      }
+    };
+
+    window.copiarLinkParceiro = function (link) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(function () { setMsg("Link copiado!", true); });
+      } else {
+        setMsg(link, true);
+      }
+    };
+
+    window.alternarStatusParceiro = async function (id, ativo) {
+      var { ok, data } = await App.api("/api/admin/parceiros/" + id + "/status", { method: "PUT", body: JSON.stringify({ ativo: ativo }) });
+      setMsg(ok ? "Status do parceiro atualizado." : (data.error || "Erro."), ok);
+      carregarParceiros();
+    };
 
     window.trocarSenha = async function () {
       var atual = document.getElementById("senhaAtual").value;

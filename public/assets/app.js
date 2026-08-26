@@ -160,12 +160,36 @@ window.App = (function () {
     return s;
   }
 
+  // ---------------------------------------------------------------------
+  // Código do parceiro (ref) vindo do link de compartilhamento.
+  // Captura o ?ref= da URL, persiste em localStorage e inclui em todos os
+  // beacons de tracking e na criação de pedidos para atribuir a comissão.
+  // ---------------------------------------------------------------------
+  var REF_KEY = "oe_ref";
+  function obterRef() {
+    var ref = "";
+    try { ref = localStorage.getItem(REF_KEY) || ""; } catch (e) { ref = ""; }
+    if (!ref) {
+      var m = window.location.search.match(/[?&]ref=([^&]+)/);
+      if (m) {
+        ref = decodeURIComponent(m[1]).slice(0, 40);
+        try { localStorage.setItem(REF_KEY, ref); } catch (e) { /* ignora */ }
+      }
+    }
+    return ref;
+  }
+  function limparRef() {
+    try { localStorage.removeItem(REF_KEY); } catch (e) { /* ignora */ }
+  }
+
   // Envia um beacon de tracking sem bloquear a navegação. Retorna true se
   // conseguiu usar sendBeacon (fallback para fetch em navegadores antigos).
   function beacon(dados) {
     var s = obterSessao();
     tocarSessao();
     dados.sessao = s;
+    var ref = obterRef();
+    if (ref) dados.parceiro = ref;
     var blob = new Blob([JSON.stringify(dados)], { type: "application/json" });
     try {
       if (navigator.sendBeacon) { return navigator.sendBeacon("/api/track", blob); }
@@ -223,7 +247,7 @@ window.App = (function () {
     });
   }
 
-  return { api, authMe, mostrarAlerta, limparAlerta, logout, formatarPreco, carregarHeader, track: trackEvento, registrarPageview, iniciarHeartbeat };
+  return { api, authMe, mostrarAlerta, limparAlerta, logout, formatarPreco, carregarHeader, track: trackEvento, registrarPageview, iniciarHeartbeat, obterRef, limparRef };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {

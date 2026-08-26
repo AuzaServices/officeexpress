@@ -279,7 +279,7 @@ app.get("/api/config/pagamento", async (req, res) => {
 // Pedidos
 // ---------------------------------------------------------------------------
 app.post("/api/pedidos", async (req, res) => {
-  const { modelo, dados, tipo = "curriculo" } = req.body || {};
+  const { modelo, dados, tipo = "curriculo", ref } = req.body || {};
   const catalogo = tipo === "carta" ? CARTAS : MODELOS;
   if (!modelo || !catalogo.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
   if (!dados || !dados.nome) return res.status(400).json({ error: "Dados do currículo incompletos." });
@@ -288,11 +288,17 @@ app.post("/api/pedidos", async (req, res) => {
   // não ser mais usada no currículo, ela inchava a tabela pedidos.
   const dadosLimpos = { ...(dados || {}) };
   if (typeof dadosLimpos === "object" && "foto" in dadosLimpos) delete dadosLimpos.foto;
+  // Associa o pedido ao parceiro indicado pelo link (ref), se válido e ativo.
+  let parceiroId = null;
+  if (ref) {
+    const [par] = await pool.query("SELECT id FROM parceiros WHERE codigo = ? AND ativo = 1", [String(ref).slice(0, 40)]);
+    if (par.length) parceiroId = par[0].id;
+  }
   const [result] = await pool.query(
-    "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor) VALUES (?, ?, ?, ?)",
-    [usuarioDaSessao(req), modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), valor]
+    "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor, parceiro_id) VALUES (?, ?, ?, ?, ?)",
+    [usuarioDaSessao(req), modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), valor, parceiroId]
   );
-  res.json({ pedido: { id: result.insertId, modelo, tipo, valor } });
+  res.json({ pedido: { id: result.insertId, modelo, tipo, valor, parceiro_id: parceiroId } });
 });
 
 app.get("/api/pedidos/meus", async (req, res) => {
@@ -623,6 +629,7 @@ app.post("/api/track", async (req, res) => {
     const origem = classificarOrigem(referer);
     const dispositivo = detectarDispositivo(ua);
     const uf = String(body.uf || "").slice(0, 2);
+    const parceiro = String(body.parceiro || "").slice(0, 40); // código do parceiro (ref)
 
     if (!sessao) return res.status(400).json({ error: "Sessão ausente." });
 
@@ -645,14 +652,14 @@ app.post("/api/track", async (req, res) => {
     if (tipo === "pageview") {
       await pool.query(
         `INSERT INTO visitas
-          (sessao, path, pagina, referer, origem, user_agent, dispositivo, ip, uf, primeira_visita)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [sessao, path, pagina, referer, origem, ua, dispositivo, ip, uf, body.primeiraVisita ? 1 : 0]
+          (sessao, path, pagina, referer, origem, user_agent, dispositivo, ip, uf, primeira_visita, parceiro)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [sessao, path, pagina, referer, origem, ua, dispositivo, ip, uf, body.primeiraVisita ? 1 : 0, parceiro]
       );
     } else {
       await pool.query(
-        `INSERT INTO eventos (sessao, tipo, valor, pagina) VALUES (?, ?, ?, ?)`,
-        [sessao, String(tipo).slice(0, 60), valor, pagina || path]
+        `INSERT INTO eventos (sessao, tipo, valor, pagina, parceiro) VALUES (?, ?, ?, ?, ?)`,
+        [sessao, String(tipo).slice(0, 60), valor, pagina || path, parceiro]
       );
     }
     res.json({ ok: true, online: sessoesOnline.size });
@@ -1037,6 +1044,186 @@ app.get("/api/admin/backup", protegerAdmin, async (req, res) => {
   } catch (e) {
     console.error("Erro no backup:", e.message);
     res.status(500).json({ error: "Erro no backup." });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Parceiros (afiliados)
+// ---------------------------------------------------------------------------
+function protegerParceiro(req, res, next) {
+  if (!req.session.parceiroId) return res.status(401).json({ error: "Não autorizado." });
+  next();
+}
+
+async function buscarParceiroPorId(id) {
+  const [rows] = await pool.query(
+    "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, created_at FROM parceiros WHERE id = ?",
+    [id]
+  );
+  return rows[0] || null;
+}
+
+// Cadastra um novo parceiro (admin) e gera o código/link.
+app.post("/api/admin/parceiros", protegerAdmin, async (req, res) => {
+  try {
+    const { nome, email, whatsapp, senha, dia_pagamento = 5, comissao = 40 } = req.body || {};
+    if (!nome || !email) return res.status(400).json({ error: "Nome e e-mail são obrigatórios." });
+    const em = String(email).toLowerCase().trim();
+    const [existe] = await pool.query("SELECT id FROM parceiros WHERE email = ?", [em]);
+    if (existe.length) return res.status(409).json({ error: "Já existe um parceiro com este e-mail." });
+    const codigo = "P" + Math.random().toString(36).slice(2, 8).toUpperCase() + Date.now().toString(36).slice(-3).toUpperCase();
+    const senhaHash = senha ? await bcrypt.hash(senha, 10) : null;
+    const dia = Math.min(28, Math.max(1, parseInt(dia_pagamento, 10) || 5));
+    const com = Math.min(100, Math.max(0, parseFloat(comissao)));
+    await pool.query(
+      "INSERT INTO parceiros (nome, email, whatsapp, senha, codigo, dia_pagamento, comissao) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [nome.trim(), em, whatsapp || null, senhaHash, codigo, dia, com]
+    );
+    await registrarAdminLog("parceiro_cadastro", `${nome.trim()} (${codigo})`);
+    res.json({ success: true, codigo });
+  } catch (e) {
+    console.error("Erro ao cadastrar parceiro:", e.message);
+    res.status(500).json({ error: "Erro ao cadastrar parceiro." });
+  }
+});
+
+// Lista parceiros (admin) com status de aceite dos termos.
+app.get("/api/admin/parceiros", protegerAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, created_at FROM parceiros ORDER BY id DESC"
+    );
+    res.json({ parceiros: rows });
+  } catch (e) {
+    console.error("Erro ao listar parceiros:", e.message);
+    res.status(500).json({ error: "Erro ao listar parceiros." });
+  }
+});
+
+// Ativa/desativa um parceiro (admin).
+app.put("/api/admin/parceiros/:id/status", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { ativo } = req.body || {};
+    await pool.query("UPDATE parceiros SET ativo = ? WHERE id = ?", [ativo ? 1 : 0, id]);
+    await registrarAdminLog("parceiro_status", `Parceiro ${id} -> ${ativo ? "ativo" : "inativo"}`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao alterar status do parceiro:", e.message);
+    res.status(500).json({ error: "Erro ao alterar status do parceiro." });
+  }
+});
+
+// Login do parceiro.
+app.post("/api/parceiro/login", async (req, res) => {
+  const { email, senha } = req.body || {};
+  if (!email || !senha) return res.status(400).json({ error: "Informe e-mail e senha." });
+  const em = String(email).toLowerCase().trim();
+  const [rows] = await pool.query("SELECT * FROM parceiros WHERE email = ?", [em]);
+  if (!rows.length) return res.status(401).json({ error: "E-mail ou senha incorretos." });
+  const p = rows[0];
+  if (!p.senha || !(await bcrypt.compare(senha, p.senha))) return res.status(401).json({ error: "E-mail ou senha incorretos." });
+  if (!p.ativo) return res.status(403).json({ error: "Parceiro desativado. Fale com o administrador." });
+  req.session.parceiroId = p.id;
+  req.session.save((err) => {
+    if (err) return res.status(500).json({ error: "Erro ao iniciar sessão." });
+    res.json({ success: true });
+  });
+});
+
+// Logout do parceiro.
+app.post("/api/parceiro/logout", (req, res) => {
+  req.session.destroy(() => res.json({ success: true }));
+});
+
+// Dados do parceiro logado.
+app.get("/api/parceiro/me", protegerParceiro, async (req, res) => {
+  const p = await buscarParceiroPorId(req.session.parceiroId);
+  if (!p) return res.status(401).json({ error: "Parceiro não encontrado." });
+  res.json({ parceiro: p });
+});
+
+// Aceita os termos e políticas (marca como Aceito).
+app.post("/api/parceiro/aceitar-termos", protegerParceiro, async (req, res) => {
+  try {
+    const { termos, privacidade } = req.body || {};
+    if (!termos || !privacidade) return res.status(400).json({ error: "Você deve marcar as duas caixas para aceitar." });
+    await pool.query("UPDATE parceiros SET aceitou_termos = 1, termos_aceitos_em = NOW() WHERE id = ?", [req.session.parceiroId]);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao aceitar termos:", e.message);
+    res.status(500).json({ error: "Erro ao aceitar termos." });
+  }
+});
+
+// Dashboard do parceiro: link, métricas, comissão e dia de pagamento.
+app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
+  try {
+    const pid = req.session.parceiroId;
+    const p = await buscarParceiroPorId(pid);
+    if (!p) return res.status(401).json({ error: "Parceiro não encontrado." });
+    const codigo = p.codigo;
+
+    // Acessos vindos do link do parceiro.
+    const [acessos] = await pool.query(
+      "SELECT COUNT(*) AS c, COUNT(DISTINCT sessao) AS sessoes FROM visitas WHERE parceiro = ? AND created_at >= (NOW() - INTERVAL 30 DAY)",
+      [codigo]
+    );
+
+    // Pedidos dos clientes do parceiro (pendentes e pagos).
+    const [pendentes] = await pool.query(
+      "SELECT COUNT(*) AS c FROM pedidos WHERE parceiro_id = ? AND status = 'pendente'",
+      [pid]
+    );
+    const [pagos] = await pool.query(
+      "SELECT COUNT(*) AS c, COALESCE(SUM(valor),0) AS total FROM pedidos WHERE parceiro_id = ? AND status = 'pago'",
+      [pid]
+    );
+    const comissao = Number(p.comissao) || 40;
+    const valorComissao = (Number(pagos[0].total) || 0) * (comissao / 100);
+
+    // Acessos/pedidos recentes por dia (tendência dos últimos 7 dias).
+    const [tendencia] = await pool.query(
+      `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS dia, COUNT(*) AS c
+       FROM visitas WHERE parceiro = ? AND created_at >= (NOW() - INTERVAL 7 DAY)
+       GROUP BY dia ORDER BY dia ASC`,
+      [codigo]
+    );
+
+    res.json({
+      parceiro: p,
+      link: `${process.env.BASE_URL || "https://www.officeexpress.com.br"}/?ref=${codigo}`,
+      acessos30: acessos[0].c || 0,
+      sessoes30: acessos[0].sessoes || 0,
+      pendentes: pendentes[0].c || 0,
+      pagos: pagos[0].c || 0,
+      valorVendas: Number(pagos[0].total) || 0,
+      comissaoPct: comissao,
+      valorComissao,
+      diaPagamento: p.dia_pagamento,
+      tendencia,
+    });
+  } catch (e) {
+    console.error("Erro no dashboard do parceiro:", e.message);
+    res.status(500).json({ error: "Erro ao carregar o painel." });
+  }
+});
+
+// Lista os clientes que vieram pelo link do parceiro.
+app.get("/api/parceiro/pedidos", protegerParceiro, async (req, res) => {
+  try {
+    const pid = req.session.parceiroId;
+    const [rows] = await pool.query(
+      `SELECT p.id, p.modelo, p.valor, p.status, p.pagamento_tipo, p.created_at,
+              COALESCE(u.nome, JSON_UNQUOTE(JSON_EXTRACT(p.dados_json, '$.nome'))) AS cliente_nome
+       FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id
+       WHERE p.parceiro_id = ? ORDER BY p.id DESC LIMIT 100`,
+      [pid]
+    );
+    res.json({ pedidos: rows });
+  } catch (e) {
+    console.error("Erro ao listar pedidos do parceiro:", e.message);
+    res.status(500).json({ error: "Erro ao listar pedidos." });
   }
 });
 
