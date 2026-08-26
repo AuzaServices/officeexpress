@@ -38,6 +38,7 @@ const { pool, garantirSchema, getPreco } = require("./lib/db");
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao } = require("./lib/email");
+const cron = require("node-cron");
 
 require("dotenv").config();
 
@@ -955,3 +956,25 @@ process.on("unhandledRejection", (reason) => {
 app.listen(PORT, () => {
   console.log(`✅ Office Express rodando em http://localhost:${PORT}`);
 });
+
+// ---------------------------------------------------------------------------
+// Limpeza semanal automática dos logs de tráfego e visitas.
+// Todo domingo às 00h00 (horário de Brasília) apaga os registros de visitas e
+// eventos, que alimentam as métricas de visitas, páginas mais acessadas,
+// origens, tendência e rejeição do painel admin.
+// ---------------------------------------------------------------------------
+cron.schedule(
+  "0 0 0 * * 0",
+  async () => {
+    console.log("🧹 Limpeza semanal: apagando logs de tráfego e visitas...");
+    try {
+      const [r1] = await pool.query("DELETE FROM visitas");
+      const [r2] = await pool.query("DELETE FROM eventos");
+      console.log(`✅ Logs apagados (${r1.affectedRows} visitas, ${r2.affectedRows} eventos).`);
+    } catch (e) {
+      console.error("❌ Erro na limpeza semanal dos logs:", e.message);
+    }
+  },
+  { timezone: "America/Sao_Paulo" }
+);
+console.log("🗓️ Limpeza semanal agendada: todo domingo às 00h00 (Brasília).");
