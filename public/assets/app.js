@@ -124,22 +124,48 @@ window.App = (function () {
   // para as métricas de fluxo de entrada e rejeição no painel admin.
   // ---------------------------------------------------------------------
   var SESS_KEY = "oe_sessao";
+  var SESS_T_KEY = "oe_sessao_t";
+  var SESS_TTL = 30 * 60 * 1000; // 30 min de inatividade = nova visita
   var sessaoAtual = (function () {
     try { return localStorage.getItem(SESS_KEY); } catch (e) { return ""; }
   })();
 
   function novaSessao() {
     var s = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-    try { localStorage.setItem(SESS_KEY, s); } catch (e) { /* ignora */ }
+    try {
+      localStorage.setItem(SESS_KEY, s);
+      localStorage.setItem(SESS_T_KEY, String(Date.now()));
+    } catch (e) { /* ignora */ }
     sessaoAtual = s;
+    return s;
+  }
+
+  function tocarSessao() {
+    try { localStorage.setItem(SESS_T_KEY, String(Date.now())); } catch (e) { /* ignora */ }
+  }
+
+  // Devolve a sessão atual ou cria uma nova se o visitante voltou após o
+  // tempo de inatividade (assim um retorno conta como uma nova visita).
+  function obterSessao() {
+    var s = "", t = 0;
+    try {
+      s = localStorage.getItem(SESS_KEY) || "";
+      t = Number(localStorage.getItem(SESS_T_KEY)) || 0;
+    } catch (e) { /* ignora */ }
+    if (s && (!t || (Date.now() - t) < SESS_TTL)) {
+      sessaoAtual = s;
+    } else {
+      s = novaSessao();
+    }
     return s;
   }
 
   // Envia um beacon de tracking sem bloquear a navegação. Retorna true se
   // conseguiu usar sendBeacon (fallback para fetch em navegadores antigos).
   function beacon(dados) {
-    if (!sessaoAtual) sessaoAtual = novaSessao();
-    dados.sessao = sessaoAtual;
+    var s = obterSessao();
+    tocarSessao();
+    dados.sessao = s;
     var blob = new Blob([JSON.stringify(dados)], { type: "application/json" });
     try {
       if (navigator.sendBeacon) { return navigator.sendBeacon("/api/track", blob); }
@@ -155,10 +181,12 @@ window.App = (function () {
     var pagina = path.split("/").filter(Boolean).join("/") || "inicio";
     var primeira = false;
     var data = { tipo: "pageview", path: path, pagina: pagina, referer: document.referrer || "" };
+    // Marca como "primeira visita" apenas no primeiro pageview desta sessão de
+    // navegação (resetado quando o navegador é fechado). Não usa o path para
+    // não contar cada página como uma visita separada.
     try {
-      var chave = "oe_pv_" + path;
-      primeira = !sessionStorage.getItem(chave);
-      if (primeira) sessionStorage.setItem(chave, "1");
+      primeira = !sessionStorage.getItem("oe_pv_visitou");
+      if (primeira) sessionStorage.setItem("oe_pv_visitou", "1");
     } catch (e) { primeira = false; }
     data.primeiraVisita = primeira;
     beacon(data);

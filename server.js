@@ -614,15 +614,17 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
       "SELECT COUNT(DISTINCT sessao) AS c FROM visitas WHERE created_at >= (NOW() - INTERVAL 5 MINUTE)"
     );
 
-    // Últimas 24h e últimos 7 dias.
+    // Últimas 24h e últimos 7 dias. Cada usuário/sessão conta como UMA visita,
+    // independentemente de quantas páginas visitou (não infla por pageview).
     const [d24] = await pool.query(
-      "SELECT COUNT(*) AS c, COUNT(DISTINCT sessao) AS sessoes FROM visitas WHERE created_at >= (NOW() - INTERVAL 24 HOUR)"
+      "SELECT COUNT(DISTINCT sessao) AS c FROM visitas WHERE created_at >= (NOW() - INTERVAL 24 HOUR)"
     );
     const [d7] = await pool.query(
-      "SELECT COUNT(*) AS c, COUNT(DISTINCT sessao) AS sessoes FROM visitas WHERE created_at >= (NOW() - INTERVAL 7 DAY)"
+      "SELECT COUNT(DISTINCT sessao) AS c FROM visitas WHERE created_at >= (NOW() - INTERVAL 7 DAY)"
     );
 
-    // Páginas mais visitadas nas últimas 24h.
+    // Páginas mais visitadas nas últimas 24h (número de visualizações de página,
+    // métrica de engajamento por pageview, não infla a contagem de visitas).
     const [paginas] = await pool.query(
       `SELECT COALESCE(NULLIF(pagina,''), path) AS pagina, COUNT(*) AS c
        FROM visitas
@@ -630,9 +632,9 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
        GROUP BY pagina ORDER BY c DESC LIMIT 8`
     );
 
-    // Origens de tráfego nas últimas 24h.
+    // Origens de tráfego nas últimas 24h (1 por usuário, por origem).
     const [origens] = await pool.query(
-      `SELECT origem, COUNT(*) AS c FROM visitas
+      `SELECT origem, COUNT(DISTINCT sessao) AS c FROM visitas
        WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
        GROUP BY origem ORDER BY c DESC`
     );
@@ -661,8 +663,8 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
 
     res.json({
       onlineAgora: online[0].c || 0,
-      ultimas24h: { visitas: d24[0].c || 0, sessoes: d24[0].sessoes || 0 },
-      ultimos7dias: { visitas: d7[0].c || 0, sessoes: d7[0].sessoes || 0 },
+      ultimas24h: { visitas: d24[0].c || 0 },
+      ultimos7dias: { visitas: d7[0].c || 0 },
       taxaRejeicao,
       paginas,
       origens,
@@ -679,7 +681,7 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
 app.get("/api/admin/metricas/tendencia", protegerAdmin, async (req, res) => {
   try {
     const [linhas] = await pool.query(
-      `SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:00') AS hora, COUNT(*) AS c
+      `SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:00') AS hora, COUNT(DISTINCT sessao) AS c
        FROM visitas
        WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
        GROUP BY hora ORDER BY hora ASC`
