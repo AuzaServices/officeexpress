@@ -67,31 +67,122 @@
         </div>
       </div>
 
+      <!-- Alerta de pedidos pendentes -->
+      <div class="card" id="alertaPendentes" style="margin-bottom:32px;border-color:rgba(255,180,0,.5);display:none">
+        <div class="metricas-topo" style="margin-bottom:0">
+          <div>
+            <h3 style="margin:0;color:#f59e0b" id="alertaPendentesTexto">0 pedidos pendentes aguardando</h3>
+            <p style="margin:6px 0 0;color:var(--text-muted);font-size:.85rem">Atualizado em tempo real. Faça o acompanhamento do pagamento.</p>
+          </div>
+          <a class="btn btn-primary" href="/api/admin/exportar/pedidos" style="text-decoration:none">Exportar CSV</a>
+        </div>
+      </div>
+
+      <!-- Faturamento -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Faturamento</h3>
+        <div class="stats-grid" id="faturamentoStats"></div>
+        <h4 style="margin:4px 0 12px;color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px">Por canal de pagamento</h4>
+        <ul class="metrica-lista" id="listaCanal"></ul>
+      </div>
+
+      <!-- Ranking e funil de receita -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Desempenho</h3>
+        <div class="metrica-cols">
+          <div>
+            <h4>Modelos mais vendidos</h4>
+            <ul class="metrica-lista" id="listaRanking"></ul>
+          </div>
+          <div>
+            <h4>Funil de receita (30 dias)</h4>
+            <ul class="metrica-lista" id="listaFunilReceita"></ul>
+          </div>
+        </div>
+      </div>
+
       <!-- Pedidos -->
       <div class="card" style="margin-bottom:32px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 style="margin:0">Pedidos recentes</h3>
-          <button type="button" class="btn-icone-lixeira" id="btnLimparPedidos" title="Apagar todos os pedidos" aria-label="Apagar todos os pedidos" onclick="limparPedidos()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-          </button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0">Pedidos</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="text" id="filtroBusca" placeholder="Buscar (nome, email, modelo, #)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+            <select id="filtroStatus" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)">
+              <option value="">Todos os status</option>
+              <option value="pago">Pago</option>
+              <option value="pendente">Pendente</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <button class="btn btn-primary" onclick="aplicarFiltros()">Filtrar</button>
+            <button type="button" class="btn-icone-lixeira" id="btnLimparPedidos" title="Apagar todos os pedidos" aria-label="Apagar todos os pedidos" onclick="limparPedidos()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            </button>
+          </div>
         </div>
         <div class="tabela-wrap">
           <table class="tabela">
-            <thead><tr><th>#</th><th>Usuário</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Pago via</th><th>Data</th></tr></thead>
+            <thead><tr><th>#</th><th>Usuário</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Pago via</th><th>Data</th><th>Ações</th></tr></thead>
             <tbody id="tbodyPedidos"></tbody>
           </table>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:10px">
+          <span id="pedidosInfo" style="color:var(--text-muted);font-size:.85rem"></span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="mudarPagina(-1)">Anterior</button>
+            <button class="btn btn-primary" onclick="mudarPagina(1)">Próxima</button>
+          </div>
         </div>
       </div>
 
       <!-- Usuários -->
-      <div class="card">
+      <div class="card" style="margin-bottom:32px">
         <h3 style="margin-bottom:16px">Usuários cadastrados</h3>
         <div class="tabela-wrap">
           <table class="tabela">
-            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>E-mail confirmado</th><th>Data</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>E-mail confirmado</th><th>Data</th><th>Ações</th></tr></thead>
             <tbody id="tbodyUsuarios"></tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Segurança -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Segurança do administrador</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+          <div>
+            <h4 style="color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px">Trocar senha</h4>
+            <input type="password" id="senhaAtual" placeholder="Senha atual" style="width:100%;margin-bottom:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+            <input type="password" id="senhaNova" placeholder="Nova senha (mín. 8)" style="width:100%;margin-bottom:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+            <button class="btn btn-primary" onclick="trocarSenha()">Trocar senha</button>
+          </div>
+          <div>
+            <h4 style="color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:0 0 12px">Verificação em 2 etapas (2FA)</h4>
+            <p style="color:var(--text-muted);font-size:.85rem;margin:0 0 10px">Envia um código por e-mail para liberar o acesso.</p>
+            <input type="text" id="codigo2fa" placeholder="Código de 6 dígitos" style="width:100%;margin-bottom:8px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" />
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="enviar2fa()">Enviar código</button>
+              <button class="btn btn-primary" onclick="validar2fa()">Validar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auditoria -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Auditoria de ações do admin</h3>
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead><tr><th>Ação</th><th>Detalhe</th><th>Data</th></tr></thead>
+            <tbody id="tbodyAuditoria"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Backup -->
+      <div class="card">
+        <h3 style="margin-bottom:12px">Backup dos dados</h3>
+        <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 14px">Exporte todos os pedidos e usuários em um arquivo JSON.</p>
+        <a class="btn btn-primary" href="/api/admin/backup" style="text-decoration:none">Baixar backup (JSON)</a>
       </div>
     </div>
   </section>
@@ -113,6 +204,19 @@
     }
     .btn-icone-lixeira-linha:hover { background: rgba(255,68,68,.18); }
     .btn-icone-lixeira-linha svg { width: 16px; height: 16px; display: block; }
+
+    /* Botões de ação nas linhas */
+    .btn-acao { display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.06); color:var(--text-primary); cursor:pointer; font-size:.75rem; font-weight:600; text-decoration:none; transition:background .15s; }
+    .btn-acao:hover { background:rgba(255,255,255,.14); }
+    .btn-acao.verde { background:rgba(22,163,74,.15); border-color:rgba(22,163,74,.4); color:#4ade80; }
+    .btn-acao.verde:hover { background:rgba(22,163,74,.28); }
+    .btn-acao.amarelo { background:rgba(245,158,11,.15); border-color:rgba(245,158,11,.4); color:#fbbf24; }
+    .btn-acao.amarelo:hover { background:rgba(245,158,11,.28); }
+    .btn-acao.vermelho { background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.4); color:#f87171; }
+    .btn-acao.vermelho:hover { background:rgba(239,68,68,.28); }
+    .acoes-linha { display:flex; gap:5px; flex-wrap:wrap; }
+    .detalhe-box { font-size:.85rem; color:var(--text-secondary); }
+    .detalhe-box b { color:var(--text-primary); }
 
     /* ---- Métricas de tráfego ---- */
     .metricas-topo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
@@ -179,6 +283,18 @@
       if (r.ok) r.data.modelos.forEach(function (m) { nomesModelo[m.id] = m.nome; });
     });
 
+    // Estado de filtros e paginação de pedidos
+    var pedidosPagina = 1;
+    var pedidosStatus = "";
+    var pedidosBusca = "";
+    var pedidosTotal = 0;
+
+    function setMsg(txt, ok) {
+      var m = document.getElementById("msg");
+      m.style.color = ok ? "var(--success)" : "var(--danger)";
+      m.textContent = txt;
+    }
+
     async function carregar() {
       if (!(await verificar())) return;
 
@@ -190,13 +306,18 @@
         '<div class="stat-card"><div class="stat-value">' + App.formatarPreco(est.faturamento) + '</div><div class="stat-label">Faturamento</div></div>' +
         '<div class="stat-card"><div class="stat-value">' + est.totalUsuarios + '</div><div class="stat-label">Usuários</div></div>';
 
-      // Pedidos
-      var { data: ped } = await App.api("/api/admin/pedidos");
+      // Pedidos (com filtros e paginação)
+      var qs = "?page=" + pedidosPagina + "&status=" + encodeURIComponent(pedidosStatus) + "&q=" + encodeURIComponent(pedidosBusca);
+      var { data: ped } = await App.api("/api/admin/pedidos" + qs);
+      pedidosTotal = ped.total || 0;
       var tbp = document.getElementById("tbodyPedidos");
       tbp.innerHTML = "";
       (ped.pedidos || []).forEach(function (p) {
         var cls = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
         var txt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
+        var botaoStatus = p.status === "pago"
+          ? '<button class="btn-acao amarelo" onclick="mudarStatus(' + p.id + ",'cancelado'" + ')">Cancelar</button>'
+          : '<button class="btn-acao verde" onclick="mudarStatus(' + p.id + ",'pago'" + ')">Marcar pago</button>';
         var tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + p.id + "</td>" +
@@ -205,9 +326,17 @@
           "<td>" + App.formatarPreco(p.valor) + "</td>" +
           '<td><span class="badge ' + cls + '">' + txt + "</span></td>" +
           "<td>" + (p.pagamento_tipo || "-") + "</td>" +
-          "<td>" + (p.created_at ? new Date(p.created_at).toLocaleString("pt-BR") : "-") + "</td>";
+          "<td>" + (p.created_at ? new Date(p.created_at).toLocaleString("pt-BR") : "-") + "</td>" +
+          '<td><div class="acoes-linha">' +
+            '<button class="btn-acao" onclick="verDetalhes(' + p.id + ')">Ver</button>' +
+            '<a class="btn-acao" href="/api/admin/pedidos/' + p.id + '/download">PDF</a>' +
+            botaoStatus +
+            '<button class="btn-acao amarelo" onclick="editarValor(' + p.id + "," + (p.valor || 0) + ')">Valor</button>' +
+          "</div></td>";
         tbp.appendChild(tr);
       });
+      if (!ped.pedidos || !ped.pedidos.length) tbp.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Nenhum pedido encontrado.</td></tr>';
+      document.getElementById("pedidosInfo").textContent = "Total: " + pedidosTotal + " · Página " + (ped.pagina || 1) + " de " + (ped.paginas || 1);
 
       // Usuários
       var { data: usr } = await App.api("/api/admin/usuarios");
@@ -221,10 +350,167 @@
           "<td>" + u.email + "</td>" +
           "<td>" + (u.email_confirmado ? '<span class="badge badge-pago">Sim</span>' : '<span class="badge badge-pendente">Não</span>') + "</td>" +
           "<td>" + (u.created_at ? new Date(u.created_at).toLocaleString("pt-BR") : "-") + "</td>" +
-          '<td><button type="button" class="btn-icone-lixeira-linha" title="Excluir usuário" aria-label="Excluir usuário" onclick="excluirUsuario(' + u.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button></td>';
+          '<td><div class="acoes-linha">' +
+            (u.email_confirmado ? "" : '<button class="btn-acao" onclick="reenviarEmail(' + u.id + ')">Reenviar e-mail</button>') +
+            '<button class="btn-acao" onclick="verEmails(' + u.id + ')">E-mails</button>' +
+            '<button type="button" class="btn-acao vermelho" onclick="excluirUsuario(' + u.id + ')">Excluir</button>' +
+          "</div></td>";
         tbu.appendChild(tr);
       });
+
+      // Alerta de pendentes
+      var pendencias = (ped.pedidos || []).filter(function (p) { return p.status === "pendente"; }).length;
+      var alerta = document.getElementById("alertaPendentes");
+      var totalPendentes = 0;
+      try {
+        var rp = await App.api("/api/admin/pedidos?status=pendente&limit=1");
+        totalPendentes = (rp.data && rp.data.total) || 0;
+      } catch (e) { totalPendentes = pendencias; }
+      if (totalPendentes > 0) {
+        alerta.style.display = "block";
+        document.getElementById("alertaPendentesTexto").textContent = totalPendentes + " pedido(s) pendente(s) aguardando pagamento";
+        if (typeof tocarAlerta === "function") tocarAlerta();
+      } else {
+        alerta.style.display = "none";
+      }
+
+      carregarFaturamento();
+      carregarDesempenho();
+      carregarAuditoria();
     }
+
+    window.aplicarFiltros = function () {
+      pedidosBusca = document.getElementById("filtroBusca").value.trim();
+      pedidosStatus = document.getElementById("filtroStatus").value;
+      pedidosPagina = 1;
+      carregar();
+    };
+    window.mudarPagina = function (d) {
+      var max = Math.max(1, Math.ceil(pedidosTotal / 50));
+      pedidosPagina = Math.min(max, Math.max(1, pedidosPagina + d));
+      carregar();
+    };
+
+    window.mudarStatus = async function (id, status) {
+      var { ok, data } = await App.api("/api/admin/pedidos/" + id + "/status", { method: "PUT", body: JSON.stringify({ status: status }) });
+      setMsg(ok ? "Status atualizado." : (data.error || "Erro."), ok);
+      carregar();
+    };
+    window.editarValor = async function (id, atual) {
+      var v = prompt("Novo valor (R$):", atual);
+      if (v === null) return;
+      var { ok, data } = await App.api("/api/admin/pedidos/" + id + "/valor", { method: "PUT", body: JSON.stringify({ valor: parseFloat(v) }) });
+      setMsg(ok ? "Valor atualizado." : (data.error || "Erro."), ok);
+      carregar();
+    };
+    window.verDetalhes = async function (id) {
+      var { ok, data } = await App.api("/api/admin/pedidos/" + id);
+      if (!ok) { alert(data.error || "Erro."); return; }
+      var p = data.pedido;
+      var d = p.dados || {};
+      var partes = [
+        "Pedido #" + p.id,
+        "Cliente: " + (p.usuario_nome || d.nome || "-"),
+        "E-mail: " + (p.usuario_email || d.email || "-"),
+        "Telefone: " + (d.telefone || d.celular || "-"),
+        "Modelo: " + (nomesModelo[p.modelo] || p.modelo),
+        "Valor: " + App.formatarPreco(p.valor),
+        "Status: " + p.status,
+        "Pago via: " + (p.pagamento_tipo || "-"),
+        "Criado: " + (p.created_at ? new Date(p.created_at).toLocaleString("pt-BR") : "-"),
+      ];
+      alert(partes.join("\n"));
+    };
+    window.reenviarEmail = async function (id) {
+      var { ok, data } = await App.api("/api/admin/usuarios/" + id + "/reenviar-email", { method: "POST" });
+      setMsg(ok ? "E-mail de confirmação reenviado." : (data.error || "Erro."), ok);
+      carregar();
+    };
+    window.verEmails = async function (id) {
+      var { ok, data } = await App.api("/api/admin/usuarios/" + id + "/emails");
+      if (!ok) { alert(data.error || "Erro."); return; }
+      if (!data.emails || !data.emails.length) { alert("Nenhum e-mail enviado."); return; }
+      var linhas = data.emails.map(function (e) {
+        return (e.tipo === "confirmacao" ? "Confirmação" : e.tipo) + " · " + (e.usado ? "usado" : "não usado") + " · " + new Date(e.created_at).toLocaleString("pt-BR");
+      });
+      alert(linhas.join("\n"));
+    };
+
+    async function carregarFaturamento() {
+      var { ok, data } = await App.api("/api/admin/faturamento");
+      if (!ok) return;
+      var p = data.periodos;
+      document.getElementById("faturamentoStats").innerHTML =
+        '<div class="stat-card"><div class="stat-value small">' + App.formatarPreco(p.hoje.total) + '</div><div class="stat-label">Faturamento hoje</div><div class="stat-sub">' + p.hoje.pagos + ' pagos</div></div>' +
+        '<div class="stat-card"><div class="stat-value small">' + App.formatarPreco(p["7dias"].total) + '</div><div class="stat-label">7 dias</div><div class="stat-sub">' + p["7dias"].pagos + ' pagos</div></div>' +
+        '<div class="stat-card"><div class="stat-value small">' + App.formatarPreco(p["30dias"].total) + '</div><div class="stat-label">30 dias</div><div class="stat-sub">' + p["30dias"].pagos + ' pagos</div></div>' +
+        '<div class="stat-card"><div class="stat-value small">' + App.formatarPreco(p.total.total) + '</div><div class="stat-label">Total</div><div class="stat-sub">' + p.total.pagos + ' pagos</div></div>';
+      var lc = document.getElementById("listaCanal");
+      lc.innerHTML = "";
+      (data.porCanal || []).forEach(function (c) {
+        var nome = c.pagamento_tipo === "pix" ? "Pix" : (c.pagamento_tipo === "card" ? "Cartão" : (c.pagamento_tipo || "—"));
+        var li = document.createElement("li");
+        li.innerHTML = '<span class="rotulo">' + nome + '</span><span class="valor">' + c.c + " · " + App.formatarPreco(c.total) + "</span>";
+        lc.appendChild(li);
+      });
+      if (!data.porCanal || !data.porCanal.length) lc.innerHTML = '<li class="rotulo" style="color:var(--text-muted)">Sem dados</li>';
+    }
+
+    async function carregarDesempenho() {
+      var { ok, data } = await App.api("/api/admin/relatorios/vendas");
+      if (!ok) return;
+      var lr = document.getElementById("listaRanking");
+      lr.innerHTML = "";
+      (data.ranking || []).forEach(function (r) {
+        var li = document.createElement("li");
+        li.innerHTML = '<span class="rotulo">' + (nomesModelo[r.modelo] || r.modelo) + '</span><span class="valor">' + r.c + " · " + App.formatarPreco(r.total) + "</span>";
+        lr.appendChild(li);
+      });
+      if (!data.ranking || !data.ranking.length) lr.innerHTML = '<li class="rotulo" style="color:var(--text-muted)">Sem dados</li>';
+      var f = data.funil || {};
+      var lf = document.getElementById("listaFunilReceita");
+      var itens = [
+        ["Visitas", f.visitas], ["Abrir editor", f.editores], ["Chegar ao pagamento", f.pagamentos],
+        ["Pedidos criados", f.pedidos], ["Pagos", f.pagos],
+      ];
+      lf.innerHTML = "";
+      itens.forEach(function (it) {
+        var li = document.createElement("li");
+        li.innerHTML = '<span class="rotulo">' + it[0] + '</span><span class="valor">' + (it[1] || 0) + "</span>";
+        lf.appendChild(li);
+      });
+    }
+
+    async function carregarAuditoria() {
+      var { ok, data } = await App.api("/api/admin/auditoria");
+      if (!ok) return;
+      var tb = document.getElementById("tbodyAuditoria");
+      tb.innerHTML = "";
+      (data.logs || []).forEach(function (l) {
+        var tr = document.createElement("tr");
+        tr.innerHTML = "<td>" + l.acao + "</td><td>" + (l.detalhe || "-") + "</td><td>" + new Date(l.created_at).toLocaleString("pt-BR") + "</td>";
+        tb.appendChild(tr);
+      });
+      if (!data.logs || !data.logs.length) tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">Nenhuma ação registrada.</td></tr>';
+    }
+
+    window.trocarSenha = async function () {
+      var atual = document.getElementById("senhaAtual").value;
+      var nova = document.getElementById("senhaNova").value;
+      var { ok, data } = await App.api("/api/admin/senha", { method: "PUT", body: JSON.stringify({ atual: atual, nova: nova }) });
+      setMsg(ok ? "Senha alterada." : (data.error || "Erro."), ok);
+      if (ok) { document.getElementById("senhaAtual").value = ""; document.getElementById("senhaNova").value = ""; }
+    };
+    window.enviar2fa = async function () {
+      var { ok, data } = await App.api("/api/admin/2fa", { method: "POST", body: JSON.stringify({ acao: "enviar" }) });
+      setMsg(ok ? "Código enviado por e-mail." : (data.error || "Erro."), ok);
+    };
+    window.validar2fa = async function () {
+      var codigo = document.getElementById("codigo2fa").value;
+      var { ok, data } = await App.api("/api/admin/2fa", { method: "POST", body: JSON.stringify({ acao: "validar", codigo: codigo }) });
+      setMsg(ok ? "2FA validado com sucesso." : (data.error || "Código inválido."), ok);
+      if (ok) document.getElementById("codigo2fa").value = "";
+    };
 
     // ---- Métricas de tráfego em tempo real ----
     var nomesOrigem = { direto: "Direto", google: "Google", instagram: "Instagram", facebook: "Facebook", whatsapp: "WhatsApp", interno: "Interno", outro: "Outro" };
@@ -335,15 +621,31 @@
       else { document.getElementById("msg").style.color = "var(--danger)"; document.getElementById("msg").textContent = data.error || "Erro."; }
     };
 
+    // Alerta sonoro quando aumenta o nº de pedidos pendentes (tempo real).
+    var ultimoPendentes = -1;
+    function tocarAlerta() {
+      var total = parseInt(document.getElementById("alertaPendentesTexto").textContent || "0", 10) || 0;
+      if (total > ultimoPendentes && ultimoPendentes !== -1) {
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.frequency.value = 880; gain.gain.value = 0.08;
+          osc.start(); osc.stop(ctx.currentTime + 0.25);
+        } catch (e) { /* ignora */ }
+      }
+      ultimoPendentes = total;
+    }
+
     carregar();
     carregarMetricas();
-    // Atualização em tempo real: métricas de tráfego a cada 10s (para o
-    // "online agora" refletir entrada/saída logo) e pedidos/usuários a cada 15s.
+    // Atualização em tempo real: métricas a cada 10s e pedidos/dados a cada 10s.
     setInterval(function () { carregarMetricas(); }, 10000);
     setInterval(function () {
       var conteudo = document.getElementById("conteudo");
       if (conteudo && conteudo.style.display !== "none") carregar();
-    }, 15000);
+    }, 10000);
   </script>
 </body>
 </html>

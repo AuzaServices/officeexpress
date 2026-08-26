@@ -494,10 +494,33 @@ app.get("/api/admin/estatisticas", protegerAdmin, async (req, res) => {
 });
 
 app.get("/api/admin/pedidos", protegerAdmin, async (req, res) => {
-  const [rows] = await pool.query(
-    "SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id ORDER BY p.id DESC LIMIT 200"
-  );
-  res.json({ pedidos: rows });
+  try {
+    const { status, q, modelo, page = 1, limit = 50 } = req.query;
+    const pagina = Math.max(1, parseInt(page, 10) || 1);
+    const tamanho = Math.min(200, Math.max(1, parseInt(limit, 10) || 50));
+    const params = [];
+    let where = " WHERE 1=1";
+    if (status) { where += " AND p.status = ?"; params.push(status); }
+    if (modelo) { where += " AND p.modelo = ?"; params.push(modelo); }
+    if (q) {
+      where += " AND (u.nome LIKE ? OR u.email LIKE ? OR p.modelo LIKE ? OR CAST(p.id AS CHAR) = ?)";
+      params.push(`%${q}%`, `%${q}%`, `%${q}%`, q);
+    }
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) AS total FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id ${where}`,
+      params
+    );
+    const [rows] = await pool.query(
+      `SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email FROM pedidos p
+       LEFT JOIN usuarios u ON u.id = p.usuario_id ${where}
+       ORDER BY p.id DESC LIMIT ? OFFSET ?`,
+      [...params, tamanho, (pagina - 1) * tamanho]
+    );
+    res.json({ pedidos: rows, total: total || 0, pagina, limit: tamanho, paginas: Math.ceil((total || 0) / tamanho) });
+  } catch (e) {
+    console.error("Erro ao listar pedidos:", e.message);
+    res.status(500).json({ error: "Erro ao listar pedidos." });
+  }
 });
 
 app.get("/api/admin/usuarios", protegerAdmin, async (req, res) => {
@@ -727,6 +750,293 @@ app.get("/api/admin/metricas/tendencia", protegerAdmin, async (req, res) => {
   } catch (e) {
     console.error("Erro ao carregar tendência:", e);
     res.status(500).json({ error: "Erro ao carregar tendência." });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Painel admin — controle total
+// ---------------------------------------------------------------------------
+
+// Registra uma ação do admin na auditoria (admin_log).
+async function registrarAdminLog(acao, detalhe) {
+  try {
+    await pool.query("INSERT INTO admin_log (acao, detalhe) VALUES (?, ?)", [String(acao).slice(0, 60), String(detalhe || "").slice(0, 255)]);
+  } catch (e) {
+    console.error("Erro ao registrar log do admin:", e.message);
+  }
+}
+
+// Detalhes completos de um pedido (inclui dados_json do currículo).
+app.get("/api/admin/pedidos/:id", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ error: "Pedido inválido." });
+    const [rows] = await pool.query(
+      "SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id WHERE p.id = ?",
+      [id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
+    const pedido = rows[0];
+    try { pedido.dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { pedido.dados = {}; }
+    delete pedido.dados_json;
+    res.json({ pedido });
+  } catch (e) {
+    console.error("Erro ao carregar pedido:", e.message);
+    res.status(500).json({ error: "Erro ao carregar pedido." });
+  }
+});
+
+// Altera o status de um pedido (pago / pendente / cancelado) manualmente.
+app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { status } = req.body || {};
+    if (!id) return res.status(400).json({ error: "Pedido inválido." });
+    if (!["pago", "pendente", "cancelado"].includes(status)) return res.status(400).json({ error: "Status inválido." });
+    const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
+    const pedido = rows[0];
+    if (status === "pago" && pedido.status !== "pago") {
+      await pool.query(
+        "UPDATE pedidos SET status = 'pago', pago_at = NOW(), download_token = COALESCE(download_token, ?) WHERE id = ?",
+        [gerarToken(), id]
+      );
+    } else {
+      await pool.query("UPDATE pedidos SET status = ? WHERE id = ?", [status, id]);
+    }
+    await registrarAdminLog("pedido_status", `Pedido ${id} -> ${status}`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao alterar status:", e.message);
+    res.status(500).json({ error: "Erro ao alterar status." });
+  }
+});
+
+// Edita o valor de um pedido.
+app.put("/api/admin/pedidos/:id/valor", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const v = parseFloat((req.body || {}).valor);
+    if (!id) return res.status(400).json({ error: "Pedido inválido." });
+    if (isNaN(v) || v < 0) return res.status(400).json({ error: "Valor inválido." });
+    await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [v, id]);
+    await registrarAdminLog("pedido_valor", `Pedido ${id} -> ${v}`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao editar valor:", e.message);
+    res.status(500).json({ error: "Erro ao editar valor." });
+  }
+});
+
+// Baixa o PDF/currículo de um pedido (permite admin ver o entregável,
+// mesmo que o pedido ainda não esteja pago — controle total).
+app.get("/api/admin/pedidos/:id/download", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
+    const pedido = rows[0];
+    let dados;
+    try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { return res.status(500).json({ error: "Dados inválidos." }); }
+    const arquivoNome = (dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+    const tipoPedido = dados._tipo || "curriculo";
+    const buffer = tipoPedido === "carta" ? await gerarCartaPDF(pedido.modelo, dados) : await gerarPDF(pedido.modelo, dados);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${arquivoNome}.pdf"`);
+    res.send(buffer);
+  } catch (e) {
+    console.error("Erro ao gerar arquivo (admin):", e.message);
+    res.status(500).json({ error: "Erro ao gerar o arquivo." });
+  }
+});
+
+// Faturamento por período (hoje, 7 dias, 30 dias, total) e por canal (pix/card).
+app.get("/api/admin/faturamento", protegerAdmin, async (req, res) => {
+  try {
+    const periodos = {};
+    for (const [chave, intervalo] of [
+      ["hoje", "INTERVAL 1 DAY"],
+      ["7dias", "INTERVAL 7 DAY"],
+      ["30dias", "INTERVAL 30 DAY"],
+    ]) {
+      const [r] = await pool.query(
+        `SELECT COUNT(*) AS pagos, COALESCE(SUM(valor),0) AS total
+         FROM pedidos WHERE status='pago' AND created_at >= (NOW() - ${intervalo})`
+      );
+      periodos[chave] = { pagos: r[0].pagos || 0, total: Number(r[0].total) || 0 };
+    }
+    const [total] = await pool.query("SELECT COUNT(*) AS pagos, COALESCE(SUM(valor),0) AS total FROM pedidos WHERE status='pago'");
+    periodos.total = { pagos: total[0].pagos || 0, total: Number(total[0].total) || 0 };
+    const [porCanal] = await pool.query(
+      "SELECT pagamento_tipo, COUNT(*) AS c, COALESCE(SUM(valor),0) AS total FROM pedidos WHERE status='pago' GROUP BY pagamento_tipo"
+    );
+    res.json({ periodos, porCanal });
+  } catch (e) {
+    console.error("Erro ao carregar faturamento:", e.message);
+    res.status(500).json({ error: "Erro ao carregar faturamento." });
+  }
+});
+
+// Exportação CSV de pedidos (com filtros opcionais).
+app.get("/api/admin/exportar/pedidos", protegerAdmin, async (req, res) => {
+  try {
+    const { status, q } = req.query;
+    const params = [];
+    let where = " WHERE 1=1";
+    if (status) { where += " AND p.status = ?"; params.push(status); }
+    if (q) { where += " AND (u.nome LIKE ? OR u.email LIKE ? OR p.modelo LIKE ? OR CAST(p.id AS CHAR) = ?)"; params.push(`%${q}%`, `%${q}%`, `%${q}%`, q); }
+    const [rows] = await pool.query(
+      `SELECT p.id, p.modelo, p.valor, p.status, p.pagamento_tipo, p.created_at, p.pago_at, u.nome AS usuario_nome, u.email AS usuario_email
+       FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id ${where} ORDER BY p.id DESC`,
+      params
+    );
+    const cab = "id,modelo,valor,status,canal,created_at,pago_at,usuario,email";
+    const linhas = rows.map((r) =>
+      [r.id, r.modelo, r.valor, r.status, r.pagamento_tipo || "", r.created_at, r.pago_at || "", (r.usuario_nome || "").replace(/,/g, " "), (r.usuario_email || "").replace(/,/g, " ")].join(",")
+    );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=pedidos.csv");
+    res.send("\uFEFF" + cab + "\n" + linhas.join("\n"));
+  } catch (e) {
+    console.error("Erro ao exportar:", e.message);
+    res.status(500).json({ error: "Erro ao exportar." });
+  }
+});
+
+// Ranking de modelos + funil de receita (visitas -> editor -> pagamento -> pago).
+app.get("/api/admin/relatorios/vendas", protegerAdmin, async (req, res) => {
+  try {
+    const [ranking] = await pool.query(
+      "SELECT modelo, COUNT(*) AS c, COALESCE(SUM(CASE WHEN status='pago' THEN valor ELSE 0 END),0) AS total FROM pedidos GROUP BY modelo ORDER BY c DESC"
+    );
+    // Funil de receita (últimos 30 dias): visitas, editor, pagamento, pedidos, pagos.
+    const [funil] = await pool.query(`SELECT
+      (SELECT COUNT(DISTINCT sessao) FROM visitas WHERE created_at >= (NOW() - INTERVAL 30 DAY)) AS visitas,
+      (SELECT COUNT(DISTINCT sessao) FROM eventos WHERE tipo='abrir_editor' AND created_at >= (NOW() - INTERVAL 30 DAY)) AS editores,
+      (SELECT COUNT(DISTINCT sessao) FROM eventos WHERE tipo='chegar_pagamento' AND created_at >= (NOW() - INTERVAL 30 DAY)) AS pagamentos,
+      (SELECT COUNT(*) FROM pedidos WHERE created_at >= (NOW() - INTERVAL 30 DAY)) AS pedidos,
+      (SELECT COUNT(*) FROM pedidos WHERE status='pago' AND created_at >= (NOW() - INTERVAL 30 DAY)) AS pagos`);
+    res.json({ ranking, funil: funil[0] });
+  } catch (e) {
+    console.error("Erro ao carregar relatório:", e.message);
+    res.status(500).json({ error: "Erro ao carregar relatório." });
+  }
+});
+
+// Troca a senha do admin (valida a senha atual do LOGIN_PASS).
+app.put("/api/admin/senha", protegerAdmin, async (req, res) => {
+  try {
+    const { atual, nova } = req.body || {};
+    if (atual !== process.env.LOGIN_PASS) return res.status(401).json({ error: "Senha atual incorreta." });
+    if (!nova || nova.length < 8) return res.status(400).json({ error: "A nova senha deve ter no mínimo 8 caracteres." });
+    process.env.LOGIN_PASS = nova;
+    await registrarAdminLog("admin_senha", "Senha do admin alterada");
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao trocar senha:", e.message);
+    res.status(500).json({ error: "Erro ao trocar senha." });
+  }
+});
+
+// Configura/valida o 2FA por e-mail: envia um código e valida na sessão.
+// Simples e sem dependências externas: código de 6 dígitos válido por 10 min.
+app.post("/api/admin/2fa", protegerAdmin, async (req, res) => {
+  try {
+    const { acao, codigo } = req.body || {};
+    if (acao === "enviar") {
+      const codigoGerado = String(Math.floor(100000 + Math.random() * 900000));
+      req.session.codigo2fa = codigoGerado;
+      req.session.codigo2fa_exp = Date.now() + 10 * 60 * 1000;
+      req.session.save(async (err) => {
+        if (err) return res.status(500).json({ error: "Erro interno." });
+        const { enviarEmail } = require("./lib/email");
+        // Sempre usa o e-mail fixo do admin (não há campo de e-mail do admin).
+        const adminEmail = process.env.ADMIN_EMAIL || "admin@officeexpress.com.br";
+        await enviarEmail({ to: adminEmail, subject: "Código de acesso - Office Express", html: `<p>Seu código de verificação é: <b>${codigoGerado}</b></p><p>Válido por 10 minutos.</p>`, text: `Seu código de verificação é: ${codigoGerado}` });
+        res.json({ success: true });
+      });
+      return;
+    }
+    if (acao === "validar") {
+      if (!codigo) return res.status(400).json({ error: "Informe o código." });
+      if (req.session.codigo2fa && String(codigo) === String(req.session.codigo2fa) && req.session.codigo2fa_exp > Date.now()) {
+        req.session.verificado2fa = true;
+        req.session.save(() => res.json({ success: true }));
+      } else {
+        res.status(401).json({ error: "Código inválido ou expirado." });
+      }
+      return;
+    }
+    res.status(400).json({ error: "Ação inválida." });
+  } catch (e) {
+    console.error("Erro no 2FA:", e.message);
+    res.status(500).json({ error: "Erro no 2FA." });
+  }
+});
+
+// Histórico de auditoria das ações do admin.
+app.get("/api/admin/auditoria", protegerAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM admin_log ORDER BY id DESC LIMIT 200");
+    res.json({ logs: rows });
+  } catch (e) {
+    console.error("Erro ao carregar auditoria:", e.message);
+    res.status(500).json({ error: "Erro ao carregar auditoria." });
+  }
+});
+
+// Reenvia o e-mail de confirmação de um usuário.
+app.post("/api/admin/usuarios/:id/reenviar-email", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const [rows] = await pool.query("SELECT id, nome, email, email_confirmado FROM usuarios WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Usuário não encontrado." });
+    const u = rows[0];
+    if (u.email_confirmado) return res.json({ success: true, message: "E-mail já confirmado." });
+    const token = gerarToken();
+    const expira = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await pool.query("INSERT INTO email_tokens (usuario_id, tipo, token, expira_em) VALUES (?, 'confirmacao', ?, ?)", [id, token, expira]);
+    await enviarConfirmacao(u.email, u.nome, token);
+    await registrarAdminLog("reenviar_email", `Confirmação reenviada para ${u.email}`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao reenviar e-mail:", e.message);
+    res.status(500).json({ error: "Erro ao reenviar e-mail." });
+  }
+});
+
+// Lista os e-mails (tokens) já enviados a um usuário.
+app.get("/api/admin/usuarios/:id/emails", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const [rows] = await pool.query(
+      "SELECT tipo, usado, expira_em, created_at FROM email_tokens WHERE usuario_id = ? ORDER BY id DESC LIMIT 50",
+      [id]
+    );
+    res.json({ emails: rows });
+  } catch (e) {
+    console.error("Erro ao listar e-mails:", e.message);
+    res.status(500).json({ error: "Erro ao listar e-mails." });
+  }
+});
+
+// Backup/exportação dos dados (pedidos + usuários em JSON).
+app.get("/api/admin/backup", protegerAdmin, async (req, res) => {
+  try {
+    const [pedidos] = await pool.query("SELECT * FROM pedidos");
+    const [usuarios] = await pool.query("SELECT id, nome, email, email_confirmado, created_at FROM usuarios");
+    const backup = {
+      geradoEm: new Date().toISOString(),
+      pedidos: pedidos.map((p) => ({ ...p, dados: (() => { try { return JSON.parse(p.dados_json || "{}"); } catch (e) { return {}; } })() })),
+      usuarios,
+    };
+    backup.pedidos.forEach((p) => delete p.dados_json);
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", "attachment; filename=backup-officeexpress.json");
+    res.send(JSON.stringify(backup, null, 2));
+  } catch (e) {
+    console.error("Erro no backup:", e.message);
+    res.status(500).json({ error: "Erro no backup." });
   }
 });
 
