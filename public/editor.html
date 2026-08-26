@@ -342,6 +342,7 @@
 
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("editor");
+    try { App.track && App.track("abrir_editor"); } catch (e) { /* ignora */ }
 
     // Usa nomes únicos (irAnterior/irProximo) porque "prev"/"next" colidem
     // com propriedades nativas read-only do objeto window do navegador.

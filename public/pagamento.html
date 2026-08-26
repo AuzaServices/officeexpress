@@ -419,6 +419,7 @@
 
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("pagamento");
+    try { App.track && App.track("chegar_pagamento"); } catch (e) { /* ignora */ }
 
     // ---- Prévia do currículo (coluna esquerda, somente desktop) ----
     var modeloPrev = localStorage.getItem("modeloSelecionado") || "classico";

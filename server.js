@@ -528,6 +528,175 @@ app.put("/api/admin/preco", protegerAdmin, async (req, res) => {
   res.json({ success: true, preco: v });
 });
 
+// ---------------------------------------------------------------------------
+// Métricas de tráfego em tempo real (visitas, rejeição, origem, funil)
+// ---------------------------------------------------------------------------
+
+// Normaliza o dispositivo a partir do User-Agent (valores curtos para o banco).
+function detectarDispositivo(ua) {
+  if (!ua) return "desconhecido";
+  if (/mobile|android|iphone|ipod/i.test(ua)) return "mobile";
+  if (/tablet|ipad/i.test(ua)) return "tablet";
+  return "desktop";
+}
+
+// Extrai o domínio de origem a partir do referer e classifica em grupos.
+function classificarOrigem(referer) {
+  if (!referer) return "direto";
+  try {
+    const u = new URL(referer);
+    const host = u.hostname.toLowerCase();
+    if (host.includes("google.")) return "google";
+    if (host.includes("instagram")) return "instagram";
+    if (host.includes("facebook") || host.includes("fb.com")) return "facebook";
+    if (host.includes("wa.me") || host.includes("whatsapp")) return "whatsapp";
+    if (host.includes("officeexpress")) return "interno";
+    return "outro";
+  } catch (e) {
+    return "outro";
+  }
+}
+
+// Gera um id de sessão de navegação (sem depender de cookie, para não
+// esbarrar em bloqueadores). O frontend envia o mesmo id em cada evento.
+function gerarSessaoId() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
+// Endpoint de tracking: recebe pageviews e eventos de interação. Usado com
+// navigator.sendBeacon no frontend, por isso aceita tanto JSON quanto texto.
+app.post("/api/track", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const tipo = body.tipo || "pageview";
+    const sessao = String(body.sessao || "").slice(0, 64);
+    const pagina = String(body.pagina || "").slice(0, 190);
+    const path = String(body.path || req.headers.referer || "/").slice(0, 190);
+    const valor = String(body.valor || "").slice(0, 255);
+    const ua = String(req.headers["user-agent"] || "").slice(0, 255);
+    const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim().slice(0, 45);
+    const referer = String(body.referer || "").slice(0, 255);
+    const origem = classificarOrigem(referer);
+    const dispositivo = detectarDispositivo(ua);
+    const uf = String(body.uf || "").slice(0, 2);
+
+    if (!sessao) return res.status(400).json({ error: "Sessão ausente." });
+
+    if (tipo === "pageview") {
+      await pool.query(
+        `INSERT INTO visitas
+          (sessao, path, pagina, referer, origem, user_agent, dispositivo, ip, uf, primeira_visita)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [sessao, path, pagina, referer, origem, ua, dispositivo, ip, uf, body.primeiraVisita ? 1 : 0]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO eventos (sessao, tipo, valor, pagina) VALUES (?, ?, ?, ?)`,
+        [sessao, String(tipo).slice(0, 60), valor, pagina || path]
+      );
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro no tracking:", e);
+    // Nunca deixa o tracking quebrar a navegação do usuário.
+    res.status(500).json({ error: "Erro interno." });
+  }
+});
+
+// Dados de tráfego para o painel: online agora, últimas 24h, rejeição,
+// origem, páginas e funil de conversão. Tudo agrupado no banco.
+app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
+  try {
+    const agora = Date.now();
+
+    // Visitantes online agora (pageview nos últimos 5 minutos).
+    const [online] = await pool.query(
+      "SELECT COUNT(DISTINCT sessao) AS c FROM visitas WHERE created_at >= (NOW() - INTERVAL 5 MINUTE)"
+    );
+
+    // Últimas 24h e últimos 7 dias.
+    const [d24] = await pool.query(
+      "SELECT COUNT(*) AS c, COUNT(DISTINCT sessao) AS sessoes FROM visitas WHERE created_at >= (NOW() - INTERVAL 24 HOUR)"
+    );
+    const [d7] = await pool.query(
+      "SELECT COUNT(*) AS c, COUNT(DISTINCT sessao) AS sessoes FROM visitas WHERE created_at >= (NOW() - INTERVAL 7 DAY)"
+    );
+
+    // Páginas mais visitadas nas últimas 24h.
+    const [paginas] = await pool.query(
+      `SELECT COALESCE(NULLIF(pagina,''), path) AS pagina, COUNT(*) AS c
+       FROM visitas
+       WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
+       GROUP BY pagina ORDER BY c DESC LIMIT 8`
+    );
+
+    // Origens de tráfego nas últimas 24h.
+    const [origens] = await pool.query(
+      `SELECT origem, COUNT(*) AS c FROM visitas
+       WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
+       GROUP BY origem ORDER BY c DESC`
+    );
+
+    // Funil: visitas (entradas) vs. eventos de conversão nas últimas 24h.
+    const [funil] = await pool.query(
+      `SELECT tipo, COUNT(*) AS c FROM eventos
+       WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
+       GROUP BY tipo ORDER BY c DESC`
+    );
+    const funilMap = {};
+    (funil || []).forEach((f) => { funilMap[f.tipo] = f.c; });
+
+    // Rejeição: % de visitas de uma sessão que não gerou nenhum evento de
+    // interação (rebaixadas ou sem clique). Estimada por sessão nas 24h.
+    const [rejeicao] = await pool.query(
+      `SELECT
+        (SELECT COUNT(DISTINCT sessao) FROM visitas WHERE created_at >= (NOW() - INTERVAL 24 HOUR)) AS total_sessoes,
+        (SELECT COUNT(DISTINCT sessao) FROM eventos WHERE created_at >= (NOW() - INTERVAL 24 HOUR)) AS sessoes_com_evento`
+    );
+    const totalSessoes = Number(rejeicao[0].total_sessoes) || 0;
+    const sessoesComEvento = Number(rejeicao[0].sessoes_com_evento) || 0;
+    const taxaRejeicao = totalSessoes > 0
+      ? Math.round(((totalSessoes - sessoesComEvento) / totalSessoes) * 100)
+      : 0;
+
+    res.json({
+      onlineAgora: online[0].c || 0,
+      ultimas24h: { visitas: d24[0].c || 0, sessoes: d24[0].sessoes || 0 },
+      ultimos7dias: { visitas: d7[0].c || 0, sessoes: d7[0].sessoes || 0 },
+      taxaRejeicao,
+      paginas,
+      origens,
+      funil: funilMap,
+      geradoEm: new Date(agora).toISOString(),
+    });
+  } catch (e) {
+    console.error("Erro ao carregar métricas:", e);
+    res.status(500).json({ error: "Erro ao carregar métricas." });
+  }
+});
+
+// Séries temporais (por hora) das últimas 24h para o gráfico do painel.
+app.get("/api/admin/metricas/tendencia", protegerAdmin, async (req, res) => {
+  try {
+    const [linhas] = await pool.query(
+      `SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:00') AS hora, COUNT(*) AS c
+       FROM visitas
+       WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
+       GROUP BY hora ORDER BY hora ASC`
+    );
+    res.json({ pontos: linhas });
+  } catch (e) {
+    console.error("Erro ao carregar tendência:", e);
+    res.status(500).json({ error: "Erro ao carregar tendência." });
+  }
+});
+
+// Gera um id de sessão para o tracking do frontend (endpoint leve).
+app.get("/api/track/sessao", (req, res) => {
+  res.json({ sessao: gerarSessaoId() });
+});
+
+
 // Upload temporário do currículo enviado na página de análise, para que a
 // prévia "Original" exiba o documento de forma fiel (via visualizador do
 // Office para DOCX). O arquivo é recebido em base64 via JSON.

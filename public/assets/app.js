@@ -118,11 +118,66 @@ window.App = (function () {
     });
   }
 
-  return { api, authMe, mostrarAlerta, limparAlerta, logout, formatarPreco, carregarHeader };
+  // ---------------------------------------------------------------------
+  // Rastreamento de tráfego (pageviews e eventos) via navigator.sendBeacon.
+  // Usa um id de sessão guardado em localStorage, sem depender de cookies,
+  // para as métricas de fluxo de entrada e rejeição no painel admin.
+  // ---------------------------------------------------------------------
+  var SESS_KEY = "oe_sessao";
+  var sessaoAtual = (function () {
+    try { return localStorage.getItem(SESS_KEY); } catch (e) { return ""; }
+  })();
+
+  function novaSessao() {
+    var s = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    try { localStorage.setItem(SESS_KEY, s); } catch (e) { /* ignora */ }
+    sessaoAtual = s;
+    return s;
+  }
+
+  // Envia um beacon de tracking sem bloquear a navegação. Retorna true se
+  // conseguiu usar sendBeacon (fallback para fetch em navegadores antigos).
+  function beacon(dados) {
+    if (!sessaoAtual) sessaoAtual = novaSessao();
+    dados.sessao = sessaoAtual;
+    var blob = new Blob([JSON.stringify(dados)], { type: "application/json" });
+    try {
+      if (navigator.sendBeacon) { return navigator.sendBeacon("/api/track", blob); }
+    } catch (e) { /* ignora */ }
+    try {
+      fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados), keepalive: true }).catch(function () {});
+    } catch (e) { /* ignora */ }
+    return false;
+  }
+
+  function registrarPageview() {
+    var path = window.location.pathname + window.location.search;
+    var pagina = path.split("/").filter(Boolean).join("/") || "inicio";
+    var primeira = false;
+    var data = { tipo: "pageview", path: path, pagina: pagina, referer: document.referrer || "" };
+    try {
+      var chave = "oe_pv_" + path;
+      primeira = !sessionStorage.getItem(chave);
+      if (primeira) sessionStorage.setItem(chave, "1");
+    } catch (e) { primeira = false; }
+    data.primeiraVisita = primeira;
+    beacon(data);
+  }
+
+  // Registra um evento de conversão (ex.: abrir editor, gerar PDF, pagamento).
+  function trackEvento(tipo, valor) {
+    beacon({ tipo: tipo, valor: valor || "", pagina: window.location.pathname });
+  }
+
+  return { api, authMe, mostrarAlerta, limparAlerta, logout, formatarPreco, carregarHeader, track: trackEvento, registrarPageview };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
   const paginaPainel = /(^|\/)painel(?:\.html)?(?:$|\?)/i.test(window.location.pathname + window.location.search);
+  if (!paginaPainel) {
+    // Registra a visita na página para as métricas de tráfego do painel.
+    try { window.App.registrarPageview && window.App.registrarPageview(); } catch (e) { /* ignora */ }
+  }
   if (!paginaPainel) {
     document.body.classList.add("page-enter");
     document.body.classList.add("motion-ready");

@@ -33,6 +33,31 @@
       <!-- Estatísticas -->
       <div class="stats-grid" id="stats"></div>
 
+      <!-- Métricas de tráfego em tempo real -->
+      <div class="card" style="margin-bottom:32px">
+        <div class="metricas-topo">
+          <h3 style="margin:0">Tráfego em tempo real</h3>
+          <span class="metrica-atualizacao" id="metricaStatus">Atualizando…</span>
+        </div>
+        <div class="stats-grid" id="metricaStats"></div>
+        <h4 style="margin:0 0 4px;color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px">Visitas por hora (últimas 24h)</h4>
+        <div class="grafico-barras" id="graficoTendencia"></div>
+        <div class="metrica-cols">
+          <div>
+            <h4>Páginas mais acessadas</h4>
+            <ul class="metrica-lista" id="listaPaginas"></ul>
+          </div>
+          <div>
+            <h4>Origem do tráfego</h4>
+            <ul class="metrica-lista" id="listaOrigens"></ul>
+          </div>
+          <div>
+            <h4>Funil de conversão</h4>
+            <ul class="metrica-lista" id="listaFunil"></ul>
+          </div>
+        </div>
+      </div>
+
       <!-- Editar preço -->
       <div class="card" style="margin-bottom:32px">
         <h3 style="margin-bottom:16px">Preço do currículo (valor fixo único)</h3>
@@ -88,6 +113,43 @@
     }
     .btn-icone-lixeira-linha:hover { background: rgba(255,68,68,.18); }
     .btn-icone-lixeira-linha svg { width: 16px; height: 16px; display: block; }
+
+    /* ---- Métricas de tráfego ---- */
+    .metricas-topo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .metrica-atualizacao { color: var(--text-muted); font-size: .8rem; background: rgba(255,255,255,.05); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; }
+    .metrica-atualizacao.live { color: #34d399; border-color: rgba(52,211,153,.4); }
+    .metrica-atualizacao.live::before { content: "● "; }
+    .stat-card.destaque { border-color: rgba(255,136,0,.45); }
+    .stat-card .stat-value.small { font-size: 1.5rem; }
+    .stat-card .stat-sub { color: var(--text-muted); font-size: .75rem; margin-top: 4px; }
+
+    .grafico-barras { display: flex; align-items: flex-end; gap: 4px; height: 130px; margin: 16px 0 24px; padding: 12px; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+    .grafico-barras .barra { flex: 1 0 18px; min-width: 12px; background: linear-gradient(180deg, var(--brand), var(--brand-dark)); border-radius: 5px 5px 0 0; position: relative; transition: height .4s ease; cursor: default; }
+    .grafico-barras .barra:hover { opacity: .85; }
+    .grafico-barras .barra.empty { background: rgba(255,255,255,.06); }
+    .grafico-barras .barra .barra-val { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-size: .68rem; color: var(--text-muted); white-space: nowrap; }
+
+    .metrica-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 8px; }
+    .metrica-cols h4 { font-size: .85rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin: 0 0 12px; }
+    .metrica-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .metrica-lista li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .88rem; }
+    .metrica-lista li .rotulo { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .metrica-lista li .valor { font-weight: 700; color: var(--text-primary); background: rgba(255,255,255,.06); padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+    .barra-origem { height: 6px; border-radius: 4px; background: rgba(255,255,255,.08); flex: 1; overflow: hidden; }
+    .barra-origem > span { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-dark)); }
+
+    /* Responsividade mobile do painel */
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .stat-card { padding: 16px; }
+      .stat-card .stat-value { font-size: 1.5rem; }
+      .stat-card .stat-value.small { font-size: 1.2rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .metrica-topo { flex-direction: column; align-items: flex-start; }
+      table.tabela th, table.tabela td { padding: 10px 8px; font-size: .8rem; }
+    }
   </style>
 
   <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
@@ -164,6 +226,82 @@
       });
     }
 
+    // ---- Métricas de tráfego em tempo real ----
+    var nomesOrigem = { direto: "Direto", google: "Google", instagram: "Instagram", facebook: "Facebook", whatsapp: "WhatsApp", interno: "Interno", outro: "Outro" };
+    var nomesFunil = { abrir_editor: "Abrir editor", chegar_pagamento: "Chegar ao pagamento" };
+
+    function formatarHora(h) { return (h || "").split(":")[0] + "h"; }
+
+    function renderMetricas(m) {
+      var status = document.getElementById("metricaStatus");
+      if (status) {
+        status.textContent = "Atualizado " + new Date(m.geradoEm).toLocaleTimeString("pt-BR") + " · atualiza a cada 30s";
+        status.classList.add("live");
+      }
+      document.getElementById("metricaStats").innerHTML =
+        '<div class="stat-card destaque"><div class="stat-value">' + (m.onlineAgora || 0) + '</div><div class="stat-label">Visitantes online agora</div><div class="stat-sub">últimos 5 min</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + m.ultimas24h.visitas + '</div><div class="stat-label">Visitas (24h)</div><div class="stat-sub">' + m.ultimas24h.sessoes + ' sessões</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + m.taxaRejeicao + '%</div><div class="stat-label">Rejeição (24h)</div><div class="stat-sub">sem interação</div></div>' +
+        '<div class="stat-card"><div class="stat-value small">' + m.ultimos7dias.visitas + '</div><div class="stat-label">Visitas (7 dias)</div></div>';
+
+      var lp = document.getElementById("listaPaginas");
+      lp.innerHTML = "";
+      (m.paginas || []).forEach(function (pg) {
+        var li = document.createElement("li");
+        li.innerHTML = '<span class="rotulo">' + (pg.pagina || "/") + '</span><span class="valor">' + pg.c + '</span>';
+        lp.appendChild(li);
+      });
+      if (!m.paginas || !m.paginas.length) lp.innerHTML = '<li class="rotulo" style="color:var(--text-muted)">Sem dados ainda</li>';
+
+      var lo = document.getElementById("listaOrigens");
+      lo.innerHTML = "";
+      var total = (m.origens || []).reduce(function (a, o) { return a + o.c; }, 0) || 1;
+      (m.origens || []).forEach(function (o) {
+        var pct = Math.round((o.c / total) * 100);
+        var li = document.createElement("li");
+        li.innerHTML = '<span class="rotulo">' + (nomesOrigem[o.origem] || o.origem) + '</span><span class="barra-origem"><span style="width:' + pct + '%"></span></span><span class="valor">' + pct + '%</span>';
+        lo.appendChild(li);
+      });
+      if (!m.origens || !m.origens.length) lo.innerHTML = '<li class="rotulo" style="color:var(--text-muted)">Sem dados ainda</li>';
+
+      var lf = document.getElementById("listaFunil");
+      lf.innerHTML = "";
+      var chaves = Object.keys(m.funil || {});
+      chaves.forEach(function (k) {
+        var li = document.createElement("li");
+        li.innerHTML = '<span class="rotulo">' + (nomesFunil[k] || k) + '</span><span class="valor">' + m.funil[k] + '</span>';
+        lf.appendChild(li);
+      });
+      if (!chaves.length) lf.innerHTML = '<li class="rotulo" style="color:var(--text-muted)">Sem eventos ainda</li>';
+    }
+
+    function renderTendencia(pontos) {
+      var g = document.getElementById("graficoTendencia");
+      g.innerHTML = "";
+      if (!pontos || !pontos.length) {
+        g.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;margin:auto;align-self:center">Sem dados ainda</div>';
+        return;
+      }
+      var max = Math.max.apply(null, pontos.map(function (p) { return p.c; })) || 1;
+      pontos.forEach(function (p) {
+        var h = Math.max(6, Math.round((p.c / max) * 100));
+        var b = document.createElement("div");
+        b.className = "barra" + (p.c === 0 ? " empty" : "");
+        b.style.height = h + "%";
+        b.title = formatarHora(p.hora) + " · " + p.c + " visitas";
+        b.innerHTML = '<span class="barra-val">' + p.c + '</span>';
+        g.appendChild(b);
+      });
+    }
+
+    async function carregarMetricas() {
+      var { ok, data } = await App.api("/api/admin/metricas");
+      if (!ok) return;
+      renderMetricas(data);
+      var tend = await App.api("/api/admin/metricas/tendencia");
+      if (tend.ok && tend.data.pontos) renderTendencia(tend.data.pontos);
+    }
+
     window.limparPedidos = async function () {
       if (!confirm("Tem certeza que deseja apagar TODOS os pedidos? Esta ação não pode ser desfeita.")) return;
       var { ok, data } = await App.api("/api/admin/pedidos", { method: "DELETE" });
@@ -198,6 +336,14 @@
     };
 
     carregar();
+    carregarMetricas();
+    // Atualização em tempo real: métricas de tráfego a cada 30s e
+    // pedidos/usuários a cada 15s para acompanhar o fluxo ao vivo.
+    setInterval(function () { carregarMetricas(); }, 30000);
+    setInterval(function () {
+      var conteudo = document.getElementById("conteudo");
+      if (conteudo && conteudo.style.display !== "none") carregar();
+    }, 15000);
   </script>
 </body>
 </html>
