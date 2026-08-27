@@ -1114,6 +1114,23 @@ app.put("/api/admin/parceiros/:id/status", protegerAdmin, async (req, res) => {
   }
 });
 
+// Exclui um parceiro (admin). Antes de remover, desvincula os pedidos que
+// apontavam para ele (parceiro_id -> NULL) para preservar o histórico de
+// vendas sem deixar referências órfãs.
+app.delete("/api/admin/parceiros/:id", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ error: "Parceiro inválido." });
+    await pool.query("UPDATE pedidos SET parceiro_id = NULL WHERE parceiro_id = ?", [id]);
+    await pool.query("DELETE FROM parceiros WHERE id = ?", [id]);
+    await registrarAdminLog("parceiro_excluido", `Parceiro ${id} excluído`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao excluir parceiro:", e.message);
+    res.status(500).json({ error: "Erro ao excluir parceiro." });
+  }
+});
+
 // Login do parceiro.
 app.post("/api/parceiro/login", async (req, res) => {
   const { email, senha } = req.body || {};

@@ -545,6 +545,7 @@
           '<td><div class="acoes-linha">' +
             '<button class="btn-acao" onclick="copiarLinkParceiro(\'' + link.replace(/'/g, "\\'") + '\')">Copiar link</button>' +
             botao +
+            '<button type="button" class="btn-acao vermelho" title="Excluir parceiro" onclick="excluirParceiro(' + p.id + ')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Excluir</button>' +
           "</div></td>";
         tb.appendChild(tr);
       });
@@ -578,6 +579,13 @@
       var { ok, data } = await App.api("/api/admin/parceiros/" + id + "/status", { method: "PUT", body: JSON.stringify({ ativo: ativo }) });
       setMsg(ok ? "Status do parceiro atualizado." : (data.error || "Erro."), ok);
       carregarParceiros();
+    };
+
+    window.excluirParceiro = async function (id) {
+      if (!confirm("Tem certeza que deseja excluir este parceiro? Os pedidos dele deixarão de ser atribuídos a ele. Esta ação não pode ser desfeita.")) return;
+      var { ok, data } = await App.api("/api/admin/parceiros/" + id, { method: "DELETE" });
+      setMsg(ok ? "Parceiro excluído." : (data.error || "Erro ao excluir parceiro."), ok);
+      if (ok) carregarParceiros();
     };
 
     window.trocarSenha = async function () {
