@@ -647,6 +647,24 @@ function detectarDispositivo(ua) {
   return "desktop";
 }
 
+// Detecta acessos feitos por bots de pré-visualização de links e crawlers de
+// redes sociais/buscadores. Esses bots abrem a página para gerar o preview
+// (título/imagem) ou indexar o conteúdo e, quando executam JavaScript,
+// disparam o tracking como se fosse uma visita humana — inflando os acessos
+// (ex.: apenas enviar um link no Instagram gera 1-2 "acessos" de preview).
+function ehBotNaoHumano(ua) {
+  if (!ua) return false;
+  // Crawlers/bots conhecidos de redes sociais e buscadores, além de headless.
+  if (/(facebookexternalhit|facebot|twitterbot|pinterestbot|linkedinbot|telegrambot|discordbot|slackbot|vkshare|embedly|outbrain|pocket|bitlybot|quora|headless|phantomjs|python-requests|curl|wget|axios|httpclient|googlebot|bingbot|duckduckbot|baiduspider|yandexbot|semrushbot|ahrefsbot|mj12bot|crawler|spider|preview)/i.test(ua)) return true;
+  // WhatsApp: só o crawler de preview é bot. O navegador interno do app tem
+  // "Mobile/Safari/Chrome" no UA e deve ser contado como visita real.
+  if (/whatsapp/i.test(ua) && !/(mobile|safari|chrome)/i.test(ua)) return true;
+  // Instagram: só o crawler de preview é bot. O navegador interno do app tem
+  // "Mobile/Safari/Chrome/iOS/Android" e deve ser contado como visita real.
+  if (/instagram/i.test(ua) && !/(mobile|safari|chrome|ios|android)/i.test(ua)) return true;
+  return false;
+}
+
 // Extrai o domínio de origem a partir do referer e classifica em grupos.
 function classificarOrigem(referer) {
   if (!referer) return "direto";
@@ -725,6 +743,12 @@ app.post("/api/track", async (req, res) => {
     // Qualquer outro tipo (pageview, eventos de conversão) também marca a
     // sessão como ativa, indicando entrada imediata do visitante.
     sessoesOnline.set(sessao, Date.now());
+
+    // Descarta acessos de bots de pré-visualização/crawlers (não são visitas
+    // humanas e não devem contar como acesso do parceiro).
+    if (ehBotNaoHumano(ua)) {
+      return res.json({ ok: true, online: sessoesOnline.size, ignorado: "bot" });
+    }
 
     if (tipo === "pageview") {
       await pool.query(
