@@ -263,6 +263,10 @@ window.App = (function () {
 document.addEventListener("DOMContentLoaded", function () {
   const paginaPainel = /(^|\/)(painel|painel-parceiro|login-parceiro)(?:\.html)?(?:$|\?)/i.test(window.location.pathname + window.location.search);
   if (!paginaPainel) {
+    // Captura e persiste o código do parceiro (ref) vindo do ?ref= da URL.
+    // Isso guarda o vínculo no navegador para uso no cadastro e na criação
+    // de pedidos (comissão), sem afetar o tracking (que usa refDaRota).
+    try { window.App.obterRef && window.App.obterRef(); } catch (e) { /* ignora */ }
     // Registra a visita na página para as métricas de tráfego do painel.
     try { window.App.registrarPageview && window.App.registrarPageview(); } catch (e) { /* ignora */ }
     // Mantém o visitante "online agora" em tempo real (heartbeat + saída).
