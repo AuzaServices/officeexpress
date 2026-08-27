@@ -124,7 +124,7 @@ async function buscarUsuarioPorId(id) {
 // AUTH: cadastro, confirmação, login, logout, me
 // ---------------------------------------------------------------------------
 app.post("/api/auth/registrar", async (req, res) => {
-  const { nome, email, senha } = req.body || {};
+  const { nome, email, senha, ref } = req.body || {};
   if (!nome || !email || !senha) return res.status(400).json({ error: "Preencha nome, e-mail e senha." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "E-mail inválido." });
   if (!validarSenha(senha)) return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, com letras e números." });
@@ -133,8 +133,21 @@ app.post("/api/auth/registrar", async (req, res) => {
   const [existe] = await pool.query("SELECT id FROM usuarios WHERE email = ?", [em]);
   if (existe.length) return res.status(409).json({ error: "Já existe uma conta com este e-mail." });
 
+  // Associa o usuário ao parceiro indicado pelo link (ref), se válido e ativo.
+  // Isso grava o vínculo na conta: assim a comissão não se perde quando o
+  // usuário confirma o e-mail em outro navegador/dispositivo (fora da rota
+  // do link), pois o parceiro passa a estar salvo no cadastro.
+  let parceiroId = null;
+  if (ref) {
+    const [par] = await pool.query("SELECT id FROM parceiros WHERE codigo = ? AND ativo = 1", [String(ref).slice(0, 40)]);
+    if (par.length) parceiroId = par[0].id;
+  }
+
   const hash = await bcrypt.hash(senha, 10);
-  const [result] = await pool.query("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)", [nome.trim(), em, hash]);
+  const [result] = await pool.query(
+    "INSERT INTO usuarios (nome, email, senha, parceiro_id) VALUES (?, ?, ?, ?)",
+    [nome.trim(), em, hash, parceiroId]
+  );
   const usuarioId = result.insertId;
 
   // Gera token de confirmação e envia e-mail
@@ -293,6 +306,17 @@ app.post("/api/pedidos", async (req, res) => {
   if (ref) {
     const [par] = await pool.query("SELECT id FROM parceiros WHERE codigo = ? AND ativo = 1", [String(ref).slice(0, 40)]);
     if (par.length) parceiroId = par[0].id;
+  }
+  // Fallback: se o usuário está logado e tem um parceiro vinculado na conta
+  // (ex.: veio pelo link, se cadastrou e confirmou o e-mail em outro lugar),
+  // usa esse vínculo mesmo que o ref não esteja na URL deste pedido. Assim a
+  // comissão não se perde quando o fluxo sai da rota do parceiro.
+  if (!parceiroId) {
+    const uid = usuarioDaSessao(req);
+    if (uid) {
+      const [u] = await pool.query("SELECT parceiro_id FROM usuarios WHERE id = ? AND parceiro_id IS NOT NULL", [uid]);
+      if (u.length && u[0].parceiro_id) parceiroId = u[0].parceiro_id;
+    }
   }
   const [result] = await pool.query(
     "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor, parceiro_id) VALUES (?, ?, ?, ?, ?)",
