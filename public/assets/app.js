@@ -182,13 +182,23 @@ window.App = (function () {
     try { localStorage.removeItem(REF_KEY); } catch (e) { /* ignora */ }
   }
 
+  // Devolve o código do parceiro apenas quando a rota atual é a do link dele
+  // (contém ?ref=). O ref não é persistido para o tracking: assim os acessos e
+  // eventos só são atribuídos ao parceiro quando o visitante está de fato na
+  // página do link de compartilhamento, não em qualquer página depois.
+  function refDaRota() {
+    var m = window.location.search.match(/[?&]ref=([^&]+)/);
+    if (!m) return "";
+    try { return decodeURIComponent(m[1]).slice(0, 40); } catch (e) { return ""; }
+  }
+
   // Envia um beacon de tracking sem bloquear a navegação. Retorna true se
   // conseguiu usar sendBeacon (fallback para fetch em navegadores antigos).
   function beacon(dados) {
     var s = obterSessao();
     tocarSessao();
     dados.sessao = s;
-    var ref = obterRef();
+    var ref = refDaRota();
     if (ref) dados.parceiro = ref;
     var blob = new Blob([JSON.stringify(dados)], { type: "application/json" });
     try {
@@ -251,7 +261,7 @@ window.App = (function () {
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
-  const paginaPainel = /(^|\/)painel(?:\.html)?(?:$|\?)/i.test(window.location.pathname + window.location.search);
+  const paginaPainel = /(^|\/)(painel|painel-parceiro|login-parceiro)(?:\.html)?(?:$|\?)/i.test(window.location.pathname + window.location.search);
   if (!paginaPainel) {
     // Registra a visita na página para as métricas de tráfego do painel.
     try { window.App.registrarPageview && window.App.registrarPageview(); } catch (e) { /* ignora */ }
