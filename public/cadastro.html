@@ -63,6 +63,14 @@
       document.getElementById("btnCad").disabled = false;
 
       if (ok) {
+        // Se o usuário estava montando um currículo, garante que, após confirmar
+        // o e-mail, ele volte direto ao pagamento desse currículo (e não aos
+        // modelos). O caminho /preview?autopagamento=1 recria o pedido e segue
+        // para /pagamento?pedido=ID.
+        try {
+          var temCurriculo = localStorage.getItem("curriculo") || localStorage.getItem("modeloSelecionado");
+          if (temCurriculo) localStorage.setItem("redirectAposLogin", "/preview?autopagamento=1");
+        } catch (e) { /* ignora */ }
         document.getElementById("cadForm").style.display = "none";
         App.mostrarAlerta("alert", data.message || "Conta criada! Enviamos um link de confirmação para o seu e-mail. Clique nele para liberar o acesso.", "success");
       } else {
