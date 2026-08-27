@@ -396,6 +396,21 @@ async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
     "UPDATE pedidos SET status = 'pago', pagamento_id = ?, pagamento_tipo = ?, pago_at = NOW(), download_token = ? WHERE id = ?",
     [pagamentoId, tipo, gerarToken(), pedidoId]
   );
+  // Grava a transação financeira imutável — fonte de verdade de receitas e
+  // comissões, independente da tabela `pedidos`. O INSERT IGNORE + índice
+  // único em pedido_id garante que não duplica mesmo se o webhook e o
+  // confirmar-pago chegarem para o mesmo pedido.
+  try {
+    const [p] = await pool.query("SELECT id, usuario_id, valor, parceiro_id, modelo FROM pedidos WHERE id = ?", [pedidoId]);
+    if (p.length) {
+      await pool.query(
+        "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), 'venda', ?)",
+        [pedidoId, p[0].usuario_id, p[0].parceiro_id, p[0].modelo, p[0].valor, p[0].parceiro_id, tipo || "pix"]
+      );
+    }
+  } catch (e) {
+    console.error("Erro ao registrar transação financeira:", e.message);
+  }
 }
 
 app.post("/api/pagamento/pix", async (req, res) => {
@@ -562,14 +577,17 @@ app.post("/api/admin/logout", (req, res) => {
 });
 
 app.get("/api/admin/estatisticas", protegerAdmin, async (req, res) => {
-  const [pedidos] = await pool.query("SELECT COUNT(*) c, COALESCE(SUM(CASE WHEN status='pago' THEN valor ELSE 0 END),0) faturamento, SUM(status='pago') pagos FROM pedidos");
+  const [pedidos] = await pool.query("SELECT COUNT(*) c FROM pedidos");
+  // Valores financeiros vêm da tabela imutável `transacoes`, independente de
+  // `pedidos`. Assim, limpar `pedidos` não apaga receitas/pagamentos.
+  const [fin] = await pool.query("SELECT COUNT(*) AS pagos, COALESCE(SUM(valor),0) AS faturamento FROM transacoes WHERE tipo='venda'");
   const [usuarios] = await pool.query("SELECT COUNT(*) c FROM usuarios");
   const [porModelo] = await pool.query("SELECT modelo, COUNT(*) c FROM pedidos WHERE status='pago' GROUP BY modelo ORDER BY c DESC");
   const preco = await getPreco();
   res.json({
     totalPedidos: pedidos[0].c,
-    pagos: pedidos[0].pagos || 0,
-    faturamento: pedidos[0].faturamento,
+    pagos: fin[0].pagos || 0,
+    faturamento: fin[0].faturamento,
     totalUsuarios: usuarios[0].c,
     porModelo,
     preco,
@@ -909,6 +927,16 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
         "UPDATE pedidos SET status = 'pago', pago_at = NOW(), download_token = COALESCE(download_token, ?) WHERE id = ?",
         [gerarToken(), id]
       );
+      // Registra a transação financeira (fonte de verdade dos valores),
+      // também quando o admin marca um pedido como pago manualmente.
+      try {
+        await pool.query(
+          "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), 'venda', ?)",
+          [id, pedido.usuario_id, pedido.parceiro_id, pedido.modelo, pedido.valor, pedido.parceiro_id, pedido.pagamento_tipo || "pix"]
+        );
+      } catch (e) {
+        console.error("Erro ao registrar transação financeira (admin):", e.message);
+      }
     } else {
       await pool.query("UPDATE pedidos SET status = ? WHERE id = ?", [status, id]);
     }
@@ -969,14 +997,14 @@ app.get("/api/admin/faturamento", protegerAdmin, async (req, res) => {
     ]) {
       const [r] = await pool.query(
         `SELECT COUNT(*) AS pagos, COALESCE(SUM(valor),0) AS total
-         FROM pedidos WHERE status='pago' AND created_at >= (NOW() - ${intervalo})`
+         FROM transacoes WHERE tipo='venda' AND created_at >= (NOW() - ${intervalo})`
       );
       periodos[chave] = { pagos: r[0].pagos || 0, total: Number(r[0].total) || 0 };
     }
-    const [total] = await pool.query("SELECT COUNT(*) AS pagos, COALESCE(SUM(valor),0) AS total FROM pedidos WHERE status='pago'");
+    const [total] = await pool.query("SELECT COUNT(*) AS pagos, COALESCE(SUM(valor),0) AS total FROM transacoes WHERE tipo='venda'");
     periodos.total = { pagos: total[0].pagos || 0, total: Number(total[0].total) || 0 };
     const [porCanal] = await pool.query(
-      "SELECT pagamento_tipo, COUNT(*) AS c, COALESCE(SUM(valor),0) AS total FROM pedidos WHERE status='pago' GROUP BY pagamento_tipo"
+      "SELECT pagamento_tipo, COUNT(*) AS c, COALESCE(SUM(valor),0) AS total FROM transacoes WHERE tipo='venda' GROUP BY pagamento_tipo"
     );
     res.json({ periodos, porCanal });
   } catch (e) {
@@ -1015,7 +1043,7 @@ app.get("/api/admin/exportar/pedidos", protegerAdmin, async (req, res) => {
 app.get("/api/admin/relatorios/vendas", protegerAdmin, async (req, res) => {
   try {
     const [ranking] = await pool.query(
-      "SELECT modelo, COUNT(*) AS c, COALESCE(SUM(CASE WHEN status='pago' THEN valor ELSE 0 END),0) AS total FROM pedidos GROUP BY modelo ORDER BY c DESC"
+      "SELECT modelo, COUNT(*) AS c, COALESCE(SUM(valor),0) AS total FROM transacoes WHERE tipo='venda' GROUP BY modelo ORDER BY c DESC"
     );
     // Funil de receita (últimos 30 dias): visitas, editor, pagamento, pedidos, pagos.
     const [funil] = await pool.query(`SELECT
@@ -1288,17 +1316,24 @@ app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
       [codigo]
     );
 
-    // Pedidos dos clientes do parceiro (pendentes e pagos).
+    // Pedidos pendentes dos clientes do parceiro (contagem de pedidos).
     const [pendentes] = await pool.query(
       "SELECT COUNT(*) AS c FROM pedidos WHERE parceiro_id = ? AND status = 'pendente'",
       [pid]
     );
+    // Receitas do parceiro vêm da tabela imutável `transacoes` (independente
+    // de `pedidos`). A comissão usa a porcentagem congelada em cada venda,
+    // então mudanças futuras na % do parceiro não alteram valores passados.
     const [pagos] = await pool.query(
-      "SELECT COUNT(*) AS c, COALESCE(SUM(valor),0) AS total FROM pedidos WHERE parceiro_id = ? AND status = 'pago'",
+      "SELECT COUNT(*) AS c, COALESCE(SUM(valor),0) AS total FROM transacoes WHERE parceiro_id = ? AND tipo='venda'",
+      [pid]
+    );
+    const [comissaoCalc] = await pool.query(
+      "SELECT COALESCE(SUM(valor * comissao_pct / 100),0) AS total FROM transacoes WHERE parceiro_id = ? AND tipo='venda' AND comissao_pct IS NOT NULL",
       [pid]
     );
     const comissao = Number(p.comissao) || 40;
-    const valorComissao = (Number(pagos[0].total) || 0) * (comissao / 100);
+    const valorComissao = Number(comissaoCalc[0].total) || 0;
 
     // Acessos/pedidos recentes por dia (tendência dos últimos 7 dias).
     const [tendencia] = await pool.query(
