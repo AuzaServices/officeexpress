@@ -167,15 +167,20 @@ window.App = (function () {
   // ---------------------------------------------------------------------
   var REF_KEY = "oe_ref";
   function obterRef() {
+    // O ?ref= da URL atual tem prioridade: ao entrar pelo link do parceiro,
+    // ele sempre atualiza o vínculo salvo. Isso evita que um ref antigo
+    // (de um teste/anterior) continue valendo e deixe o cadastro/pedido sem
+    // atribuição ao parceiro correto.
+    var m = window.location.search.match(/[?&]ref=([^&]+)/);
+    if (m) {
+      var refAtual = decodeURIComponent(m[1]).slice(0, 40);
+      try { localStorage.setItem(REF_KEY, refAtual); } catch (e) { /* ignora */ }
+      return refAtual;
+    }
+    // Sem ?ref= na URL, usa o vínculo persistido anteriormente (para não
+    // perder o parceiro quando o usuário navega para fora da rota do link).
     var ref = "";
     try { ref = localStorage.getItem(REF_KEY) || ""; } catch (e) { ref = ""; }
-    if (!ref) {
-      var m = window.location.search.match(/[?&]ref=([^&]+)/);
-      if (m) {
-        ref = decodeURIComponent(m[1]).slice(0, 40);
-        try { localStorage.setItem(REF_KEY, ref); } catch (e) { /* ignora */ }
-      }
-    }
     return ref;
   }
   function limparRef() {
