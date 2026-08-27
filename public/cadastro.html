@@ -37,6 +37,23 @@
         <button type="submit" class="btn btn-primary btn-block" id="btnCad">Criar conta</button>
       </form>
 
+      <!-- Confirmação de e-mail por código de 4 dígitos (mantém o usuário no site) -->
+      <div id="codigoBloco" style="display:none">
+        <div style="text-align:center;padding:6px 0 2px">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,136,0,.12);display:inline-flex;align-items:center;justify-content:center;color:var(--brand,#ff8800);margin-bottom:10px">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </div>
+          <h2 style="margin:0 0 6px;font-size:19px">Confirme seu e-mail</h2>
+          <p class="subtitle" style="margin:0 0 14px">Enviamos um <strong>código de 4 dígitos</strong> para o seu e-mail. Digite abaixo para continuar.</p>
+        </div>
+        <div class="campo">
+          <label for="codigo">Código de confirmação</label>
+          <input type="text" id="codigo" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;font-size:28px;letter-spacing:12px;font-weight:800" autocomplete="one-time-code" />
+        </div>
+        <button type="button" class="btn btn-primary btn-block" id="btnConfirmar">Confirmar e-mail</button>
+        <p style="text-align:center;font-size:13px;color:var(--text-muted,#64748b);margin-top:12px">Não recebeu? <a href="#" id="reenviar" style="color:var(--brand,#ff8800)">Reenviar código</a></p>
+      </div>
+
       <div class="auth-links">
         <p>Já tem conta? <a href="/login">Entrar</a></p>
       </div>
@@ -71,11 +88,52 @@
           var temCurriculo = localStorage.getItem("curriculo") || localStorage.getItem("modeloSelecionado");
           if (temCurriculo) localStorage.setItem("redirectAposLogin", "/preview?autopagamento=1");
         } catch (e) { /* ignora */ }
+        App.limparAlerta("alert");
+        // Esconde o formulário e mostra a confirmação por código (o usuário
+        // continua no site, mantendo sessão e vínculo do parceiro).
         document.getElementById("cadForm").style.display = "none";
-        App.mostrarAlerta("alert", data.message || "Conta criada! Enviamos um link de confirmação para o seu e-mail. Clique nele para liberar o acesso.", "success");
+        document.getElementById("codigoBloco").style.display = "block";
+        document.getElementById("codigo").focus();
       } else {
         App.mostrarAlerta("alert", data.error || "Erro ao criar conta.", "error");
       }
+    });
+
+    // Confirma o e-mail com o código de 4 dígitos digitado na tela.
+    function confirmarCodigo() {
+      var codigo = document.getElementById("codigo").value.trim();
+      if (!/^\d{4}$/.test(codigo)) {
+        App.mostrarAlerta("alert", "Digite o código de 4 dígitos enviado por e-mail.", "error");
+        return;
+      }
+      document.getElementById("btnConfirmar").disabled = true;
+      App.api("/api/auth/confirmar-codigo", {
+        method: "POST",
+        body: JSON.stringify({ codigo: codigo }),
+      }).then(function (r) {
+        document.getElementById("btnConfirmar").disabled = false;
+        if (r.ok) {
+          App.mostrarAlerta("alert", "E-mail confirmado! Redirecionando…", "success");
+          var destino = localStorage.getItem("redirectAposLogin");
+          localStorage.removeItem("redirectAposLogin");
+          setTimeout(function () {
+            window.location.href = destino || "/modelos";
+          }, 1200);
+        } else {
+          App.mostrarAlerta("alert", r.data.error || "Código inválido ou expirado.", "error");
+        }
+      });
+    }
+    document.getElementById("btnConfirmar").addEventListener("click", confirmarCodigo);
+    document.getElementById("codigo").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") confirmarCodigo();
+    });
+    // Reenvia um novo código de confirmação.
+    document.getElementById("reenviar").addEventListener("click", function (e) {
+      e.preventDefault();
+      App.api("/api/auth/reenviar-codigo", { method: "POST" }).then(function (r) {
+        App.mostrarAlerta("alert", r.ok ? "Novo código enviado para o seu e-mail." : (r.data.error || "Erro ao reenviar."), r.ok ? "success" : "error");
+      });
     });
   </script>
 </body>

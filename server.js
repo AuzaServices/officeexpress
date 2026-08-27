@@ -106,6 +106,12 @@ function gerarToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
+// Código numérico de 4 dígitos para confirmação de e-mail, digitado pelo
+// usuário na tela (sem precisar abrir link em outro contexto/navegador).
+function gerarCodigoConfirmacao() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
 function validarSenha(senha) {
   // Mínimo 8 caracteres, ao menos 1 letra e 1 número
   return typeof senha === "string" && senha.length >= 8 && /[a-zA-Z]/.test(senha) && /\d/.test(senha);
@@ -150,14 +156,16 @@ app.post("/api/auth/registrar", async (req, res) => {
   );
   const usuarioId = result.insertId;
 
-  // Gera token de confirmação e envia e-mail
-  const token = gerarToken();
+  // Gera código de confirmação (4 dígitos) e envia por e-mail. O usuário
+  // digita o código na tela do site, sem precisar abrir link em outro
+  // contexto/navegador (mantém a sessão e o vínculo do parceiro intactos).
+  const codigo = gerarCodigoConfirmacao();
   const expira = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await pool.query(
     "INSERT INTO email_tokens (usuario_id, tipo, token, expira_em) VALUES (?, 'confirmacao', ?, ?)",
-    [usuarioId, token, expira]
+    [usuarioId, codigo, expira]
   );
-  await enviarConfirmacao(em, nome.trim(), token);
+  await enviarConfirmacao(em, nome.trim(), codigo);
 
   // Já autentica a sessão (email ainda não confirmado)
   req.session.usuarioId = usuarioId;
@@ -166,7 +174,7 @@ app.post("/api/auth/registrar", async (req, res) => {
       console.error("❌ Falha ao salvar sessão de cadastro:", err.message);
       return res.status(500).json({ error: "Conta criada, mas não foi possível iniciar a sessão. Faça login." });
     }
-    res.json({ success: true, message: "Conta criada! Confirme seu e-mail pelo link enviado.", usuario: { id: usuarioId, nome: nome.trim(), email: em, email_confirmado: 0 } });
+    res.json({ success: true, message: "Conta criada! Digite o código enviado ao seu e-mail.", usuario: { id: usuarioId, nome: nome.trim(), email: em, email_confirmado: 0 } });
   });
 });
 
@@ -181,6 +189,43 @@ app.get("/api/auth/confirmar", async (req, res) => {
   await pool.query("UPDATE usuarios SET email_confirmado = 1 WHERE id = ?", [rows[0].usuario_id]);
   await pool.query("UPDATE email_tokens SET usado = 1 WHERE id = ?", [rows[0].id]);
   res.json({ success: true, message: "E-mail confirmado com sucesso!" });
+});
+
+// Confirma o e-mail via código de 4 dígitos digitado na tela do site. O
+// usuário continua no ambiente em que está (com a sessão e o vínculo do
+// parceiro intactos), sem precisar abrir um link em outro contexto/navegador.
+app.post("/api/auth/confirmar-codigo", async (req, res) => {
+  const uid = usuarioDaSessao(req);
+  if (!uid) return res.status(401).json({ error: "Sessão expirada. Faça login novamente." });
+  const { codigo } = req.body || {};
+  if (!codigo || !/^\d{4}$/.test(String(codigo))) {
+    return res.status(400).json({ error: "Informe o código de 4 dígitos." });
+  }
+  const [rows] = await pool.query(
+    "SELECT * FROM email_tokens WHERE usuario_id = ? AND tipo = 'confirmacao' AND token = ? AND usado = 0 AND expira_em > NOW()",
+    [uid, String(codigo).trim()]
+  );
+  if (!rows.length) return res.status(400).json({ error: "Código inválido ou expirado." });
+  await pool.query("UPDATE usuarios SET email_confirmado = 1 WHERE id = ?", [uid]);
+  await pool.query("UPDATE email_tokens SET usado = 1 WHERE id = ?", [rows[0].id]);
+  res.json({ success: true, message: "E-mail confirmado com sucesso!" });
+});
+
+// Reenvia um novo código de confirmação de 4 dígitos para o usuário logado.
+app.post("/api/auth/reenviar-codigo", async (req, res) => {
+  const uid = usuarioDaSessao(req);
+  if (!uid) return res.status(401).json({ error: "Sessão expirada. Faça login novamente." });
+  const [us] = await pool.query("SELECT id, nome, email, email_confirmado FROM usuarios WHERE id = ?", [uid]);
+  if (!us.length) return res.status(404).json({ error: "Usuário não encontrado." });
+  if (us[0].email_confirmado) return res.json({ success: true, message: "Seu e-mail já está confirmado." });
+  const codigo = gerarCodigoConfirmacao();
+  const expira = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await pool.query(
+    "INSERT INTO email_tokens (usuario_id, tipo, token, expira_em) VALUES (?, 'confirmacao', ?, ?)",
+    [uid, codigo, expira]
+  );
+  await enviarConfirmacao(us[0].email, us[0].nome || "usuário", codigo);
+  res.json({ success: true, message: "Novo código enviado para o seu e-mail." });
 });
 
 app.post("/api/auth/login", async (req, res) => {
@@ -1032,10 +1077,10 @@ app.post("/api/admin/usuarios/:id/reenviar-email", protegerAdmin, async (req, re
     if (!rows.length) return res.status(404).json({ error: "Usuário não encontrado." });
     const u = rows[0];
     if (u.email_confirmado) return res.json({ success: true, message: "E-mail já confirmado." });
-    const token = gerarToken();
+    const codigo = gerarCodigoConfirmacao();
     const expira = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await pool.query("INSERT INTO email_tokens (usuario_id, tipo, token, expira_em) VALUES (?, 'confirmacao', ?, ?)", [id, token, expira]);
-    await enviarConfirmacao(u.email, u.nome, token);
+    await pool.query("INSERT INTO email_tokens (usuario_id, tipo, token, expira_em) VALUES (?, 'confirmacao', ?, ?)", [id, codigo, expira]);
+    await enviarConfirmacao(u.email, u.nome, codigo);
     await registrarAdminLog("reenviar_email", `Confirmação reenviada para ${u.email}`);
     res.json({ success: true });
   } catch (e) {
