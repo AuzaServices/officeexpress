@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     var r = await App.api('/api/pedidos', {
       method: 'POST',
-      body: JSON.stringify({ tipo: 'carta', modelo: localStorage.getItem('cartaSelecionada') || 'moderna', dados: dados }),
+      body: JSON.stringify({ tipo: 'carta', modelo: localStorage.getItem('cartaSelecionada') || 'moderna', dados: dados, ref: App.obterRef() }),
     });
     if (r.ok) location.href = '/pagamento?pedido=' + r.data.pedido.id;
     else alert(r.data.error || 'Não foi possível criar o pedido.');
