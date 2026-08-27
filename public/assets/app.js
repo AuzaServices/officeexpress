@@ -31,6 +31,11 @@ window.App = (function () {
 
   async function logout() {
     await api("/api/auth/logout", { method: "POST" });
+    // Ao deslogar, limpa o código do parceiro salvo no navegador. Assim, se
+    // outra pessoa usar o mesmo dispositivo, ela não herda a indicação de
+    // quem saiu — só é atribuída ao parceiro se clicar no link dele. O vínculo
+    // da conta (parceiro_id) permanece no servidor e não se perde.
+    limparRef();
     window.location.href = "/";
   }
 
