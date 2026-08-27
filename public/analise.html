@@ -1502,6 +1502,20 @@
         alert("Analise um currículo antes de continuar.");
         return;
       }
+      // Exige login para que o pedido seja criado com a sessão do usuário.
+      // Assim o servidor sempre consegue atribuir o parceiro (pela conta),
+      // mesmo que o fluxo tenha passado por confirmação de e-mail no Gmail.
+      App.authMe().then(function (u) {
+        if (!u) {
+          localStorage.setItem("redirectAposLogin", "/analise?autopagamento=1");
+          window.location.href = "/login";
+          return;
+        }
+        criarPedidoAnalise(btn);
+      });
+    });
+
+    function criarPedidoAnalise(btn) {
       btn.disabled = true;
       btn.textContent = "Preparando pagamento...";
 
@@ -1517,7 +1531,7 @@
       // Cria o pedido (modelo Cronológico) e vai direto ao pagamento
       App.api("/api/pedidos", {
         method: "POST",
-        body: JSON.stringify({ modelo: "cronologico", dados: dadosCrono, tipo: "curriculo" }),
+        body: JSON.stringify({ modelo: "cronologico", dados: dadosCrono, tipo: "curriculo", ref: App.obterRef() }),
       }).then(function (r) {
         btn.disabled = false;
         btn.textContent = "Melhorar meu currículo agora";
@@ -1531,7 +1545,28 @@
         btn.textContent = "Melhorar meu currículo agora";
         alert("Erro ao criar o pedido. Tente novamente.");
       });
-    });
+    }
+
+    // Se voltou do login/cadastro com intenção de pagamento, recria o pedido.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      // Restaura a análise pendente salva no localStorage (feita antes do login).
+      if (!dadosExtraidos) {
+        try {
+          var pendente = localStorage.getItem("curriculoUploadPendente");
+          var salvo = localStorage.getItem("curriculoUpload");
+          if (pendente && salvo) {
+            dadosExtraidos = JSON.parse(salvo);
+            localStorage.removeItem("curriculoUploadPendente");
+          }
+        } catch (e) { /* ignora */ }
+      }
+      if (params.get("autopagamento") === "1" && dadosExtraidos) {
+        App.authMe().then(function (u) {
+          if (u) criarPedidoAnalise(document.getElementById("btnPagamento"));
+        });
+      }
+    })();
 
     // Botão Editar: leva ao editor com todos os dados do currículo analisado.
     document.getElementById("btnEditar").addEventListener("click", function () {
