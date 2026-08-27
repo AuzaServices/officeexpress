@@ -184,12 +184,20 @@ app.get("/api/auth/confirmar", async (req, res) => {
 });
 
 app.post("/api/auth/login", async (req, res) => {
-  const { email, senha } = req.body || {};
+  const { email, senha, ref } = req.body || {};
   if (!email || !senha) return res.status(400).json({ error: "Informe e-mail e senha." });
   const em = String(email).toLowerCase().trim();
   const [rows] = await pool.query("SELECT * FROM usuarios WHERE email = ?", [em]);
   if (!rows.length) return res.status(401).json({ error: "E-mail ou senha incorretos." });
   const match = await bcrypt.compare(senha, rows[0].senha);
+  // Se a conta ainda não tem parceiro vinculado e o login veio pelo link de
+  // um parceiro (ref), grava o vínculo na conta. Isso garante que, mesmo que
+  // o usuário confirme o e-mail fora do navegador original (ex.: dentro do
+  // Gmail) e só volte a logar depois, a comissão não se perde.
+  if (match && !rows[0].parceiro_id && ref) {
+    const [par] = await pool.query("SELECT id FROM parceiros WHERE codigo = ? AND ativo = 1", [String(ref).slice(0, 40)]);
+    if (par.length) await pool.query("UPDATE usuarios SET parceiro_id = ? WHERE id = ?", [par[0].id, rows[0].id]);
+  }
   if (!match) return res.status(401).json({ error: "E-mail ou senha incorretos." });
   req.session.usuarioId = rows[0].id;
   req.session.save((err) => {
