@@ -1260,6 +1260,57 @@ app.delete("/api/admin/parceiros/:id", protegerAdmin, async (req, res) => {
   }
 });
 
+// Lista os pagamentos (comissões mensais) de todos os parceiros.
+app.get("/api/admin/pagamentos", protegerAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT pp.id, pp.parceiro_id, pp.mes_ref, pp.valor, pp.status, pp.pago_em,
+              COALESCE(p.nome, 'Parceiro removido') AS parceiro_nome
+       FROM pagamentos_parceiros pp
+       LEFT JOIN parceiros p ON p.id = pp.parceiro_id
+       ORDER BY pp.mes_ref DESC, p.nome ASC`
+    );
+    res.json({ pagamentos: rows });
+  } catch (e) {
+    console.error("Erro ao listar pagamentos:", e.message);
+    res.status(500).json({ error: "Erro ao listar pagamentos." });
+  }
+});
+
+// Marca um pagamento de comissão como pago (repasse realizado).
+app.post("/api/admin/pagamentos/:id/pagar", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    await pool.query("UPDATE pagamentos_parceiros SET status='pago', pago_em = NOW() WHERE id = ?", [id]);
+    await registrarAdminLog("pagamento_parceiro", `Pagamento ${id} marcado como pago`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao marcar pagamento como pago:", e.message);
+    res.status(500).json({ error: "Erro ao marcar pagamento como pago." });
+  }
+});
+
+// Dispara manualmente o fechamento das comissões de um mês (ex.: teste ou
+// recuperação). Se mes_ref não for informado, usa o mês anterior.
+app.post("/api/admin/pagamentos/fechar", protegerAdmin, async (req, res) => {
+  try {
+    const { mes_ref } = req.body || {};
+    let mesRef = mes_ref;
+    if (!mesRef) {
+      const hoje = new Date();
+      const mesAnt = hoje.getMonth() - 1 < 0 ? 11 : hoje.getMonth() - 1;
+      const anoAnt = hoje.getMonth() - 1 < 0 ? hoje.getFullYear() - 1 : hoje.getFullYear();
+      mesRef = `${anoAnt}-${String(mesAnt + 1).padStart(2, "0")}`;
+    }
+    const qtd = await fecharComissoesMes(mesRef);
+    await registrarAdminLog("fechar_comissoes", `Mês ${mesRef} (${qtd} parceiros)`);
+    res.json({ success: true, mes_ref: mesRef, parceiros: qtd });
+  } catch (e) {
+    console.error("Erro ao fechar comissões:", e.message);
+    res.status(500).json({ error: "Erro ao fechar comissões." });
+  }
+});
+
 // Login do parceiro.
 app.post("/api/parceiro/login", async (req, res) => {
   const { email, senha } = req.body || {};
@@ -1332,8 +1383,14 @@ app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
       "SELECT COALESCE(SUM(valor * comissao_pct / 100),0) AS total FROM transacoes WHERE parceiro_id = ? AND tipo='venda' AND comissao_pct IS NOT NULL",
       [pid]
     );
+    // Total de comissões fechadas (pagamentos mensais) ainda não pagas.
+    const [apagar] = await pool.query(
+      "SELECT COALESCE(SUM(valor),0) AS total FROM pagamentos_parceiros WHERE parceiro_id = ? AND status='apagar'",
+      [pid]
+    );
     const comissao = Number(p.comissao) || 40;
     const valorComissao = Number(comissaoCalc[0].total) || 0;
+    const totalApagar = Number(apagar[0].total) || 0;
 
     // Acessos/pedidos recentes por dia (tendência dos últimos 7 dias).
     const [tendencia] = await pool.query(
@@ -1353,6 +1410,7 @@ app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
       valorVendas: Number(pagos[0].total) || 0,
       comissaoPct: comissao,
       valorComissao,
+      totalApagar,
       diaPagamento: p.dia_pagamento,
       tendencia,
     });
@@ -1628,3 +1686,48 @@ cron.schedule(
   { timezone: "America/Sao_Paulo" }
 );
 console.log("🗓️ Limpeza semanal agendada: todo domingo às 00h00 (Brasília).");
+
+// ---------------------------------------------------------------------------
+// Fechamento mensal das comissões dos parceiros (Opção 2).
+// Todo dia 05 às 00h00 (Brasília), fecha o mês anterior e registra, para cada
+// parceiro, o valor de comissão a pagar referente às vendas pagas daquele mês.
+// O admin marca como "pago" quando faz o repasse. Não zera nem apaga nada:
+// apenas registra o valor mensal de forma imutável.
+// ---------------------------------------------------------------------------
+async function fecharComissoesMes(mesRef) {
+  const [rows] = await pool.query(
+    `SELECT parceiro_id, SUM(valor * comissao_pct / 100) AS total
+     FROM transacoes
+     WHERE tipo='venda' AND parceiro_id IS NOT NULL AND comissao_pct IS NOT NULL
+       AND DATE_FORMAT(created_at, '%Y-%m') = ?
+     GROUP BY parceiro_id`,
+    [mesRef]
+  );
+  for (const r of rows) {
+    await pool.query(
+      "INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)",
+      [r.parceiro_id, mesRef, Number(r.total) || 0]
+    );
+  }
+  console.log(`🗓️ Comissões do mês ${mesRef} fechadas (${rows.length} parceiro(s)).`);
+  return rows.length;
+}
+
+cron.schedule(
+  "0 0 5 * *",
+  async () => {
+    console.log("🗓️ Fechamento mensal de comissões: dia 05 às 00h00 (Brasília)...");
+    try {
+      const hoje = new Date();
+      // Calcula o mês anterior (0 = janeiro).
+      const mesAnt = hoje.getMonth() - 1 < 0 ? 11 : hoje.getMonth() - 1;
+      const anoAnt = hoje.getMonth() - 1 < 0 ? hoje.getFullYear() - 1 : hoje.getFullYear();
+      const mesRef = `${anoAnt}-${String(mesAnt + 1).padStart(2, "0")}`;
+      await fecharComissoesMes(mesRef);
+    } catch (e) {
+      console.error("❌ Erro no fechamento mensal de comissões:", e.message);
+    }
+  },
+  { timezone: "America/Sao_Paulo" }
+);
+console.log("🗓️ Fechamento mensal agendado: dia 05 às 00h00 (Brasília).");

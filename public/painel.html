@@ -165,6 +165,23 @@
         </div>
       </div>
 
+      <!-- Comissões a pagar (fechamento mensal no dia 05, mês anterior) -->
+      <div class="card" style="margin-bottom:32px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <div>
+            <h3 style="margin:0 0 4px">Comissões a pagar</h3>
+            <p style="color:var(--text-muted);font-size:.88rem;margin:0">Fechamento automático todo dia 05, referente às vendas do mês anterior. Marque como <strong>pago</strong> quando fizer o repasse.</p>
+          </div>
+          <button class="btn btn-primary" onclick="fecharMesManual()">Fechar mês agora</button>
+        </div>
+        <div class="tabela-wrap">
+          <table class="tabela">
+            <thead><tr><th>Parceiro</th><th>Mês de referência</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbodyPagamentos"><tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Segurança -->
       <div class="card" style="margin-bottom:32px">
         <h3 style="margin-bottom:16px">Segurança do administrador</h3>
@@ -398,6 +415,7 @@
       carregarDesempenho();
       carregarAuditoria();
       carregarParceiros();
+      carregarPagamentos();
     }
 
     window.aplicarFiltros = function () {
@@ -586,6 +604,46 @@
       var { ok, data } = await App.api("/api/admin/parceiros/" + id, { method: "DELETE" });
       setMsg(ok ? "Parceiro excluído." : (data.error || "Erro ao excluir parceiro."), ok);
       if (ok) carregarParceiros();
+    };
+
+    async function carregarPagamentos() {
+      var { ok, data } = await App.api("/api/admin/pagamentos");
+      var tb = document.getElementById("tbodyPagamentos");
+      if (!tb) return;
+      if (!ok) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Erro ao carregar.</td></tr>'; return; }
+      if (!data.pagamentos || !data.pagamentos.length) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Nenhum fechamento ainda. O fechamento automático ocorre todo dia 05 (mês anterior).</td></tr>';
+        return;
+      }
+      tb.innerHTML = "";
+      (data.pagamentos || []).forEach(function (pg) {
+        var pago = pg.status === "pago";
+        var status = pago ? '<span class="badge badge-pago">Pago</span>' : '<span class="badge badge-pendente">A pagar</span>';
+        var acao = pago
+          ? '<span style="color:var(--text-muted);font-size:.8rem">' + (pg.pago_em ? "pago em " + pg.pago_em : "") + '</span>'
+          : '<button class="btn-acao verde" onclick="marcarPago(' + pg.id + ')">Marcar pago</button>';
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (pg.parceiro_nome || "-") + "</td>" +
+          "<td>" + (pg.mes_ref || "-") + "</td>" +
+          "<td>" + App.formatarPreco(pg.valor) + "</td>" +
+          "<td>" + status + "</td>" +
+          "<td>" + acao + "</td>";
+        tb.appendChild(tr);
+      });
+    }
+
+    window.marcarPago = async function (id) {
+      var { ok, data } = await App.api("/api/admin/pagamentos/" + id + "/pagar", { method: "POST" });
+      setMsg(ok ? "Pagamento marcado como pago." : (data.error || "Erro."), ok);
+      carregarPagamentos();
+    };
+
+    window.fecharMesManual = async function () {
+      if (!confirm("Fechar as comissões do mês anterior agora? Os valores já fechados não serão duplicados.")) return;
+      var { ok, data } = await App.api("/api/admin/pagamentos/fechar", { method: "POST" });
+      setMsg(ok ? ("Mês " + data.mes_ref + " fechado (" + data.parceiros + " parceiro(s)).") : (data.error || "Erro."), ok);
+      carregarPagamentos();
     };
 
     window.trocarSenha = async function () {
