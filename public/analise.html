@@ -354,12 +354,14 @@
 
   <script src="/curriculo-render.js"></script>
   <script src="/assets/app.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <!-- Bibliotecas de extração servidas localmente (mais confiável que CDN).
+       Se o arquivo local falhar, cai para o CDN como alternativa. -->
+  <script src="/vendor/pdf.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';document.head.appendChild(s);"></script>
+  <script src="/vendor/mammoth.browser.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';document.head.appendChild(s);"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script>
     if (window["pdfjs-dist/build/pdf"]) { window.pdfjsLib = window["pdfjs-dist/build/pdf"]; }
-    if (window.pdfjsLib) { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }
+    if (window.pdfjsLib) { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdf.worker.min.js"; }
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("analise");
 
