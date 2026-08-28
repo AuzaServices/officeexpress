@@ -241,73 +241,590 @@
 
     function limparEspacos(s) { return (s || "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim(); }
 
-    // Heurísticas simples de extração de dados a partir do texto puro do currículo
+    // Motor de extração de dados a partir do texto puro do currículo.
+    // Captura nome, e-mail, MÚLTIPLOS telefones, cidade/UF, endereço, LinkedIn,
+    // objetivo, múltiplas experiências, formações, cursos, habilidades, idiomas,
+    // hobbies e informações adicionais — com vários fallbacks para aumentar a taxa
+    // de aproveitamento do documento original.
     function extrairDadosDoTexto(textoOriginal) {
-      var texto = limparEspacos(textoOriginal);
+      var texto = limparEspacos(textoOriginal || "");
+      if (!texto) return { pessoal: {}, objetivo: "", experiencias: [], formacoes: [], cursos: [], habilidades: "", hobbies: "", idiomas: "" };
+
       var linhas = texto.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
-      var dados = { pessoal: {}, objetivo: "", experiencias: [], formacoes: [], cursos: [], habilidades: "", hobbies: "", idiomas: "" };
+      var dados = { pessoal: {}, objetivo: "", experiencias: [], formacoes: [], cursos: [], habilidades: "", hobbies: "", idiomas: "", infoAdicional: "" };
+      var totalLinhas = linhas.length;
 
-      var reEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-      var reTelefone = /(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[\s.-]?\d{4}/;
-      var reCidadeUF = /([A-ZÀ-Ú][a-zà-ú]+(?:\s[A-ZÀ-Ú][a-zà-ú]+)*)\s*[-,/]\s*([A-Z]{2})\b/;
+      // ---------- 1. CONTATO (e-mail, telefone, cidade/UF, links) ----------
+      var email = "";
+      var mEmail = texto.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+      if (mEmail) email = mEmail[0];
+      if (email) dados.pessoal.email = email;
 
-      var emailMatch = texto.match(reEmail);
-      if (emailMatch) dados.pessoal.email = emailMatch[0];
+      // Telefone: vários formatos — (11) 99999-9999, 11 99999 9999, +55 11 99999-9999, 99999-9999
+      // Captura TODOS os telefones (primeiro é o principal, demais vão para infoAdicional)
+      var telefone = "";
+      dados.pessoal.telefones = [];
+      var reTel = /(?:\+?55[\s.\-]?)?(?:\(?(\d{2})\)?[\s.\-]?)?(9\s?[6-9]?[\d]{3,4}[\s.\-]?\d{4}|\d{4}[\s.\-]?\d{4})/g;
+      var telMatches = texto.match(reTel);
+      if (telMatches && telMatches.length) {
+        var telefonesLimpos = [];
+        for (var t = 0; t < telMatches.length; t++) {
+          var limpo = telMatches[t].replace(/[^\d+]/g, "");
+          if (limpo.length >= 10 && telefonesLimpos.indexOf(limpo) === -1) telefonesLimpos.push(limpo);
+        }
+        if (telefonesLimpos.length) {
+          telefone = telefonesLimpos[0];
+          dados.pessoal.telefone = telefone;
+          dados.pessoal.telefones = telefonesLimpos;
+        }
+      }
 
-      var telMatch = texto.match(reTelefone);
-      if (telMatch) dados.pessoal.telefone = telMatch[0].replace(/\D/g, "");
+      // Cidade / UF — padrões "Cidade - UF", "Cidade, UF", "Cidade/UF"
+      var cidade = "", uf = "";
+      var reCidade = /([A-ZÀ-Ú][a-zà-ú]+(?:\s(?:de|da|do|das|dos|e|d'|’)\s)?[A-Za-zÀ-ú]+(?:\s[A-ZÀ-Ú][a-zà-ú]+)*)\s*[-,/]\s*([A-Z]{2})\b/;
+      var mCidade = texto.match(reCidade);
+      if (mCidade) { cidade = mCidade[1]; uf = mCidade[2]; dados.pessoal.cidade = cidade; dados.pessoal.uf = uf; }
 
-      var cidadeMatch = texto.match(reCidadeUF);
-      if (cidadeMatch) { dados.pessoal.cidade = cidadeMatch[1]; dados.pessoal.uf = cidadeMatch[2]; }
+      // CEP / endereço simples (Rua, Av, etc.) — opcional
+      var mEnd = texto.match(/((?:Rua|Av|Avenida|Alameda|Travessa|Estrada|Rodovia)\s+[A-Za-zÀ-ú0-9.\s]+)/i);
+      if (mEnd) dados.pessoal.endereco = mEnd[1].trim();
 
-      // Nome: geralmente a primeira linha "forte" do documento, sem @ nem dígitos, com 2+ palavras
-      for (var n = 0; n < Math.min(linhas.length, 6); n++) {
+      // LinkedIn / site
+      var mLi = texto.match(/(?:linkedin\.com|github\.com|behance\.net)\/[a-zA-Z0-9\-._\/]+/i);
+      if (mLi) dados.pessoal.linkedin = mLi[0];
+
+      // ---------- 2. NOME ----------
+      // O nome é tipicamente a primeira linha que NÃO é contato, seção, e-mail
+      // ou linha numérica. Tenta nas primeiras 8 linhas.
+      var nome = "";
+      var reSecaoHeader = /^(experi[eê]ncia|forma[çc][ãa]o|educa[çc][ãa]o|habilidades|compet[eê]ncias|objetivo|resumo|perfil|idiomas|hobbies|interesses|cursos|certifica|dados\s+pessoais|contato|refer[eê]ncias|qualifica[çc][õo]es|projetos|pr[eê]mios|idioma)/i;
+      var reLinhaContato = /@|www\.|http|\bCEP\b|\(\d{2}\)|\b\d{4,5}[-.\s]?\d{4}\b|[A-Z]{2}\s*[,/]|\b(?:Rua|Av|Avenida|Estrada|Rodovia|Alameda)\b/i;
+      for (var n = 0; n < Math.min(totalLinhas, 8); n++) {
         var cand = linhas[n];
-        if (cand.length >= 4 && cand.length <= 60 && !/[@0-9]/.test(cand) && cand.split(" ").length >= 2 && cand.split(" ").length <= 6) {
-          dados.pessoal.nome = cand;
+        if (!cand) continue;
+        var palavras = cand.split(/\s+/).filter(Boolean);
+        var lenOk = cand.length >= 5 && cand.length <= 70;
+        var temLetra = /[A-Za-zÀ-ú]/.test(cand);
+        var palavrasOk = palavras.length >= 2 && palavras.length <= 6;
+        var naoEhSeccao = !reSecaoHeader.test(cand);
+        var naoEhContato = !reLinhaContato.test(cand);
+        var naoSoNumero = !/^\d[\d\s.,-]*$/.test(cand);
+        var primeiroPalavraMaiuscula = /^[A-ZÀ-Ú]/.test(cand);
+        if (lenOk && temLetra && palavrasOk && naoEhSeccao && naoEhContato && naoSoNumero && primeiroPalavraMaiuscula) {
+          // Remove rótulos comuns de nome ("Nome:", "Nome completo:", "Candidate:", "Name:")
+          nome = cand.replace(/^(nome\s+completo|nome|candidate|name|candidat[oa]|aplicante)\s*[:.\-]?\s*/i, "").trim();
+          break;
+        }
+      }
+      if (nome) dados.pessoal.nome = nome;
+
+      // ---------- 3. DETECÇÃO DE SEÇÕES (segmentação) ----------
+      var reSeccoes = [
+        { chave: "objetivo", re: /^(objetivo|objetivos?|resumo|resumo\s+profission(al)?|perfil\s+profission(al)?|sobre\s+mim|apresenta[çc][ãa]o|sum[áa]rio|sobre|objective|summary|profile|about\s+me|professional\s+summary|career\s+objective)\s*[:]?$/i },
+        { chave: "experiencia", re: /^(experi[eê]ncias?\s+profission(al)?|experi[eê]ncias?\s+de\s+trabalho|hist[oó]rico\s+profission(al)?|experi[eê]ncias?\s+profission(ais)?|trajet[oó]ria\s+profission(al)?|experi[eê]ncia\s+relevante|experi[eê]ncia|experi[eê]ncias?|experi[eê]ncias?\s+anteriores|experi[eê]ncias?\s+de\s+mercado|work\s+experience|professional\s+experience|employment\s+history|work\s+history|experience|career\s+history)\s*[:]?$/i },
+        { chave: "formacao", re: /^(forma[çc][ãa]o\s+acad[eê]mica|forma[çc][ãa]o\s+profission(al)?|forma[çc][ãa]o|escolaridade|educa[çc][ãa]o|forma[çc][õo]es|education|academic\s+background|academic\s+education|degree)\s*[:]?$/i },
+        { chave: "cursos", re: /^(cursos\s+(complementares|extras|e\s+certifica[çc][õo]es)|cursos|certifica[çc][õo]es|qualifica[çc][õo]es\s+profission(ais)?|forma[çc][ãa]o\s+complementar|certifications|certificates|courses\s+and\s+certifications|licenses|professional\s+development)\s*[:]?$/i },
+        { chave: "habilidades", re: /^(habilidades|compet[eê]ncias|compet[eê]ncias\s+e\s+habilidades|habilidades\s+t[eê]cnicas|habilidades\s+comportamentais|skills|technical\s+skills|core\s+competencies)\s*[:]?$/i },
+        { chave: "idiomas", re: /^(idiomas|idioma|l[ií]nguas|languages)\s*[:]?$/i },
+        { chave: "hobbies", re: /^(hobbies|interesses|atividades\s+extracurriculares|lazer|interesses\s+pessoais|hobbies\s+and\s+interests|interests|extracurricular)\s*[:]?$/i },
+        { chave: "informacoes", re: /^(informa[çc][õo]es\s+(adicionais|complementares|extras|relevantes)|dados\s+(adicionais|complementares)|outras\s+informa[çc][õo]es|additional\s+information|other\s+information|informa[çc][õo]es)\s*[:]?$/i }
+      ];
+
+      // Índices das linhas que são cabeçalhos de seção
+      var seccoes = [];
+      linhas.forEach(function (l, idx) {
+        for (var s = 0; s < reSeccoes.length; s++) {
+          if (reSeccoes[s].re.test(l) && l.length < 60) {
+            seccoes.push({ chave: reSeccoes[s].chave, idx: idx });
+            break;
+          }
+        }
+      });
+      seccoes.sort(function (a, b) { return a.idx - b.idx; });
+
+      // Função: retorna o bloco de linhas entre esta seção e a próxima
+      function blocoDaSecao(idxSecao) {
+        var inicio = seccoes[idxSecao].idx + 1;
+        var fim = (idxSecao + 1 < seccoes.length) ? seccoes[idxSecao + 1].idx : totalLinhas;
+        return linhas.slice(inicio, fim);
+      }
+
+      // ---------- 4. OBJETIVO ----------
+      for (var oi = 0; oi < seccoes.length; oi++) {
+        if (seccoes[oi].chave === "objetivo") {
+          var blocoObj = blocoDaSecao(oi).join("\n").trim();
+          if (blocoObj) { dados.objetivo = blocoObj; break; }
+        }
+      }
+      // Fallback objetivo: procura frases com "busco", "objetivo", "atuar como" no início
+      if (!dados.objetivo) {
+        var reObjFrase = /(busco|busca|almejo|procuro|desejo|objetivo|pretendo|atuar como|posi[çc][ãa]o como|oportunidade de).{5,}/i;
+        var mObj = texto.match(reObjFrase);
+        if (mObj) dados.objetivo = mObj[0].trim();
+      }
+
+      // ---------- 5. EXPERIÊNCIAS ----------
+      // Coleta o bloco de experiência (se houver seção), senão o texto inteiro
+      var blocoExp = [];
+      var temSecaoExp = false;
+      for (var ei = 0; ei < seccoes.length; ei++) {
+        if (seccoes[ei].chave === "experiencia") { blocoExp = blocoDaSecao(ei); temSecaoExp = true; break; }
+      }
+      if (!temSecaoExp) blocoExp = linhas;
+
+      dados.experiencias = extrairExperiencias(blocoExp, dados);
+
+      // ---------- 6. FORMAÇÃO ----------
+      var blocoForm = [];
+      var temSecaoForm = false;
+      for (var fi = 0; fi < seccoes.length; fi++) {
+        if (seccoes[fi].chave === "formacao") { blocoForm = blocoDaSecao(fi); temSecaoForm = true; break; }
+      }
+      if (!temSecaoForm) blocoForm = linhas;
+      dados.formacoes = extrairFormacoes(blocoForm, temSecaoForm);
+
+      // ---------- 7. CURSOS / CERTIFICAÇÕES ----------
+      var blocoCur = [];
+      var temSecaoCur = false;
+      for (var ci = 0; ci < seccoes.length; ci++) {
+        if (seccoes[ci].chave === "cursos") { blocoCur = blocoDaSecao(ci); temSecaoCur = true; break; }
+      }
+      if (!temSecaoCur) blocoCur = [];
+      dados.cursos = extrairCursos(blocoCur);
+
+      // ---------- 8. HABILIDADES ----------
+      for (var hi = 0; hi < seccoes.length; hi++) {
+        if (seccoes[hi].chave === "habilidades") {
+          var blocoHab = blocoDaSecao(hi).join(" ").trim();
+          if (blocoHab) { dados.habilidades = normalizarLista(blocoHab); }
+          break;
+        }
+      }
+      // Fallback habilidades: procura lista separada por vírgulas/bullets com termos comuns
+      if (!dados.habilidades) {
+        var reHabilidades = /(?:habilidades|compet[eê]ncias)\s*[:]?\s*([A-Za-zÀ-ú][A-Za-zÀ-ú0-9\s,.;·•\-]+)/i;
+        var mHab = texto.match(reHabilidades);
+        if (mHab) dados.habilidades = normalizarLista(mHab[1]);
+      }
+
+      // ---------- 9. IDIOMAS ----------
+      for (var ii = 0; ii < seccoes.length; ii++) {
+        if (seccoes[ii].chave === "idiomas") {
+          var blocoIdi = blocoDaSecao(ii).join(" ").trim();
+          if (blocoIdi) { dados.idiomas = normalizarLista(blocoIdi); }
+          break;
+        }
+      }
+      // Fallback idiomas: detecta idiomas comuns + nível
+      if (!dados.idiomas) {
+        var idiomasComuns = /(portugu[eê]s|ingl[eê]s|espanhol|franc[eê]s|alem[aã]o|italiano|mandarim|japon[eê]s|chin[eê]s|coreano|russo|holand[eê]s)/gi;
+        var idiomaSet = {};
+        var mi = texto.match(idiomasComuns);
+        if (mi) {
+          mi.forEach(function (i) { idiomaSet[i.toLowerCase()] = true; });
+          dados.idiomas = Object.keys(idiomaSet).map(function (i) { return i.charAt(0).toUpperCase() + i.slice(1); }).join(", ");
+        }
+      }
+
+      // ---------- 10. HOBBIES ----------
+      for (var bi = 0; bi < seccoes.length; bi++) {
+        if (seccoes[bi].chave === "hobbies") {
+          var blocoHob = blocoDaSecao(bi).join(" ").trim();
+          if (blocoHob) { dados.hobbies = normalizarLista(blocoHob); }
           break;
         }
       }
 
-      // Seções por palavras-chave
-      var secoes = {
-        objetivo: /objetivo|resumo profissional|perfil profissional|sobre mim/i,
-        experiencia: /experi[eê]ncias?\s+profission|experi[eê]ncia\s+de\s+trabalho|hist[oó]rico\s+profissional/i,
-        formacao: /forma[çc][ãa]o\s+acad[eê]mica|escolaridade|educa[çc][ãa]o/i,
-        cursos: /cursos?\s+(complementares|extras|e\s+certifica)/i,
-        habilidades: /habilidades|compet[eê]ncias/i,
-        idiomas: /idiomas/i,
-        hobbies: /hobbies|interesses/i
-      };
+      // ---------- 11. INFORMAÇÕES ADICIONAIS ----------
+      var infosAdicionais = [];
+      // Seção própria "Informações adicionais" (se existir)
+      for (var ia = 0; ia < seccoes.length; ia++) {
+        if (seccoes[ia].chave === "informacoes") {
+          var blocoInfo = blocoDaSecao(ia).join(" ").trim();
+          if (blocoInfo) infosAdicionais.push(blocoInfo);
+          break;
+        }
+      }
+      // Dados de contato que não têm campo próprio: segundo telefone, endereço, linkedin, CEP
+      if (dados.pessoal.telefones && dados.pessoal.telefones.length > 1) {
+        infosAdicionais.push("Telefone secundário: " + dados.pessoal.telefones.slice(1).join(", "));
+      }
+      if (dados.pessoal.endereco) infosAdicionais.push(dados.pessoal.endereco);
+      if (dados.pessoal.linkedin) infosAdicionais.push(dados.pessoal.linkedin);
 
-      var indices = [];
-      linhas.forEach(function (l, idx) {
-        Object.keys(secoes).forEach(function (chave) {
-          if (secoes[chave].test(l) && l.length < 50) indices.push({ chave: chave, idx: idx });
-        });
-      });
-      indices.sort(function (a, b) { return a.idx - b.idx; });
+      // Linhas do cabeçalho (antes da primeira seção) com dados complementares:
+      // CNH, disponibilidade, idade, estado civil, CPF, etc.
+      var fimCabecalho = seccoes.length ? seccoes[0].idx : Math.min(totalLinhas, 12);
+      for (var hc = 0; hc < fimCabecalho; hc++) {
+        var lCab = linhas[hc];
+        if (!lCab) continue;
+        if (/(CNH|habilita[çc][ãa]o|carteira\s+de\s+motorista|disponibilidade|idade|nascimento|estado\s+civil|estado\s+ci|CPF|casado|solteiro|viagem|turnos|mudan[çc]a|PCD|defici[eê]ncia)/i.test(lCab)) {
+          // evita duplicar e-mail/telefone/endereço já capturados
+          if (!/@/.test(lCab) && !/telefone|email|e-mail/i.test(lCab) && infosAdicionais.indexOf(lCab) === -1) {
+            infosAdicionais.push(lCab);
+          }
+        }
+      }
 
-      indices.forEach(function (item, i2) {
-        var fim = i2 + 1 < indices.length ? indices[i2 + 1].idx : linhas.length;
-        var bloco = linhas.slice(item.idx + 1, fim).join("\n").trim();
-        if (!bloco) return;
-        if (item.chave === "objetivo" && !dados.objetivo) dados.objetivo = bloco;
-        if (item.chave === "habilidades" && !dados.habilidades) dados.habilidades = bloco.replace(/\n/g, ", ");
-        if (item.chave === "idiomas" && !dados.idiomas) dados.idiomas = bloco.replace(/\n/g, ", ");
-        if (item.chave === "hobbies" && !dados.hobbies) dados.hobbies = bloco.replace(/\n/g, ", ");
-        if (item.chave === "experiencia" && !dados.experiencias.length) {
-          dados.experiencias.push({ cargo: "", empresa: "", periodo: "", descricao: bloco.slice(0, 600) });
-        }
-        if (item.chave === "formacao" && !dados.formacoes.length) {
-          dados.formacoes.push({ curso: "", instituicao: "", periodo: "", descricao: bloco.slice(0, 400) });
-        }
-        if (item.chave === "cursos" && !dados.cursos.length) {
-          dados.cursos.push({ nome: bloco.split("\n")[0] || "", instituicao: "", carga: "" });
-        }
-      });
+      if (infosAdicionais.length) dados.infoAdicional = infosAdicionais.join(" | ");
 
       return dados;
+    }
+
+    // Normaliza listas separadas por vírgula/ponto-e-vírgula/bullet
+    function normalizarLista(s) {
+      return (s || "")
+        .replace(/[•·▪▸►‣-]/g, ",")
+        .replace(/\s*,\s*/g, ", ")
+        .replace(/^[,;\s]+|[,;\s]+$/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+    }
+
+    // Extrai múltiplas experiências a partir de um bloco de linhas
+    function extrairExperiencias(linhasBloco, dados) {
+      var exps = [];
+      // Período aceita ano (2018 - 2020), mês/ano (10/2020 á 02/2022) e "atual/presente"
+      var rePeriodo = /(?:\(\s*)?(?:\d{1,2}\/)?(?:19|20)\d{2}(?:\s*[-–—aàá/]\s*(?:(?:\d{1,2}\/)?(?:19|20)\d{2}|atual|presente|present|hoje|o\s+momento|now))?(?:\s*\)?)?/i;
+      var reCargoLinha = /^([A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,60}?)\s*(?:[-–—|]\s*|\s+\bat\b\s+|\s+na\s+|\s+em\s+|\s+no\s+|\s+\()/;
+
+      // Estratégia: agrupa o bloco em "entradas" separadas por linhas que
+      // parecem começar um novo emprego (cargo + empresa/periodo).
+      // Exclui linhas que claramente pertencem a outras seções (cidade,
+      // formação, idioma, curso) para evitar falsos positivos.
+      var reExcluirExp = /^(habilidades|compet[eê]ncias|idiomas|forma[çc][ãa]o|cursos|objetivo|projetos|refer[eê]ncias|hobbies|interesses|certifica[çc][õo]es)\b/i;
+      var reCidadeLinha = /^(s[ãa]o\s+paulo|rio\s+de\s+janeiro|belo\s+horizonte|salvador|curitiba|porto\s+alegre|recife|fortaleza|bras[ií]lia|manaus|bel[eé]m|goi[âa]nia|florian[oó]polis|santos|campinas|s[ãa]o\s+bernardo|santo\s+andr[eé]|niter[oó]i|guarulhos|osasco|sorocaba|jundia[ií]|ribeir[ãa]o\s+preto|uberl[âa]ndia|joinville|londrina|maring[áa]|n[aá]t|jo[ãa]o\s+pessoa|aracaju|macap[áa]|boa\s+vista|porto\s+velho|rio\s+branco|cuiab[áa]|campo\s+grande|teresina|s[ãa]o\s+lu[ií]s|palmas|vit[oó]ria)\b/i;
+      var entradas = [];
+      var atual = [];
+      // Linha que é apenas um período de datas (ex: "De 2018 a 2022", "2018 - 2022", "10/2020 á 02/2022")
+      var reSoPeriodo = /^(?:de\s+)?(?:\d{1,2}\/)?(?:19|20)\d{2}(?:\s*[-–—aàá/]\s*(?:(?:\d{1,2}\/)?(?:19|20)\d{2}|atual|presente|present|hoje|o\s+momento|now))?$/i;
+      for (var i = 0; i < linhasBloco.length; i++) {
+        var l = linhasBloco[i];
+        // Linha só de período: anexa à primeira linha da entrada atual (se houver)
+        if (reSoPeriodo.test(l.trim()) && atual.length > 0) {
+          atual[0] = atual[0] + " (" + l.trim() + ")";
+          continue;
+        }
+        var pareceInicio = /^[A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,60}/.test(l) &&
+          (reCargoLinha.test(l) || rePeriodo.test(l)) &&
+          l.length <= 120 &&
+          !/[.;,]$/.test(l.trim()) &&
+          !/^[•·▪-]/.test(l.trim()) &&
+          !reExcluirExp.test(l) &&
+          !reCidadeLinha.test(l) &&
+          !/^(portugu[eê]s|ingl[eê]s|espanhol|franc[eê]s|alem[aã]o|italiano|mandarim|japon[eê]s)\b/i.test(l) &&
+          !/^\d/.test(l) &&
+          !/@/.test(l);
+        // Se a linha atual parece um novo emprego E já temos conteúdo na entrada atual, fecha a atual
+        if (pareceInicio && atual.length > 0) {
+          entradas.push(atual);
+          atual = [];
+        }
+        atual.push(l);
+      }
+      if (atual.length) entradas.push(atual);
+
+      // Processa cada entrada
+      for (var e = 0; e < entradas.length && exps.length < 8; e++) {
+        var entrada = entradas[e];
+        var textoEntrada = entrada.join("\n");
+        var primeira = entrada[0] || "";
+
+        var cargo = "", empresa = "", periodo = "";
+
+        // Padrão "EMPRESA – período" (sem cargo), ex: "Sirtec – 07/2022 á 04/2023"
+        var mEmpresaPeriodo = primeira.match(/^([A-ZÀ-Ú][A-Za-zÀ-ú0-9&.\-\s]{2,80}?)\s*[-–—]\s*((?:\d{1,2}\/)?(?:19|20)\d{2}(?:\s*(?:á|a|[-–—/])\s*(?:\d{1,2}\/)?(?:19|20)\d{2})?)$/i);
+        if (mEmpresaPeriodo) {
+          empresa = mEmpresaPeriodo[1].trim();
+          periodo = mEmpresaPeriodo[2].trim();
+        } else {
+          // Fallback: linha termina com período — o texto antes vira a empresa
+          // (ex: "VULCABRAS - CE... S/A 10/2020 á 02/2022")
+          var mPerFim = primeira.match(/(?:\d{1,2}\/)?(?:19|20)\d{2}(?:\s*(?:á|a|[-–—/])\s*(?:\d{1,2}\/)?(?:19|20)\d{2})?\s*$/);
+          if (mPerFim && primeira.indexOf(mPerFim[0]) > 0) {
+            var antes = primeira.slice(0, primeira.indexOf(mPerFim[0])).replace(/[-–—]\s*$/, "").trim();
+            if (antes.length >= 2 && antes.length <= 100) {
+              empresa = antes;
+              periodo = mPerFim[0].trim();
+            }
+          }
+          if (!empresa) {
+            // Tenta extrair cargo / empresa / periodo da primeira linha
+            var mCargo = primeira.match(/^([A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,60}?)\s*(?:[-–—|]\s*|\s+\bat\b\s+|\s+na\s+|\s+em\s+|\s+no\s+|\s+\(|\.\s*)/);
+            if (mCargo) {
+              cargo = mCargo[1].trim();
+              var resto = primeira.slice(mCargo[0].length);
+              // Empresa é o texto restante antes do período
+              var mEmp = resto.match(/^([A-ZÀ-Ú][A-Za-zÀ-ú0-9&.\-\s]{2,70}?)\s*(?:\(|[-–—]\s*|$)/);
+              if (mEmp) {
+                var empCand = mEmp[1].trim();
+                // não considera o período como empresa
+                if (!/^(19|20)\d{2}/.test(empCand) && !/atual|presente|hoje/i.test(empCand)) empresa = empCand;
+              }
+            } else {
+              // Formato: "Cargo - 2020" ou "Cargo (2020-2021)"
+              var mCargoS = primeira.match(/^([A-ZÀ-Ú][A-Za-zÀ-ú0-9\s\-]{2,60})\s*[-–—(]\s*(?:19|20)\d{2}/);
+              if (mCargoS) cargo = mCargoS[1].trim();
+            }
+          }
+        }
+
+        // Período em qualquer parte da primeira linha (ou nas 2 primeiras) —
+        // somente se ainda não foi preenchido acima
+        if (!periodo) {
+          var mPeriodo = (primeira + "\n" + (entrada[1] || "")).match(rePeriodo);
+          if (mPeriodo) periodo = mPeriodo[0].replace(/[()]/g, "").trim();
+        }
+
+        // Descrição = linhas restantes (2ª em diante) que não são só cargo/periodo
+        var descricao = entrada.slice(1).join("\n").trim();
+        // Se não há descrição, tenta capturar uma possível 2ª linha de atribuições
+        if (!descricao && entrada.length === 1) descricao = "";
+
+        // Se não encontrou cargo nem empresa, usa a primeira linha como cargo genérico
+        if (!cargo && !empresa && entrada.length === 1 && primeira.length < 80 && !/^[•·▪-]/.test(primeira)) {
+          cargo = primeira;
+        }
+
+        // Evita entradas vazias ou que são cabeçalhos
+        var cargoCmp = (cargo || "").toLowerCase();
+        var descCmp = (descricao || "").toLowerCase();
+        var ehFalsoPositivo =
+          (!cargo && !descricao && !empresa) ||
+          (/@/.test(descricao) && !cargo) ||
+          (/s[ãa]o\s+paulo|rio\s+de\s+janeiro|belo\s+horizonte|curitiba|porto\s+alegre|recife|fortaleza|bras[ií]lia/.test(descCmp) && !cargo) ||
+          (descricao && !cargo && !empresa && !periodo && descricao.length > 5 && !/^[•·▪-]/.test(descricao)) ||
+          /habilidades|idiomas|forma[çc][ãa]o|objetivo|projetos|refer[eê]ncias|hobbies|interesses|certifica[çc][õo]es|qualifica[çc][õo]es/.test(cargo) ||
+          /^(s[ãa]o\s+paulo|rio\s+de\s+janeiro|belo\s+horizonte|salvador|curitiba|porto\s+alegre|recife|fortaleza|bras[ií]lia|portugu[eê]s|ingl[eê]s|espanhol|franc[eê]s|alem[aã]o|italiano|mandarim|japon[eê]s|mba|bacharel|tecn[oó]logo|licenciatura|gradua[çc][ãa]o|mestrado|doutorado|ensino\s+(m[ée]dio|fundamental|superior|t[ée]cnico))\b/.test(cargoCmp) ||
+          (cargo && !descricao && !empresa && !periodo && cargo.split(" ").length < 2);
+        if (!ehFalsoPositivo) {
+          exps.push({ cargo: cargo || "", empresa: empresa || "", periodo: periodo || "", descricao: descricao.slice(0, 600) });
+        }
+      }
+
+      // Se ainda não encontrou nenhuma experiência, fallback simples por linha
+      if (!exps.length) {
+        for (var j = 0; j < linhasBloco.length && exps.length < 5; j++) {
+          var lj = linhasBloco[j];
+          var ljCmp = lj.toLowerCase();
+          var pareceExp = /^[A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,70}$/.test(lj) &&
+            lj.length >= 8 && lj.length <= 90 &&
+            !/[;,.]$/.test(lj) &&
+            !/habilidades|idiomas|forma[çc][ãa]o|objetivo|refer[eê]ncias|hobbies|interesses|cursos|certifica[çc][õo]es/i.test(lj) &&
+            !/^(s[ãa]o\s+paulo|rio\s+de\s+janeiro|belo\s+horizonte|salvador|curitiba|porto\s+alegre|recife|fortaleza|bras[ií]lia|portugu[eê]s|ingl[eê]s|espanhol|franc[eê]s|alem[aã]o|italiano|mba|bacharel|tecn[oó]logo|licenciatura|gradua[çc][ãa]o|mestrado|doutorado)\b/.test(ljCmp) &&
+            !/^(recrutamento|atendimento|implementa[çc][ãa]o|desenvolvimento|gest[ãa]o|coordena[çc][ãa]o|cria[çc][ãa]o|participa[çc][ãa]o|organiza[çc][ãa]o|manuten[çc][ãa]o|configura[çc][ãa]o|respons[áa]vel|realiza[çc][ãa]o|planejamento|elabora[çc][ãa]o|condu[çc][ãa]o|an[aá]lise\s+de|suporte\s+a|aux[ií]lio)\b/.test(ljCmp) &&
+            lj !== (dados.pessoal.nome || "");
+          if (pareceExp && !/^(19|20)\d{2}/.test(lj)) {
+            exps.push({ cargo: lj, empresa: "", periodo: "", descricao: "" });
+          }
+        }
+      }
+
+      return exps;
+    }
+
+    // Extrai múltiplas formações (curso, instituição, período)
+    // temSecao: true quando o bloco já foi delimitado por uma seção "Formação"
+    // (nesse caso não precisamos filtrar padrões de experiência)
+    function extrairFormacoes(linhasBloco, temSecao) {
+      var forms = [];
+      var rePeriodo = /(?:\(\s*(?:19\d{2}|20\d{2})\s*(?:[-–—aàá/]\s*(?:19\d{2}|20\d{2}|atual|presente|hoje)\s*)?\)?|(?:de\s+(?:19\d{2}|20\d{2})\s+a\s+(?:19\d{2}|20\d{2}|atual|presente)))/i;
+
+      var entradas = [];
+      var atual = [];
+      for (var i = 0; i < linhasBloco.length; i++) {
+        var l = linhasBloco[i];
+        var temIndicadorForm = /(bacharel|licenciatura|tecn[oó]logo|p[oó]s[- ]|mestrado|doutorado|gradua[çc][ãa]o|t[ée]cnico\s|curso\s|superior|forma[çc][ãa]o|ensino\s|faculdade|universidade|MBA|especializa[çc][ãa]o|col[eé]gio|instituto|centro\s+universit[áa]rio|b\.?sc|b\.?a|b\.?s|m\.?sc|master|phd|bachelor|degree|college|university\s+of|high\s+school)/i.test(l);
+        // No fallback (sem seção), rejeita linhas que parecem experiência
+        var pareceExperiencia = !temSecao && (/^[A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,60}\s+(na|em|no|at|@)\s[A-ZÀ-Ú]/.test(l) || /\s+[-–—|]\s+[A-ZÀ-Ú]/.test(l));
+        // Dentro de um bloco de formação já delimitado, aceita "Curso - Instituição"
+        var separadorInstituicao = temSecao && /\s+[-–—|]\s+[A-ZÀ-Ú][A-Za-zÀ-ú]/.test(l) && !/^(19|20)\d{2}/.test(l.replace(/^[^-–—|]*[-–—|]\s*/, ""));
+        var pareceInicio = /^[A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,60}/.test(l) &&
+          (rePeriodo.test(l) || temIndicadorForm || separadorInstituicao) &&
+          l.length <= 120 &&
+          !/@/.test(l) &&
+          !pareceExperiencia &&
+          !/experi[eê]ncia|objetivo|habilidades|idiomas|hobbies|interesses|refer[eê]ncias|cursos\s+complementares|certifica[çc][õo]es/i.test(l) &&
+          !/^(ana\s+|maria\s+|jo[aã]o\s+|pedro\s+|carlos\s+|roberto\s+|lucas\s+|felipe\s+|rafael\s+|bruno\s+|paulo\s+|juliana\s+|camila\s+|fernanda\s+|patr[ií]cia\s+|laura\s+|carolina\s+|beatriz\s+)/i.test(l);
+        if (pareceInicio && atual.length > 0) { entradas.push(atual); atual = []; }
+        atual.push(l);
+      }
+      if (atual.length) entradas.push(atual);
+
+      for (var e = 0; e < entradas.length && forms.length < 6; e++) {
+        var entrada = entradas[e];
+        var primeira = entrada[0] || "";
+        var periodo = "";
+        var mPer = (primeira + "\n" + (entrada[1] || "")).match(rePeriodo);
+        if (mPer) periodo = mPer[0].replace(/[()]/g, "").trim();
+
+        // Curso / instituição
+        var curso = "", instituicao = "";
+        // Formato: "Curso - Instituição (periodo)" ou "Curso - Instituição"
+        var m = primeira.match(/^([A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,60}?)\s*[-–—|]\s*([A-ZÀ-Ú][A-Za-zÀ-ú0-9\s&.\-]{2,60})/);
+        if (m) {
+          var a = m[1].trim();
+          var b = m[2].trim();
+          // Determina qual é curso e qual é instituição (curso geralmente não é U/Empresa)
+          if (/(bacharel|licenciatura|tecn[oó]logo|gradua[çc][ãa]o|curso|t[ée]cnico|superior|MBA|especializa[çc][ãa]o|mestrado|doutorado|p[oó]s)/i.test(a)) {
+            curso = a; instituicao = b;
+          } else if (/(universidade|faculdade|escola|instituto|senac|senai|if|unesp|usp|ufrgs|ufrj|ufmg|puc|fatec|etec|centro|col[eé]gio)/i.test(b)) {
+            curso = a; instituicao = b;
+          } else {
+            curso = a; instituicao = b;
+          }
+        } else {
+          // Formato: só curso, ou curso + instituição sem separador
+          curso = primeira.replace(rePeriodo, "").replace(/[()]/g, "").trim();
+          if (entrada.length > 1 && !rePeriodo.test(entrada[1])) {
+            instituicao = entrada[1].replace(rePeriodo, "").trim();
+          }
+        }
+
+        // Valida: rejeita falsos positivos (nome, e-mail, descrições de emprego)
+        var cursoCmp = (curso || "").toLowerCase();
+        var temIndicadorCurso = /(bacharel|licenciatura|tecn[oó]logo|p[oó]s[- ]|mestrado|doutorado|gradua[çc][ãa]o|t[ée]cnico\s|curso\s|superior|forma[çc][ãa]o|ensino\s|faculdade|universidade|MBA|especializa[çc][ãa]o|b\.?sc|b\.?a|b\.?s|m\.?sc|master|phd|bachelor|degree|college|psicologia|administra[çc][ãa]o|engenharia|direito|medicina|arquitetura|cont[aá]bil|design|marketing|log[ií]stica|gest[ãa]o|comunica[çc][ãa]o|educa[çc][ãa]o|sistemas\s+de\s+informa[çc][ãa]o|ci[eê]ncia\s+da\s+computa[çc][ãa]o|an[aá]lise\s+de\s+sistemas)/i.test(cursoCmp);
+        var ehFalsoForm =
+          (!curso && !instituicao) ||
+          /@/.test(curso) ||
+          (!temIndicadorCurso && /experi[eê]ncia|atendimento ao cliente|desenvolvimento de|gest[ãa]o de|lideran[çc]a|respons[áa]vel por|controle de|vendas e|atendimento|organiza[çc][ãa]o do|recrutamento|manuten[çc][ãa]o de|configura[çc][ãa]o de/.test(cursoCmp)) ||
+          /^(ana\s+|maria\s+|jo[aã]o\s+|pedro\s+|carlos\s+|roberto\s+|lucas\s+|felipe\s+|rafael\s+|bruno\s+|paulo\s+|juliana\s+|camila\s+|fernanda\s+)/.test(cursoCmp) ||
+          curso.length > 120 ||
+          (curso.length < 4 && !instituicao);
+        if (!ehFalsoForm) {
+          forms.push({ curso: curso, instituicao: instituicao, periodo: periodo, descricao: (entrada.slice(1).join("\n")).slice(0, 400) });
+        }
+      }
+
+      // Fallback: se não detectou, procura linhas com palavras de formação
+      if (!forms.length) {
+        for (var j = 0; j < linhasBloco.length && forms.length < 5; j++) {
+          var lj = linhasBloco[j];
+          if (/(bacharel|licenciatura|tecn[oó]logo|gradua[çc][ãa]o|t[ée]cnico\s|superior|mestrado|doutorado|MBA|especializa[çc][ãa]o|ensino\s+(m[ée]dio|fundamental|superior|t[ée]cnico))/i.test(lj) &&
+              lj.length <= 100 && !/@/.test(lj)) {
+            forms.push({ curso: lj.replace(rePeriodo, "").trim(), instituicao: "", periodo: "", descricao: "" });
+          }
+        }
+      }
+
+      return forms;
+    }
+
+    // Extrai múltiplos cursos / certificações
+    function extrairCursos(linhasBloco) {
+      var cursos = [];
+      var rePeriodo = /(?:\(\s*(?:19\d{2}|20\d{2})\s*(?:[-–—aàá/]\s*(?:19\d{2}|20\d{2})?\s*)?\)?)/i;
+      for (var i = 0; i < linhasBloco.length && cursos.length < 10; i++) {
+        var l = linhasBloco[i];
+        // Aceita linhas com ao menos 2 letras (evita perder cursos curtos como "NR-10" ou "NR-12")
+        if (l.length <= 140 && /[A-Za-zÀ-ú]{2}/.test(l) && !/^[•·▪-]+$/.test(l.trim())) {
+          var nome = l.replace(rePeriodo, "").replace(/[()]/g, "").trim();
+          if (nome && nome.length >= 2 && nome !== "Cursos complementares" && nome !== "Cursos e certificações" && nome !== "Certificações" && nome !== "Cursos") {
+            cursos.push({ nome: nome, instituicao: "", carga: "" });
+          }
+        }
+      }
+      return cursos;
+    }
+
+    // Normaliza os dados estruturados retornados pela IA (Gemini) para o
+    // formato esperado pelo restante do fluxo.
+    function normalizarDadosIA(d) {
+      d = d || {};
+      function s(v) { return (v == null ? "" : String(v)).trim(); }
+      function lista(arr) {
+        if (!Array.isArray(arr)) return [];
+        return arr.filter(function (x) { return x != null && String(x).trim() !== ""; })
+                 .map(function (x) { return String(x).trim(); });
+      }
+      var p = (d.pessoal && typeof d.pessoal === "object") ? d.pessoal : {};
+      var telefones = lista(p.telefones);
+      var tel = s(p.telefone);
+      if (!telefones.length && tel) telefones = [tel];
+      var experiencias = Array.isArray(d.experiencias) ? d.experiencias.filter(function (x) { return x && typeof x === "object"; }) : [];
+      var formacoes = Array.isArray(d.formacoes) ? d.formacoes.filter(function (x) { return x && typeof x === "object"; }) : [];
+      return {
+        pessoal: {
+          nome: s(p.nome),
+          email: s(p.email),
+          telefone: tel,
+          telefones: telefones,
+          cidade: s(p.cidade),
+          uf: s(p.uf),
+          endereco: s(p.endereco),
+          cep: s(p.cep),
+          linkedin: s(p.linkedin),
+          github: s(p.github),
+          site: s(p.site),
+          nascimento: s(p.nascimento)
+        },
+        objetivo: s(d.objetivo),
+        resumo: s(d.resumo),
+        experiencias: experiencias.map(function (e) {
+          return {
+            cargo: s(e.cargo),
+            empresa: s(e.empresa),
+            periodo: s(e.periodo),
+            local: s(e.local),
+            descricao: s(e.descricao) || s(e.detalhes)
+          };
+        }),
+        formacoes: formacoes.map(function (f) {
+          return {
+            curso: s(f.curso) || s(f.nome),
+            instituicao: s(f.instituicao) || s(f.nomeInstituicao),
+            periodo: s(f.periodo),
+            status: s(f.status)
+          };
+        }),
+        cursos: lista(d.cursos),
+        habilidades: s(d.habilidades),
+        idiomas: idiomasEmString(d.idiomas),
+        idiomasDetalhe: idiomasDetalhe(d.idiomas),
+        projetos: lista(d.projetos),
+        premios: lista(d.premios),
+        publicacoes: lista(d.publicacoes),
+        voluntariado: lista(d.voluntariado),
+        referencias: lista(d.referencias),
+        infoAdicional: s(d.infoAdicional),
+        hobbies: s(d.hobbies)
+      };
+    }
+    // Normaliza os pontos (fortes/melhorar) retornados pela IA para o formato { t, d }.
+    function pontosIA(pontos) {
+      if (!Array.isArray(pontos)) return [];
+      return pontos.filter(function (p) {
+        return p && typeof p === "object" && String(p.titulo || p.t || "").trim() !== "";
+      }).map(function (p) {
+        return {
+          t: String(p.titulo || p.t || "").trim(),
+          d: String(p.descricao || p.d || "").trim()
+        };
+      });
+    }
+    // Converte idiomas (string ou lista de objetos) em uma string separada por vírgula.
+    function idiomasEmString(idiomas) {
+      if (idiomas == null) return "";
+      if (typeof idiomas === "string") return idiomas.trim();
+      if (Array.isArray(idiomas)) {
+        return idiomas.filter(function (i) {
+          return i != null && String(i).trim() !== "";
+        }).map(function (i) {
+          if (typeof i === "object") {
+            return (i.idioma || "") + (i.nivel ? " (" + i.nivel + ")" : "");
+          }
+          return String(i).trim();
+        }).filter(Boolean).join(", ");
+      }
+      return "";
+    }
+    function idiomasDetalhe(idiomas) {
+      if (!Array.isArray(idiomas)) return [];
+      return idiomas.filter(function (i) {
+        return i && typeof i === "object" && String(i.idioma || "").trim() !== "";
+      }).map(function (i) {
+        return { idioma: String(i.idioma).trim(), nivel: String(i.nivel || "").trim() };
+      });
     }
 
     function processarArquivo(file) {
@@ -324,22 +841,37 @@
             uploadLabel.classList.remove("processando");
             return;
           }
-          var dados = extrairDadosDoTexto(texto);
-          try {
-            localStorage.setItem("curriculoUpload", JSON.stringify(dados));
-            localStorage.setItem("curriculoUploadPendente", "1");
-          } catch (e) {}
-          App.authMe().then(function (usuario) {
-            if (usuario) {
-              setStatus("Dados identificados! Redirecionando para os modelos...");
-              setTimeout(function () { window.location.href = "/modelos"; }, 700);
-            } else {
+          // Tenta a IA (Gemini) primeiro — muito mais preciso; se não houver chave
+          // ou a chamada falhar, usa o parser local robusto.
+          function concluirExtracao(dados) {
+            try {
+              localStorage.setItem("curriculoUpload", JSON.stringify(dados));
+              localStorage.setItem("curriculoUploadPendente", "1");
+            } catch (e) {}
+            App.authMe().then(function (usuario) {
+              if (usuario) {
+                setStatus("Dados identificados! Redirecionando para os modelos...");
+                setTimeout(function () { window.location.href = "/modelos"; }, 700);
+              } else {
+                setStatus("Dados identificados! Redirecionando para o cadastro...");
+                setTimeout(function () { window.location.href = "/cadastro?origem=upload"; }, 700);
+              }
+            }).catch(function () {
               setStatus("Dados identificados! Redirecionando para o cadastro...");
               setTimeout(function () { window.location.href = "/cadastro?origem=upload"; }, 700);
+            });
+          }
+          App.api("/api/analise-ia", {
+            method: "POST",
+            body: JSON.stringify({ texto: texto })
+          }).then(function (res) {
+            if (res.ok && res.data && res.data.ok && res.data.dados) {
+              concluirExtracao(normalizarDadosIA(res.data.dados));
+            } else {
+              concluirExtracao(extrairDadosDoTexto(texto));
             }
           }).catch(function () {
-            setStatus("Dados identificados! Redirecionando para o cadastro...");
-            setTimeout(function () { window.location.href = "/cadastro?origem=upload"; }, 700);
+            concluirExtracao(extrairDadosDoTexto(texto));
           });
         }).catch(function (err) {
           setStatus("Não foi possível processar este arquivo. Tente novamente.");
