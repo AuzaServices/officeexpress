@@ -1550,48 +1550,61 @@ app.post("/api/analise-ia", async (req, res) => {
       parts.push({ text: "TEXTO EXTRAÍDO DO CURRÍCULO:\n" + String(texto).slice(0, 12000) });
     }
 
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" + apiKey;
     const body = {
       contents: [{ parts: parts }],
       generationConfig: { temperature: 0.2, responseMimeType: "application/json", maxOutputTokens: 4096 },
     };
 
-    // Retry com backoff para erros temporários (alta demanda, rate limit, quota, etc.).
-    // Para 429 (quota/rate limit), aguarda o tempo sugerido pela própria API quando disponível.
+    // Lista de modelos a tentar em ordem. O primeiro com cota disponível é usado.
+    // Prioriza modelos com limite diário (RPD) alto no plano gratuito para evitar
+    // esgotamento: gemini-3.1-flash-lite (RPD 500) e gemini-3.5-flash-lite (RPD 500).
+    const modelos = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite"];
     let resp = null;
-    const maxTentativas = 4;
-    const backoffs = [0, 5000, 12000, 20000]; // backoff base (ms) para cada tentativa
-    for (let i = 0; i < maxTentativas; i++) {
-      if (i > 0) {
-        // Extrai o tempo de espera sugerido pela API no erro 429, se houver.
-        let espera = backoffs[i];
-        if (resp) {
-          try {
-            const corpo = await resp.text().catch(() => "");
-            const m = String(corpo).match(/retry in\s+([\d.]+)\s*s/i) || String(corpo).match(/retryDelay['":\s]+(\d+)/i);
-            if (m) {
-              const sugerido = m[1].indexOf(".") !== -1 ? Math.ceil(parseFloat(m[1]) * 1000) : parseInt(m[1], 10);
-              if (sugerido > espera) espera = sugerido;
-            }
-          } catch (e) { /* ignora */ }
+    for (let m = 0; m < modelos.length; m++) {
+      const url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelos[m] + ":generateContent?key=" + apiKey;
+
+      // Retry com backoff para erros temporários (alta demanda, rate limit, quota, etc.).
+      // Para 429 (quota/rate limit), aguarda o tempo sugerido pela própria API quando disponível.
+      const maxTentativas = 3;
+      const backoffs = [0, 3000, 8000]; // backoff base (ms) para cada tentativa
+      resp = null;
+      for (let i = 0; i < maxTentativas; i++) {
+        if (i > 0) {
+          // Extrai o tempo de espera sugerido pela API no erro 429, se houver.
+          let espera = backoffs[i];
+          if (resp) {
+            try {
+              const corpo = await resp.text().catch(() => "");
+              const m = String(corpo).match(/retry in\s+([\d.]+)\s*s/i) || String(corpo).match(/retryDelay['":\s]+(\d+)/i);
+              if (m) {
+                const sugerido = m[1].indexOf(".") !== -1 ? Math.ceil(parseFloat(m[1]) * 1000) : parseInt(m[1], 10);
+                if (sugerido > espera) espera = sugerido;
+              }
+            } catch (e) { /* ignora */ }
+          }
+          await new Promise((r) => setTimeout(r, espera));
         }
-        await new Promise((r) => setTimeout(r, espera));
+        try {
+          resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        } catch (e) {
+          resp = null;
+        }
+        // Sucesso ou erro permanente: para. Se for erro temporário, tenta de novo.
+        if (resp && resp.ok) break;
+        const status = resp ? resp.status : 0;
+        const temporario = status === 429 || status === 500 || status === 502 || status === 503 || status === 504 || status === 0;
+        if (!temporario) break;
+        console.error("Erro temporário na API Gemini (" + modelos[m] + ", tentativa " + (i + 1) + "): status " + status);
       }
-      try {
-        resp = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      } catch (e) {
-        resp = null;
-      }
-      // Sucesso ou erro permanente: para. Se for erro temporário, tenta de novo.
+
+      // Se este modelo respondeu com sucesso, usa-o.
       if (resp && resp.ok) break;
-      const status = resp ? resp.status : 0;
-      const temporario = status === 429 || status === 500 || status === 502 || status === 503 || status === 504 || status === 0;
-      if (!temporario) break;
-      console.error("Erro temporário na API Gemini (tentativa " + (i + 1) + "): status " + status);
+      // Se o erro é permanente (ex.: modelo inexistente) ou cota esgotada, tenta o próximo modelo.
+      console.error("Modelo " + modelos[m] + " indisponível (status " + (resp ? resp.status : 0) + "). Tentando próximo modelo.");
     }
 
     if (!resp || !resp.ok) {
