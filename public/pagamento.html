@@ -422,6 +422,9 @@
     try { App.track && App.track("chegar_pagamento"); } catch (e) { /* ignora */ }
 
     // ---- Prévia do currículo (coluna esquerda, somente desktop) ----
+    // Quando um pedido específico foi escolhido (via ?pedido=), a prévia deve
+    // mostrar EXATAMENTE o modelo e os dados daquele pedido — não o último
+    // currículo salvo no navegador. Sem pedido, mantém o fallback do editor.
     var modeloPrev = localStorage.getItem("modeloSelecionado") || "classico";
     var dadosPrev = {};
     try { dadosPrev = JSON.parse(localStorage.getItem("curriculo") || "{}"); } catch (e) {}
@@ -445,6 +448,19 @@
         '</div>';
       dimensionarPrevia();
     }
+
+    // Se vier um pedido na URL, carrega os dados reais desse pedido para a
+    // prévia (independente de estar pago ou não) e para o fluxo de pagamento.
+    if (pedidoId) {
+      App.api("/api/pedidos/" + encodeURIComponent(pedidoId) + "/dados").then(function (r) {
+        if (r.ok && r.data && r.data.modelo) {
+          modeloPrev = r.data.modelo;
+          dadosPrev = r.data.dados || {};
+          renderPrevia();
+        }
+      }).catch(function (e) { console.error("Erro ao carregar dados do pedido para prévia:", e); });
+    }
+
     function dimensionarPrevia() {
       var pv = document.getElementById("previaCurriculo");
       if (!pv) return;

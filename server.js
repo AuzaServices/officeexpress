@@ -545,15 +545,18 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
   }
 });
 
-// Retorna modelo + dados do pedido pago para o cliente gerar o PDF
-// a partir da IMAGEM do preview (html2canvas) — sem depender do Chromium
-// no servidor.
+// Retorna modelo + dados do pedido para o cliente montar a prévia / gerar o
+// PDF (html2canvas). Requer sessão e que o pedido pertença ao usuário logado;
+// o acesso é liberado para qualquer status para que a prévia correta do
+// currículo seja exibida na página de pagamento mesmo antes do pagamento.
 app.get("/api/pedidos/:id/dados", async (req, res) => {
   const { id } = req.params;
+  const usuarioId = usuarioDaSessao(req);
+  if (!usuarioId) return res.status(401).json({ error: "Faça login para ver este pedido." });
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
-  if (pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
+  if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
   res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", dados });
