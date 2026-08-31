@@ -13,6 +13,10 @@
     <div class="container wrap">
       <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
       <nav class="menu" style="align-items:center;gap:12px">
+        <div class="admin-tabs" role="tablist">
+          <button class="admin-tab ativo" id="tabPrincipal" type="button" onclick="mostrarAba('principal')">Painel</button>
+          <button class="admin-tab" id="tabEmpresas" type="button" onclick="mostrarAba('empresas')">Empresas</button>
+        </div>
         <button class="tema-toggle" id="temaToggle" type="button" aria-label="Alternar tema" title="Alternar tema claro/escuro">
           <svg id="temaIcone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
@@ -35,6 +39,7 @@
     </div>
 
     <div id="conteudo" style="display:none">
+      <div id="viewPrincipal">
       <!-- Estatísticas -->
       <div class="stats-grid" id="stats"></div>
 
@@ -226,7 +231,23 @@
         <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 14px">Exporte todos os pedidos e usuários em um arquivo JSON.</p>
         <a class="btn btn-primary" href="/api/admin/backup" style="text-decoration:none">Baixar backup (JSON)</a>
       </div>
-    </div>
+      </div><!-- /viewPrincipal -->
+
+      <!-- ===== Aba Empresas ===== -->
+      <div id="viewEmpresas" class="oculto">
+        <div class="card" style="margin-bottom:24px">
+          <h3 style="margin-bottom:16px">Empresas cadastradas (Office Express | Companies)</h3>
+          <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">Gerencie as empresas assinantes da plataforma de contratação. Você pode ativar/desativar o acesso e alterar o plano.</p>
+          <div class="tabela-wrap">
+            <table class="tabela">
+              <thead><tr><th>#</th><th>Empresa</th><th>CNPJ</th><th>E-mail</th><th>Plano</th><th>Assinatura</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+              <tbody id="tbodyEmpresas"><tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+          <span id="empresasInfo" style="color:var(--text-muted);font-size:.85rem"></span>
+        </div>
+      </div>
+    </div><!-- /conteudo -->
   </section>
 
   <style>
@@ -295,6 +316,20 @@
       .stats-grid { grid-template-columns: 1fr; }
       .metrica-topo { flex-direction: column; align-items: flex-start; }
       table.tabela th, table.tabela td { padding: 10px 8px; font-size: .8rem; }
+    }
+
+    /* Abas do painel (Painel | Empresas) */
+    .oculto { display: none !important; }
+    .admin-tabs { display: inline-flex; align-items: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 50px; padding: 4px; gap: 4px; }
+    .admin-tab {
+      background: transparent; border: none; color: rgba(255,255,255,0.8); cursor: pointer;
+      font-family: inherit; font-weight: 600; font-size: 0.9rem; padding: 8px 18px; border-radius: 50px;
+      transition: background .15s, color .15s;
+    }
+    .admin-tab:hover { color: #ffffff; }
+    .admin-tab.ativo { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; font-weight: 700; }
+    @media (max-width: 560px) {
+      .admin-tab { padding: 7px 12px; font-size: 0.82rem; }
     }
 
     /* Botão alternar tema (cabeçalho) */
@@ -645,6 +680,83 @@
       });
       if (!data.parceiros || !data.parceiros.length) tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Nenhum parceiro cadastrado ainda.</td></tr>';
     }
+
+    // ===== Aba Empresas (Office Express | Companies) =====
+    function mostrarAba(aba) {
+      var isPrincipal = aba === "principal";
+      document.getElementById("viewPrincipal").classList.toggle("oculto", !isPrincipal);
+      document.getElementById("viewEmpresas").classList.toggle("oculto", isPrincipal);
+      document.getElementById("tabPrincipal").classList.toggle("ativo", isPrincipal);
+      document.getElementById("tabEmpresas").classList.toggle("ativo", !isPrincipal);
+      if (!isPrincipal) carregarEmpresas();
+    }
+    window.mostrarAba = mostrarAba;
+
+    async function carregarEmpresas() {
+      var tb = document.getElementById("tbodyEmpresas");
+      tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr>';
+      var { ok, data } = await App.api("/api/admin/empresas");
+      if (!ok) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger)">Erro ao carregar empresas.</td></tr>'; return; }
+      var lista = data.empresas || [];
+      document.getElementById("empresasInfo").textContent = lista.length + (lista.length === 1 ? " empresa cadastrada" : " empresas cadastradas");
+      tb.innerHTML = "";
+      if (!lista.length) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Nenhuma empresa cadastrada ainda.</td></tr>'; return; }
+
+      lista.forEach(function (e) {
+        var planoNome = { starter: "Starter", pro: "Pro", enterprise: "Enterprise" }[e.plano] || e.plano;
+        var planoBadge = e.plano === "enterprise" ? "badge-pendente" : "badge-pago";
+        var assinatura = e.assinatura_ativa
+          ? '<span class="badge badge-pago">Ativa</span>'
+          : '<span class="badge badge-pendente">Inativa</span>';
+        var status = e.status === "ativo"
+          ? '<span class="badge badge-pago">Ativo</span>'
+          : '<span class="badge badge-cancelado">Inativo</span>';
+        var data = e.created_at ? new Date(e.created_at).toLocaleDateString("pt-BR") : "-";
+        var botaoStatus = e.status === "ativo"
+          ? '<button class="btn-acao vermelho" onclick="alternarStatusEmpresa(' + e.id + ',\'inativo\')">Desativar</button>'
+          : '<button class="btn-acao verde" onclick="alternarStatusEmpresa(' + e.id + ',\'ativo\')">Ativar</button>';
+
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + e.id + "</td>" +
+          "<td><b>" + (e.nome || "-") + "</b></td>" +
+          "<td>" + (e.cnpj || "-") + "</td>" +
+          "<td>" + (e.email || "-") + "</td>" +
+          '<td><span class="badge ' + planoBadge + '">' + planoNome + '</span></td>' +
+          "<td>" + assinatura + "</td>" +
+          "<td>" + status + "</td>" +
+          "<td>" + data + "</td>" +
+          '<td><div class="acoes-linha">' +
+            '<button class="btn-acao amarelo" onclick="alterarPlanoEmpresa(' + e.id + ')">Plano</button>' +
+            botaoStatus +
+          "</div></td>";
+        tb.appendChild(tr);
+      });
+    }
+    window.carregarEmpresas = carregarEmpresas;
+
+    window.alternarStatusEmpresa = async function (id, status) {
+      var { ok, data } = await App.api("/api/admin/empresas/" + id + "/status", {
+        method: "PUT",
+        body: JSON.stringify({ status: status })
+      });
+      if (!ok) { alert(data.error || "Erro ao alterar status."); return; }
+      carregarEmpresas();
+    };
+
+    window.alterarPlanoEmpresa = async function (id) {
+      var plano = prompt("Novo plano (starter, pro ou enterprise):");
+      if (!plano) return;
+      plano = plano.trim().toLowerCase();
+      if (["starter", "pro", "enterprise"].indexOf(plano) === -1) { alert("Plano inválido."); return; }
+      var ativar = confirm("Ativar assinatura deste plano agora?");
+      var { ok, data } = await App.api("/api/admin/empresas/" + id + "/plano", {
+        method: "PUT",
+        body: JSON.stringify({ plano: plano, assinatura_ativa: ativar ? 1 : 0 })
+      });
+      if (!ok) { alert(data.error || "Erro ao alterar plano."); return; }
+      carregarEmpresas();
+    };
 
     window.cadastrarParceiro = async function () {
       var nome = document.getElementById("parNome").value.trim();

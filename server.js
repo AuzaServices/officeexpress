@@ -1320,6 +1320,54 @@ app.post("/api/admin/pagamentos/fechar", protegerAdmin, async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Office Express | Companies — gestão no painel admin
+// ---------------------------------------------------------------------------
+app.get("/api/admin/empresas", protegerAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT e.id, e.nome, e.cnpj, e.email, e.plano, e.assinatura_ativa, e.status, e.created_at, " +
+      "(SELECT COUNT(*) FROM empresas_pagamentos ep WHERE ep.empresa_id = e.id AND ep.status = 'pago') AS pagamentos_pagos " +
+      "FROM empresas e ORDER BY e.id DESC"
+    );
+    res.json({ empresas: rows });
+  } catch (e) {
+    console.error("Erro ao listar empresas:", e.message);
+    res.status(500).json({ error: "Erro ao listar empresas." });
+  }
+});
+
+app.put("/api/admin/empresas/:id/status", protegerAdmin, async (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!["ativo", "inativo"].includes(status)) return res.status(400).json({ error: "Status inválido." });
+    await pool.query("UPDATE empresas SET status = ? WHERE id = ?", [status, req.params.id]);
+    await registrarAdminLog("empresa_status", `Empresa #${req.params.id} → ${status}`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao alterar status da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao alterar status." });
+  }
+});
+
+app.put("/api/admin/empresas/:id/plano", protegerAdmin, async (req, res) => {
+  try {
+    const { plano, assinatura_ativa } = req.body || {};
+    if (!["starter", "pro", "enterprise"].includes(plano)) return res.status(400).json({ error: "Plano inválido." });
+    const ativa = assinatura_ativa != null ? (assinatura_ativa ? 1 : 0) : undefined;
+    if (ativa != null) {
+      await pool.query("UPDATE empresas SET plano = ?, assinatura_ativa = ? WHERE id = ?", [plano, ativa, req.params.id]);
+    } else {
+      await pool.query("UPDATE empresas SET plano = ? WHERE id = ?", [plano, req.params.id]);
+    }
+    await registrarAdminLog("empresa_plano", `Empresa #${req.params.id} → ${plano}`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao alterar plano da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao alterar plano." });
+  }
+});
+
 // Login do parceiro.
 app.post("/api/parceiro/login", async (req, res) => {
   const { email, senha } = req.body || {};
