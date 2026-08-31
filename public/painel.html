@@ -235,9 +235,29 @@
 
       <!-- ===== Aba Empresas ===== -->
       <div id="viewEmpresas" class="oculto">
+        <!-- Preços das assinaturas -->
         <div class="card" style="margin-bottom:24px">
+          <div class="metricas-topo">
+            <div>
+              <h3 style="margin:0">Preços das assinaturas</h3>
+              <p style="color:var(--text-muted);font-size:.85rem;margin:4px 0 0">Os valores abaixo são exibidos na página pública e cobrados na assinatura. Altere e clique em "Salvar preços".</p>
+            </div>
+          </div>
+          <div class="precos-grid">
+            <div class="campo"><label>Starter (R$/mês)</label><input type="number" id="precoStarterInput" min="0" step="0.01" placeholder="99" /></div>
+            <div class="campo"><label>Pro (R$/mês)</label><input type="number" id="precoProInput" min="0" step="0.01" placeholder="249" /></div>
+            <div class="campo"><label>Enterprise (R$/mês — 0 = sob consulta)</label><input type="number" id="precoEnterpriseInput" min="0" step="0.01" placeholder="0" /></div>
+            <div class="campo" style="display:flex;align-items:flex-end">
+              <button class="btn btn-primary" onclick="salvarPrecosPlanos()">Salvar preços</button>
+            </div>
+          </div>
+          <span id="precosInfo" style="color:var(--text-muted);font-size:.85rem"></span>
+        </div>
+
+        <!-- Empresas cadastradas -->
+        <div class="card">
           <h3 style="margin-bottom:16px">Empresas cadastradas (Office Express | Companies)</h3>
-          <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">Gerencie as empresas assinantes da plataforma de contratação. Você pode ativar/desativar o acesso e alterar o plano.</p>
+          <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">Gerencie as empresas assinantes da plataforma de contratação. Clique em "Detalhes" para editar dados, ver pagamentos e currículos visualizados.</p>
           <div class="tabela-wrap">
             <table class="tabela">
               <thead><tr><th>#</th><th>Empresa</th><th>CNPJ</th><th>E-mail</th><th>Plano</th><th>Assinatura</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
@@ -245,6 +265,49 @@
             </table>
           </div>
           <span id="empresasInfo" style="color:var(--text-muted);font-size:.85rem"></span>
+        </div>
+      </div>
+
+      <!-- Modal de detalhes/edição da empresa -->
+      <div id="modalEmpresa" class="modal-empresa oculto" onclick="if(event.target===this)fecharModalEmpresa()">
+        <div class="modal-empresa-box">
+          <div class="modal-empresa-head">
+            <h3 id="modalEmpresaTitulo" style="margin:0">Detalhes da empresa</h3>
+            <button class="btn-acao" onclick="fecharModalEmpresa()" style="background:transparent;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer" title="Fechar">✕</button>
+          </div>
+          <div class="modal-empresa-body">
+            <div class="campo"><label>Nome da empresa</label><input type="text" id="eNome" /></div>
+            <div class="campo"><label>CNPJ</label><input type="text" id="eCnpj" /></div>
+            <div class="campo"><label>E-mail de acesso</label><input type="email" id="eEmail" /></div>
+            <div class="campo"><label>Plano</label>
+              <select id="ePlano">
+                <option value="starter">Starter</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div class="campo"><label>Assinatura ativa</label>
+              <select id="eAssinatura">
+                <option value="1">Ativa</option>
+                <option value="0">Inativa</option>
+              </select>
+            </div>
+            <div class="campo"><label>Status da conta</label>
+              <select id="eStatus">
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+              </select>
+            </div>
+            <div class="modal-empresa-actions">
+              <button class="btn btn-primary" onclick="salvarEmpresa()">Salvar alterações</button>
+            </div>
+
+            <h4 style="margin:22px 0 10px;font-size:.95rem">Pagamentos</h4>
+            <div class="tabela-wrap"><table class="tabela"><thead><tr><th>#</th><th>Plano</th><th>Valor</th><th>Status</th><th>Tipo</th><th>Data</th></tr></thead><tbody id="tbodyEmpresaPagamentos"><tr><td colspan="6" style="text-align:center;color:var(--text-muted)">—</td></tr></tbody></table></div>
+
+            <h4 style="margin:22px 0 10px;font-size:.95rem">Currículos visualizados</h4>
+            <div class="tabela-wrap"><table class="tabela"><thead><tr><th>#</th><th>Currículo</th><th>Data</th></tr></thead><tbody id="tbodyEmpresaCurriculos"><tr><td colspan="3" style="text-align:center;color:var(--text-muted)">—</td></tr></tbody></table></div>
+          </div>
         </div>
       </div>
     </div><!-- /conteudo -->
@@ -331,6 +394,25 @@
     @media (max-width: 560px) {
       .admin-tab { padding: 7px 12px; font-size: 0.82rem; }
     }
+
+    /* Controle total das empresas */
+    .precos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 14px; }
+    .precos-grid .campo { margin: 0; }
+    .precos-grid label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .precos-grid input { width: 100%; box-sizing: border-box; }
+    @media (max-width: 720px) { .precos-grid { grid-template-columns: 1fr 1fr; } }
+
+    .btn-acao.amarelo { background: rgba(245,158,11,.12); color: #b45309; border: 1px solid rgba(245,158,11,.35); }
+    .btn-acao.azul { background: rgba(59,130,246,.12); color: var(--brand); border: 1px solid rgba(59,130,246,.35); }
+
+    .modal-empresa { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-empresa-box { background: var(--card, #ffffff); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 620px; max-height: 90vh; overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+    .modal-empresa-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card, #ffffff); }
+    .modal-empresa-body { padding: 20px 22px; }
+    .modal-empresa-actions { margin-top: 16px; }
+    .modal-empresa .campo { margin-bottom: 12px; }
+    .modal-empresa label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .modal-empresa input, .modal-empresa select { width: 100%; box-sizing: border-box; }
 
     /* Botão alternar tema (cabeçalho) */
     .tema-toggle {
@@ -688,9 +770,31 @@
       document.getElementById("viewEmpresas").classList.toggle("oculto", isPrincipal);
       document.getElementById("tabPrincipal").classList.toggle("ativo", isPrincipal);
       document.getElementById("tabEmpresas").classList.toggle("ativo", !isPrincipal);
-      if (!isPrincipal) carregarEmpresas();
+      if (!isPrincipal) { carregarPrecosPlanos(); carregarEmpresas(); }
     }
     window.mostrarAba = mostrarAba;
+
+    async function carregarPrecosPlanos() {
+      var { ok, data } = await App.api("/api/admin/empresas/planos/precos");
+      if (!ok || !data || !data.planos) return;
+      if (data.planos.starter != null) document.getElementById("precoStarterInput").value = data.planos.starter;
+      if (data.planos.pro != null) document.getElementById("precoProInput").value = data.planos.pro;
+      if (data.planos.enterprise != null) document.getElementById("precoEnterpriseInput").value = data.planos.enterprise;
+    }
+
+    window.salvarPrecosPlanos = async function () {
+      var starter = document.getElementById("precoStarterInput").value;
+      var pro = document.getElementById("precoProInput").value;
+      var enterprise = document.getElementById("precoEnterpriseInput").value;
+      var { ok, data } = await App.api("/api/admin/empresas/planos/precos", {
+        method: "PUT",
+        body: JSON.stringify({ starter: starter, pro: pro, enterprise: enterprise })
+      });
+      var info = document.getElementById("precosInfo");
+      if (!ok) { info.textContent = data.error || "Erro ao salvar preços."; info.style.color = "var(--danger)"; return; }
+      info.textContent = "Preços salvos com sucesso!"; info.style.color = "var(--success, #16a34a)";
+      setTimeout(function () { info.textContent = ""; }, 3000);
+    };
 
     async function carregarEmpresas() {
       var tb = document.getElementById("tbodyEmpresas");
@@ -727,6 +831,7 @@
           "<td>" + status + "</td>" +
           "<td>" + data + "</td>" +
           '<td><div class="acoes-linha">' +
+            '<button class="btn-acao azul" onclick="abrirModalEmpresa(' + e.id + ')">Detalhes</button>' +
             '<button class="btn-acao amarelo" onclick="alterarPlanoEmpresa(' + e.id + ')">Plano</button>' +
             botaoStatus +
           "</div></td>";
@@ -757,6 +862,98 @@
       if (!ok) { alert(data.error || "Erro ao alterar plano."); return; }
       carregarEmpresas();
     };
+
+    var empresaAtual = null;
+
+    window.abrirModalEmpresa = async function (id) {
+      var { ok, data } = await App.api("/api/admin/empresas");
+      if (!ok || !data) { alert("Erro ao carregar empresa."); return; }
+      var e = (data.empresas || []).find(function (x) { return x.id === id; });
+      if (!e) { alert("Empresa não encontrada."); return; }
+      empresaAtual = e;
+      document.getElementById("modalEmpresaTitulo").textContent = "Detalhes — " + (e.nome || "Empresa #" + id);
+      document.getElementById("eNome").value = e.nome || "";
+      document.getElementById("eCnpj").value = e.cnpj || "";
+      document.getElementById("eEmail").value = e.email || "";
+      document.getElementById("ePlano").value = e.plano || "starter";
+      document.getElementById("eAssinatura").value = e.assinatura_ativa ? "1" : "0";
+      document.getElementById("eStatus").value = e.status || "ativo";
+      document.getElementById("modalEmpresa").classList.remove("oculto");
+      carregarPagamentosEmpresa(id);
+      carregarCurriculosEmpresa(id);
+    };
+    window.abrirModalEmpresa = abrirModalEmpresa;
+
+    window.fecharModalEmpresa = function () {
+      document.getElementById("modalEmpresa").classList.add("oculto");
+      empresaAtual = null;
+    };
+    window.fecharModalEmpresa = fecharModalEmpresa;
+
+    window.salvarEmpresa = async function () {
+      if (!empresaAtual) return;
+      var id = empresaAtual.id;
+      var { ok, data } = await App.api("/api/admin/empresas/" + id, {
+        method: "PUT",
+        body: JSON.stringify({
+          nome: document.getElementById("eNome").value,
+          cnpj: document.getElementById("eCnpj").value,
+          email: document.getElementById("eEmail").value,
+          plano: document.getElementById("ePlano").value,
+          assinatura_ativa: document.getElementById("eAssinatura").value === "1" ? 1 : 0,
+          status: document.getElementById("eStatus").value
+        })
+      });
+      if (!ok) { alert(data.error || "Erro ao salvar empresa."); return; }
+      alert("Empresa atualizada com sucesso!");
+      fecharModalEmpresa();
+      carregarEmpresas();
+    };
+    window.salvarEmpresa = salvarEmpresa;
+
+    async function carregarPagamentosEmpresa(id) {
+      var tb = document.getElementById("tbodyEmpresaPagamentos");
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr>';
+      var { ok, data } = await App.api("/api/admin/empresas/" + id + "/pagamentos");
+      if (!ok || !data) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erro.</td></tr>'; return; }
+      var lista = data.pagamentos || [];
+      tb.innerHTML = "";
+      if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Nenhum pagamento registrado.</td></tr>'; return; }
+      lista.forEach(function (pg) {
+        var statusBadge = pg.status === "pago"
+          ? '<span class="badge badge-pago">Pago</span>'
+          : pg.status === "pendente"
+            ? '<span class="badge badge-pendente">Pendente</span>'
+            : '<span class="badge badge-cancelado">' + (pg.status || "—") + '</span>';
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + pg.id + "</td>" +
+          "<td>" + (pg.plano || "-") + "</td>" +
+          "<td>" + App.formatarPreco(pg.valor) + "</td>" +
+          "<td>" + statusBadge + "</td>" +
+          "<td>" + (pg.tipo || "-") + "</td>" +
+          "<td>" + (pg.created_at ? new Date(pg.created_at).toLocaleString("pt-BR") : "-") + "</td>";
+        tb.appendChild(tr);
+      });
+    }
+
+    async function carregarCurriculosEmpresa(id) {
+      var tb = document.getElementById("tbodyEmpresaCurriculos");
+      tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr>';
+      var { ok, data } = await App.api("/api/admin/empresas/" + id + "/curriculos");
+      if (!ok || !data) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--danger)">Erro.</td></tr>'; return; }
+      var lista = data.curriculos || [];
+      tb.innerHTML = "";
+      if (!lista.length) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted)">Nenhum currículo visualizado.</td></tr>'; return; }
+      lista.forEach(function (c) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + c.id + "</td>" +
+          "<td>" + (c.curriculo_id || "-") + "</td>" +
+          "<td>" + (c.created_at ? new Date(c.created_at).toLocaleString("pt-BR") : "-") + "</td>";
+        tb.appendChild(tr);
+      });
+    }
 
     window.cadastrarParceiro = async function () {
       var nome = document.getElementById("parNome").value.trim();

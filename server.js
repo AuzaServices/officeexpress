@@ -1368,6 +1368,98 @@ app.put("/api/admin/empresas/:id/plano", protegerAdmin, async (req, res) => {
   }
 });
 
+// Preços configuráveis das assinaturas (leitura para o admin).
+app.get("/api/admin/empresas/planos/precos", protegerAdmin, async (req, res) => {
+  try {
+    const [starter, pro, enterprise] = await Promise.all([
+      getValorPlano("starter"),
+      getValorPlano("pro"),
+      getValorPlano("enterprise"),
+    ]);
+    res.json({ planos: { starter, pro, enterprise } });
+  } catch (e) {
+    console.error("Erro ao carregar preços dos planos (admin):", e.message);
+    res.status(500).json({ error: "Erro ao carregar preços dos planos." });
+  }
+});
+
+// Atualiza os preços configuráveis das assinaturas.
+app.put("/api/admin/empresas/planos/precos", protegerAdmin, async (req, res) => {
+  try {
+    const { starter, pro, enterprise } = req.body || {};
+    const dados = { starter, pro, enterprise };
+    for (const plano of ["starter", "pro", "enterprise"]) {
+      let v = dados[plano];
+      if (v === undefined || v === null || v === "") continue;
+      v = parseFloat(String(v).replace(",", "."));
+      if (isNaN(v) || v < 0) return res.status(400).json({ error: "Valor inválido para o plano " + plano + "." });
+      await setValorPlano(plano, v);
+    }
+    await registrarAdminLog("empresa_precos", `Preços atualizados: starter=${starter}, pro=${pro}, enterprise=${enterprise}`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao atualizar preços dos planos:", e.message);
+    res.status(500).json({ error: "Erro ao atualizar preços dos planos." });
+  }
+});
+
+// Editar dados da empresa (nome, CNPJ, e-mail, plano, assinatura e status).
+app.put("/api/admin/empresas/:id", protegerAdmin, async (req, res) => {
+  try {
+    const { nome, cnpj, email, plano, assinatura_ativa, status } = req.body || {};
+    const campos = [];
+    const valores = [];
+    if (nome !== undefined) { campos.push("nome = ?"); valores.push(String(nome).trim()); }
+    if (cnpj !== undefined) { campos.push("cnpj = ?"); valores.push(String(cnpj).trim() || null); }
+    if (email !== undefined) { campos.push("email = ?"); valores.push(String(email).trim()); }
+    if (plano !== undefined) {
+      if (!["starter", "pro", "enterprise"].includes(plano)) return res.status(400).json({ error: "Plano inválido." });
+      campos.push("plano = ?"); valores.push(plano);
+    }
+    if (assinatura_ativa !== undefined) { campos.push("assinatura_ativa = ?"); valores.push(assinatura_ativa ? 1 : 0); }
+    if (status !== undefined) {
+      if (!["ativo", "inativo"].includes(status)) return res.status(400).json({ error: "Status inválido." });
+      campos.push("status = ?"); valores.push(status);
+    }
+    if (!campos.length) return res.status(400).json({ error: "Nenhum campo para atualizar." });
+    valores.push(req.params.id);
+    await pool.query("UPDATE empresas SET " + campos.join(", ") + " WHERE id = ?", valores);
+    await registrarAdminLog("empresa_editar", `Empresa #${req.params.id} atualizada`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao editar empresa:", e.message);
+    res.status(500).json({ error: "Erro ao editar empresa." });
+  }
+});
+
+// Pagamentos de uma empresa.
+app.get("/api/admin/empresas/:id/pagamentos", protegerAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, pagamento_id, plano, valor, status, tipo, created_at FROM empresas_pagamentos WHERE empresa_id = ? ORDER BY id DESC",
+      [req.params.id]
+    );
+    res.json({ pagamentos: rows });
+  } catch (e) {
+    console.error("Erro ao listar pagamentos da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao listar pagamentos." });
+  }
+});
+
+// Currículos visualizados por uma empresa.
+app.get("/api/admin/empresas/:id/curriculos", protegerAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, curriculo_id, created_at FROM empresas_curriculos_vistos WHERE empresa_id = ? ORDER BY id DESC",
+      [req.params.id]
+    );
+    res.json({ curriculos: rows });
+  } catch (e) {
+    console.error("Erro ao listar currículos vistos pela empresa:", e.message);
+    res.status(500).json({ error: "Erro ao listar currículos vistos." });
+  }
+});
+
 // Login do parceiro.
 app.post("/api/parceiro/login", async (req, res) => {
   const { email, senha } = req.body || {};
@@ -1699,6 +1791,30 @@ app.post("/api/analise-ia", async (req, res) => {
 // ---------------------------------------------------------------------------
 const VALORES_PLANOS = { starter: 99, pro: 249, enterprise: 0 };
 
+// Retorna o valor mensal de um plano, lendo o valor configurável (editável
+// pelo admin no painel) da tabela `config`, com fallback para o padrão.
+async function getValorPlano(plano) {
+  const chave = "preco_plano_" + plano;
+  try {
+    const [rows] = await pool.query("SELECT valor FROM config WHERE chave = ?", [chave]);
+    if (rows.length > 0 && rows[0].valor !== null && rows[0].valor !== "") {
+      const v = parseFloat(rows[0].valor);
+      if (!isNaN(v) && v >= 0) return v;
+    }
+  } catch (err) {
+    // ignora e usa padrão
+  }
+  return VALORES_PLANOS[plano] != null ? VALORES_PLANOS[plano] : 0;
+}
+
+async function setValorPlano(plano, valor) {
+  await pool.query(
+    "INSERT INTO config (chave, valor) VALUES (?, ?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)",
+    ["preco_plano_" + plano, String(valor)]
+  );
+}
+
+
 function empresaDaSessao(req) {
   return req.session.empresaId || null;
 }
@@ -1710,6 +1826,21 @@ async function buscarEmpresaPorId(id) {
   );
   return rows[0] || null;
 }
+
+// Preços atuais dos planos (configuráveis pelo admin no painel).
+app.get("/api/companies/planos/precos", async (req, res) => {
+  try {
+    const [starter, pro, enterprise] = await Promise.all([
+      getValorPlano("starter"),
+      getValorPlano("pro"),
+      getValorPlano("enterprise"),
+    ]);
+    res.json({ planos: { starter, pro, enterprise } });
+  } catch (e) {
+    console.error("Erro ao carregar preços dos planos:", e.message);
+    res.status(500).json({ error: "Erro ao carregar preços dos planos." });
+  }
+});
 
 async function garantirEmpresasSchema() {
   try {
@@ -1840,7 +1971,7 @@ app.post("/api/companies/contato", async (req, res) => {
 // Gera Pix para assinatura da empresa
 app.post("/api/companies/assinatura/pix", async (req, res) => {
   const { empresaId, plano = "starter" } = req.body || {};
-  const valor = VALORES_PLANOS[plano];
+  const valor = await getValorPlano(plano);
   if (!empresaId || valor == null || valor <= 0) return res.status(400).json({ error: "Dados de assinatura inválidos." });
   const emp = await buscarEmpresaPorId(empresaId);
   if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
@@ -1873,7 +2004,7 @@ app.post("/api/companies/assinatura/pix", async (req, res) => {
 // Cartão para assinatura da empresa
 app.post("/api/companies/assinatura/cartao", async (req, res) => {
   const { empresaId, plano = "starter", card_token } = req.body || {};
-  const valor = VALORES_PLANOS[plano];
+  const valor = await getValorPlano(plano);
   if (!empresaId || !card_token || valor == null || valor <= 0) return res.status(400).json({ error: "Dados de assinatura inválidos." });
   const emp = await buscarEmpresaPorId(empresaId);
   if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
@@ -1949,7 +2080,7 @@ app.put("/api/companies/plano", async (req, res) => {
       await pool.query("UPDATE empresas SET plano = ?, assinatura_ativa = 0 WHERE id = ?", [plano, id]);
       return res.json({ ok: true });
     }
-    const valor = VALORES_PLANOS[plano];
+    const valor = await getValorPlano(plano);
     const body = {
       transaction_amount: valor,
       description: "Alteração de plano Office Express Companies - " + plano,

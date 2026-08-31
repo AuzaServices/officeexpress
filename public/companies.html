@@ -150,7 +150,7 @@
         <div class="planos-grid">
           <div class="card plano-card">
             <div class="plano-nome">Starter</div>
-            <div class="plano-preco">R$ 99 <small>/mês</small></div>
+            <div class="plano-preco" id="precoStarter">R$ 99 <small>/mês</small></div>
             <div class="plano-desc">Para pequenas empresas que estão começando a contratar.</div>
             <ul>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Até 3 recrutadores</li>
@@ -162,7 +162,7 @@
           <div class="card plano-card plano-destaque">
             <span class="plano-badge">MAIS POPULAR</span>
             <div class="plano-nome">Pro</div>
-            <div class="plano-preco">R$ 249 <small>/mês</small></div>
+            <div class="plano-preco" id="precoPro">R$ 249 <small>/mês</small></div>
             <div class="plano-desc">Para empresas em crescimento com demanda constante.</div>
             <ul>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Até 10 recrutadores</li>
@@ -174,7 +174,7 @@
           </div>
           <div class="card plano-card">
             <div class="plano-nome">Enterprise</div>
-            <div class="plano-preco">Sob consulta</div>
+            <div class="plano-preco" id="precoEnterprise">Sob consulta</div>
             <div class="plano-desc">Para grandes empresas e necessidades sob medida.</div>
             <ul>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Recrutadores ilimitados</li>
@@ -203,8 +203,7 @@
                 <option value="starter">Starter — R$ 99/mês</option>
                 <option value="pro">Pro — R$ 249/mês</option>
                 <option value="enterprise">Enterprise — Sob consulta</option>
-              </select>
-            </div>
+              </select>            </div>
             <button type="submit" class="btn btn-primary btn-block">Criar conta e assinar</button>
             <p style="text-align:center;margin-top:16px;font-size:.9rem;color:var(--text-muted)">Já tem conta? <a href="#" onclick="mostrarForm('login');return false;" style="color:var(--brand)">Entrar</a></p>
           </form>
@@ -350,6 +349,25 @@
     (function () {
       document.getElementById("ano").textContent = new Date().getFullYear();
       App.carregarHeader("companies");
+
+      // Carrega preços dinâmicos dos planos (configuráveis pelo admin)
+      function carregarPrecos() {
+        App.api("/api/companies/planos/precos").then(function (r) {
+          if (!r.ok || !r.data || !r.data.planos) return;
+          var p = r.data.planos;
+          if (p.starter) {
+            document.getElementById("precoStarter").innerHTML = App.formatarPreco(p.starter) + " <small>/mês</small>";
+            var optS = document.querySelector('#cPlano option[value="starter"]');
+            if (optS) optS.textContent = "Starter — " + App.formatarPreco(p.starter) + "/mês";
+          }
+          if (p.pro) {
+            document.getElementById("precoPro").innerHTML = App.formatarPreco(p.pro) + " <small>/mês</small>";
+            var optP = document.querySelector('#cPlano option[value="pro"]');
+            if (optP) optP.textContent = "Pro — " + App.formatarPreco(p.pro) + "/mês";
+          }
+        }).catch(function () { /* mantém preços padrão */ });
+      }
+      carregarPrecos();
 
       var ESTADOS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
       var selEstado = document.getElementById("fEstado");

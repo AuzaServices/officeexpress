@@ -117,9 +117,19 @@
       var pollTimer = null;
       var pagamentoId = null;
 
-      document.getElementById("raPlano").textContent = p.nome;
-      document.getElementById("raValor").textContent = p.valor ? App.formatarPreco(p.valor) + " /mês" : "Sob consulta";
-      document.getElementById("raDesc").textContent = p.desc;
+      // Preços dinâmicos (configuráveis pelo admin no painel)
+      App.api("/api/companies/planos/precos").then(function (r) {
+        if (r.ok && r.data && r.data.planos) {
+          if (r.data.planos[plano] != null) p.valor = r.data.planos[plano];
+          renderResumo();
+        }
+      }).catch(function () { renderResumo(); });
+
+      function renderResumo() {
+        document.getElementById("raPlano").textContent = p.nome;
+        document.getElementById("raValor").textContent = p.valor ? App.formatarPreco(p.valor) + " /mês" : "Sob consulta";
+        document.getElementById("raDesc").textContent = p.desc;
+      }
 
       App.carregarHeader("companies");
 
