@@ -117,7 +117,7 @@
           var destino = localStorage.getItem("redirectAposLogin");
           localStorage.removeItem("redirectAposLogin");
           setTimeout(function () {
-            window.location.href = destino || "/modelos";
+            window.location.href = destino || "/minha-conta";
           }, 1200);
         } else {
           App.mostrarAlerta("alert", r.data.error || "Código inválido ou expirado.", "error");

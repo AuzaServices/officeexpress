@@ -58,7 +58,9 @@
         }
         var destino = localStorage.getItem("redirectAposLogin");
         localStorage.removeItem("redirectAposLogin");
-        window.location.href = destino || "/modelos";
+        // Após o login, o cliente vai direto para o painel dele (minha-conta),
+        // a menos que tenha sido direcionado a um destino específico.
+        window.location.href = destino || "/minha-conta";
       } else {
         App.mostrarAlerta("alert", data.error || "Falha no login.", "error");
       }

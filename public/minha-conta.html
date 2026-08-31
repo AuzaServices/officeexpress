@@ -104,8 +104,20 @@
     @media (max-width: 900px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
+    @media (max-width: 768px) {
+      /* No mobile, o bloco de boas-vindas fica "colado" logo abaixo do
+         cabeçalho (que é fixo), acompanhando o scroll. */
+      .hero-conta {
+        position: sticky; top: 64px; z-index: 900;
+        margin-bottom: 20px; border-radius: 0 0 20px 20px;
+        padding: 20px 20px 18px;
+      }
+      .hero-conta h2 { font-size: 1.35rem; margin-bottom: 4px; }
+      .hero-conta p { font-size: 0.9rem; }
+      .hero-acoes .tema-toggle { padding: 7px 12px; font-size: 0.82rem; }
+    }
     @media (max-width: 560px) {
-      .hero-conta { padding: 26px 22px; }
+      .hero-conta { padding: 18px 18px 16px; }
       .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
       .stat-card { padding: 16px; }
       .stat-card .stat-value { font-size: 1.5rem; }
