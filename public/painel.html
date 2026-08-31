@@ -12,8 +12,13 @@
   <header class="cabecalho">
     <div class="container wrap">
       <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
-      <nav class="menu">
-        <a href="#" onclick="sair();return false;">Sair</a>
+      <nav class="menu" style="align-items:center;gap:12px">
+        <button class="tema-toggle" id="temaToggle" type="button" aria-label="Alternar tema" title="Alternar tema claro/escuro">
+          <svg id="temaIcone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a href="#" onclick="sair();return false;" class="sair-icone" title="Sair" aria-label="Sair">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
       </nav>
     </div>
   </header>
@@ -291,6 +296,44 @@
       .metrica-topo { flex-direction: column; align-items: flex-start; }
       table.tabela th, table.tabela td { padding: 10px 8px; font-size: .8rem; }
     }
+
+    /* Botão alternar tema (cabeçalho) */
+    .tema-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06); color: #ffffff; cursor: pointer;
+      transition: background .15s, transform .15s, border-color .15s; flex-shrink: 0;
+    }
+    .tema-toggle:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); transform: translateY(-1px); }
+    .tema-toggle svg { width: 18px; height: 18px; }
+
+    /* Ícone de sair (cabeçalho) */
+    .sair-icone {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 10px; text-decoration: none;
+      color: #fca5a5; transition: background .15s, transform .15s;
+    }
+    .sair-icone:hover { background: rgba(255,68,68,.15); transform: translateY(-1px); }
+    .sair-icone svg { width: 20px; height: 20px; }
+
+    /* Tema escuro no painel admin */
+    html[data-tema="escuro"] body.pagina-painel {
+      --text-primary: #e8eef4;
+      --text-secondary: #b9c7d4;
+      --text-muted: #8496a8;
+      --card: #132433;
+      --card-hover: #182c3d;
+      --border: rgba(255,255,255,0.1);
+      --border-hover: rgba(255,255,255,0.2);
+      --shadow: rgba(0,0,0,0.4);
+      --shadow-lg: rgba(0,0,0,0.5);
+      background-color: #0b1622;
+      color: #e8eef4;
+    }
+    html[data-tema="escuro"] body.pagina-painel .card { background: var(--card); border-color: var(--border); }
+    html[data-tema="escuro"] body.pagina-painel .card:hover { border-color: var(--border-hover); box-shadow: 0 20px 40px var(--shadow-lg); }
+    html[data-tema="escuro"] body.pagina-painel table.tabela th { background: #0f2030; }
+    html[data-tema="escuro"] body.pagina-painel table.tabela tr:hover td { background: #16293a; }
   </style>
 
   <footer class="footer"><div class="container"><p>&copy; <span id="ano"></span> Office Express</p></div></footer>
@@ -315,6 +358,39 @@
       await App.api("/api/admin/logout", { method: "POST" });
       window.location.href = "/login-admin";
     };
+
+    // ===== Alternar tema (respeita preferência do sistema) =====
+    (function () {
+      var TEMA_KEY = "oe_tema";
+      var root = document.documentElement;
+      var icone = document.getElementById("temaIcone");
+      var toggle = document.getElementById("temaToggle");
+      if (!toggle) return;
+
+      function aplicarTema(tema) {
+        if (tema === "auto") {
+          tema = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro";
+        }
+        root.setAttribute("data-tema", tema);
+        var escuro = tema === "escuro";
+        if (icone) {
+          icone.innerHTML = escuro
+            ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+            : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        }
+      }
+
+      var salvo = null;
+      try { salvo = localStorage.getItem(TEMA_KEY); } catch (e) {}
+      aplicarTema(salvo || "auto");
+
+      toggle.addEventListener("click", function () {
+        var atual = root.getAttribute("data-tema");
+        var novo = atual === "escuro" ? "claro" : "escuro";
+        aplicarTema(novo);
+        try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
+      });
+    })();
 
     App.api("/api/modelos").then(function (r) {
       if (r.ok) r.data.modelos.forEach(function (m) { nomesModelo[m.id] = m.nome; });
