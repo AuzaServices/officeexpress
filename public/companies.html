@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Office Express | Companies</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    /* ===== Office Express | Companies — estilos específicos ===== */
+    .companies-wrap { max-width: 1080px; margin: 0 auto; }
+
+    /* Hero da landing */
+    .hero-c {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #0e2b44 0%, #174a6b 55%, #1f5d82 100%);
+      border-radius: 20px; padding: 40px 44px; margin-bottom: 28px;
+      color: #ffffff;
+      box-shadow: 0 18px 44px rgba(14,43,68,0.28);
+    }
+    .hero-c::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 85% 15%, rgba(255,136,0,0.28) 0, transparent 34%),
+                  radial-gradient(circle at 10% 90%, rgba(73,190,203,0.22) 0, transparent 36%);
+    }
+    .hero-c h2 { font-size: clamp(1.7rem, 4.5vw, 2.4rem); font-weight: 800; margin: 0 0 8px; position: relative; z-index: 1; }
+    .hero-c p { margin: 0 0 20px; color: rgba(255,255,255,0.85); font-size: 1.05rem; max-width: 560px; position: relative; z-index: 1; }
+    .hero-c .hero-acoes { display: flex; gap: 12px; flex-wrap: wrap; position: relative; z-index: 1; }
+
+    /* Cards de planos */
+    .planos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+    .plano-card { display: flex; flex-direction: column; }
+    .plano-card .plano-nome { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+    .plano-card .plano-preco { font-size: 1.6rem; font-weight: 900; color: var(--brand-dark); margin-bottom: 4px; }
+    .plano-card .plano-preco small { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .plano-card .plano-desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px; }
+    .plano-card ul { list-style: none; margin: 0 0 20px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .plano-card ul li { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+    .plano-card ul li svg { width: 16px; height: 16px; color: var(--success); flex-shrink: 0; }
+    .plano-card .btn { margin-top: auto; }
+    .plano-destaque { border: 2px solid var(--brand); box-shadow: 0 10px 30px var(--brand-glow); }
+    .plano-badge { display: inline-block; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; }
+
+    /* Formulário (cadastro/login) */
+    .form-card { max-width: 520px; margin: 0 auto; }
+    .campo select { background: #ffffff; }
+    html[data-tema="escuro"] .campo select { background: #0f2030; color: var(--text-primary); border-color: var(--border); }
+
+    /* Painel: KPIs */
+    .companies-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { text-align: left; }
+    .stat-card .stat-icone { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .stat-card .stat-value { font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1.1; }
+    .stat-card .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 6px; font-weight: 500; }
+    .stat-icone-azul { background: rgba(59,130,246,0.14); color: #2563eb; }
+    .stat-icone-verde { background: rgba(22,163,74,0.14); color: #16a34a; }
+    .stat-icone-laranja { background: rgba(255,136,0,0.16); color: var(--brand-dark); }
+    .stat-icone-roxo { background: rgba(139,92,246,0.14); color: #7c3aed; }
+
+    /* Busca e filtros */
+    .filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .filtros .campo { margin-bottom: 0; }
+    .resultados-titulo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+    .resultados-titulo h3 { font-size: 1.15rem; font-weight: 800; margin: 0; }
+
+    /* Cards de candidatos */
+    .candidatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .cand-card { cursor: pointer; }
+    .cand-card .cand-nome { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .cand-card .cand-cargo { color: var(--brand-dark); font-weight: 700; font-size: 0.92rem; margin-bottom: 10px; }
+    .cand-card .cand-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .cand-tag { background: rgba(59,130,246,0.1); color: #2563eb; border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; }
+    .cand-card .cand-acoes { display: flex; gap: 8px; margin-top: 4px; }
+
+    /* Modal de currículo */
+    .modal-curriculo { padding: 4px 2px; }
+    .modal-curriculo .mc-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .modal-curriculo .mc-nome { font-size: 1.6rem; font-weight: 900; margin: 0 0 4px; }
+    .modal-curriculo .mc-cargo { color: var(--brand-dark); font-weight: 700; margin-bottom: 6px; }
+    .modal-curriculo .mc-contato { display: flex; flex-wrap: wrap; gap: 14px; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px; }
+    .modal-curriculo .mc-contato span { display: inline-flex; align-items: center; gap: 6px; }
+    .modal-curriculo .mc-contato svg { width: 15px; height: 15px; }
+    .modal-curriculo .mc-secao { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+    .modal-curriculo .mc-secao h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin: 0 0 8px; }
+    .modal-curriculo .mc-secao p, .modal-curriculo .mc-secao li { font-size: 0.92rem; color: var(--text-secondary); }
+    .modal-curriculo .mc-secao ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+
+    /* Assinatura (painel) */
+    .assinatura-atual { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .assinatura-atual .aa-nome { font-weight: 800; font-size: 1.2rem; }
+    .assinatura-atual .aa-status { font-size: 0.85rem; color: var(--text-muted); }
+
+    .oculto { display: none !important; }
+    .mt-2 { margin-top: 20px; }
+
+    /* Responsivo */
+    @media (max-width: 900px) { .companies-stats { grid-template-columns: repeat(2, 1fr); } .planos-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .planos-grid { grid-template-columns: 1fr; } .hero-c { padding: 28px 22px; } .companies-stats { grid-template-columns: 1fr 1fr; gap: 12px; } .stat-card { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/companies"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <section class="section container">
+    <div class="companies-wrap">
+
+      <!-- ===== LANDING (não logado) ===== -->
+      <div id="viewLanding">
+        <div class="hero-c">
+          <h2>Encontre os melhores talentos da Office Express</h2>
+          <p>Acesse o banco de currículos profissionais dos nossos clientes e contrate com agilidade.</p>
+          <div class="hero-acoes">
+            <button class="btn btn-primary" onclick="mostrarForm('cadastro')">Quero contratar</button>
+            <button class="btn btn-secondary" onclick="mostrarForm('login')">Já sou empresa</button>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h2>Planos</h2>
+          <p>Assinatura mensal com acesso ao banco de currículos.</p>
+        </div>
+
+        <div class="planos-grid">
+          <div class="card plano-card">
+            <div class="plano-nome">Starter</div>
+            <div class="plano-preco">R$ 99 <small>/mês</small></div>
+            <div class="plano-desc">Para pequenas empresas que estão começando a contratar.</div>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Até 3 recrutadores</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>100 visualizações de currículo/mês</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Busca por cargo e cidade</li>
+            </ul>
+            <button class="btn btn-primary" onclick="mostrarForm('cadastro')">Assinar Starter</button>
+          </div>
+          <div class="card plano-card plano-destaque">
+            <span class="plano-badge">MAIS POPULAR</span>
+            <div class="plano-nome">Pro</div>
+            <div class="plano-preco">R$ 249 <small>/mês</small></div>
+            <div class="plano-desc">Para empresas em crescimento com demanda constante.</div>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Até 10 recrutadores</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Visualizações ilimitadas</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Busca por habilidade e formação</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Contato via WhatsApp</li>
+            </ul>
+            <button class="btn btn-primary" onclick="mostrarForm('cadastro')">Assinar Pro</button>
+          </div>
+          <div class="card plano-card">
+            <div class="plano-nome">Enterprise</div>
+            <div class="plano-preco">Sob consulta</div>
+            <div class="plano-desc">Para grandes empresas e necessidades sob medida.</div>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Recrutadores ilimitados</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Integrações e relatórios</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Suporte dedicado</li>
+            </ul>
+            <button class="btn btn-secondary" onclick="mostrarForm('contato')">Falar com vendas</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FORM (cadastro / login / contato) ===== -->
+      <div id="viewForm" class="oculto">
+        <div class="card form-card">
+          <h2 id="formTitulo" style="margin-bottom:8px;font-weight:800"></h2>
+          <p id="formSub" style="color:var(--text-muted);margin-bottom:24px"></p>
+          <div class="alert" id="alertC"></div>
+
+          <form id="formCadastro" class="oculto">
+            <div class="campo"><label>Nome da empresa</label><input type="text" id="cNome" required /></div>
+            <div class="campo"><label>CNPJ</label><input type="text" id="cCnpj" placeholder="00.000.000/0000-00" /></div>
+            <div class="campo"><label>E-mail de acesso</label><input type="email" id="cEmail" required /></div>
+            <div class="campo"><label>Senha (mín. 8 caracteres)</label><input type="password" id="cSenha" required /></div>
+            <div class="campo"><label>Plano</label>
+              <select id="cPlano">
+                <option value="starter">Starter — R$ 99/mês</option>
+                <option value="pro">Pro — R$ 249/mês</option>
+                <option value="enterprise">Enterprise — Sob consulta</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Criar conta e assinar</button>
+            <p style="text-align:center;margin-top:16px;font-size:.9rem;color:var(--text-muted)">Já tem conta? <a href="#" onclick="mostrarForm('login');return false;" style="color:var(--brand)">Entrar</a></p>
+          </form>
+
+          <form id="formLogin" class="oculto">
+            <div class="campo"><label>E-mail</label><input type="email" id="lEmail" required /></div>
+            <div class="campo"><label>Senha</label><input type="password" id="lSenha" required /></div>
+            <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+            <p style="text-align:center;margin-top:16px;font-size:.9rem;color:var(--text-muted)">Ainda não tem conta? <a href="#" onclick="mostrarForm('cadastro');return false;" style="color:var(--brand)">Assinar agora</a></p>
+          </form>
+
+          <form id="formContato" class="oculto">
+            <div class="campo"><label>Nome</label><input type="text" id="ctNome" required /></div>
+            <div class="campo"><label>E-mail</label><input type="email" id="ctEmail" required /></div>
+            <div class="campo"><label>Empresa</label><input type="text" id="ctEmpresa" /></div>
+            <div class="campo"><label>Mensagem</label><textarea id="ctMsg" required></textarea></div>
+            <button type="submit" class="btn btn-primary btn-block">Enviar</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ===== PAINEL (logado) ===== -->
+      <div id="viewPainel" class="oculto">
+        <div class="hero-c">
+          <div>
+            <h2 id="painelSaudacao">Olá!</h2>
+            <p>Gerencie sua assinatura e encontre talentos no banco de currículos.</p>
+          </div>
+        </div>
+
+        <div class="companies-stats">
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></div>
+            <div class="stat-value" id="stCandidatos">0</div>
+            <div class="stat-label">Candidatos disponíveis</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="stat-value" id="stVistos">0</div>
+            <div class="stat-label">Currículos vistos</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-laranja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="stat-value" id="stContatados">0</div>
+            <div class="stat-label">Candidatos contatados</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-roxo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+            <div class="stat-value" id="stPlano">—</div>
+            <div class="stat-label">Plano atual</div>
+          </div>
+        </div>
+
+        <!-- Assinatura -->
+        <div class="card" style="margin-bottom:32px">
+          <div class="assinatura-atual">
+            <div>
+              <div class="aa-nome" id="aaNome">—</div>
+              <div class="aa-status" id="aaStatus">—</div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-secondary" onclick="trocarPlano()" id="btnTrocarPlano" style="padding:10px 18px;font-size:.9rem">Trocar plano</button>
+              <button class="btn btn-secondary" onclick="sairEmpresa()" style="padding:10px 18px;font-size:.9rem;color:var(--danger)">Sair</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="card" style="margin-bottom:24px">
+          <h3 style="font-weight:800;margin-bottom:16px">Buscar talentos</h3>
+          <div class="filtros">
+            <div class="campo"><label>Cargo / área</label><input type="text" id="fCargo" placeholder="Ex.: Desenvolvedor, Vendas..." /></div>
+            <div class="campo"><label>Cidade</label><input type="text" id="fCidade" placeholder="Ex.: São Paulo" /></div>
+            <div class="campo"><label>Estado</label>
+              <select id="fEstado"><option value="">Todos</option></select>
+            </div>
+            <div class="campo" style="display:flex;align-items:flex-end">
+              <button class="btn btn-primary" onclick="buscar()" style="padding:12px 22px">Buscar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resultados -->
+        <div class="card" style="padding-top:24px">
+          <div class="resultados-titulo">
+            <h3>Resultados</h3>
+            <span class="contagem" id="contagemResultados" style="color:var(--text-muted);font-size:.85rem"></span>
+          </div>
+          <div id="candVazio" style="text-align:center;padding:30px;color:var(--text-muted)" class="oculto">
+            Nenhum candidato encontrado com os filtros atuais.
+          </div>
+          <div id="candErro" style="text-align:center;padding:30px;color:var(--danger)" class="oculto"></div>
+          <div class="candidatos-grid" id="candGrid"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Modal de currículo -->
+  <div id="modalCurriculo"></div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <img src="/imagens/logo.png" class="footer-logo" alt="Office Express" onerror="this.style.display='none'" />
+          <p>Office Express | Companies — encontre talentos no banco de currículos profissionais.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navegação</h4>
+          <ul>
+            <li><a href="/">Office Express</a></li>
+            <li><a href="/companies">Companies</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/termos">Termos de Uso</a></li>
+            <li><a href="/politica">Política de Privacidade</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contato</h4>
+          <ul>
+            <li><a href="#" onclick="mostrarForm('contato');return false;">Falar com vendas</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="ano"></span> Office Express. Todos os direitos reservados.</span>
+        <div class="footer-bottom-links">
+          <a href="/termos">Termos de Uso</a>
+          <a href="/politica">Política de Privacidade</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    (function () {
+      document.getElementById("ano").textContent = new Date().getFullYear();
+      App.carregarHeader("companies");
+
+      var ESTADOS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+      var selEstado = document.getElementById("fEstado");
+      ESTADOS.forEach(function (uf) { var o = document.createElement("option"); o.value = uf; o.textContent = uf; selEstado.appendChild(o); });
+
+      var IDS = {
+        landing: document.getElementById("viewLanding"),
+        form: document.getElementById("viewForm"),
+        painel: document.getElementById("viewPainel"),
+        formTitulo: document.getElementById("formTitulo"),
+        formSub: document.getElementById("formSub"),
+        alert: document.getElementById("alertC"),
+        formCadastro: document.getElementById("formCadastro"),
+        formLogin: document.getElementById("formLogin"),
+        formContato: document.getElementById("formContato"),
+        painelSaudacao: document.getElementById("painelSaudacao"),
+        stCandidatos: document.getElementById("stCandidatos"),
+        stVistos: document.getElementById("stVistos"),
+        stContatados: document.getElementById("stContatados"),
+        stPlano: document.getElementById("stPlano"),
+        aaNome: document.getElementById("aaNome"),
+        aaStatus: document.getElementById("aaStatus"),
+        candGrid: document.getElementById("candGrid"),
+        candVazio: document.getElementById("candVazio"),
+        candErro: document.getElementById("candErro"),
+        contagem: document.getElementById("contagemResultados")
+      };
+
+      function mostrarAlerta(msg, ok) {
+        IDS.alert.textContent = msg;
+        IDS.alert.className = "alert show " + (ok ? "alert-success" : "alert-error");
+      }
+      window.mostrarAlerta = mostrarAlerta;
+
+      function mostrarView(nome) {
+        IDS.landing.classList.add("oculto");
+        IDS.form.classList.add("oculto");
+        IDS.painel.classList.add("oculto");
+        if (nome === "landing") IDS.landing.classList.remove("oculto");
+        else if (nome === "form") IDS.form.classList.remove("oculto");
+        else if (nome === "painel") IDS.painel.classList.remove("oculto");
+      }
+
+      function mostrarForm(tipo) {
+        mostrarView("form");
+        IDS.formCadastro.classList.add("oculto");
+        IDS.formLogin.classList.add("oculto");
+        IDS.formContato.classList.add("oculto");
+        IDS.alert.className = "alert";
+        if (tipo === "cadastro") {
+          IDS.formTitulo.textContent = "Assine o Office Express | Companies";
+          IDS.formSub.textContent = "Crie sua conta e comece a encontrar talentos.";
+          IDS.formCadastro.classList.remove("oculto");
+        } else if (tipo === "login") {
+          IDS.formTitulo.textContent = "Entrar na sua conta";
+          IDS.formSub.textContent = "Acesse o painel da sua empresa.";
+          IDS.formLogin.classList.remove("oculto");
+        } else if (tipo === "contato") {
+          IDS.formTitulo.textContent = "Fale com nossas vendas";
+          IDS.formSub.textContent = "Conte sua necessidade e retornaremos em breve.";
+          IDS.formContato.classList.remove("oculto");
+        }
+      }
+      window.mostrarForm = mostrarForm;
+
+      // Cadastro
+      document.getElementById("formCadastro").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var body = {
+          nome: document.getElementById("cNome").value.trim(),
+          cnpj: document.getElementById("cCnpj").value.trim(),
+          email: document.getElementById("cEmail").value.trim(),
+          senha: document.getElementById("cSenha").value,
+          plano: document.getElementById("cPlano").value
+        };
+        var { ok, data } = await App.api("/api/companies/cadastro", { method: "POST", body: JSON.stringify(body) });
+        if (!ok) return mostrarAlerta(data.error || "Erro ao criar conta.", false);
+        // Enterprise = sob consulta; envia e-mail de aprovação
+        if (body.plano === "enterprise") {
+          mostrarAlerta("Conta criada! Para o plano Enterprise entraremos em contato para a assinatura sob consulta.", true);
+          return;
+        }
+        window.location.href = "/companies/pagar?empresa=" + encodeURIComponent(data.empresa.id) + "&plano=" + body.plano;
+      });
+
+      // Login
+      document.getElementById("formLogin").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var { ok, data } = await App.api("/api/companies/login", {
+          method: "POST",
+          body: JSON.stringify({ email: document.getElementById("lEmail").value.trim(), senha: document.getElementById("lSenha").value })
+        });
+        if (!ok) return mostrarAlerta(data.error || "Falha no login.", false);
+        carregarPainel();
+      });
+
+      // Contato (vendas)
+      document.getElementById("formContato").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var body = {
+          nome: document.getElementById("ctNome").value.trim(),
+          email: document.getElementById("ctEmail").value.trim(),
+          empresa: document.getElementById("ctEmpresa").value.trim(),
+          mensagem: document.getElementById("ctMsg").value.trim()
+        };
+        var { ok, data } = await App.api("/api/companies/contato", { method: "POST", body: JSON.stringify(body) });
+        mostrarAlerta(ok ? "Mensagem enviada! Retornaremos em breve." : (data.error || "Erro ao enviar."), ok);
+        if (ok) document.getElementById("formContato").reset();
+      });
+
+      // Painel
+      async function carregarPainel() {
+        var { ok, data } = await App.api("/api/companies/me");
+        if (!ok) { mostrarView("landing"); return; }
+        var e = data.empresa;
+        IDS.painelSaudacao.textContent = "Olá, " + (e.nome ? e.nome.split(" ")[0] : "empresa") + "!";
+        IDS.stPlano.textContent = (e.plano || "—").charAt(0).toUpperCase() + (e.plano || "").slice(1);
+        IDS.aaNome.textContent = e.nome;
+        IDS.aaStatus.textContent = (e.plano === "enterprise" ? "Sob consulta" : "Ativa") + " · " + (e.plano || "").toUpperCase();
+        mostrarView("painel");
+        atualizarStats();
+        buscar();
+      }
+      window.carregarPainel = carregarPainel;
+
+      async function atualizarStats() {
+        var { ok, data } = await App.api("/api/companies/curriculos");
+        if (ok && data.total != null) {
+          IDS.stCandidatos.textContent = data.total;
+          IDS.stVistos.textContent = data.vistos != null ? data.vistos : 0;
+          IDS.stContatados.textContent = data.contatados != null ? data.contatados : 0;
+        }
+      }
+      window.atualizarStats = atualizarStats;
+
+      // Busca
+      async function buscar() {
+        var qs = [];
+        var cargo = document.getElementById("fCargo").value.trim();
+        var cidade = document.getElementById("fCidade").value.trim();
+        var estado = document.getElementById("fEstado").value;
+        if (cargo) qs.push("cargo=" + encodeURIComponent(cargo));
+        if (cidade) qs.push("cidade=" + encodeURIComponent(cidade));
+        if (estado) qs.push("estado=" + encodeURIComponent(estado));
+        var url = "/api/companies/curriculos" + (qs.length ? "?" + qs.join("&") : "");
+
+        var { ok, data } = await App.api(url);
+        IDS.candVazio.classList.add("oculto");
+        IDS.candErro.classList.add("oculto");
+        if (!ok) {
+          if (data && data.error === "Empresa sem assinatura ativa.") {
+            IDS.candErro.textContent = "Sua assinatura não está ativa. Ative o plano para acessar os currículos.";
+            IDS.candErro.classList.remove("oculto");
+          } else {
+            IDS.candErro.textContent = data && data.error ? data.error : "Erro ao buscar candidatos.";
+            IDS.candErro.classList.remove("oculto");
+          }
+          IDS.candGrid.innerHTML = "";
+          IDS.contagem.textContent = "";
+          return;
+        }
+        var lista = (data && data.curriculos) || [];
+        IDS.contagem.textContent = lista.length + (lista.length === 1 ? " resultado" : " resultados");
+        IDS.candGrid.innerHTML = "";
+        if (!lista.length) { IDS.candVazio.classList.remove("oculto"); return; }
+
+        lista.forEach(function (c) {
+          var nome = c.nome || "Candidato";
+          var cargo = c.cargo || "Não informado";
+          var cidade = c.cidade || "";
+          var estado = c.estado || "";
+          var local = [cidade, estado].filter(Boolean).join(" - ") || "—";
+          var exp = c.experiencia != null ? c.experiencia + " anos" : "";
+          var card = document.createElement("div");
+          card.className = "card cand-card";
+          card.innerHTML =
+            '<div class="cand-nome">' + escapeHtml(nome) + '</div>' +
+            '<div class="cand-cargo">' + escapeHtml(cargo) + '</div>' +
+            '<div class="cand-meta">' +
+              '<span class="cand-tag">📍 ' + escapeHtml(local) + '</span>' +
+              (exp ? '<span class="cand-tag">💼 ' + escapeHtml(exp) + '</span>' : '') +
+            '</div>' +
+            '<div class="cand-acoes">' +
+              '<button class="btn-mini btn-download" onclick="verCurriculo(' + c.id + ')">Ver currículo</button>' +
+              (c.telefone ? '<button class="btn-mini btn-conta" onclick="contatarCandidato(' + c.id + ')">Contatar</button>' : '') +
+            '</div>';
+          card.addEventListener("click", function (e) { if (e.target.tagName !== "BUTTON") verCurriculo(c.id); });
+          IDS.candGrid.appendChild(card);
+        });
+      }
+      window.buscar = buscar;
+
+      function escapeHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (m) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
+        });
+      }
+
+      // Ver currículo
+      async function verCurriculo(id) {
+        var { ok, data } = await App.api("/api/companies/curriculos/" + id + "/detalhe");
+        if (!ok) { alert(data && data.error ? data.error : "Erro ao abrir currículo."); return; }
+        var c = data.curriculo;
+        var contato = [];
+        if (c.telefone) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.34 1.79.66 2.64a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.44-1.23a2 2 0 0 1 2.11-.45c.85.32 1.74.54 2.64.66A2 2 0 0 1 22 16.92z"/></svg>' + escapeHtml(c.telefone) + '</span>');
+        if (c.email) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + escapeHtml(c.email) + '</span>');
+
+        function secao(titulo, html) {
+          if (!html) return "";
+          return '<div class="mc-secao"><h4>' + titulo + '</h4>' + html + '</div>';
+        }
+        function lista(arr) {
+          if (!arr || !arr.length) return "";
+          return "<ul>" + arr.map(function (i) { return "<li>" + escapeHtml(i) + "</li>"; }).join("") + "</ul>";
+        }
+
+        var html =
+          '<div class="modal-curriculo">' +
+            '<div class="mc-topo">' +
+              '<div>' +
+                '<div class="mc-nome">' + escapeHtml(c.nome || "Candidato") + '</div>' +
+                '<div class="mc-cargo">' + escapeHtml(c.cargo || "Não informado") + '</div>' +
+              '</div>' +
+              '<a class="btn btn-primary" style="padding:10px 18px;font-size:.9rem" href="https://wa.me/55' + (c.telefone ? String(c.telefone).replace(/\D/g,"") : "") + '" target="_blank" rel="noopener">Contatar via WhatsApp</a>' +
+            '</div>' +
+            '<div class="mc-contato">' + contato.join("") + '</div>' +
+            secao("Sobre", c.resumo ? "<p>" + escapeHtml(c.resumo) + "</p>" : "") +
+            secao("Experiências", lista(c.experiencias)) +
+            secao("Formação", lista(c.formacoes)) +
+            secao("Habilidades", c.habilidades && c.habilidades.length ? '<div class="cand-meta">' + c.habilidades.map(function (h) { return '<span class="cand-tag">' + escapeHtml(h) + '</span>'; }).join("") + '</div>' : "") +
+            secao("Idiomas", lista(c.idiomas)) +
+          '</div>';
+
+        // Monta modal simples
+        var backdrop = document.createElement("div");
+        backdrop.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto";
+        var box = document.createElement("div");
+        box.className = "card";
+        box.style.cssText = "max-width:640px;width:100%;padding:32px;position:relative";
+        box.innerHTML = '<button onclick="fecharModal()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted)" aria-label="Fechar">&times;</button>' + html;
+        backdrop.appendChild(box);
+        backdrop.id = "modalBackdrop";
+        document.getElementById("modalCurriculo").appendChild(backdrop);
+        backdrop.addEventListener("click", function (e) { if (e.target === backdrop) fecharModal(); });
+      }
+      window.verCurriculo = verCurriculo;
+      window.fecharModal = function () { var b = document.getElementById("modalBackdrop"); if (b) b.remove(); };
+
+      // Contatar candidato (registra contato + abre WhatsApp)
+      async function contatarCandidato(id) {
+        var { ok, data } = await App.api("/api/companies/curriculos/" + id + "/detalhe");
+        if (!ok || !data.curriculo || !data.curriculo.telefone) return;
+        var t = String(data.curriculo.telefone).replace(/\D/g, "");
+        await App.api("/api/companies/contatar/" + id, { method: "POST" });
+        window.open("https://wa.me/55" + t, "_blank");
+        atualizarStats();
+      }
+      window.contatarCandidato = contatarCandidato;
+
+      // Trocar plano
+      window.trocarPlano = function () {
+        var p = prompt("Digite o novo plano (starter, pro ou enterprise):");
+        if (!p) return;
+        p = p.trim().toLowerCase();
+        if (["starter", "pro", "enterprise"].indexOf(p) === -1) { alert("Plano inválido."); return; }
+        App.api("/api/companies/plano", { method: "PUT", body: JSON.stringify({ plano: p }) }).then(function (r) {
+          if (!r.ok) { alert(r.data.error || "Erro."); return; }
+          if (p === "enterprise") alert("Plano Enterprise alterado. Aguarde o contato comercial.");
+          carregarPainel();
+        });
+      };
+
+      window.sairEmpresa = async function () {
+        await App.api("/api/companies/logout", { method: "POST" });
+        window.location.href = "/companies";
+      };
+
+      // Tema escuro (mesma chave do restante do site)
+      (function () {
+        var TEMA_KEY = "oe_tema";
+        var root = document.documentElement;
+        var salvo = null;
+        try { salvo = localStorage.getItem(TEMA_KEY); } catch (e) {}
+        var tema = salvo === "escuro" ? "escuro" : "claro";
+        if (!salvo && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) tema = "escuro";
+        root.setAttribute("data-tema", tema);
+      })();
+
+      // Inicializa: verifica se já está logado
+      App.api("/api/companies/me").then(function (r) {
+        if (r.ok) carregarPainel();
+        else mostrarView("landing");
+      });
+    })();
+  </script>
+</body>
+</html>

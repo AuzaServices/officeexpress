@@ -255,6 +255,13 @@
           <label for="infoAdicional">Informações adicionais (opcional)</label>
           <textarea id="infoAdicional" placeholder="CPF, CNH, disponibilidade..."></textarea>
         </div>
+        <!-- Consentimento estratégico: permite a empresa encontrar este currículo -->
+        <div class="consentimento" style="margin-top:18px;padding:16px 18px;border:1px solid var(--border);border-radius:12px;background:rgba(59,130,246,0.05)">
+          <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;font-weight:500;font-size:.92rem">
+            <input type="checkbox" id="consentimento" style="margin-top:3px;width:18px;height:18px;accent-color:var(--brand)" />
+            <span>Permito que meu currículo seja visto por empresas parceiras da Office Express para oportunidades de emprego. <span style="color:var(--text-muted)">(Você pode desmarcar a qualquer momento)</span></span>
+          </label>
+        </div>
       </div>
 
       <div class="nav-steps">
@@ -509,7 +516,8 @@
         cargo: getArray(".e-cargo"),
         periodo_inicio: getArray(".e-inicio"),
         periodo_fim: getArray(".e-fim"),
-        atividades: getArray(".e-ativ")
+        atividades: getArray(".e-ativ"),
+        consentimento: document.getElementById("consentimento") ? document.getElementById("consentimento").checked : false
       };
     }
 

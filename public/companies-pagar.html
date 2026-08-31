@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assinar - Office Express | Companies</title>
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    .pag-wrap { max-width: 560px; margin: 0 auto; }
+    .resumo-assinatura { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .resumo-assinatura .ra-plano { font-weight: 800; font-size: 1.3rem; }
+    .resumo-assinatura .ra-valor { font-size: 1.7rem; font-weight: 900; color: var(--brand-dark); }
+    .pix-box { text-align: center; padding: 16px; }
+    .pix-box img { max-width: 220px; border-radius: 12px; margin: 16px auto; display: block; background: #fff; padding: 10px; }
+    .pix-copy { display: flex; gap: 8px; margin-top: 12px; }
+    .pix-copy input { flex: 1; padding: 12px 14px; border-radius: 10px; border: 2px solid var(--border); background: #fff; color: var(--text-primary); }
+    html[data-tema="escuro"] .pix-copy input { background: #0f2030; border-color: var(--border); color: var(--text-primary); }
+    .status-pag { text-align: center; margin-top: 20px; font-weight: 600; }
+    .oculto { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/companies"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+    </div>
+  </header>
+
+  <section class="section container">
+    <div class="pag-wrap">
+      <div class="card">
+        <h2 style="font-weight:800;margin-bottom:8px">Finalizar assinatura</h2>
+        <p style="color:var(--text-muted);margin-bottom:24px">Sua conta foi criada. Confirme o pagamento para ativar o acesso.</p>
+        <div class="alert" id="alertPg"></div>
+
+        <div class="resumo-assinatura">
+          <div>
+            <div class="ra-plano" id="raPlano">—</div>
+            <div style="color:var(--text-muted);font-size:.85rem" id="raDesc">Assinatura mensal</div>
+          </div>
+          <div class="ra-valor" id="raValor">—</div>
+        </div>
+
+        <div id="pixArea">
+          <div class="tabs">
+            <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
+            <button class="tab" id="tabCard" onclick="ativarAba('card')">Cartão</button>
+          </div>
+
+          <div id="abaPix">
+            <div class="pix-box">
+              <div id="qrCarregando">Gerando seu Pix…</div>
+              <img id="qrImg" class="oculto" alt="QR Code Pix" />
+              <div class="pix-copy">
+                <input type="text" id="pixCode" readonly />
+                <button class="btn btn-primary" onclick="copiarPix()">Copiar</button>
+              </div>
+              <div id="copiadoFeedback" style="color:var(--success);margin-top:8px;display:none">Código copiado!</div>
+            </div>
+          </div>
+
+          <div id="abaCard" class="oculto">
+            <div class="campo"><label>Número do cartão</label><input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" /></div>
+            <div style="display:flex;gap:12px">
+              <div class="campo" style="flex:1"><label>Validade</label><input type="text" id="cardExp" placeholder="MM/AA" /></div>
+              <div class="campo" style="flex:1"><label>CVV</label><input type="text" id="cardCvv" placeholder="123" /></div>
+            </div>
+            <div class="campo"><label>Nome no cartão</label><input type="text" id="cardHolder" /></div>
+            <button class="btn btn-primary btn-block" id="btnPagarCard" onclick="pagarCartao()">Pagar assinatura</button>
+            <div class="status-pag" id="statusCard" style="display:none"></div>
+          </div>
+        </div>
+
+        <div class="status-pag" id="statusPix" style="display:none"></div>
+        <button class="btn btn-secondary btn-block mt-2" onclick="location.href='/companies'" style="margin-top:16px">Voltar</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="/assets/app.js"></script>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var empresaId = params.get("empresa");
+      var plano = params.get("plano") || "starter";
+      var PLANOS = {
+        starter: { nome: "Starter", valor: 99, desc: "Até 3 recrutadores · 100 visualizações/mês" },
+        pro: { nome: "Pro", valor: 249, desc: "Até 10 recrutadores · visualizações ilimitadas" },
+        enterprise: { nome: "Enterprise", valor: 0, desc: "Sob consulta" }
+      };
+      var p = PLANOS[plano] || PLANOS.starter;
+      var publicKey = "";
+      var mp = null;
+      var pollTimer = null;
+      var pagamentoId = null;
+
+      document.getElementById("raPlano").textContent = p.nome;
+      document.getElementById("raValor").textContent = p.valor ? App.formatarPreco(p.valor) + " /mês" : "Sob consulta";
+      document.getElementById("raDesc").textContent = p.desc;
+
+      App.carregarHeader("companies");
+
+      if (plano === "enterprise") {
+        document.getElementById("pixArea").classList.add("oculto");
+        document.getElementById("statusPix").textContent = "Plano sob consulta. Entraremos em contato para fechar sua assinatura.";
+        document.getElementById("statusPix").style.display = "block";
+      } else {
+        App.api("/api/config/pagamento").then(function (r) {
+          if (r.ok) {
+            publicKey = r.data.publicKey;
+            if (window.MercadoPago && publicKey) mp = new MercadoPago(publicKey, { locale: "pt-BR" });
+            gerarPix();
+          } else {
+            mostrarAlerta("Não foi possível carregar o pagamento.", false);
+          }
+        });
+      }
+
+      function mostrarAlerta(msg, ok) {
+        var a = document.getElementById("alertPg");
+        a.textContent = msg;
+        a.className = "alert show " + (ok ? "alert-success" : "alert-error");
+      }
+
+      async function gerarPix() {
+        var { ok, data } = await App.api("/api/companies/assinatura/pix", {
+          method: "POST",
+          body: JSON.stringify({ empresaId: Number(empresaId), plano: plano })
+        });
+        if (!ok) {
+          document.getElementById("qrCarregando").textContent = "Não foi possível gerar o Pix.";
+          mostrarAlerta(data.error || "Erro ao gerar Pix.", false);
+          return;
+        }
+        if (data.qr_code_base64) {
+          document.getElementById("qrImg").src = "data:image/png;base64," + data.qr_code_base64;
+          document.getElementById("qrImg").classList.remove("oculto");
+          document.getElementById("qrCarregando").classList.add("oculto");
+        } else {
+          document.getElementById("qrCarregando").textContent = "Use o código Pix abaixo para pagar.";
+        }
+        document.getElementById("pixCode").value = data.qr_code || "";
+        pagamentoId = data.id;
+        document.getElementById("statusPix").textContent = "Aguardando confirmação do pagamento… A assinatura é ativada automaticamente.";
+        document.getElementById("statusPix").style.display = "block";
+        iniciarPolling(data.id);
+      }
+
+      function iniciarPolling(id) {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(async function () {
+          var { ok, data } = await App.api("/api/companies/assinatura/status/" + id);
+          if (ok && data.status === "approved") {
+            clearInterval(pollTimer);
+            mostrarAlerta("Pagamento confirmado! Assinatura ativada.", true);
+            setTimeout(function () { window.location.href = "/companies"; }, 1800);
+          } else if (data && (data.status === "rejected" || data.status === "cancelled")) {
+            clearInterval(pollTimer);
+            document.getElementById("statusPix").textContent = "Pagamento não concluído. Recarregue a página.";
+          }
+        }, 4000);
+      }
+
+      window.ativarAba = function (aba) {
+        document.getElementById("abaPix").style.display = aba === "pix" ? "block" : "none";
+        document.getElementById("abaCard").style.display = aba === "card" ? "block" : "none";
+        document.getElementById("tabPix").classList.toggle("active", aba === "pix");
+        document.getElementById("tabCard").classList.toggle("active", aba === "card");
+      };
+
+      window.copiarPix = function () {
+        var el = document.getElementById("pixCode");
+        if (!el.value) return;
+        navigator.clipboard.writeText(el.value).then(function () {
+          document.getElementById("copiadoFeedback").style.display = "block";
+          setTimeout(function () { document.getElementById("copiadoFeedback").style.display = "none"; }, 2000);
+        });
+      };
+
+      async function pagarCartao() {
+        if (!mp) { mostrarAlerta("Erro ao carregar processador de cartão. Use o Pix.", false); return; }
+        var btn = document.getElementById("btnPagarCard");
+        btn.disabled = true;
+        var statusCard = document.getElementById("statusCard");
+        statusCard.textContent = "Processando…";
+        statusCard.style.display = "block";
+        try {
+          var token = await mp.fields.createCardToken({
+            cardNumber: document.getElementById("cardNumber").value.replace(/\s/g, ""),
+            cardExpirationMonth: document.getElementById("cardExp").value.split("/")[0],
+            cardExpirationYear: "20" + document.getElementById("cardExp").value.split("/")[1],
+            cardholderName: document.getElementById("cardHolder").value,
+            securityCode: document.getElementById("cardCvv").value,
+            identificationType: "CPF",
+            identificationNumber: "00000000000"
+          });
+          var { ok, data } = await App.api("/api/companies/assinatura/cartao", {
+            method: "POST",
+            body: JSON.stringify({ empresaId: Number(empresaId), plano: plano, card_token: token.id })
+          });
+          if (ok && data.status === "approved") {
+            mostrarAlerta("Pagamento aprovado! Assinatura ativada.", true);
+            setTimeout(function () { window.location.href = "/companies"; }, 1800);
+          } else {
+            statusCard.textContent = "";
+            statusCard.style.display = "none";
+            mostrarAlerta((data && data.error) || "Pagamento não aprovado.", false);
+          }
+        } catch (err) {
+          mostrarAlerta("Erro ao processar: " + (err.message || "verifique os dados."), false);
+        }
+        btn.disabled = false;
+      }
+      window.pagarCartao = pagarCartao;
+
+      // Tema
+      (function () {
+        var salvo = null;
+        try { salvo = localStorage.getItem("oe_tema"); } catch (e) {}
+        var tema = salvo === "escuro" ? "escuro" : "claro";
+        if (!salvo && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) tema = "escuro";
+        document.documentElement.setAttribute("data-tema", tema);
+      })();
+    })();
+  </script>
+</body>
+</html>

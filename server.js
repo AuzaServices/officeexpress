@@ -98,6 +98,7 @@ app.use(
 );
 
 garantirSchema();
+garantirEmpresasSchema();
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1646,9 +1647,402 @@ app.post("/api/analise-ia", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Office Express | Companies (plataforma B2B)
+// ---------------------------------------------------------------------------
+const VALORES_PLANOS = { starter: 99, pro: 249, enterprise: 0 };
+
+function empresaDaSessao(req) {
+  return req.session.empresaId || null;
+}
+
+async function buscarEmpresaPorId(id) {
+  const [rows] = await pool.query(
+    "SELECT id, nome, cnpj, email, plano, assinatura_ativa, status FROM empresas WHERE id = ?",
+    [id]
+  );
+  return rows[0] || null;
+}
+
+async function garantirEmpresasSchema() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS empresas (
+        id INT NOT NULL AUTO_INCREMENT,
+        nome VARCHAR(160) NOT NULL,
+        cnpj VARCHAR(30) NULL,
+        email VARCHAR(160) NOT NULL,
+        senha_hash VARCHAR(255) NOT NULL,
+        plano ENUM('starter','pro','enterprise') NOT NULL DEFAULT 'starter',
+        assinatura_ativa TINYINT(1) NOT NULL DEFAULT 0,
+        status ENUM('ativo','inativo') NOT NULL DEFAULT 'ativo',
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uq_empresas_email (email)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS empresas_pagamentos (
+        id INT NOT NULL AUTO_INCREMENT,
+        empresa_id INT NOT NULL,
+        pagamento_id VARCHAR(80) NULL,
+        plano ENUM('starter','pro','enterprise') NOT NULL DEFAULT 'starter',
+        valor DECIMAL(10,2) NOT NULL DEFAULT 0,
+        status ENUM('pendente','pago','rejeitado','cancelado') NOT NULL DEFAULT 'pendente',
+        tipo ENUM('pix','card') NULL,
+        periodo_ref VARCHAR(20) NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        pago_at DATETIME NULL,
+        PRIMARY KEY (id),
+        KEY idx_empresa_pagamentos (empresa_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS empresas_curriculos_vistos (
+        id INT NOT NULL AUTO_INCREMENT,
+        empresa_id INT NOT NULL,
+        pedido_id INT NOT NULL,
+        visto_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY idx_empresa_vistos (empresa_id),
+        KEY idx_empresa_vistos_pedido (pedido_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS empresas_contatos (
+        id INT NOT NULL AUTO_INCREMENT,
+        nome VARCHAR(160) NOT NULL,
+        email VARCHAR(160) NOT NULL,
+        empresa VARCHAR(160) NULL,
+        mensagem TEXT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+  } catch (e) {
+    console.error("⚠️ Não foi possível criar tabelas de empresas:", e.message);
+  }
+}
+
+// Cadastro de empresa
+app.post("/api/companies/cadastro", async (req, res) => {
+  try {
+    const { nome, cnpj, email, senha, plano = "starter" } = req.body || {};
+    if (!nome || !email || !senha) return res.status(400).json({ error: "Nome, e-mail e senha são obrigatórios." });
+    if (!validarSenha(senha)) return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, com letra e número." });
+    if (!["starter", "pro", "enterprise"].includes(plano)) return res.status(400).json({ error: "Plano inválido." });
+    const senhaHash = await bcrypt.hash(senha, 10);
+    const [result] = await pool.query(
+      "INSERT INTO empresas (nome, cnpj, email, senha_hash, plano) VALUES (?, ?, ?, ?, ?)",
+      [String(nome).trim(), String(cnpj || "").trim(), String(email).trim().toLowerCase(), senhaHash, plano]
+    );
+    const empresa = await buscarEmpresaPorId(result.insertId);
+    res.json({ ok: true, empresa });
+  } catch (e) {
+    if (e && e.code === "ER_DUP_ENTRY") return res.status(409).json({ error: "Já existe uma conta com este e-mail." });
+    console.error("Erro cadastro empresa:", e.message);
+    res.status(500).json({ error: "Erro ao criar conta." });
+  }
+});
+
+// Login de empresa
+app.post("/api/companies/login", async (req, res) => {
+  try {
+    const { email, senha } = req.body || {};
+    const [rows] = await pool.query("SELECT * FROM empresas WHERE email = ?", [String(email || "").trim().toLowerCase()]);
+    if (!rows.length) return res.status(401).json({ error: "E-mail ou senha inválidos." });
+    const emp = rows[0];
+    if (emp.status === "inativo") return res.status(403).json({ error: "Conta desativada." });
+    const okSenha = await bcrypt.compare(String(senha || ""), emp.senha_hash);
+    if (!okSenha) return res.status(401).json({ error: "E-mail ou senha inválidos." });
+    req.session.empresaId = emp.id;
+    res.json({ ok: true, empresa: { id: emp.id, nome: emp.nome, plano: emp.plano } });
+  } catch (e) {
+    console.error("Erro login empresa:", e.message);
+    res.status(500).json({ error: "Erro ao entrar." });
+  }
+});
+
+// Logout de empresa
+app.post("/api/companies/logout", (req, res) => {
+  delete req.session.empresaId;
+  res.json({ ok: true });
+});
+
+// Dados da empresa logada
+app.get("/api/companies/me", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const emp = await buscarEmpresaPorId(id);
+  if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+  res.json({ ok: true, empresa: emp });
+});
+
+// Contato comercial (vendas)
+app.post("/api/companies/contato", async (req, res) => {
+  const { nome, email, empresa, mensagem } = req.body || {};
+  if (!nome || !email || !mensagem) return res.status(400).json({ error: "Preencha nome, e-mail e mensagem." });
+  try {
+    await pool.query(
+      "INSERT INTO empresas_contatos (nome, email, empresa, mensagem) VALUES (?, ?, ?, ?)",
+      [String(nome).trim(), String(email).trim().toLowerCase(), String(empresa || "").trim(), String(mensagem).trim()]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro contato empresas:", e.message);
+    res.status(500).json({ error: "Erro ao enviar mensagem." });
+  }
+});
+
+// Gera Pix para assinatura da empresa
+app.post("/api/companies/assinatura/pix", async (req, res) => {
+  const { empresaId, plano = "starter" } = req.body || {};
+  const valor = VALORES_PLANOS[plano];
+  if (!empresaId || valor == null || valor <= 0) return res.status(400).json({ error: "Dados de assinatura inválidos." });
+  const emp = await buscarEmpresaPorId(empresaId);
+  if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+  try {
+    const body = {
+      transaction_amount: valor,
+      description: "Assinatura Office Express Companies - " + plano,
+      payment_method_id: "pix",
+      external_reference: `empresa-${empresaId}-${plano}`,
+      payer: { email: emp.email || "empresa@officeexpress.com.br", first_name: (emp.nome || "Empresa").split(" ")[0], last_name: (emp.nome || "Office").split(" ").slice(1).join(" ") || "Office" },
+      notification_url: `${BASE_URL}/api/companies/webhook/mp`,
+    };
+    const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `empresa-pix-${empresaId}-${plano}-${Date.now()}` } });
+    await pool.query(
+      "INSERT INTO empresas_pagamentos (empresa_id, pagamento_id, plano, valor, status, tipo) VALUES (?, ?, ?, ?, 'pendente', 'pix')",
+      [empresaId, String(pago.id), plano, valor]
+    );
+    res.json({
+      id: pago.id,
+      status: pago.status,
+      qr_code: pago.point_of_interaction?.transaction_data?.qr_code,
+      qr_code_base64: pago.point_of_interaction?.transaction_data?.qr_code_base64,
+    });
+  } catch (e) {
+    console.error("Erro assinatura pix empresa:", e.message);
+    res.status(500).json({ error: "Erro ao gerar Pix da assinatura." });
+  }
+});
+
+// Cartão para assinatura da empresa
+app.post("/api/companies/assinatura/cartao", async (req, res) => {
+  const { empresaId, plano = "starter", card_token } = req.body || {};
+  const valor = VALORES_PLANOS[plano];
+  if (!empresaId || !card_token || valor == null || valor <= 0) return res.status(400).json({ error: "Dados de assinatura inválidos." });
+  const emp = await buscarEmpresaPorId(empresaId);
+  if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+  try {
+    const body = {
+      transaction_amount: valor,
+      description: "Assinatura Office Express Companies - " + plano,
+      payment_method_id: "card",
+      token: card_token,
+      installments: 1,
+      payer: { email: emp.email || "empresa@officeexpress.com.br" },
+      external_reference: `empresa-${empresaId}-${plano}`,
+      notification_url: `${BASE_URL}/api/companies/webhook/mp`,
+    };
+    const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `empresa-card-${empresaId}-${plano}-${Date.now()}` } });
+    if (pago.status === "approved") {
+      await pool.query("UPDATE empresas SET plano = ?, assinatura_ativa = 1 WHERE id = ?", [plano, empresaId]);
+    }
+    await pool.query(
+      "INSERT INTO empresas_pagamentos (empresa_id, pagamento_id, plano, valor, status, tipo) VALUES (?, ?, ?, ?, ?, 'card')",
+      [empresaId, String(pago.id), plano, valor, pago.status === "approved" ? "pago" : "pendente"]
+    );
+    res.json({ status: pago.status });
+  } catch (e) {
+    console.error("Erro assinatura cartao empresa:", e.message);
+    res.status(500).json({ error: "Erro ao processar cartão." });
+  }
+});
+
+// Status da assinatura
+app.get("/api/companies/assinatura/status/:id", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT pagamento_id FROM empresas_pagamentos WHERE pagamento_id = ?", [String(req.params.id)]);
+    if (!rows.length) return res.status(404).json({ error: "Pagamento não encontrado." });
+    const pago = await paymentMP.get({ id: String(req.params.id) });
+    res.json({ status: pago.status });
+  } catch (e) {
+    res.json({ status: "pending" });
+  }
+});
+
+// Webhook Mercado Pago da assinatura de empresa
+app.post("/api/companies/webhook/mp", async (req, res) => {
+  try {
+    const data = req.body || {};
+    const pagamentoId = data.data && data.data.id ? String(data.data.id) : (data.id ? String(data.id) : null);
+    if (!pagamentoId) return res.sendStatus(200);
+    const pago = await paymentMP.get({ id: pagamentoId });
+    const ref = pago.external_reference || "";
+    const m = ref.match(/^empresa-(\d+)-(starter|pro|enterprise)$/);
+    if (m && pago.status === "approved") {
+      const empresaId = parseInt(m[1], 10);
+      const plano = m[2];
+      await pool.query("UPDATE empresas SET plano = ?, assinatura_ativa = 1 WHERE id = ?", [plano, empresaId]);
+      await pool.query("UPDATE empresas_pagamentos SET status = 'pago', pago_at = NOW() WHERE pagamento_id = ?", [pagamentoId]);
+      console.log("✅ Assinatura de empresa", empresaId, "(", plano, ") paga.");
+    }
+    res.sendStatus(200);
+  } catch (e) {
+    console.error("Erro webhook empresa:", e.message);
+    res.sendStatus(200);
+  }
+});
+
+// Alterar plano da empresa logada
+app.put("/api/companies/plano", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const { plano } = req.body || {};
+  if (!["starter", "pro", "enterprise"].includes(plano)) return res.status(400).json({ error: "Plano inválido." });
+  try {
+    if (plano === "enterprise") {
+      await pool.query("UPDATE empresas SET plano = ?, assinatura_ativa = 0 WHERE id = ?", [plano, id]);
+      return res.json({ ok: true });
+    }
+    const valor = VALORES_PLANOS[plano];
+    const body = {
+      transaction_amount: valor,
+      description: "Alteração de plano Office Express Companies - " + plano,
+      payment_method_id: "pix",
+      external_reference: `empresa-${id}-${plano}`,
+      payer: { email: "empresa@officeexpress.com.br", first_name: "Empresa" },
+      notification_url: `${BASE_URL}/api/companies/webhook/mp`,
+    };
+    await paymentMP.create({ body, requestOptions: { idempotencyKey: `empresa-troca-${id}-${plano}-${Date.now()}` } });
+    res.json({ ok: true, mensagem: "Gere um novo pagamento para ativar o novo plano." });
+  } catch (e) {
+    console.error("Erro troca plano:", e.message);
+    res.status(500).json({ error: "Erro ao trocar plano." });
+  }
+});
+
+// Lista currículos autorizados (com consentimento) para empresas com assinatura ativa
+app.get("/api/companies/curriculos", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const emp = await buscarEmpresaPorId(id);
+  if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+  if (emp.plano === "enterprise" ? false : !emp.assinatura_ativa) {
+    return res.status(403).json({ error: "Empresa sem assinatura ativa." });
+  }
+  try {
+    const cargo = req.query.cargo ? String(req.query.cargo).trim() : "";
+    const cidade = req.query.cidade ? String(req.query.cidade).trim() : "";
+    const estado = req.query.estado ? String(req.query.estado).trim() : "";
+
+    let sql = `SELECT p.id, p.dados_json FROM pedidos p WHERE p.status = 'pago' AND p.dados_json LIKE '%"consentimento":true%'`;
+    const params = [];
+    if (cargo) { sql += " AND p.dados_json LIKE ?"; params.push("%" + cargo + "%"); }
+    if (cidade) { sql += " AND p.dados_json LIKE ?"; params.push("%" + cidade + "%"); }
+    if (estado) { sql += " AND JSON_EXTRACT(p.dados_json, '$.estado') = ?"; params.push(estado); }
+    sql += " ORDER BY p.id DESC LIMIT 200";
+    const [rows] = await pool.query(sql, params);
+
+    const curriculos = [];
+    for (const r of rows) {
+      let d = {};
+      try { d = JSON.parse(r.dados_json || "{}"); } catch (e) { d = {}; }
+      if (!d.consentimento) continue;
+      const cidadeC = (d.cidade || "").trim();
+      const estadoC = (d.estado || "").trim();
+      if (cidade && cidadeC.toLowerCase().indexOf(cidade.toLowerCase()) === -1) continue;
+      curriculos.push({
+        id: r.id,
+        nome: d.nome || "Candidato",
+        cargo: (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString().slice(0, 80),
+        cidade: cidadeC,
+        estado: estadoC,
+        experiencia: null,
+      });
+    }
+
+    // Contadores
+    const [v] = await pool.query("SELECT COUNT(DISTINCT pedido_id) AS c FROM empresas_curriculos_vistos WHERE empresa_id = ?", [id]);
+    res.json({ ok: true, curriculos, total: curriculos.length, vistos: v[0].c || 0, contatados: 0 });
+  } catch (e) {
+    console.error("Erro listar curriculos empresas:", e.message);
+    res.status(500).json({ error: "Erro ao buscar currículos." });
+  }
+});
+
+// Detalhe de um currículo (registra visualização)
+app.get("/api/companies/curriculos/:id/detalhe", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const emp = await buscarEmpresaPorId(id);
+  if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+  if (emp.plano === "enterprise" ? false : !emp.assinatura_ativa) {
+    return res.status(403).json({ error: "Empresa sem assinatura ativa." });
+  }
+  try {
+    const [rows] = await pool.query("SELECT id, dados_json FROM pedidos WHERE id = ? AND status = 'pago'", [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: "Currículo não encontrado." });
+    let d = {};
+    try { d = JSON.parse(rows[0].dados_json || "{}"); } catch (e) { d = {}; }
+    if (!d.consentimento) return res.status(403).json({ error: "Currículo sem autorização para consulta." });
+
+    await pool.query("INSERT IGNORE INTO empresas_curriculos_vistos (empresa_id, pedido_id) VALUES (?, ?)", [id, req.params.id]);
+
+    const arr = (k) => (Array.isArray(d[k]) ? d[k].filter(Boolean) : []);
+    const empresas = arr("empresa");
+    const cargos = arr("cargo");
+    const experiencias = empresas.map(function (e, i) {
+      var t = (e || "") + (cargos[i] ? " - " + cargos[i] : "");
+      return t || null;
+    }).filter(Boolean);
+
+    const cursos = arr("curso");
+    const instituicoes = arr("instituicao");
+    const formacoes = cursos.map(function (c, i) {
+      var t = c || "";
+      if (instituicoes[i]) t += " - " + instituicoes[i];
+      return t || null;
+    }).filter(Boolean);
+
+    res.json({
+      ok: true,
+      curriculo: {
+        id: rows[0].id,
+        nome: d.nome || "Candidato",
+        cargo: (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString(),
+        cidade: d.cidade || "",
+        estado: d.estado || "",
+        telefone: arr("telefone")[0] || "",
+        email: d.email || "",
+        resumo: d.objetivo || "",
+        experiencias: experiencias,
+        formacoes: formacoes,
+        habilidades: String(d.habilidades || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12),
+        idiomas: []
+      }
+    });
+  } catch (e) {
+    console.error("Erro detalhe curriculo:", e.message);
+    res.status(500).json({ error: "Erro ao abrir currículo." });
+  }
+});
+
+// Registrar contato com candidato
+app.post("/api/companies/contatar/:id", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    await pool.query("INSERT IGNORE INTO empresas_curriculos_vistos (empresa_id, pedido_id) VALUES (?, ?)", [id, req.params.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.json({ ok: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Páginas
 // ---------------------------------------------------------------------------
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+
+app.get("/companies", (req, res) => res.sendFile(path.join(__dirname, "public", "companies.html")));
+app.get("/companies/pagar", (req, res) => res.sendFile(path.join(__dirname, "public", "companies-pagar.html")));
 
 // Página de confirmação de email e redefinição de senha (rotas de API de token já tratadas acima)
 app.get("/confirmar-email", (req, res) => res.sendFile(path.join(__dirname, "public", "confirmar-email.html")));
