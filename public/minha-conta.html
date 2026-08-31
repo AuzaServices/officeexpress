@@ -105,12 +105,13 @@
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 768px) {
-      /* No mobile, o bloco de boas-vindas fica "colado" logo abaixo do
-         cabeçalho (que é fixo), acompanhando o scroll. */
+      /* No mobile, o bloco de boas-vindas fica colado no cabeçalho, no topo,
+         rente a ele — sem espaço — e acompanha o scroll quando desce. */
+      section.section.container { padding-top: 0; }
       .hero-conta {
         position: sticky; top: 64px; z-index: 900;
-        margin-bottom: 20px; border-radius: 0 0 20px 20px;
-        padding: 20px 20px 18px;
+        margin: 0 0 20px; border-radius: 0 0 18px 18px;
+        padding: 18px 20px 18px;
       }
       .hero-conta h2 { font-size: 1.35rem; margin-bottom: 4px; }
       .hero-conta p { font-size: 0.9rem; }
