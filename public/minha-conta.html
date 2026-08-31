@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-tema="auto">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +7,141 @@
   <link rel="icon" href="/imagens/icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
+  <style>
+    /* ============ Painel do cliente — estilos específicos ============ */
+    .minha-conta-wrap { max-width: 1040px; margin: 0 auto; }
+
+    /* Hero de boas-vindas */
+    .hero-conta {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #0e2b44 0%, #174a6b 55%, #1f5d82 100%);
+      border-radius: 20px; padding: 36px 40px; margin-bottom: 28px;
+      color: #ffffff; display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap;
+      box-shadow: 0 18px 44px rgba(14,43,68,0.28);
+    }
+    .hero-conta::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 85% 15%, rgba(255,136,0,0.28) 0, transparent 34%),
+                  radial-gradient(circle at 10% 90%, rgba(73,190,203,0.22) 0, transparent 36%);
+    }
+    .hero-conta h2 { font-size: clamp(1.6rem, 4vw, 2.1rem); font-weight: 800; margin: 0 0 6px; position: relative; z-index: 1; }
+    .hero-conta p { margin: 0; color: rgba(255,255,255,0.82); font-size: 1rem; position: relative; z-index: 1; }
+    .hero-acoes { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; flex-wrap: wrap; }
+
+    /* Botão alternar tema */
+    .tema-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
+      color: #fff; border-radius: 50px; padding: 9px 18px; cursor: pointer;
+      font-family: inherit; font-weight: 600; font-size: 0.9rem; transition: var(--transition);
+    }
+    .tema-toggle:hover { background: rgba(255,255,255,0.2); }
+    .tema-toggle svg { width: 16px; height: 16px; }
+
+    /* Cartões KPI */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { text-align: left; padding: 22px 24px; }
+    .stat-card .stat-icone {
+      width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px; font-size: 1.15rem;
+    }
+    .stat-card .stat-value { font-size: 1.9rem; font-weight: 900; color: var(--text-primary); line-height: 1.1; }
+    .stat-card .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 6px; font-weight: 500; }
+    .stat-icone-azul   { background: rgba(59,130,246,0.14); color: #2563eb; }
+    .stat-icone-verde  { background: rgba(22,163,74,0.14); color: #16a34a; }
+    .stat-icone-laranja{ background: rgba(255,136,0,0.16); color: var(--brand-dark); }
+    .stat-icone-vermelho{ background: rgba(220,38,38,0.12); color: #dc2626; }
+
+    /* Card da tabela */
+    .pedidos-card { padding: 12px 0 0; overflow: hidden; }
+    .pedidos-card .pedidos-titulo { padding: 22px 28px 6px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pedidos-card .pedidos-titulo h3 { font-size: 1.2rem; font-weight: 800; margin: 0; }
+    .pedidos-card .pedidos-titulo .contagem { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Tabela do painel */
+    table.tabela { border: 0; border-radius: 0; }
+    table.tabela th, table.tabela td { padding: 14px 20px; }
+    .tabela-modelo { display: flex; align-items: center; gap: 12px; }
+    .tabela-modelo .mini {
+      width: 40px; height: 52px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+      border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center;
+    }
+    .tabela-modelo .mini img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+    .tabela-modelo .mini span { font-size: 0.62rem; color: #94a3b8; text-align: center; padding: 2px; }
+    .tabela-modelo .nome { font-weight: 700; }
+    .tabela-modelo .tipo { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* Ações */
+    .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-mini {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700;
+      padding: 8px 14px; border-radius: 50px; border: none; cursor: pointer; text-decoration: none;
+      transition: var(--transition);
+    }
+    .btn-mini svg { width: 14px; height: 14px; }
+    .btn-download { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; box-shadow: 0 3px 12px var(--brand-glow); }
+    .btn-download:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .btn-conta { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border); }
+    .btn-conta:hover { border-color: var(--brand); color: var(--brand); }
+    .btn-bloqueado { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+
+    /* Estados vazio / erro / carregamento */
+    .estado-box { padding: 48px 24px; text-align: center; }
+    .estado-icone { font-size: 2.4rem; margin-bottom: 12px; }
+    .estado-box h4 { font-weight: 800; margin: 0 0 6px; }
+    .estado-box p { color: var(--text-muted); margin: 0 0 20px; }
+
+    /* Skeleton */
+    .skeleton { background: linear-gradient(90deg, rgba(148,163,184,0.14) 25%, rgba(148,163,184,0.3) 50%, rgba(148,163,184,0.14) 75%); background-size: 200% 100%; animation: shimmer 1.3s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton-linha { height: 20px; margin: 14px 20px; }
+    .skeleton-linha.w60 { width: 60%; }
+
+    .oculto { display: none !important; }
+
+    /* ============ Responsivo ============ */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .hero-conta { padding: 26px 22px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .stat-card { padding: 16px; }
+      .stat-card .stat-value { font-size: 1.5rem; }
+      .pedidos-card .pedidos-titulo { padding: 18px 18px 4px; }
+      table.tabela th, table.tabela td { padding: 12px 14px; }
+    }
+
+    /* ============ Tema escuro ============ */
+    html[data-tema="escuro"] body,
+    html[data-tema="escuro"] body:not(.pagina-painel) {
+      --bg-1: #0b1622;
+      --bg-2: #0f2233;
+      --text-primary: #e8eef4;
+      --text-secondary: #b9c7d4;
+      --text-muted: #8496a8;
+      --card: #132433;
+      --card-hover: #182c3d;
+      --border: rgba(255,255,255,0.1);
+      --border-hover: rgba(255,255,255,0.2);
+      --shadow: rgba(0,0,0,0.4);
+      --shadow-lg: rgba(0,0,0,0.5);
+      background-color: #0b1622;
+      background-image: none;
+      color: #e8eef4;
+    }
+    html[data-tema="escuro"] body:not(.pagina-painel)::before { display: none; }
+    html[data-tema="escuro"] .card { background: var(--card); border-color: var(--border); }
+    html[data-tema="escuro"] .card:hover { border-color: var(--border-hover); box-shadow: 0 20px 40px var(--shadow-lg); }
+    html[data-tema="escuro"] table.tabela th { background: #0f2030; color: var(--brand-light); }
+    html[data-tema="escuro"] table.tabela tr:hover td { background: #16293a; }
+    html[data-tema="escuro"] .stat-card .stat-value { color: var(--text-primary); }
+    html[data-tema="escuro"] .btn-conta { color: var(--text-secondary); }
+    html[data-tema="escuro"] .tabela-modelo .mini { background: #0b1622; }
+    html[data-tema="escuro"] .btn-bloqueado { background: #1c2c3b; color: #64748b; }
+    html[data-tema="escuro"] .campo input, html[data-tema="escuro"] .campo textarea, html[data-tema="escuro"] .campo select { background: #0f2030; color: var(--text-primary); border-color: var(--border); }
+  </style>
 </head>
 <body>
   <header class="cabecalho">
@@ -19,26 +154,89 @@
   <div id="mobileMenu"></div>
 
   <section class="section container">
-    <div class="section-header">
-      <h2>Minha Conta</h2>
-      <p id="saudacao"></p>
-    </div>
+    <div class="minha-conta-wrap">
+      <div id="naoAutenticado" style="display:none;text-align:center;padding:40px">
+        <p style="color:var(--text-muted);margin-bottom:24px">Você precisa entrar para ver seus documentos.</p>
+        <a href="/login" class="btn btn-primary">Entrar</a>
+      </div>
 
-    <div id="naoAutenticado" style="display:none;text-align:center;padding:40px">
-      <p style="color:var(--text-muted);margin-bottom:24px">Você precisa entrar para ver seus documentos.</p>
-      <a href="/login" class="btn btn-primary">Entrar</a>
-    </div>
-
-    <div id="conteudo">
-      <div class="card" style="margin-bottom:24px">
-        <h3 style="margin-bottom:16px">Meus currículos</h3>
-        <div class="tabela-wrap">
-          <table class="tabela">
-            <thead><tr><th>#</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Data</th></tr></thead>
-            <tbody id="tbody"></tbody>
-          </table>
+      <div id="conteudo" class="oculto">
+        <!-- Hero de boas-vindas -->
+        <div class="hero-conta">
+          <div>
+            <h2 id="saudacao">Olá!</h2>
+            <p>Gerencie seus currículos e acompanhe seus pedidos em um só lugar.</p>
+          </div>
+          <div class="hero-acoes">
+            <button class="tema-toggle" id="temaToggle" type="button" aria-label="Alternar tema">
+              <svg id="temaIcone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              <span id="temaLabel">Tema escuro</span>
+            </button>
+          </div>
         </div>
-        <p id="vazio" style="color:var(--text-muted);margin-top:16px;display:none">Você ainda não comprou nenhum currículo. <a href="/modelos" style="color:var(--brand)">Criar agora</a></p>
+
+        <!-- KPIs -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-azul">📄</div>
+            <div class="stat-value" id="kpiTotal">0</div>
+            <div class="stat-label">Pedidos</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-verde">✅</div>
+            <div class="stat-value" id="kpiPagos">0</div>
+            <div class="stat-label">Pagos</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-laranja">⏳</div>
+            <div class="stat-value" id="kpiPendentes">0</div>
+            <div class="stat-label">Pendentes</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icone stat-icone-vermelho">💰</div>
+            <div class="stat-value" id="kpiInvestido">R$ 0,00</div>
+            <div class="stat-label">Total investido</div>
+          </div>
+        </div>
+
+        <!-- Lista de pedidos -->
+        <div class="card pedidos-card">
+          <div class="pedidos-titulo">
+            <h3>Meus documentos</h3>
+            <span class="contagem" id="contagemPedidos"></span>
+          </div>
+
+          <!-- Skeleton -->
+          <div id="skeletonPedidos">
+            <div class="skeleton skeleton-linha"></div>
+            <div class="skeleton skeleton-linha w60"></div>
+            <div class="skeleton skeleton-linha"></div>
+          </div>
+
+          <!-- Tabela -->
+          <div class="tabela-wrap oculto" id="tabelaWrap">
+            <table class="tabela">
+              <thead><tr><th>Documento</th><th>Valor</th><th>Status</th><th>Data</th><th>Ação</th></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Vazio -->
+          <div class="estado-box oculto" id="vazio">
+            <div class="estado-icone">📭</div>
+            <h4>Você ainda não tem documentos</h4>
+            <p>Crie seu currículo profissional e comece a se destacar.</p>
+            <a href="/modelos" class="btn btn-primary">Criar meu currículo</a>
+          </div>
+
+          <!-- Erro -->
+          <div class="estado-box oculto" id="erro">
+            <div class="estado-icone">⚠️</div>
+            <h4>Não foi possível carregar seus pedidos</h4>
+            <p id="erroMsg">Tente novamente em instantes.</p>
+            <button class="btn btn-secondary" id="btnTentar" type="button">Tentar novamente</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -88,39 +286,162 @@
 
   <script src="/assets/app.js"></script>
   <script>
-    var nomesModelo = {};
-    document.getElementById("ano").textContent = new Date().getFullYear();
-    App.carregarHeader("minha-conta");
+    (function () {
+      var nomesModelo = {};
+      var pedidos = [];
+      document.getElementById("ano").textContent = new Date().getFullYear();
+      App.carregarHeader("minha-conta");
 
-    App.api("/api/modelos").then(function (r) {
-      if (r.ok) r.data.modelos.forEach(function (m) { nomesModelo[m.id] = m.nome; });
-    });
+      App.api("/api/modelos").then(function (r) {
+        if (r.ok) r.data.modelos.forEach(function (m) { nomesModelo[m.id] = m.nome; });
+      });
 
-    (async function () {
-      var u = await App.authMe();
-      if (!u) {
-        document.getElementById("naoAutenticado").style.display = "block";
-        document.getElementById("conteudo").style.display = "none";
-        return;
+      var IDS = {
+        saudacao: document.getElementById("saudacao"),
+        conteudo: document.getElementById("conteudo"),
+        naoAutenticado: document.getElementById("naoAutenticado"),
+        statsGrid: document.getElementById("statsGrid"),
+        kpiTotal: document.getElementById("kpiTotal"),
+        kpiPagos: document.getElementById("kpiPagos"),
+        kpiPendentes: document.getElementById("kpiPendentes"),
+        kpiInvestido: document.getElementById("kpiInvestido"),
+        skeleton: document.getElementById("skeletonPedidos"),
+        tabelaWrap: document.getElementById("tabelaWrap"),
+        tbody: document.getElementById("tbody"),
+        vazio: document.getElementById("vazio"),
+        erro: document.getElementById("erro"),
+        erroMsg: document.getElementById("erroMsg"),
+        contagem: document.getElementById("contagemPedidos")
+      };
+
+      function tipoLabel(modeloId, tipo) {
+        return tipo === "carta" ? "Carta" : "Currículo";
       }
-      document.getElementById("saudacao").textContent = "Olá, " + u.nome + "!";
-      var { ok, data } = await App.api("/api/pedidos/meus");
-      if (!ok || !data.pedidos.length) {
-        document.getElementById("vazio").style.display = "block";
-        return;
+
+      // Fallback: se a miniatura do modelo não existir, mostra o rótulo "CV".
+      function fallbackMini(img) {
+        if (!img) return;
+        var box = img.parentNode;
+        var span = box ? box.querySelector(".mini-fallback") : null;
+        if (img) img.style.display = "none";
+        if (span) span.style.display = "block";
       }
-      var tbody = document.getElementById("tbody");
-      data.pedidos.forEach(function (p) {
-        var tr = document.createElement("tr");
-        var statusClass = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
-        var statusTxt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
-        tr.innerHTML =
-          "<td>" + p.id + "</td>" +
-          "<td>" + (nomesModelo[p.modelo] || p.modelo) + "</td>" +
-          "<td>" + App.formatarPreco(p.valor) + "</td>" +
-          '<td><span class="badge ' + statusClass + '">' + statusTxt + "</span></td>" +
-          "<td>" + (p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "-") + "</td>";
-        tbody.appendChild(tr);
+      window.fallbackMini = fallbackMini;
+
+      function renderPedidos() {
+        var total = pedidos.length;
+        var pagos = pedidos.filter(function (p) { return p.status === "pago"; }).length;
+        var pendentes = pedidos.filter(function (p) { return p.status === "pendente"; }).length;
+        var investido = pedidos
+          .filter(function (p) { return p.status === "pago"; })
+          .reduce(function (s, p) { return s + (parseFloat(p.valor) || 0); }, 0);
+
+        IDS.kpiTotal.textContent = total;
+        IDS.kpiPagos.textContent = pagos;
+        IDS.kpiPendentes.textContent = pendentes;
+        IDS.kpiInvestido.textContent = App.formatarPreco(investido);
+        IDS.contagem.textContent = total + (total === 1 ? " documento" : " documentos");
+
+        IDS.skeleton.classList.add("oculto");
+        if (!total) {
+          IDS.vazio.classList.remove("oculto");
+          IDS.tabelaWrap.classList.add("oculto");
+          return;
+        }
+
+        IDS.tabelaWrap.classList.remove("oculto");
+        IDS.vazio.classList.add("oculto");
+        IDS.tbody.innerHTML = "";
+
+        pedidos.forEach(function (p) {
+          var tipo = (p.modelo || "").toLowerCase().indexOf("carta") !== -1 ? "carta" : "curriculo";
+          var modeloNome = nomesModelo[p.modelo] || p.modelo;
+          var statusCls = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
+          var statusTxt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
+          var data = p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "-";
+
+          var acao;
+          if (p.status === "pago") {
+            acao = '<a class="btn-mini btn-download" href="/api/pedidos/' + encodeURIComponent(p.id) + '/download">' +
+                   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Baixar</a>';
+          } else {
+            acao = '<a class="btn-mini btn-conta" href="/pagamento">Pagar agora</a>';
+          }
+
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            '<td><div class="tabela-modelo">' +
+              '<div class="mini"><img src="/imagens/miniaturas/' + encodeURIComponent(p.modelo) + '.png" alt="" loading="lazy" onerror="fallbackMini(this)"><span class="mini-fallback" style="display:none">CV</span></div>' +
+              '<div><div class="nome">' + (modeloNome || "Documento") + '</div>' +
+              '<div class="tipo">' + tipoLabel(p.modelo, tipo) + ' · Pedido #' + p.id + '</div></div>' +
+            '</div></td>' +
+            '<td>' + App.formatarPreco(p.valor) + '</td>' +
+            '<td><span class="badge ' + statusCls + '">' + statusTxt + '</span></td>' +
+            '<td>' + data + '</td>' +
+            '<td><div class="acoes">' + acao + '</div></td>';
+          IDS.tbody.appendChild(tr);
+        });
+      }
+
+      function carregarPedidos() {
+        IDS.erro.classList.add("oculto");
+        IDS.skeleton.classList.remove("oculto");
+        return App.api("/api/pedidos/meus").then(function (r) {
+          if (!r.ok || !r.data || !Array.isArray(r.data.pedidos)) {
+            throw new Error(r.data && r.data.error ? r.data.error : "Erro ao carregar.");
+          }
+          pedidos = r.data.pedidos;
+          renderPedidos();
+        }).catch(function (err) {
+          console.error("Erro ao carregar pedidos:", err);
+          IDS.skeleton.classList.add("oculto");
+          IDS.tabelaWrap.classList.add("oculto");
+          IDS.vazio.classList.add("oculto");
+          IDS.erroMsg.textContent = (err && err.message) ? err.message : "Tente novamente em instantes.";
+          IDS.erro.classList.remove("oculto");
+        });
+      }
+
+      document.getElementById("btnTentar").addEventListener("click", carregarPedidos);
+
+      (async function () {
+        var u = await App.authMe();
+        if (!u) {
+          IDS.naoAutenticado.style.display = "block";
+          return;
+        }
+        IDS.conteudo.classList.remove("oculto");
+        IDS.saudacao.textContent = "Olá, " + (u.nome ? u.nome.split(" ")[0] : "cliente") + "!";
+        carregarPedidos();
+      })();
+
+      // ===== Alternar tema (respeita preferência do sistema) =====
+      var TEMA_KEY = "oe_tema";
+      var root = document.documentElement;
+      var icone = document.getElementById("temaIcone");
+      var label = document.getElementById("temaLabel");
+
+      function aplicarTema(tema) {
+        if (tema === "auto") {
+          tema = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro";
+        }
+        root.setAttribute("data-tema", tema);
+        var escuro = tema === "escuro";
+        label.textContent = escuro ? "Tema claro" : "Tema escuro";
+        icone.innerHTML = escuro
+          ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+          : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      }
+
+      var salvo = null;
+      try { salvo = localStorage.getItem(TEMA_KEY); } catch (e) {}
+      aplicarTema(salvo || "auto");
+
+      document.getElementById("temaToggle").addEventListener("click", function () {
+        var atual = root.getAttribute("data-tema");
+        var novo = atual === "escuro" ? "claro" : "escuro";
+        aplicarTema(novo);
+        try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
       });
     })();
   </script>

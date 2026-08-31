@@ -512,9 +512,14 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
 // ---------------------------------------------------------------------------
 app.get("/api/pedidos/:id/download", async (req, res) => {
   const { id } = req.params;
+  // O download fica disponível enquanto a conta do cliente estiver ativa:
+  // exige sessão autenticada e que o pedido pertença ao usuário logado.
+  const usuarioId = usuarioDaSessao(req);
+  if (!usuarioId) return res.status(401).json({ error: "Faça login para baixar." });
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
+  if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
   if (pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
 
   let dados;
