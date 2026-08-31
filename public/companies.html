@@ -8,6 +8,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
+    /* Marca no cabeçalho: logo + "| Companies" */
+    .brand-companies { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand-companies .logo { height: 44px; width: auto; display: block; }
+    .brand-sep { color: rgba(255,255,255,.35); font-weight: 700; font-size: 1.4rem; line-height: 1; }
+    .brand-companies-label {
+      font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -.02em;
+      background: linear-gradient(135deg, #ff8800 0%, #ffaa33 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      text-transform: lowercase;
+    }
+    @media (max-width: 768px) {
+      .brand-companies .logo { height: 38px; }
+      .brand-companies-label { font-size: 1rem; }
+      .brand-sep { font-size: 1.2rem; }
+    }
+
     /* ===== Office Express | Companies — estilos específicos ===== */
     .companies-wrap { max-width: 1080px; margin: 0 auto; }
 
@@ -102,7 +118,11 @@
 <body>
   <header class="cabecalho">
     <div class="container wrap">
-      <a href="/companies"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <a href="/companies" class="brand-companies">
+        <img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" />
+        <span class="brand-sep">|</span>
+        <span class="brand-companies-label">Companies</span>
+      </a>
       <nav class="menu" id="navMenu"></nav>
       <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
