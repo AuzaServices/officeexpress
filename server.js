@@ -559,7 +559,7 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
-  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", dados });
+  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, dados });
 });
 
 // ---------------------------------------------------------------------------

@@ -456,6 +456,12 @@
         if (r.ok && r.data && r.data.modelo) {
           modeloPrev = r.data.modelo;
           dadosPrev = r.data.dados || {};
+          // Usa o valor específico do pedido (pode ter sido ajustado no admin),
+          // e não o preço global, no resumo exibido na página.
+          if (r.data.valor != null) {
+            preco = Number(r.data.valor);
+            document.getElementById("resumo").textContent = App.formatarPreco(preco);
+          }
           renderPrevia();
         }
       }).catch(function (e) { console.error("Erro ao carregar dados do pedido para prévia:", e); });
@@ -518,11 +524,15 @@
       document.getElementById("resumo").textContent = "—";
     }
 
-    // Config pública (chave do Mercado Pago + preço)
+    // Config pública (chave do Mercado Pago + preço global)
     App.api("/api/config/pagamento").then(function (r) {
       if (r.ok) {
         publicKey = r.data.publicKey;
-        preco = r.data.preco;
+        // O valor exibido usa o preço do pedido específico quando ele existe;
+        // caso contrário, cai no preço global. Se o valor do pedido ainda não
+        // chegou, guardamos o global como fallback e o resumo é preenchido
+        // quando o pedido carregar.
+        if (preco === 0) preco = r.data.preco;
         document.getElementById("resumo").textContent = App.formatarPreco(preco);
         if (window.MercadoPago && publicKey) {
           mp = new MercadoPago(publicKey, { locale: "pt-BR" });
