@@ -109,6 +109,64 @@
     .oculto { display: none !important; }
     .mt-2 { margin-top: 20px; }
 
+    /* ===== Portal B2B (painel logado) ===== */
+    .portal-wrap { display: flex; gap: 24px; align-items: flex-start; }
+    .portal-sidebar {
+      width: 250px; flex-shrink: 0; position: sticky; top: 88px;
+      background: var(--card, #ffffff); border: 1px solid var(--border); border-radius: 16px;
+      padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
+    }
+    .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
+    .pse-avatar {
+      width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark, #b45309));
+      color: #001f33; font-weight: 800; font-size: 1.05rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pse-info { min-width: 0; }
+    .pse-nome { font-weight: 700; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pse-plano { font-size: .74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+    .portal-nav { display: flex; flex-direction: column; gap: 4px; }
+    .portal-nav-item {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      background: transparent; border: none; cursor: pointer; text-align: left;
+      font-family: inherit; font-size: .9rem; font-weight: 600; color: var(--text-muted);
+      padding: 11px 12px; border-radius: 10px; transition: background .15s, color .15s;
+    }
+    .portal-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .portal-nav-item:hover { background: rgba(59,130,246,.08); color: var(--text-primary, inherit); }
+    .portal-nav-item.ativo { background: linear-gradient(135deg, var(--brand), var(--brand-dark, #b45309)); color: #001f33; }
+    .portal-sidebar-footer { border-top: 1px solid var(--border); padding-top: 14px; }
+    .portal-conteudo { flex: 1; min-width: 0; }
+    .portal-topbar { display: none; }
+    .portal-saudacao { margin-bottom: 20px; }
+    .portal-saudacao h2 { margin: 0 0 4px; font-weight: 800; }
+    .portal-saudacao p { margin: 0; color: var(--text-muted); font-size: .95rem; }
+    .portal-secao { animation: portalFade .25s ease; }
+    @keyframes portalFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .portal-menu-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card, #ffffff); color: var(--text-primary, inherit); cursor: pointer; flex-shrink: 0;
+    }
+    .portal-sidebar-backdrop { display: none; }
+
+    @media (max-width: 900px) {
+      .portal-wrap { display: block; }
+      .portal-topbar {
+        display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+      }
+      .portal-topbar-titulo { font-weight: 800; font-size: 1.05rem; }
+      .portal-sidebar {
+        position: fixed; inset: 0 auto 0 0; top: 0; z-index: 1500; width: 280px; max-width: 85vw;
+        border-radius: 0; transform: translateX(-105%); transition: transform .25s ease;
+        box-shadow: 0 10px 40px rgba(0,0,0,.3); overflow-y: auto;
+      }
+      .portal-sidebar.aberta { transform: translateX(0); }
+      .portal-sidebar-backdrop.aberta { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1400; }
+      .companies-stats { grid-template-columns: 1fr 1fr; }
+    }
+
     /* Responsivo */
     @media (max-width: 900px) { .companies-stats { grid-template-columns: repeat(2, 1fr); } .planos-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 600px) { .planos-grid { grid-template-columns: 1fr; } .hero-c { padding: 28px 22px; } .companies-stats { grid-template-columns: 1fr 1fr; gap: 12px; } .stat-card { padding: 16px; } }
@@ -225,79 +283,163 @@
         </div>
       </div>
 
-      <!-- ===== PAINEL (logado) ===== -->
+      <!-- ===== PAINEL (logado) — Portal B2B ===== -->
       <div id="viewPainel" class="oculto">
-        <div class="hero-c">
-          <div>
-            <h2 id="painelSaudacao">Olá!</h2>
-            <p>Gerencie sua assinatura e encontre talentos no banco de currículos.</p>
-          </div>
-        </div>
-
-        <div class="companies-stats">
-          <div class="card stat-card">
-            <div class="stat-icone stat-icone-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></div>
-            <div class="stat-value" id="stCandidatos">0</div>
-            <div class="stat-label">Candidatos disponíveis</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-icone stat-icone-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-            <div class="stat-value" id="stVistos">0</div>
-            <div class="stat-label">Currículos vistos</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-icone stat-icone-laranja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div class="stat-value" id="stContatados">0</div>
-            <div class="stat-label">Candidatos contatados</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-icone stat-icone-roxo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-            <div class="stat-value" id="stPlano">—</div>
-            <div class="stat-label">Plano atual</div>
-          </div>
-        </div>
-
-        <!-- Assinatura -->
-        <div class="card" style="margin-bottom:32px">
-          <div class="assinatura-atual">
-            <div>
-              <div class="aa-nome" id="aaNome">—</div>
-              <div class="aa-status" id="aaStatus">—</div>
+        <div class="portal-wrap">
+          <!-- Sidebar -->
+          <aside class="portal-sidebar" id="portalSidebar">
+            <div class="portal-sidebar-empresa">
+              <div class="pse-avatar" id="pseAvatar">E</div>
+              <div class="pse-info">
+                <div class="pse-nome" id="pseNome">Empresa</div>
+                <div class="pse-plano" id="psePlano">—</div>
+              </div>
             </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="btn btn-secondary" onclick="trocarPlano()" id="btnTrocarPlano" style="padding:10px 18px;font-size:.9rem">Trocar plano</button>
-              <button class="btn btn-secondary" onclick="sairEmpresa()" style="padding:10px 18px;font-size:.9rem;color:var(--danger)">Sair</button>
+            <nav class="portal-nav">
+              <button class="portal-nav-item ativo" id="navSecaoBusca" type="button" onclick="mostrarSecao('busca')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Buscar talentos
+              </button>
+              <button class="portal-nav-item" id="navSecaoVistos" type="button" onclick="mostrarSecao('vistos')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Currículos visualizados
+              </button>
+              <button class="portal-nav-item" id="navSecaoAssinatura" type="button" onclick="mostrarSecao('assinatura')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                Minha assinatura
+              </button>
+              <button class="portal-nav-item" id="navSecaoDados" type="button" onclick="mostrarSecao('dados')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+                Dados da empresa
+              </button>
+            </nav>
+            <div class="portal-sidebar-footer">
+              <button class="btn btn-secondary btn-block" onclick="sairEmpresa()" style="color:var(--danger)">Sair da conta</button>
             </div>
-          </div>
-        </div>
+          </aside>
+          <div class="portal-sidebar-backdrop" id="portalSidebarBackdrop" onclick="toggleSidebar(false)"></div>
 
-        <!-- Busca -->
-        <div class="card" style="margin-bottom:24px">
-          <h3 style="font-weight:800;margin-bottom:16px">Buscar talentos</h3>
-          <div class="filtros">
-            <div class="campo"><label>Cargo / área</label><input type="text" id="fCargo" placeholder="Ex.: Desenvolvedor, Vendas..." /></div>
-            <div class="campo"><label>Cidade</label><input type="text" id="fCidade" placeholder="Ex.: São Paulo" /></div>
-            <div class="campo"><label>Estado</label>
-              <select id="fEstado"><option value="">Todos</option></select>
+          <!-- Conteúdo -->
+          <div class="portal-conteudo">
+            <!-- Topbar mobile -->
+            <div class="portal-topbar">
+              <button class="portal-menu-btn" type="button" onclick="toggleSidebar(true)" aria-label="Abrir menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
+              <div class="portal-topbar-titulo" id="portalTitulo">Buscar talentos</div>
             </div>
-            <div class="campo" style="display:flex;align-items:flex-end">
-              <button class="btn btn-primary" onclick="buscar()" style="padding:12px 22px">Buscar</button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Resultados -->
-        <div class="card" style="padding-top:24px">
-          <div class="resultados-titulo">
-            <h3>Resultados</h3>
-            <span class="contagem" id="contagemResultados" style="color:var(--text-muted);font-size:.85rem"></span>
-          </div>
-          <div id="candVazio" style="text-align:center;padding:30px;color:var(--text-muted)" class="oculto">
-            Nenhum candidato encontrado com os filtros atuais.
-          </div>
-          <div id="candErro" style="text-align:center;padding:30px;color:var(--danger)" class="oculto"></div>
-          <div class="candidatos-grid" id="candGrid"></div>
-        </div>
+            <div class="portal-saudacao">
+              <h2 id="painelSaudacao">Olá!</h2>
+              <p id="painelSaudacaoSub">Encontre talentos no banco de currículos.</p>
+            </div>
+
+            <!-- ===== Seção: Busca ===== -->
+            <div class="portal-secao" id="secaoBusca">
+              <div class="companies-stats">
+                <div class="card stat-card">
+                  <div class="stat-icone stat-icone-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></div>
+                  <div class="stat-value" id="stCandidatos">0</div>
+                  <div class="stat-label">Candidatos disponíveis</div>
+                </div>
+                <div class="card stat-card">
+                  <div class="stat-icone stat-icone-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                  <div class="stat-value" id="stVistos">0</div>
+                  <div class="stat-label">Currículos vistos</div>
+                </div>
+                <div class="card stat-card">
+                  <div class="stat-icone stat-icone-laranja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                  <div class="stat-value" id="stContatados">0</div>
+                  <div class="stat-label">Candidatos contatados</div>
+                </div>
+                <div class="card stat-card">
+                  <div class="stat-icone stat-icone-roxo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+                  <div class="stat-value" id="stPlano">—</div>
+                  <div class="stat-label">Plano atual</div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-bottom:24px">
+                <h3 style="font-weight:800;margin-bottom:16px">Buscar talentos</h3>
+                <div class="filtros">
+                  <div class="campo"><label>Cargo / área</label><input type="text" id="fCargo" placeholder="Ex.: Desenvolvedor, Vendas..." /></div>
+                  <div class="campo"><label>Cidade</label><input type="text" id="fCidade" placeholder="Ex.: São Paulo" /></div>
+                  <div class="campo"><label>Estado</label>
+                    <select id="fEstado"><option value="">Todos</option></select>
+                  </div>
+                  <div class="campo" style="display:flex;align-items:flex-end">
+                    <button class="btn btn-primary" onclick="buscar()" style="padding:12px 22px">Buscar</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="padding-top:24px">
+                <div class="resultados-titulo">
+                  <h3>Resultados</h3>
+                  <span class="contagem" id="contagemResultados" style="color:var(--text-muted);font-size:.85rem"></span>
+                </div>
+                <div id="candVazio" style="text-align:center;padding:30px;color:var(--text-muted)" class="oculto">
+                  Nenhum candidato encontrado com os filtros atuais.
+                </div>
+                <div id="candErro" style="text-align:center;padding:30px;color:var(--danger)" class="oculto"></div>
+                <div class="candidatos-grid" id="candGrid"></div>
+              </div>
+            </div>
+
+            <!-- ===== Seção: Visualizados ===== -->
+            <div class="portal-secao oculto" id="secaoVistos">
+              <div class="card" style="padding-top:24px">
+                <div class="resultados-titulo">
+                  <h3>Currículos que você já visualizou</h3>
+                  <span class="contagem" id="contagemVistos" style="color:var(--text-muted);font-size:.85rem"></span>
+                </div>
+                <div id="vistosVazio" style="text-align:center;padding:30px;color:var(--text-muted)" class="oculto">
+                  Você ainda não visualizou nenhum currículo. Use a busca para encontrar talentos.
+                </div>
+                <div id="vistosErro" style="text-align:center;padding:30px;color:var(--danger)" class="oculto"></div>
+                <div class="candidatos-grid" id="vistosGrid"></div>
+              </div>
+            </div>
+
+            <!-- ===== Seção: Assinatura ===== -->
+            <div class="portal-secao oculto" id="secaoAssinatura">
+              <div class="card" style="margin-bottom:24px">
+                <h3 style="font-weight:800;margin-bottom:16px">Assinatura atual</h3>
+                <div class="assinatura-atual">
+                  <div>
+                    <div class="aa-nome" id="aaNome">—</div>
+                    <div class="aa-status" id="aaStatus">—</div>
+                  </div>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button class="btn btn-primary" onclick="trocarPlano()" id="btnTrocarPlano" style="padding:10px 18px;font-size:.9rem">Trocar plano</button>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="padding-top:24px">
+                <h3 style="font-weight:800;margin-bottom:16px">Histórico de pagamentos</h3>
+                <div class="tabela-wrap">
+                  <table class="tabela">
+                    <thead><tr><th>#</th><th>Plano</th><th>Valor</th><th>Status</th><th>Tipo</th><th>Data</th></tr></thead>
+                    <tbody id="tbodyPagamentosEmpresa"><tr><td colspan="6" style="text-align:center;color:var(--text-muted)">—</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== Seção: Dados da empresa ===== -->
+            <div class="portal-secao oculto" id="secaoDados">
+              <div class="card" style="max-width:560px">
+                <h3 style="font-weight:800;margin-bottom:16px">Dados da empresa</h3>
+                <div class="campo"><label>Nome da empresa</label><input type="text" id="dNome" /></div>
+                <div class="campo"><label>CNPJ</label><input type="text" id="dCnpj" placeholder="00.000.000/0000-00" /></div>
+                <div class="campo"><label>E-mail de acesso</label><input type="email" id="dEmail" disabled style="opacity:.6;cursor:not-allowed" /></div>
+                <div class="alert" id="alertDados"></div>
+                <button class="btn btn-primary" onclick="salvarDadosEmpresa()">Salvar alterações</button>
+              </div>
+            </div>
+
+          </div><!-- /portal-conteudo -->
+        </div><!-- /portal-wrap -->
       </div>
 
     </div>
@@ -479,19 +621,56 @@
       });
 
       // Painel
+      var empresaLogada = null;
       async function carregarPainel() {
         var { ok, data } = await App.api("/api/companies/me");
         if (!ok) { mostrarView("landing"); return; }
         var e = data.empresa;
+        empresaLogada = e;
         IDS.painelSaudacao.textContent = "Olá, " + (e.nome ? e.nome.split(" ")[0] : "empresa") + "!";
         IDS.stPlano.textContent = (e.plano || "—").charAt(0).toUpperCase() + (e.plano || "").slice(1);
         IDS.aaNome.textContent = e.nome;
-        IDS.aaStatus.textContent = (e.plano === "enterprise" ? "Sob consulta" : "Ativa") + " · " + (e.plano || "").toUpperCase();
+        IDS.aaStatus.textContent = (e.plano === "enterprise" ? "Sob consulta" : (e.assinatura_ativa ? "Ativa" : "Inativa")) + " · " + (e.plano || "").toUpperCase();
+        // Sidebar
+        document.getElementById("pseNome").textContent = e.nome || "Empresa";
+        document.getElementById("psePlano").textContent = (e.plano || "—") + (e.assinatura_ativa ? " · ativo" : "");
+        document.getElementById("pseAvatar").textContent = (e.nome || "E").trim().charAt(0).toUpperCase();
+        document.getElementById("dNome").value = e.nome || "";
+        document.getElementById("dCnpj").value = e.cnpj || "";
+        document.getElementById("dEmail").value = e.email || "";
         mostrarView("painel");
         atualizarStats();
+        mostrarSecao("busca", true);
         buscar();
       }
       window.carregarPainel = carregarPainel;
+
+      // Navegação entre seções do portal
+      var SECOES = {
+        busca: { nav: "navSecaoBusca", view: "secaoBusca", titulo: "Buscar talentos" },
+        vistos: { nav: "navSecaoVistos", view: "secaoVistos", titulo: "Currículos visualizados" },
+        assinatura: { nav: "navSecaoAssinatura", view: "secaoAssinatura", titulo: "Minha assinatura" },
+        dados: { nav: "navSecaoDados", view: "secaoDados", titulo: "Dados da empresa" }
+      };
+      function mostrarSecao(nome, silencioso) {
+        var conf = SECOES[nome];
+        if (!conf) return;
+        Object.keys(SECOES).forEach(function (k) {
+          document.getElementById(SECOES[k].nav).classList.toggle("ativo", k === nome);
+          document.getElementById(SECOES[k].view).classList.toggle("oculto", k !== nome);
+        });
+        document.getElementById("portalTitulo").textContent = conf.titulo;
+        if (nome === "vistos") carregarVistos();
+        if (nome === "assinatura") carregarPagamentosEmpresa();
+        toggleSidebar(false);
+        if (!silencioso) window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      window.mostrarSecao = mostrarSecao;
+
+      window.toggleSidebar = function (abrir) {
+        document.getElementById("portalSidebar").classList.toggle("aberta", !!abrir);
+        document.getElementById("portalSidebarBackdrop").classList.toggle("aberta", !!abrir);
+      };
 
       async function atualizarStats() {
         var { ok, data } = await App.api("/api/companies/curriculos");
@@ -502,6 +681,88 @@
         }
       }
       window.atualizarStats = atualizarStats;
+
+      // Histórico de currículos visualizados
+      async function carregarVistos() {
+        var grid = document.getElementById("vistosGrid");
+        var vazio = document.getElementById("vistosVazio");
+        var erro = document.getElementById("vistosErro");
+        grid.innerHTML = "";
+        vazio.classList.add("oculto");
+        erro.classList.add("oculto");
+        var { ok, data } = await App.api("/api/companies/vistos");
+        if (!ok) {
+          erro.textContent = (data && data.error) || "Erro ao carregar histórico.";
+          erro.classList.remove("oculto");
+          return;
+        }
+        var lista = (data && data.vistos) || [];
+        document.getElementById("contagemVistos").textContent = lista.length + (lista.length === 1 ? " currículo" : " currículos");
+        if (!lista.length) { vazio.classList.remove("oculto"); return; }
+        lista.forEach(function (c) {
+          var nome = c.nome || "Candidato";
+          var cargo = c.cargo || "Não informado";
+          var local = [c.cidade, c.estado].filter(Boolean).join(" - ") || "—";
+          var quando = c.visto_em ? new Date(c.visto_em).toLocaleString("pt-BR") : "";
+          var card = document.createElement("div");
+          card.className = "card cand-card";
+          card.innerHTML =
+            '<div class="cand-nome">' + escapeHtml(nome) + '</div>' +
+            '<div class="cand-cargo">' + escapeHtml(cargo) + '</div>' +
+            '<div class="cand-meta">' +
+              '<span class="cand-tag">' + escapeHtml(local) + '</span>' +
+              (quando ? '<span class="cand-tag">Visto em ' + escapeHtml(quando) + '</span>' : '') +
+            '</div>' +
+            '<div class="cand-acoes">' +
+              '<button class="btn-mini btn-download" onclick="verCurriculo(' + c.id + ')">Ver novamente</button>' +
+            '</div>';
+          card.addEventListener("click", function (e) { if (e.target.tagName !== "BUTTON") verCurriculo(c.id); });
+          grid.appendChild(card);
+        });
+      }
+
+      // Histórico de pagamentos da assinatura
+      async function carregarPagamentosEmpresa() {
+        var tb = document.getElementById("tbodyPagamentosEmpresa");
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr>';
+        var { ok, data } = await App.api("/api/companies/pagamentos");
+        if (!ok) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger)">Erro ao carregar pagamentos.</td></tr>'; return; }
+        var lista = (data && data.pagamentos) || [];
+        tb.innerHTML = "";
+        if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Nenhum pagamento registrado ainda.</td></tr>'; return; }
+        lista.forEach(function (pg) {
+          var badge = pg.status === "pago"
+            ? '<span class="badge badge-pago">Pago</span>'
+            : pg.status === "pendente"
+              ? '<span class="badge badge-pendente">Pendente</span>'
+              : '<span class="badge badge-cancelado">' + escapeHtml(pg.status || "—") + '</span>';
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            "<td>" + pg.id + "</td>" +
+            "<td>" + escapeHtml(pg.plano || "-") + "</td>" +
+            "<td>" + App.formatarPreco(pg.valor) + "</td>" +
+            "<td>" + badge + "</td>" +
+            "<td>" + escapeHtml(pg.tipo || "-") + "</td>" +
+            "<td>" + (pg.pago_at ? new Date(pg.pago_at).toLocaleDateString("pt-BR") : (pg.created_at ? new Date(pg.created_at).toLocaleDateString("pt-BR") : "-")) + "</td>";
+          tb.appendChild(tr);
+        });
+      }
+
+      // Salvar dados da empresa
+      window.salvarDadosEmpresa = async function () {
+        var alert = document.getElementById("alertDados");
+        alert.className = "alert";
+        var body = {
+          nome: document.getElementById("dNome").value.trim(),
+          cnpj: document.getElementById("dCnpj").value.trim()
+        };
+        if (!body.nome) { alert.textContent = "Informe o nome da empresa."; alert.className = "alert show alert-error"; return; }
+        var { ok, data } = await App.api("/api/companies/me/dados", { method: "PUT", body: JSON.stringify(body) });
+        if (!ok) { alert.textContent = (data && data.error) || "Erro ao salvar."; alert.className = "alert show alert-error"; return; }
+        alert.textContent = "Dados atualizados com sucesso!";
+        alert.className = "alert show alert-success";
+        carregarPainel();
+      };
 
       // Busca
       async function buscar() {
@@ -547,8 +808,8 @@
             '<div class="cand-nome">' + escapeHtml(nome) + '</div>' +
             '<div class="cand-cargo">' + escapeHtml(cargo) + '</div>' +
             '<div class="cand-meta">' +
-              '<span class="cand-tag">📍 ' + escapeHtml(local) + '</span>' +
-              (exp ? '<span class="cand-tag">💼 ' + escapeHtml(exp) + '</span>' : '') +
+              '<span class="cand-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:-1px;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escapeHtml(local) + '</span>' +
+              (exp ? '<span class="cand-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:-1px;margin-right:3px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + escapeHtml(exp) + '</span>' : '') +
             '</div>' +
             '<div class="cand-acoes">' +
               '<button class="btn-mini btn-download" onclick="verCurriculo(' + c.id + ')">Ver currículo</button>' +

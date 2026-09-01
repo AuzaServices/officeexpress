@@ -1450,7 +1450,7 @@ app.get("/api/admin/empresas/:id/pagamentos", protegerAdmin, async (req, res) =>
 app.get("/api/admin/empresas/:id/curriculos", protegerAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, curriculo_id, created_at FROM empresas_curriculos_vistos WHERE empresa_id = ? ORDER BY id DESC",
+      "SELECT id, pedido_id, visto_em FROM empresas_curriculos_vistos WHERE empresa_id = ? ORDER BY id DESC",
       [req.params.id]
     );
     res.json({ curriculos: rows });
@@ -1952,6 +1952,26 @@ app.get("/api/companies/me", async (req, res) => {
   res.json({ ok: true, empresa: emp });
 });
 
+// Empresa logada atualiza os próprios dados cadastrais (nome e CNPJ).
+app.put("/api/companies/me/dados", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const { nome, cnpj } = req.body || {};
+  if (!nome || !String(nome).trim()) return res.status(400).json({ error: "Informe o nome da empresa." });
+  try {
+    await pool.query("UPDATE empresas SET nome = ?, cnpj = ? WHERE id = ?", [
+      String(nome).trim(),
+      cnpj != null && String(cnpj).trim() !== "" ? String(cnpj).trim() : null,
+      id,
+    ]);
+    const emp = await buscarEmpresaPorId(id);
+    res.json({ ok: true, empresa: emp });
+  } catch (e) {
+    console.error("Erro ao atualizar dados da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao atualizar dados." });
+  }
+});
+
 // Contato comercial (vendas)
 app.post("/api/companies/contato", async (req, res) => {
   const { nome, email, empresa, mensagem } = req.body || {};
@@ -2143,6 +2163,59 @@ app.get("/api/companies/curriculos", async (req, res) => {
   } catch (e) {
     console.error("Erro listar curriculos empresas:", e.message);
     res.status(500).json({ error: "Erro ao buscar currículos." });
+  }
+});
+
+// Currículos já visualizados pela empresa logada (histórico do portal).
+app.get("/api/companies/vistos", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [rows] = await pool.query(
+      `SELECT v.pedido_id AS id, MAX(v.visto_em) AS visto_em
+       FROM empresas_curriculos_vistos v
+       WHERE v.empresa_id = ?
+       GROUP BY v.pedido_id
+       ORDER BY visto_em DESC
+       LIMIT 200`,
+      [id]
+    );
+    const vistos = [];
+    for (const r of rows) {
+      let d = {};
+      try {
+        const [p] = await pool.query("SELECT dados_json FROM pedidos WHERE id = ?", [r.id]);
+        if (p.length) d = JSON.parse(p[0].dados_json || "{}");
+      } catch (e) { d = {}; }
+      vistos.push({
+        id: r.id,
+        nome: d.nome || "Candidato",
+        cargo: (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString().slice(0, 80),
+        cidade: d.cidade || "",
+        estado: d.estado || "",
+        visto_em: r.visto_em,
+      });
+    }
+    res.json({ ok: true, vistos });
+  } catch (e) {
+    console.error("Erro listar vistos:", e.message);
+    res.status(500).json({ error: "Erro ao carregar histórico de visualizações." });
+  }
+});
+
+// Pagamentos da empresa logada (histórico de assinatura).
+app.get("/api/companies/pagamentos", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, plano, valor, status, tipo, created_at, pago_at FROM empresas_pagamentos WHERE empresa_id = ? ORDER BY id DESC",
+      [id]
+    );
+    res.json({ ok: true, pagamentos: rows });
+  } catch (e) {
+    console.error("Erro listar pagamentos empresa:", e.message);
+    res.status(500).json({ error: "Erro ao carregar pagamentos." });
   }
 });
 
