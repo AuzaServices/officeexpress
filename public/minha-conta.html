@@ -87,6 +87,15 @@
       transition: var(--transition);
     }
     .btn-mini svg { width: 14px; height: 14px; }
+    .btn-olho {
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary);
+      cursor: pointer; text-decoration: none; transition: var(--transition);
+    }
+    .btn-olho svg { width: 16px; height: 16px; }
+    .btn-olho:hover { border-color: var(--brand); color: var(--brand); background: rgba(59,130,246,.07); }
+    html[data-tema="escuro"] .btn-olho { border-color: var(--border); color: var(--text-secondary); }
     .btn-download { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; box-shadow: 0 3px 12px var(--brand-glow); }
     .btn-download:hover { transform: translateY(-1px); filter: brightness(1.05); }
     .btn-conta { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border); }
@@ -131,6 +140,9 @@
       .stat-card .stat-value { font-size: 1.5rem; }
       .pedidos-card .pedidos-titulo { padding: 18px 18px 4px; }
       table.tabela th, table.tabela td { padding: 12px 14px; }
+      /* "Pagar agora" sempre em uma linha, sem quebrar em duas */
+      .btn-mini { white-space: nowrap; padding: 8px 12px; font-size: 0.75rem; gap: 5px; }
+      .btn-olho { width: 32px; height: 32px; }
     }
 
     /* ============ Tema escuro ============ */
@@ -414,6 +426,9 @@
           var tr = document.createElement("tr");
           tr.innerHTML =
             '<td><div class="tabela-modelo">' +
+              '<a class="btn-olho" href="/pagamento?pedido=' + encodeURIComponent(p.id) + '" title="Visualizar currículo" aria-label="Visualizar currículo">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+              '</a>' +
               '<div class="mini"><img src="/imagens/miniaturas/' + encodeURIComponent(p.modelo) + '.png" alt="" loading="lazy" onerror="fallbackMini(this)"><span class="mini-fallback" style="display:none">CV</span></div>' +
               '<div><div class="nome">' + (modeloNome || "Documento") + '</div>' +
               '<div class="tipo">' + tipoLabel(p.modelo, tipo) + ' · Pedido #' + p.id + '</div></div>' +
