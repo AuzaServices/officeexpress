@@ -55,6 +55,13 @@
 
     /* Card da tabela */
     .pedidos-card { padding: 12px 0 0; overflow: hidden; }
+    .aviso-expiracao {
+      display: flex; align-items: center; gap: 8px;
+      margin: -8px 0 20px; padding: 9px 14px;
+      border: 1px solid rgba(245,158,11,.28); border-radius: 10px;
+      background: rgba(245,158,11,.07); color: var(--text-muted);
+      font-size: .82rem; line-height: 1.45;
+    }
     .pedidos-card .pedidos-titulo { padding: 22px 28px 6px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .pedidos-card .pedidos-titulo h3 { font-size: 1.2rem; font-weight: 800; margin: 0; }
     .pedidos-card .pedidos-titulo .contagem { color: var(--text-muted); font-size: 0.85rem; }
@@ -220,6 +227,12 @@
           </div>
         </div>
 
+        <!-- Aviso discreto: expiração de pedidos pendentes -->
+        <div class="aviso-expiracao" id="avisoExpiracao" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Pedidos pendentes são apagados automaticamente em até 24h. Conclua o pagamento para garantir o seu currículo.</span>
+        </div>
+
         <!-- Lista de pedidos -->
         <div class="card pedidos-card">
           <div class="pedidos-titulo">
@@ -366,6 +379,10 @@
         IDS.kpiPendentes.textContent = pendentes;
         IDS.kpiInvestido.textContent = App.formatarPreco(investido);
         IDS.contagem.textContent = total + (total === 1 ? " documento" : " documentos");
+
+        // Aviso de expiração: só aparece quando há pedidos pendentes.
+        var aviso = document.getElementById("avisoExpiracao");
+        if (aviso) aviso.style.display = pendentes > 0 ? "flex" : "none";
 
         IDS.skeleton.classList.add("oculto");
         if (!total) {

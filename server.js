@@ -2398,3 +2398,36 @@ cron.schedule(
   { timezone: "America/Sao_Paulo" }
 );
 console.log("🗓️ Fechamento mensal agendado: dia 05 às 00h00 (Brasília).");
+
+// ---------------------------------------------------------------------------
+// Expiração de pedidos pendentes (currículos não pagos).
+// Pedidos com status 'pendente' criados há mais de 24 horas são apagados do
+// sistema. Executa na inicialização do servidor e depois a cada hora, para
+// que nenhum pendente sobreviva por mais de 24h + 1h no máximo.
+// ---------------------------------------------------------------------------
+async function expirarPedidosPendentes() {
+  try {
+    const [r] = await pool.query(
+      "DELETE FROM pedidos WHERE status = 'pendente' AND created_at < (NOW() - INTERVAL 24 HOUR)"
+    );
+    if (r.affectedRows > 0) {
+      console.log(`🧹 Pedidos pendentes expirados: ${r.affectedRows} pedido(s) com mais de 24h apagado(s).`);
+    }
+    return r.affectedRows;
+  } catch (e) {
+    console.error("❌ Erro ao expirar pedidos pendentes:", e.message);
+    return 0;
+  }
+}
+
+// Roda na inicialização (garante a regra mesmo que o servidor fique offline).
+expirarPedidosPendentes();
+// Roda a cada hora (minuto 7 para não coincidir com outras rotinas).
+cron.schedule(
+  "0 7 * * * *",
+  async () => {
+    await expirarPedidosPendentes();
+  },
+  { timezone: "America/Sao_Paulo" }
+);
+console.log("🗓️ Expiração de pedidos pendentes agendada: a cada hora (24h de tolerância).");
