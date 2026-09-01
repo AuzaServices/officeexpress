@@ -200,7 +200,7 @@
           </div>
         </div>
 
-        <div class="section-header">
+        <div class="section-header" id="planos">
           <h2>Planos</h2>
           <p>Assinatura mensal com acesso ao banco de currículos.</p>
         </div>
@@ -491,6 +491,12 @@
     (function () {
       document.getElementById("ano").textContent = new Date().getFullYear();
       App.carregarHeader("companies");
+
+      // Rola até a seção de planos (usado pelo link do cabeçalho).
+      window.irParaSecao = function (id) {
+        var alvo = document.getElementById(id);
+        if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
 
       // Carrega preços dinâmicos dos planos (configuráveis pelo admin)
       function carregarPrecos() {

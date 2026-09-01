@@ -39,6 +39,19 @@ window.App = (function () {
     window.location.href = "/";
   }
 
+  // Logout exclusivo da plataforma Companies (sessão de empresa separada).
+  async function logoutEmpresa() {
+    await api("/api/companies/logout", { method: "POST" });
+    window.location.href = "/companies";
+  }
+
+  // Dispara o formulário de login da empresa quando a página companies.html
+  // está carregada (ela expõe window.mostrarForm).
+  function mostrarFormCompanies(tipo) {
+    if (typeof window.mostrarForm === "function") window.mostrarForm(tipo);
+    else window.location.href = "/companies";
+  }
+
   function formatarPreco(v) {
     return "R$ " + (typeof v === "number" ? v : parseFloat(v || 0)).toFixed(2).replace(".", ",");
   }
@@ -70,6 +83,51 @@ window.App = (function () {
     const nav = document.getElementById("navMenu");
     const mobile = document.getElementById("mobileMenu");
     if (!nav && !mobile) return;
+
+    // -----------------------------------------------------------------
+    // Header 100% dedicado à plataforma Office Express | Companies.
+    // Nada do site de clientes (Curriculum, Ferramentas, avatar do
+    // cliente): navegação própria e conta da EMPRESA logada.
+    // -----------------------------------------------------------------
+    if (ativo === "companies") {
+      api("/api/companies/me").then((r) => {
+        const empresa = r && r.ok ? r.data.empresa : null;
+        const linksCompanies =
+          '<a href="/companies" class="ativo">Para empresas</a>' +
+          '<a href="/companies" onclick="irParaSecao(\'planos\');return false;">Planos</a>' +
+          '<a href="/" >Office Express</a>';
+
+        const areaEmpresa = empresa
+          ? '<div class="user-menu" id="userMenu">' +
+              '<button class="user-menu-btn" id="userMenuBtn" aria-haspopup="true" aria-expanded="false">' +
+                '<span class="user-avatar">' + iniciais(empresa.nome) + '</span>' +
+                '<span class="user-nome">' + (empresa.nome || "Empresa").split(" ")[0] + '</span>' +
+                '<svg class="user-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+              '</button>' +
+              '<div class="user-dropdown" id="userDropdown">' +
+                '<button type="button" class="user-dropdown-sair" onclick="App.logoutEmpresa();return false;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Sair</button>' +
+              '</div>' +
+            '</div>'
+          : '<a href="/companies" onclick="mostrarFormCompanies(\'login\');return false;" class="btn-login">Entrar</a>';
+
+        if (nav) nav.innerHTML = linksCompanies + areaEmpresa;
+
+        if (mobile) {
+          const areaEmpresaMobile = empresa
+            ? '<div class="mobile-user">' +
+                '<span class="user-avatar">' + iniciais(empresa.nome) + '</span>' +
+                '<span class="user-nome">' + (empresa.nome || "Empresa") + '</span>' +
+              '</div>' +
+              '<button type="button" class="mobile-sair" onclick="App.logoutEmpresa();return false;">Sair</button>'
+            : '<a href="/companies" onclick="mostrarFormCompanies(\'login\');return false;" class="btn-login-mobile">Entrar</a>';
+          mobile.innerHTML = '<div class="mobile-menu-inner">' + linksCompanies + areaEmpresaMobile + '</div>';
+        }
+
+        setupUserDropdown();
+      });
+      return;
+    }
+
     authMe().then((usuario) => {
       const linksComuns = linksBase(ativo);
 
@@ -267,7 +325,7 @@ window.App = (function () {
     });
   }
 
-  return { api, authMe, mostrarAlerta, limparAlerta, logout, formatarPreco, carregarHeader, track: trackEvento, registrarPageview, iniciarHeartbeat, obterRef, limparRef };
+  return { api, authMe, mostrarAlerta, limparAlerta, logout, logoutEmpresa, mostrarFormCompanies, formatarPreco, carregarHeader, track: trackEvento, registrarPageview, iniciarHeartbeat, obterRef, limparRef };
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
