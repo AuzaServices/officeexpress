@@ -401,10 +401,17 @@ app.get("/api/pedidos/meus", async (req, res) => {
   const id = usuarioDaSessao(req);
   if (!id) return res.status(401).json({ error: "Não autenticado." });
   const [rows] = await pool.query(
-    "SELECT id, modelo, valor, status, created_at, pago_at, download_token FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
+    "SELECT id, modelo, valor, status, created_at, pago_at, download_token, dados_json FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
     [id]
   );
-  res.json({ pedidos: rows });
+  // Extrai o consentimento (LGPD) para exibição do selo de compartilhamento.
+  const pedidos = rows.map((p) => {
+    let consentimento = false;
+    try { consentimento = !!(JSON.parse(p.dados_json || "{}").consentimento); } catch (e) {}
+    const { dados_json, ...resto } = p;
+    return { ...resto, consentimento };
+  });
+  res.json({ pedidos });
 });
 
 // ---------------------------------------------------------------------------
@@ -1976,9 +1983,13 @@ async function garantirEmpresasSchema() {
 // ---------------------------------------------------------------------------
 async function arquivarTalento(pedidoId) {
   try {
-    const [rows] = await pool.query("SELECT id, usuario_id, modelo, dados_json FROM pedidos WHERE id = ?", [pedidoId]);
+    const [rows] = await pool.query("SELECT id, usuario_id, modelo, status, dados_json FROM pedidos WHERE id = ?", [pedidoId]);
     if (!rows.length) return;
     const p = rows[0];
+    // LGPD (proteção interna): apenas pedidos PAGOS podem ser arquivados no
+    // banco de talentos. Pendentes/cancelados nunca entram, independente de
+    // quem chame a função.
+    if (p.status !== "pago") return;
     let d = {};
     try { d = JSON.parse(p.dados_json || "{}"); } catch (e) { d = {}; }
 
@@ -2022,7 +2033,15 @@ async function arquivarTalento(pedidoId) {
       "SELECT id FROM pedidos WHERE status = 'pago' AND dados_json LIKE '%\"consentimento\":true%'"
     );
     for (const r of rows) await arquivarTalento(r.id);
-    if (rows.length) console.log(`🗄️ Talentos arquivados na inicialização: ${rows.length} currículo(s) com consentimento.`);
+    if (rows.length) console.log(`🗄️ Talentos arquivados na inicialização: ${rows.length} currículo(s) pago(s) com consentimento.`);
+
+    // LGPD (conformidade retroativa): remove da tabela talentos qualquer
+    // registro que não corresponda a um pedido PAGO atual (ex.: talentos
+    // arquivados de pendentes por versões anteriores do sistema).
+    const [del] = await pool.query(
+      "DELETE FROM talentos WHERE pedido_id IS NOT NULL AND pedido_id NOT IN (SELECT id FROM pedidos WHERE status = 'pago')"
+    );
+    if (del.affectedRows > 0) console.log(`🧹 LGPD: ${del.affectedRows} talento(s) sem pagamento confirmado removido(s) do banco.`);
   } catch (e) {
     // silencioso: ambiente sem DB (ex.: desenvolvimento offline)
   }
@@ -2540,14 +2559,9 @@ console.log("🗓️ Fechamento mensal agendado: dia 05 às 00h00 (Brasília).")
 // ---------------------------------------------------------------------------
 async function expirarPedidosPendentes() {
   try {
-    // Antes de apagar, arquiva os currículos pendentes com consentimento no
-    // banco permanente de talentos — o dado do profissional sobrevive ao
-    // pedido, que será removido logo em seguida.
-    const [aArquivar] = await pool.query(
-      "SELECT id FROM pedidos WHERE status = 'pendente' AND created_at < (NOW() - INTERVAL 24 HOUR) AND dados_json LIKE '%\"consentimento\":true%'"
-    );
-    for (const r of aArquivar) await arquivarTalento(r.id);
-
+    // LGPD: currículos pendentes NÃO entram no banco de talentos. Somente
+    // pedidos pagos são arquivados (consentimento + contraprestação). O
+    // pendente expirado é simplesmente removido do sistema.
     const [r] = await pool.query(
       "DELETE FROM pedidos WHERE status = 'pendente' AND created_at < (NOW() - INTERVAL 24 HOUR)"
     );

@@ -257,6 +257,12 @@
           </div>
         </div>
 
+        <!-- Aviso LGPD: entrada no banco de talentos (só quando consentiu) -->
+        <div id="avisoBancoTalentos" style="display:none;align-items:flex-start;gap:9px;margin:14px 0 4px;padding:12px 14px;border:1px solid rgba(59,130,246,.3);border-left:3px solid var(--brand);border-radius:10px;background:rgba(59,130,246,.05)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="color:var(--brand);flex-shrink:0;margin-top:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span style="font-size:.82rem;line-height:1.5;color:var(--text-secondary)">Você autorizou o compartilhamento do seu currículo. <strong>Ao concluir o pagamento, seu currículo entrará no banco de talentos da Office Express</strong> e poderá ser visualizado por <strong>empresas parceiras em busca de candidatos</strong>, nos termos da Lei nº 13.709/2018 (LGPD). Você pode revogar a autorização a qualquer momento pela nossa <a href="/politica" target="_blank" rel="noopener" style="color:var(--brand);font-weight:600">Política de Privacidade</a>.</span>
+        </div>
+
         <div class="barra-confianca" id="barraConfianca">
           <div class="carrossel-track" id="carrosselTrack">
           <div class="carrossel-slide"><div class="item">
@@ -456,6 +462,10 @@
         if (r.ok && r.data && r.data.modelo) {
           modeloPrev = r.data.modelo;
           dadosPrev = r.data.dados || {};
+          // Aviso do banco de talentos: exibe somente se o titular autorizou
+          // o compartilhamento (consentimento LGPD) nos dados do pedido.
+          var aviso = document.getElementById("avisoBancoTalentos");
+          if (aviso) aviso.style.display = dadosPrev.consentimento ? "flex" : "none";
           // Usa o valor específico do pedido (pode ter sido ajustado no admin),
           // e não o preço global, no resumo exibido na página.
           if (r.data.valor != null) {
@@ -465,6 +475,11 @@
           renderPrevia();
         }
       }).catch(function (e) { console.error("Erro ao carregar dados do pedido para prévia:", e); });
+    } else {
+      // Sem pedido na URL (fluxo antigo via localStorage), usa o consentimento
+      // salvo localmente para decidir a exibição do aviso.
+      var aviso2 = document.getElementById("avisoBancoTalentos");
+      if (aviso2) aviso2.style.display = dadosPrev.consentimento ? "flex" : "none";
     }
 
     function dimensionarPrevia() {

@@ -255,11 +255,16 @@
           <label for="infoAdicional">Informações adicionais (opcional)</label>
           <textarea id="infoAdicional" placeholder="CPF, CNH, disponibilidade..."></textarea>
         </div>
-        <!-- Consentimento estratégico: permite a empresa encontrar este currículo -->
-        <div class="consentimento" style="margin-top:18px;padding:16px 18px;border:1px solid var(--border);border-radius:12px;background:rgba(59,130,246,0.05)">
-          <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;font-weight:500;font-size:.92rem">
-            <input type="checkbox" id="consentimento" style="margin-top:3px;width:18px;height:18px;accent-color:var(--brand)" />
-            <span>Permito que meu currículo seja visto por empresas parceiras da Office Express para oportunidades de emprego. <span style="color:var(--text-muted)">(Você pode desmarcar a qualquer momento)</span></span>
+        <!-- Consentimento LGPD: compartilhamento com empresas parceiras -->
+        <div class="consentimento" style="margin-top:18px;padding:18px 20px;border:1px solid var(--border);border-left:3px solid var(--brand);border-radius:12px;background:rgba(59,130,246,0.04)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="color:var(--brand);flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <strong style="font-size:.9rem;letter-spacing:.2px">Autorização de compartilhamento — LGPD</strong>
+          </div>
+          <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;font-weight:500;font-size:.88rem;line-height:1.55">
+            <input type="checkbox" id="consentimento" style="margin-top:3px;width:18px;height:18px;accent-color:var(--brand);flex-shrink:0" />
+            <span>Autorizo, nos termos da <strong>Lei nº 13.709/2018 (LGPD)</strong>, em especial o seu <strong>Art. 7º, I</strong> (consentimento), que meus dados cadastrais e meu currículo sejam armazenados e compartilhados com <strong>empresas parceiras da Office Express</strong> contratantes, com a finalidade exclusiva de <strong>seleção e recrutamento para oportunidades de emprego</strong>.<br />
+            <span style="color:var(--text-muted);font-size:.82rem">Conforme o <strong>Art. 18 da LGPD</strong>, você pode solicitar a qualquer momento o acesso, a correção ou a <strong>eliminação</strong> dos seus dados, além de revogar esta autorização quando quiser — bastando entrar em contato com o nosso suporte. Saiba mais na nossa <a href="/politica" target="_blank" rel="noopener" style="color:var(--brand);font-weight:600">Política de Privacidade</a>.</span></span>
           </label>
         </div>
       </div>
