@@ -1972,6 +1972,11 @@ async function garantirEmpresasSchema() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
   } catch (e) {
     console.error("⚠️ Não foi possível criar tabelas de empresas:", e.message);
+    if (/denied|command denied/i.test(e.message)) {
+      console.error("🚨 ATENÇÃO: o usuário do banco NÃO tem permissão de CREATE TABLE.");
+      console.error("🚨 A tabela 'talentos' (e demais tabelas) precisa ser criada manualmente no painel do banco (phpMyAdmin).");
+      console.error("🚨 O SQL completo está no arquivo schema.sql do projeto. Sem a tabela 'talentos', a busca de currículos das empresas retornará erro.");
+    }
   }
 }
 
