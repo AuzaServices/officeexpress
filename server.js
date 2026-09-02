@@ -419,6 +419,10 @@ async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
   // comissões, independente da tabela `pedidos`. O INSERT IGNORE + índice
   // único em pedido_id garante que não duplica mesmo se o webhook e o
   // confirmar-pago chegarem para o mesmo pedido.
+  // Arquiva o talento no banco permanente (Companies), se houver consentimento.
+  // O arquivamento é interno — não afeta a resposta do pagamento.
+  try { await arquivarTalento(pedidoId); } catch (e) {}
+
   try {
     const [p] = await pool.query("SELECT id, usuario_id, valor, parceiro_id, modelo FROM pedidos WHERE id = ?", [pedidoId]);
     if (p.length) {
@@ -980,6 +984,8 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
       } catch (e) {
         console.error("Erro ao registrar transação financeira (admin):", e.message);
       }
+      // Arquiva o talento no banco permanente (Companies).
+      try { await arquivarTalento(id); } catch (e) {}
     } else {
       await pool.query("UPDATE pedidos SET status = ? WHERE id = ?", [status, id]);
     }
@@ -1927,10 +1933,100 @@ async function garantirEmpresasSchema() {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+
+    // ---------------------------------------------------------------------
+    // Banco permanente de talentos (Office Express | Companies).
+    // Espelha os dados essenciais do currículo pago com consentimento, para
+    // que o talento permaneça disponível às empresas mesmo que o pedido
+    // original seja apagado (pendentes +24h, limpeza admin, etc.).
+    // ---------------------------------------------------------------------
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS talentos (
+        id INT NOT NULL AUTO_INCREMENT,
+        pedido_id INT NULL,
+        usuario_id INT NULL,
+        nome VARCHAR(200) NOT NULL,
+        email VARCHAR(200) NULL,
+        telefone VARCHAR(60) NULL,
+        cargo VARCHAR(200) NULL,
+        cidade VARCHAR(120) NULL,
+        estado VARCHAR(4) NULL,
+        objetivo TEXT NULL,
+        dados_json LONGTEXT NOT NULL,
+        consentimento TINYINT(1) NOT NULL DEFAULT 0,
+        modelo VARCHAR(40) NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uq_talentos_pedido (pedido_id),
+        KEY idx_talentos_estado (estado),
+        KEY idx_talentos_cidade (cidade),
+        KEY idx_talentos_consentimento (consentimento)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
   } catch (e) {
     console.error("⚠️ Não foi possível criar tabelas de empresas:", e.message);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Banco de talentos: espelhamento permanente.
+// arquivarTalento(pedidoId) extrai os dados essenciais do pedido pago e
+// grava/atualiza o registro em `talentos`. Idempotente (upsert por pedido_id):
+// se o pedido for re-pago ou corrigido, o talento é atualizado, não duplicado.
+// ---------------------------------------------------------------------------
+async function arquivarTalento(pedidoId) {
+  try {
+    const [rows] = await pool.query("SELECT id, usuario_id, modelo, dados_json FROM pedidos WHERE id = ?", [pedidoId]);
+    if (!rows.length) return;
+    const p = rows[0];
+    let d = {};
+    try { d = JSON.parse(p.dados_json || "{}"); } catch (e) { d = {}; }
+
+    const cargo = (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString().slice(0, 200) || null;
+    const telefones = Array.isArray(d.telefone) ? d.telefone.filter(Boolean) : [d.telefone].filter(Boolean);
+    const telefone = (telefones[0] || "").toString().slice(0, 60) || null;
+
+    await pool.query(
+      `INSERT INTO talentos (pedido_id, usuario_id, nome, email, telefone, cargo, cidade, estado, objetivo, dados_json, consentimento, modelo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         nome = VALUES(nome), email = VALUES(email), telefone = VALUES(telefone),
+         cargo = VALUES(cargo), cidade = VALUES(cidade), estado = VALUES(estado),
+         objetivo = VALUES(objetivo), dados_json = VALUES(dados_json),
+         consentimento = VALUES(consentimento), modelo = VALUES(modelo)`,
+      [
+        p.id,
+        p.usuario_id || null,
+        (d.nome || "Candidato").toString().slice(0, 200),
+        (d.email || "").toString().slice(0, 200) || null,
+        telefone,
+        cargo,
+        (d.cidade || "").toString().slice(0, 120) || null,
+        (d.estado || "").toString().slice(0, 4) || null,
+        (d.objetivo || "").toString() || null,
+        p.dados_json || "{}",
+        d.consentimento ? 1 : 0,
+        p.modelo || null,
+      ]
+    );
+  } catch (e) {
+    console.error("⚠️ Erro ao arquivar talento do pedido", pedidoId, ":", e.message);
+  }
+}
+
+// Sincroniza pedidos pagos antigos para a tabela talentos (roda na subida).
+// Garante que talentos de antes da feature também sejam permanentes.
+(async () => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id FROM pedidos WHERE status = 'pago' AND dados_json LIKE '%\"consentimento\":true%'"
+    );
+    for (const r of rows) await arquivarTalento(r.id);
+    if (rows.length) console.log(`🗄️ Talentos arquivados na inicialização: ${rows.length} currículo(s) com consentimento.`);
+  } catch (e) {
+    // silencioso: ambiente sem DB (ex.: desenvolvimento offline)
+  }
+})();
 
 // Cadastro de empresa
 app.post("/api/companies/cadastro", async (req, res) => {
@@ -2165,31 +2261,24 @@ app.get("/api/companies/curriculos", async (req, res) => {
     const cidade = req.query.cidade ? String(req.query.cidade).trim() : "";
     const estado = req.query.estado ? String(req.query.estado).trim() : "";
 
-    let sql = `SELECT p.id, p.dados_json FROM pedidos p WHERE p.status = 'pago' AND p.dados_json LIKE '%"consentimento":true%'`;
+    // Lê do banco PERMANENTE de talentos — os dados sobrevivem à exclusão
+    // do pedido original (pendentes +24h, limpeza admin, exclusão de usuário).
+    let sql = "SELECT id, nome, cargo, cidade, estado FROM talentos WHERE consentimento = 1";
     const params = [];
-    if (cargo) { sql += " AND p.dados_json LIKE ?"; params.push("%" + cargo + "%"); }
-    if (cidade) { sql += " AND p.dados_json LIKE ?"; params.push("%" + cidade + "%"); }
-    if (estado) { sql += " AND JSON_EXTRACT(p.dados_json, '$.estado') = ?"; params.push(estado); }
-    sql += " ORDER BY p.id DESC LIMIT 200";
+    if (cargo) { sql += " AND (cargo LIKE ? OR objetivo LIKE ?)"; params.push("%" + cargo + "%", "%" + cargo + "%"); }
+    if (cidade) { sql += " AND cidade LIKE ?"; params.push("%" + cidade + "%"); }
+    if (estado) { sql += " AND estado = ?"; params.push(estado); }
+    sql += " ORDER BY id DESC LIMIT 200";
     const [rows] = await pool.query(sql, params);
 
-    const curriculos = [];
-    for (const r of rows) {
-      let d = {};
-      try { d = JSON.parse(r.dados_json || "{}"); } catch (e) { d = {}; }
-      if (!d.consentimento) continue;
-      const cidadeC = (d.cidade || "").trim();
-      const estadoC = (d.estado || "").trim();
-      if (cidade && cidadeC.toLowerCase().indexOf(cidade.toLowerCase()) === -1) continue;
-      curriculos.push({
-        id: r.id,
-        nome: d.nome || "Candidato",
-        cargo: (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString().slice(0, 80),
-        cidade: cidadeC,
-        estado: estadoC,
-        experiencia: null,
-      });
-    }
+    const curriculos = rows.map((r) => ({
+      id: r.id,
+      nome: r.nome || "Candidato",
+      cargo: r.cargo || "",
+      cidade: r.cidade || "",
+      estado: r.estado || "",
+      experiencia: null,
+    }));
 
     // Contadores
     const [v] = await pool.query("SELECT COUNT(DISTINCT pedido_id) AS c FROM empresas_curriculos_vistos WHERE empresa_id = ?", [id]);
@@ -2216,17 +2305,24 @@ app.get("/api/companies/vistos", async (req, res) => {
     );
     const vistos = [];
     for (const r of rows) {
-      let d = {};
-      try {
-        const [p] = await pool.query("SELECT dados_json FROM pedidos WHERE id = ?", [r.id]);
-        if (p.length) d = JSON.parse(p[0].dados_json || "{}");
-      } catch (e) { d = {}; }
+      // Resolve os dados pelo banco permanente de talentos. O visto grava o
+      // pedido_id; se o pedido foi apagado, o talento permanece acessível.
+      let t = null;
+      if (r.id) {
+        const [tt] = await pool.query("SELECT id, nome, cargo, cidade, estado FROM talentos WHERE pedido_id = ?", [r.id]);
+        t = tt[0] || null;
+      }
+      if (!t && r.id) {
+        // Registros antigos podem ter gravado o id do talento diretamente.
+        const [tt2] = await pool.query("SELECT id, nome, cargo, cidade, estado FROM talentos WHERE id = ?", [r.id]);
+        t = tt2[0] || null;
+      }
       vistos.push({
-        id: r.id,
-        nome: d.nome || "Candidato",
-        cargo: (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString().slice(0, 80),
-        cidade: d.cidade || "",
-        estado: d.estado || "",
+        id: t ? t.id : r.id,
+        nome: t ? t.nome : "Candidato",
+        cargo: t ? (t.cargo || "") : "",
+        cidade: t ? t.cidade : "",
+        estado: t ? t.estado : "",
         visto_em: r.visto_em,
       });
     }
@@ -2263,13 +2359,15 @@ app.get("/api/companies/curriculos/:id/detalhe", async (req, res) => {
     return res.status(403).json({ error: "Empresa sem assinatura ativa." });
   }
   try {
-    const [rows] = await pool.query("SELECT id, dados_json FROM pedidos WHERE id = ? AND status = 'pago'", [req.params.id]);
+    // Lê do banco PERMANENTE de talentos. O id recebido é o id do talento;
+    // se o pedido original já foi apagado, o talento continua acessível.
+    const [rows] = await pool.query("SELECT id, pedido_id, dados_json FROM talentos WHERE id = ? AND consentimento = 1", [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: "Currículo não encontrado." });
     let d = {};
     try { d = JSON.parse(rows[0].dados_json || "{}"); } catch (e) { d = {}; }
     if (!d.consentimento) return res.status(403).json({ error: "Currículo sem autorização para consulta." });
 
-    await pool.query("INSERT IGNORE INTO empresas_curriculos_vistos (empresa_id, pedido_id) VALUES (?, ?)", [id, req.params.id]);
+    await pool.query("INSERT IGNORE INTO empresas_curriculos_vistos (empresa_id, pedido_id) VALUES (?, ?)", [id, rows[0].pedido_id || rows[0].id]);
 
     const arr = (k) => (Array.isArray(d[k]) ? d[k].filter(Boolean) : []);
     const empresas = arr("empresa");
@@ -2291,6 +2389,7 @@ app.get("/api/companies/curriculos/:id/detalhe", async (req, res) => {
       ok: true,
       curriculo: {
         id: rows[0].id,
+        pedido_id: rows[0].pedido_id,
         nome: d.nome || "Candidato",
         cargo: (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString(),
         cidade: d.cidade || "",
@@ -2441,6 +2540,14 @@ console.log("🗓️ Fechamento mensal agendado: dia 05 às 00h00 (Brasília).")
 // ---------------------------------------------------------------------------
 async function expirarPedidosPendentes() {
   try {
+    // Antes de apagar, arquiva os currículos pendentes com consentimento no
+    // banco permanente de talentos — o dado do profissional sobrevive ao
+    // pedido, que será removido logo em seguida.
+    const [aArquivar] = await pool.query(
+      "SELECT id FROM pedidos WHERE status = 'pendente' AND created_at < (NOW() - INTERVAL 24 HOUR) AND dados_json LIKE '%\"consentimento\":true%'"
+    );
+    for (const r of aArquivar) await arquivarTalento(r.id);
+
     const [r] = await pool.query(
       "DELETE FROM pedidos WHERE status = 'pendente' AND created_at < (NOW() - INTERVAL 24 HOUR)"
     );

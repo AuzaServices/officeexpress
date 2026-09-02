@@ -143,6 +143,33 @@ CREATE TABLE IF NOT EXISTS `empresas_contatos` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Tabela: talentos (banco PERMANENTE de profissionais para a Companies)
+-- Espelha os dados essenciais de currículos pagos com consentimento.
+-- Os dados sobrevivem à exclusão do pedido original (pendentes +24h,
+-- limpeza admin, exclusão de usuário).
+CREATE TABLE IF NOT EXISTS `talentos` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `pedido_id` INT NULL,
+  `usuario_id` INT NULL,
+  `nome` VARCHAR(200) NOT NULL,
+  `email` VARCHAR(200) NULL,
+  `telefone` VARCHAR(60) NULL,
+  `cargo` VARCHAR(200) NULL,
+  `cidade` VARCHAR(120) NULL,
+  `estado` VARCHAR(4) NULL,
+  `objetivo` TEXT NULL,
+  `dados_json` LONGTEXT NOT NULL,
+  `consentimento` TINYINT(1) NOT NULL DEFAULT 0,
+  `modelo` VARCHAR(40) NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_talentos_pedido` (`pedido_id`),
+  KEY `idx_talentos_estado` (`estado`),
+  KEY `idx_talentos_cidade` (`cidade`),
+  KEY `idx_talentos_consentimento` (`consentimento`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================================
