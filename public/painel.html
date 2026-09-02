@@ -175,6 +175,28 @@
         </div>
       </div>
 
+      <!-- Programa de Rede (Pai / Filho) — controles -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:8px">Programa de Rede (Parceiro Pai / Filho)</h3>
+        <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">O filho fica vinculado ao pai e ganha a comissão padrão em cada venda. Enquanto vinculado, cada venda do filho gera um <strong>bônus de indicação</strong> para o pai (descontado da margem da plataforma, nunca do filho). Ao bater a meta, o filho vira Parceiro Pai automaticamente e se desprende.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:12px">
+          <label style="font-size:.8rem;color:var(--text-muted)">Meta de vendas p/ virar Pai<input type="number" id="rcMeta" min="1" style="width:100%;margin-top:4px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" /></label>
+          <label style="font-size:.8rem;color:var(--text-muted)">Bônus do pai (% por venda do filho)<input type="number" id="rcBonus" min="0" max="100" step="0.5" style="width:100%;margin-top:4px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" /></label>
+          <label style="font-size:.8rem;color:var(--text-muted)">Limite de filhos por pai<input type="number" id="rcLimite" min="1" max="50" style="width:100%;margin-top:4px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" /></label>
+          <label style="font-size:.8rem;color:var(--text-muted)">Comissão padrão (%)<input type="number" id="rcComissao" min="0" max="100" step="0.5" style="width:100%;margin-top:4px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text-primary)" /></label>
+        </div>
+        <button class="btn btn-primary" onclick="salvarConfigRede()">Salvar configurações da rede</button>
+        <div style="margin-top:20px">
+          <h4 style="margin:0 0 8px;color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px">Rede cadastrada (pais e filhos)</h4>
+          <div class="tabela-wrap">
+            <table class="tabela">
+              <thead><tr><th>#</th><th>Nome</th><th>Tipo</th><th>Pai</th><th>Vendas</th><th>Código</th></tr></thead>
+              <tbody id="tbodyRede"><tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Comissões a pagar (fechamento mensal no dia 05, mês anterior) -->
       <div class="card" style="margin-bottom:32px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
@@ -609,6 +631,8 @@
       carregarAuditoria();
       carregarParceiros();
       carregarPagamentos();
+      carregarConfigRede();
+      carregarRedeAdmin();
     }
 
     window.aplicarFiltros = function () {
@@ -762,6 +786,50 @@
       });
       if (!data.parceiros || !data.parceiros.length) tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Nenhum parceiro cadastrado ainda.</td></tr>';
     }
+
+    // ===== Programa de Rede (Pai / Filho) =====
+    async function carregarConfigRede() {
+      var { ok, data } = await App.api("/api/admin/rede/config");
+      if (!ok) return;
+      document.getElementById("rcMeta").value = data.config.meta_filho;
+      document.getElementById("rcBonus").value = data.config.bonus_pai_pct;
+      document.getElementById("rcLimite").value = data.config.limite_filhos;
+      document.getElementById("rcComissao").value = data.config.comissao_pct;
+    }
+    async function salvarConfigRede() {
+      var body = JSON.stringify({
+        meta_filho: document.getElementById("rcMeta").value,
+        bonus_pai_pct: document.getElementById("rcBonus").value,
+        limite_filhos: document.getElementById("rcLimite").value,
+        comissao_pct: document.getElementById("rcComissao").value
+      });
+      var { ok, data } = await App.api("/api/admin/rede/config", { method: "PUT", body: body });
+      if (ok) alert("Configurações da rede salvas!");
+      else alert(data.error || "Erro ao salvar.");
+    }
+    async function carregarRedeAdmin() {
+      var { ok, data } = await App.api("/api/admin/rede");
+      if (!ok) return;
+      var tb = document.getElementById("tbodyRede");
+      tb.innerHTML = "";
+      var nomes = {};
+      (data.rede || []).forEach(function (p) { nomes[p.id] = p.nome; });
+      (data.rede || []).forEach(function (p) {
+        var tipo = p.tipo === "pai" ? "Pai (formado)" : (p.tipo === "filho" ? "Filho" : "Independente");
+        var pai = p.pai_id ? (nomes[p.pai_id] || "#" + p.pai_id) : "—";
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + p.id + "</td>" +
+          "<td>" + (p.nome || "-") + "</td>" +
+          "<td>" + tipo + "</td>" +
+          "<td>" + pai + "</td>" +
+          "<td>" + (p.vendas || 0) + "</td>" +
+          "<td>" + (p.codigo || "-") + "</td>";
+        tb.appendChild(tr);
+      });
+      if (!data.rede || !data.rede.length) tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Nenhuma rede formada ainda.</td></tr>';
+    }
+    window.salvarConfigRede = salvarConfigRede;
 
     // ===== Aba Empresas (Office Express | Companies) =====
     function mostrarAba(aba) {

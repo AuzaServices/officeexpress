@@ -417,26 +417,85 @@ app.get("/api/pedidos/meus", async (req, res) => {
 // ---------------------------------------------------------------------------
 // Pagamento (Mercado Pago: Pix e Cartão)
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Programa de Sub-afiliados (Pai / Filho) — configurações via tabela config
+// ---------------------------------------------------------------------------
+const PADRAO_REDE = { meta_filho: 100, bonus_pai_pct: 10, limite_filhos: 5, comissao_pct: 40 };
+async function getConfigRede() {
+  const cfg = { ...PADRAO_REDE };
+  try {
+    const [rows] = await pool.query("SELECT chave, valor FROM config WHERE chave LIKE 'rede_%'");
+    for (const r of rows) {
+      const k = r.chave.replace("rede_", "");
+      const v = parseFloat(r.valor);
+      if (k in cfg && !isNaN(v) && v >= 0) cfg[k] = v;
+    }
+  } catch (e) {}
+  return cfg;
+}
+// Promoção automática: filho que atingiu a meta vira 'pai' (painel muda sozinho).
+async function verificarPromocaoFilho(parceiroId) {
+  try {
+    const cfg = await getConfigRede();
+    const [rows] = await pool.query("SELECT id, tipo, pai_id FROM parceiros WHERE id = ?", [parceiroId]);
+    const p = rows[0];
+    if (!p || p.tipo !== "filho" || !p.pai_id) return false;
+    const [vendas] = await pool.query(
+      "SELECT COUNT(*) AS c FROM transacoes WHERE parceiro_id = ? AND tipo='venda'",
+      [parceiroId]
+    );
+    if (Number(vendas[0].c) >= cfg.meta_filho) {
+      await pool.query("UPDATE parceiros SET tipo = 'pai', promovido_em = NOW() WHERE id = ?", [parceiroId]);
+      console.log(`🎓 Parceiro #${parceiroId} bateu a meta (${vendas[0].c}/${cfg.meta_filho}) e foi promovido a Parceiro Pai. Painel dele agora é o Painel do Pai.`);
+      return true;
+    }
+  } catch (e) {
+    console.error("Erro ao verificar promoção do filho:", e.message);
+  }
+  return false;
+}
+
+// Cada venda paga de um FILHO vinculado gera bônus para o pai (congelado na
+// transação via bonus_pai_id / bonus_pct). O filho recebe sempre os 40%
+// dele; o bônus sai da margem da plataforma.
+async function verificarPromocaoFilhoWrapper(parceiroId) { try { await verificarPromocaoFilho(parceiroId); } catch (e) {} }
+
 async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
   await pool.query(
     "UPDATE pedidos SET status = 'pago', pagamento_id = ?, pagamento_tipo = ?, pago_at = NOW(), download_token = ? WHERE id = ?",
     [pagamentoId, tipo, gerarToken(), pedidoId]
   );
-  // Grava a transação financeira imutável — fonte de verdade de receitas e
-  // comissões, independente da tabela `pedidos`. O INSERT IGNORE + índice
-  // único em pedido_id garante que não duplica mesmo se o webhook e o
-  // confirmar-pago chegarem para o mesmo pedido.
   // Arquiva o talento no banco permanente (Companies), se houver consentimento.
-  // O arquivamento é interno — não afeta a resposta do pagamento.
   try { await arquivarTalento(pedidoId); } catch (e) {}
 
   try {
     const [p] = await pool.query("SELECT id, usuario_id, valor, parceiro_id, modelo FROM pedidos WHERE id = ?", [pedidoId]);
     if (p.length) {
+      // Congela, no momento da venda: a % do parceiro vendedor e, se o
+      // vendedor for um filho vinculado, o bônus do pai dele.
+      let bonusPaiId = null;
+      let bonusPct = null;
+      const vendedorId = p[0].parceiro_id;
+      if (vendedorId) {
+        try {
+          const [vd] = await pool.query("SELECT id, tipo, pai_id FROM parceiros WHERE id = ? AND ativo = 1", [vendedorId]);
+          const v = vd[0];
+          if (v && v.tipo === "filho" && v.pai_id) {
+            const cfg = await getConfigRede();
+            const [paiRow] = await pool.query("SELECT id, ativo FROM parceiros WHERE id = ?", [v.pai_id]);
+            if (paiRow.length && paiRow[0].ativo) {
+              bonusPaiId = v.pai_id;
+              bonusPct = cfg.bonus_pai_pct;
+            }
+          }
+        } catch (e) { console.error("Erro ao calcular bônus do pai:", e.message); }
+      }
       await pool.query(
-        "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), 'venda', ?)",
-        [pedidoId, p[0].usuario_id, p[0].parceiro_id, p[0].modelo, p[0].valor, p[0].parceiro_id, tipo || "pix"]
+        "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, bonus_pai_id, bonus_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), ?, ?, 'venda', ?)",
+        [pedidoId, p[0].usuario_id, p[0].parceiro_id, p[0].modelo, p[0].valor, p[0].parceiro_id, bonusPaiId, bonusPct, tipo || "pix"]
       );
+      // Verifica se o vendedor bateu a meta e deve ser promovido a pai.
+      if (vendedorId) verificarPromocaoFilhoWrapper(vendedorId);
     }
   } catch (e) {
     console.error("Erro ao registrar transação financeira:", e.message);
@@ -983,16 +1042,32 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
       );
       // Registra a transação financeira (fonte de verdade dos valores),
       // também quando o admin marca um pedido como pago manualmente.
+      // Inclui o bônus do pai, se o vendedor for filho vinculado.
       try {
+        let bonusPaiId = null;
+        let bonusPct = null;
+        if (pedido.parceiro_id) {
+          try {
+            const [vd] = await pool.query("SELECT id, tipo, pai_id FROM parceiros WHERE id = ? AND ativo = 1", [pedido.parceiro_id]);
+            const v = vd[0];
+            if (v && v.tipo === "filho" && v.pai_id) {
+              const cfg = await getConfigRede();
+              bonusPaiId = v.pai_id;
+              bonusPct = cfg.bonus_pai_pct;
+            }
+          } catch (e) {}
+        }
         await pool.query(
-          "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), 'venda', ?)",
-          [id, pedido.usuario_id, pedido.parceiro_id, pedido.modelo, pedido.valor, pedido.parceiro_id, pedido.pagamento_tipo || "pix"]
+          "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, bonus_pai_id, bonus_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), ?, ?, 'venda', ?)",
+          [id, pedido.usuario_id, pedido.parceiro_id, pedido.modelo, pedido.valor, pedido.parceiro_id, bonusPaiId, bonusPct, pedido.pagamento_tipo || "pix"]
         );
       } catch (e) {
         console.error("Erro ao registrar transação financeira (admin):", e.message);
       }
       // Arquiva o talento no banco permanente (Companies).
       try { await arquivarTalento(id); } catch (e) {}
+      // Verifica promoção do filho (meta batida).
+      if (pedido.parceiro_id) verificarPromocaoFilhoWrapper(pedido.parceiro_id);
     } else {
       await pool.query("UPDATE pedidos SET status = ? WHERE id = ?", [status, id]);
     }
@@ -1242,7 +1317,7 @@ function protegerParceiro(req, res, next) {
 
 async function buscarParceiroPorId(id) {
   const [rows] = await pool.query(
-    "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, created_at FROM parceiros WHERE id = ?",
+    "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, promovido_em, created_at FROM parceiros WHERE id = ?",
     [id]
   );
   return rows[0] || null;
@@ -1276,7 +1351,7 @@ app.post("/api/admin/parceiros", protegerAdmin, async (req, res) => {
 app.get("/api/admin/parceiros", protegerAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, created_at FROM parceiros ORDER BY id DESC"
+      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, created_at FROM parceiros ORDER BY id DESC"
     );
     res.json({ parceiros: rows });
   } catch (e) {
@@ -1588,6 +1663,18 @@ app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
     const valorComissao = Number(comissaoCalc[0].total) || 0;
     const totalApagar = Number(apagar[0].total) || 0;
 
+    // Progresso do filho para virar pai (meta configurável).
+    let progressoMeta = null;
+    if (p.tipo === "filho" && p.pai_id) {
+      const cfg = await getConfigRede();
+      progressoMeta = { vendas: Number(pagos[0].c) || 0, meta: cfg.meta_filho };
+    }
+    // Bônus recebido como pai (vendas dos filhos vinculados).
+    const [bonusRecebido] = await pool.query(
+      "SELECT COALESCE(SUM(valor * bonus_pct / 100),0) AS total FROM transacoes WHERE bonus_pai_id = ? AND tipo='venda' AND bonus_pct IS NOT NULL",
+      [pid]
+    );
+
     // Acessos/pedidos recentes por dia (tendência dos últimos 7 dias).
     const [tendencia] = await pool.query(
       `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS dia, COUNT(*) AS c
@@ -1609,6 +1696,9 @@ app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
       totalApagar,
       diaPagamento: p.dia_pagamento,
       tendencia,
+      tipo: p.tipo || "independente",
+      progressoMeta,
+      bonusRecebido: Number(bonusRecebido[0].total) || 0,
     });
   } catch (e) {
     console.error("Erro no dashboard do parceiro:", e.message);
@@ -1631,6 +1721,190 @@ app.get("/api/parceiro/pedidos", protegerParceiro, async (req, res) => {
   } catch (e) {
     console.error("Erro ao listar pedidos do parceiro:", e.message);
     res.status(500).json({ error: "Erro ao listar pedidos." });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Rede de sub-afiliados (Painel do Pai): cadastrar filhos, acompanhar metas
+// e bônus de indicação. Regras:
+// - Pai pode ter até rede_limite_filhos filhos (config).
+// - Filho nasce com tipo='filho' e pai_id; comissão padrão (40%).
+// - Filho é promovido a 'pai' automaticamente ao bater a meta de vendas.
+// ---------------------------------------------------------------------------
+app.get("/api/parceiro/rede", protegerParceiro, async (req, res) => {
+  try {
+    const pid = req.session.parceiroId;
+    const cfg = await getConfigRede();
+    const [p] = await pool.query("SELECT id, tipo, pai_id, comissao FROM parceiros WHERE id = ?", [pid]);
+    if (!p.length) return res.status(404).json({ error: "Parceiro não encontrado." });
+    const eu = p[0];
+
+    // Filhos deste parceiro, com progresso de vendas de cada um.
+    const [filhos] = await pool.query(
+      `SELECT pf.id, pf.nome, pf.email, pf.whatsapp, pf.codigo, pf.tipo, pf.ativo, pf.created_at,
+              (SELECT COUNT(*) FROM transacoes t WHERE t.parceiro_id = pf.id AND t.tipo='venda') AS vendas,
+              (SELECT COALESCE(SUM(t.valor * t.bonus_pct / 100), 0) FROM transacoes t
+                WHERE t.bonus_pai_id = ? AND t.parceiro_id = pf.id AND t.tipo='venda' AND t.bonus_pct IS NOT NULL) AS bonus_gerado
+       FROM parceiros pf
+       WHERE pf.pai_id = ?
+       ORDER BY pf.id ASC`,
+      [pid, pid]
+    );
+
+    // Bônus total ganho como pai (todas as vendas de todos os filhos).
+    const [bonusTotal] = await pool.query(
+      "SELECT COALESCE(SUM(valor * bonus_pct / 100),0) AS total FROM transacoes WHERE bonus_pai_id = ? AND tipo='venda' AND bonus_pct IS NOT NULL",
+      [pid]
+    );
+
+    // Meu próprio vínculo (se sou filho de alguém): progresso para virar pai.
+    let meuProgresso = null;
+    if (eu.tipo === "filho" && eu.pai_id) {
+      const [minhasVendas] = await pool.query(
+        "SELECT COUNT(*) AS c FROM transacoes WHERE parceiro_id = ? AND tipo='venda'",
+        [pid]
+      );
+      meuProgresso = { vendas: Number(minhasVendas[0].c), meta: cfg.meta_filho };
+    }
+
+    res.json({
+      tipo: eu.tipo,
+      config: cfg,
+      filhos: filhos.map((f) => ({ ...f, vendas: Number(f.vendas), bonus_gerado: Number(f.bonus_gerado) })),
+      limiteFilhos: cfg.limite_filhos,
+      bonusTotal: Number(bonusTotal[0].total) || 0,
+      meuProgresso,
+    });
+  } catch (e) {
+    console.error("Erro ao carregar rede do parceiro:", e.message);
+    res.status(500).json({ error: "Erro ao carregar a rede." });
+  }
+});
+
+// Pai cadastra um novo filho (limite de vagas respeitado).
+app.post("/api/parceiro/rede/filhos", protegerParceiro, async (req, res) => {
+  try {
+    const pid = req.session.parceiroId;
+    const { nome, email, whatsapp, senha } = req.body || {};
+    if (!nome || !email || !senha || String(senha).length < 6) {
+      return res.status(400).json({ error: "Nome, e-mail e senha (mín. 6 caracteres) são obrigatórios." });
+    }
+    const [p] = await pool.query("SELECT id, tipo FROM parceiros WHERE id = ?", [pid]);
+    if (!p.length) return res.status(404).json({ error: "Parceiro não encontrado." });
+    const cfg = await getConfigRede();
+    const [count] = await pool.query("SELECT COUNT(*) AS c FROM parceiros WHERE pai_id = ?", [pid]);
+    if (Number(count[0].c) >= cfg.limite_filhos) {
+      return res.status(400).json({ error: `Limite de ${cfg.limite_filhos} parceiros filhos atingido.` });
+    }
+    const em = String(email).toLowerCase().trim();
+    const [existe] = await pool.query("SELECT id FROM parceiros WHERE email = ?", [em]);
+    if (existe.length) return res.status(409).json({ error: "Já existe um parceiro com este e-mail." });
+    const codigo = "P" + Math.random().toString(36).slice(2, 8).toUpperCase() + Date.now().toString(36).slice(-3).toUpperCase();
+    const senhaHash = await bcrypt.hash(String(senha), 10);
+    await pool.query(
+      "INSERT INTO parceiros (nome, email, whatsapp, senha, codigo, dia_pagamento, comissao, pai_id, tipo) VALUES (?, ?, ?, ?, ?, 5, ?, ?, 'filho')",
+      [String(nome).trim(), em, whatsapp || null, senhaHash, codigo, cfg.comissao_pct, pid]
+    );
+    res.json({ success: true, codigo });
+  } catch (e) {
+    console.error("Erro ao cadastrar filho:", e.message);
+    res.status(500).json({ error: "Erro ao cadastrar parceiro filho." });
+  }
+});
+
+// Pai desativa/ativa um filho direto (bônus para de contar enquanto inativo).
+app.put("/api/parceiro/rede/filhos/:id/status", protegerParceiro, async (req, res) => {
+  try {
+    const pid = req.session.parceiroId;
+    const filhoId = parseInt(req.params.id, 10);
+    const { ativo } = req.body || {};
+    const [rows] = await pool.query("SELECT id FROM parceiros WHERE id = ? AND pai_id = ?", [filhoId, pid]);
+    if (!rows.length) return res.status(404).json({ error: "Filho não encontrado na sua rede." });
+    await pool.query("UPDATE parceiros SET ativo = ? WHERE id = ?", [ativo ? 1 : 0, filhoId]);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao alterar status do filho:", e.message);
+    res.status(500).json({ error: "Erro ao alterar status." });
+  }
+});
+
+// Configurações do programa (admin) — meta, bônus, limite de filhos, % comissão.
+app.get("/api/admin/rede/config", protegerAdmin, async (req, res) => {
+  try {
+    res.json({ config: await getConfigRede() });
+  } catch (e) {
+    console.error("Erro ao carregar config da rede:", e.message);
+    res.status(500).json({ error: "Erro ao carregar configurações." });
+  }
+});
+
+app.put("/api/admin/rede/config", protegerAdmin, async (req, res) => {
+  try {
+    const { meta_filho, bonus_pai_pct, limite_filhos, comissao_pct } = req.body || {};
+    const dados = { meta_filho, bonus_pai_pct, limite_filhos, comissao_pct };
+    for (const k of Object.keys(dados)) {
+      if (dados[k] === undefined || dados[k] === null || dados[k] === "") continue;
+      const v = parseFloat(String(dados[k]).replace(",", "."));
+      if (isNaN(v) || v < 0) return res.status(400).json({ error: "Valor inválido para " + k + "." });
+      await pool.query(
+        "INSERT INTO config (chave, valor) VALUES (?, ?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)",
+        ["rede_" + k, String(v)]
+      );
+    }
+    await registrarAdminLog("rede_config", `Config da rede atualizada: ${JSON.stringify(dados)}`);
+    res.json({ ok: true, config: await getConfigRede() });
+  } catch (e) {
+    console.error("Erro ao salvar config da rede:", e.message);
+    res.status(500).json({ error: "Erro ao salvar configurações." });
+  }
+});
+
+// Visão da rede no admin: árvore pai -> filhos com progresso.
+app.get("/api/admin/rede", protegerAdmin, async (req, res) => {
+  try {
+    const [pais] = await pool.query(
+      `SELECT p.id, p.nome, p.email, p.codigo, p.tipo, p.pai_id, p.ativo, p.created_at,
+              (SELECT COUNT(*) FROM transacoes t WHERE t.parceiro_id = p.id AND t.tipo='venda') AS vendas
+       FROM parceiros p
+       WHERE p.pai_id IS NOT NULL OR p.id IN (SELECT DISTINCT pai_id FROM parceiros WHERE pai_id IS NOT NULL)
+       ORDER BY p.id ASC`
+    );
+    res.json({ rede: pais });
+  } catch (e) {
+    console.error("Erro ao carregar rede (admin):", e.message);
+    res.status(500).json({ error: "Erro ao carregar a rede." });
+  }
+});
+
+// Vincula/desvincula pai de um parceiro (admin). Impede ciclos.
+app.put("/api/admin/parceiros/:id/vinculo", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { pai_id } = req.body || {};
+    let paiId = pai_id ? parseInt(pai_id, 10) : null;
+    if (paiId === id) return res.status(400).json({ error: "Um parceiro não pode ser pai de si mesmo." });
+    if (paiId) {
+      // Impede ciclos: o novo pai não pode estar na subárvore do filho.
+      const [sub] = await pool.query(
+        `SELECT id FROM parceiros WHERE pai_id = ? OR id = ?`,
+        [id, id]
+      );
+      const visitados = new Set(sub.map((r) => r.id));
+      let segurança = 0;
+      let atual = paiId;
+      while (atual && segurança++ < 50) {
+        if (visitados.has(atual)) return res.status(400).json({ error: "Vínculo criaria um ciclo na rede." });
+        const [r] = await pool.query("SELECT pai_id FROM parceiros WHERE id = ?", [atual]);
+        if (!r.length) break;
+        atual = r[0].pai_id;
+      }
+    }
+    await pool.query("UPDATE parceiros SET pai_id = ?, tipo = ? WHERE id = ?", [paiId, paiId ? "filho" : "independente", id]);
+    await registrarAdminLog("rede_vinculo", `Parceiro #${id} -> pai: ${paiId || "nenhum"}`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao vincular pai:", e.message);
+    res.status(500).json({ error: "Erro ao vincular pai." });
   }
 });
 
@@ -2519,6 +2793,7 @@ console.log("🗓️ Limpeza semanal agendada: todo domingo às 00h00 (Brasília
 // apenas registra o valor mensal de forma imutável.
 // ---------------------------------------------------------------------------
 async function fecharComissoesMes(mesRef) {
+  // Comissão das vendas próprias de cada parceiro.
   const [rows] = await pool.query(
     `SELECT parceiro_id, SUM(valor * comissao_pct / 100) AS total
      FROM transacoes
@@ -2527,14 +2802,29 @@ async function fecharComissoesMes(mesRef) {
      GROUP BY parceiro_id`,
     [mesRef]
   );
-  for (const r of rows) {
+  // Bônus de indicação: pai recebe % sobre as vendas dos filhos vinculados
+  // naquele mês (bonus_pct congelado por venda).
+  const [bonus] = await pool.query(
+    `SELECT bonus_pai_id AS parceiro_id, SUM(valor * bonus_pct / 100) AS total
+     FROM transacoes
+     WHERE tipo='venda' AND bonus_pai_id IS NOT NULL AND bonus_pct IS NOT NULL
+       AND DATE_FORMAT(created_at, '%Y-%m') = ?
+     GROUP BY bonus_pai_id`,
+    [mesRef]
+  );
+  const mapa = new Map();
+  for (const r of rows) mapa.set(r.parceiro_id, Number(r.total) || 0);
+  for (const b of bonus) {
+    mapa.set(b.parceiro_id, (mapa.get(b.parceiro_id) || 0) + (Number(b.total) || 0));
+  }
+  for (const [parceiroId, total] of mapa) {
     await pool.query(
       "INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)",
-      [r.parceiro_id, mesRef, Number(r.total) || 0]
+      [parceiroId, mesRef, total]
     );
   }
-  console.log(`🗓️ Comissões do mês ${mesRef} fechadas (${rows.length} parceiro(s)).`);
-  return rows.length;
+  console.log(`🗓️ Comissões do mês ${mesRef} fechadas (${mapa.size} parceiro(s), bônus de rede incluído).`);
+  return mapa.size;
 }
 
 cron.schedule(

@@ -203,6 +203,70 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* Progresso de meta (barra) */
+    .meta-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 22px; box-shadow: var(--shadow); margin-bottom: 22px;
+    }
+    .meta-card .meta-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .meta-card .meta-title { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .meta-card .meta-count { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .meta-bar { height: 14px; background: #eef2f7; border-radius: 999px; overflow: hidden; margin-top: 12px; }
+    .meta-bar .fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, var(--brand), var(--brand-dark));
+      transition: width .6s ease; min-width: 2px;
+    }
+    .meta-bar .fill.done { background: linear-gradient(90deg, #16a34a, #15803d); }
+    .meta-legend { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
+    .badge-tipo { padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+    .badge-tipo.pai { background: var(--green-bg); color: var(--green); }
+    .badge-tipo.filho { background: var(--amber-bg); color: var(--amber); }
+    .badge-tipo.independente { background: #eef2ff; color: var(--primary); }
+
+    /* Rede (filhos) */
+    .filho-card {
+      border: 1px solid var(--border); border-radius: 14px; padding: 16px;
+      margin-bottom: 12px; background: #fbfcfe;
+    }
+    .filho-card .f-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+    .filho-card .f-nome { font-weight: 700; font-size: 14px; }
+    .filho-card .f-contato { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .filho-card .f-link {
+      margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .filho-card .f-link input {
+      flex: 1; min-width: 180px; border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 12px; font-size: 12px; color: var(--ink); background: #fff;
+      font-family: inherit; overflow: hidden; text-overflow: ellipsis;
+    }
+    .filho-card .f-link button {
+      border: 1px solid var(--border); background: #fff; border-radius: 10px;
+      padding: 8px 12px; font-size: 12px; font-weight: 700; cursor: pointer; transition: .15s;
+    }
+    .filho-card .f-link button:hover { border-color: var(--primary); color: var(--primary); }
+    .filho-card .mini-bar { height: 10px; background: #eef2f7; border-radius: 999px; overflow: hidden; margin-top: 12px; }
+    .filho-card .mini-bar .fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-dark)); border-radius: 999px; transition: width .6s ease; }
+    .filho-card .mini-bar .fill.done { background: linear-gradient(90deg, #16a34a, #15803d); }
+    .filho-card .f-meta-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .btn-mini-acao { padding: 5px 10px; font-size: 11px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-weight: 700; transition: .15s; }
+    .btn-mini-acao:hover { border-color: var(--red); color: var(--red); }
+
+    /* Formulário novo filho */
+    .novo-filho { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .novo-filho input {
+      border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px;
+      font-size: 14px; font-family: inherit; width: 100%;
+    }
+    .novo-filho input:focus { outline: 2px solid #c7d2fe; border-color: var(--primary); }
+    .novo-filho .full { grid-column: 1 / -1; }
+    .btn-cadastrar-filho {
+      grid-column: 1 / -1; background: var(--primary); color: #fff; border: none;
+      padding: 13px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 14px; transition: .2s;
+    }
+    .btn-cadastrar-filho:hover { background: var(--primary-2); }
+    .btn-cadastrar-filho:disabled { background: #c7cbe8; cursor: not-allowed; }
+
     /* Responsivo */
     @media (max-width: 900px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
@@ -215,6 +279,7 @@
       .link-field { min-width: 100%; }
       .table-scroll { overflow-x: auto; }
       table { min-width: 520px; }
+      .novo-filho { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -278,6 +343,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copiar
         </button>
+        <button class="btn-share" onclick="copiarMensagemPronta()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Copiar mensagem pronta
+        </button>
         <button class="btn-share" onclick="compartilhar()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
           Compartilhar
@@ -324,10 +393,57 @@
       <span class="pill" id="comissaoPct">40% de comissão</span>
     </div>
 
+    <!-- Progresso de meta (filho) / badge de tipo -->
+    <div class="meta-card" id="metaCard" style="display:none">
+      <div class="meta-head">
+        <div class="meta-title">
+          <span class="badge-tipo" id="badgeTipo">–</span>
+          <span id="metaTitulo">Sua meta para virar Parceiro Pai</span>
+        </div>
+        <div class="meta-count" id="metaCount">–</div>
+      </div>
+      <div class="meta-bar"><div class="fill" id="metaFill" style="width:0%"></div></div>
+      <div class="meta-legend">
+        <span id="metaFalta">–</span>
+        <span id="metaRecompensa">Ao bater a meta: painel do Pai + cadastrar até 5 filhos</span>
+      </div>
+    </div>
+
     <!-- Tendência de acessos -->
     <div class="section">
       <h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Acessos dos últimos 7 dias</h2>
       <div class="trend-wrap"><div class="trend" id="trend"></div></div>
+    </div>
+
+    <!-- Minha Rede (pai / filho que já pode acompanhar) -->
+    <div class="section" id="secaoRede" style="display:none">
+      <h2>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4m0 0-5.5 4.5M12 12l5.5 4.5"/></svg>
+        Minha Rede <span class="chip" id="countFilhos">0/5</span>
+      </h2>
+      <p style="margin:0 0 14px;color:#64748b;font-size:13px">
+        Cadastre parceiros filhos com o seu acompanhamento. Você ganha um <b>bônus de indicação</b>
+        sobre cada venda de cada filho enquanto ele não bate a meta. Quando o filho bate a meta,
+        ele vira Parceiro Pai e se desprende da sua rede.
+      </p>
+
+      <div id="listaFilhos"></div>
+
+      <!-- Cadastro de novo filho -->
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+        <h3 style="margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8m-4-4h8"/></svg>
+          Cadastrar parceiro filho
+        </h3>
+        <p style="margin:0 0 10px;font-size:12px;color:#64748b" id="vagasInfo">–</p>
+        <div class="novo-filho">
+          <input type="text" id="fNome" placeholder="Nome completo" />
+          <input type="email" id="fEmail" placeholder="E-mail (login)" />
+          <input type="text" id="fWhatsapp" placeholder="WhatsApp (opcional)" />
+          <input type="password" id="fSenha" placeholder="Senha de acesso (mín. 6 caracteres)" />
+          <button class="btn-cadastrar-filho" id="btnCadastrarFilho" onclick="cadastrarFilho()">Cadastrar filho e gerar link</button>
+        </div>
+      </div>
     </div>
 
     <!-- Clientes / pedidos -->
@@ -448,6 +564,133 @@
       });
     }
 
+    function renderMeta(dash) {
+      var card = document.getElementById("metaCard");
+      var tipo = dash.tipo || "independente";
+      var badge = document.getElementById("badgeTipo");
+      badge.className = "badge-tipo " + tipo;
+      badge.textContent = tipo === "pai" ? "Parceiro Pai" : (tipo === "filho" ? "Parceiro Filho" : "Independente");
+
+      // Título do painel muda conforme o tipo (troca automática).
+      document.querySelector(".welcome h1").innerHTML =
+        'Olá, <span id="nomeParceiro">' + (PARCEIRO.nome || "Parceiro") + "</span>" +
+        (tipo === "pai" ? ' — <span style="color:var(--green)">Painel do Pai</span>' : "");
+
+      if (tipo === "filho" && dash.progressoMeta) {
+        card.style.display = "block";
+        document.getElementById("metaTitulo").textContent = "Sua meta para virar Parceiro Pai";
+        var v = dash.progressoMeta.vendas, m = dash.progressoMeta.meta;
+        var pct = Math.min(100, Math.round((v / m) * 100));
+        document.getElementById("metaCount").textContent = v + " / " + m + " vendas";
+        var fill = document.getElementById("metaFill");
+        fill.style.width = pct + "%";
+        fill.className = "fill" + (pct >= 100 ? " done" : "");
+        document.getElementById("metaFalta").textContent =
+          pct >= 100 ? "Meta batida! Você virou Parceiro Pai 🎓" : "Faltam " + (m - v) + " venda(s) — " + pct + "% concluído";
+      } else if (tipo === "pai") {
+        card.style.display = "block";
+        document.getElementById("metaTitulo").textContent = "Bônus de indicação recebido (vendas dos seus filhos)";
+        document.getElementById("metaCount").textContent = App.formatarPreco(dash.bonusRecebido || 0);
+        var fill2 = document.getElementById("metaFill");
+        fill2.style.width = "100%";
+        fill2.className = "fill done";
+        document.getElementById("metaFalta").textContent = "Você é Parceiro Pai — 40% de comissão + bônus da sua rede";
+      } else {
+        card.style.display = "none";
+      }
+    }
+
+    function renderRede(rede) {
+      var secao = document.getElementById("secaoRede");
+      // A aba Minha Rede aparece para pais E para filhos (o filho pode ver
+      // o próprio progresso e, ao ser promovido, cadastrar os próprios filhos).
+      secao.style.display = "block";
+      var filhos = rede.filhos || [];
+      document.getElementById("countFilhos").textContent = filhos.length + "/" + rede.limiteFilhos;
+      document.getElementById("vagasInfo").textContent =
+        filhos.length >= rede.limiteFilhos
+          ? "Limite de " + rede.limiteFilhos + " filhos atingido."
+          : "Você tem " + (rede.limiteFilhos - filhos.length) + " vaga(s) disponível(is). Bônus de indicação: " + rede.config.bonus_pai_pct + "% por venda de cada filho até ele bater a meta de " + rede.config.meta_filho + " vendas.";
+
+      var container = document.getElementById("listaFilhos");
+      if (!filhos.length) {
+        container.innerHTML = '<div class="empty">Nenhum parceiro filho cadastrado ainda. Cadastre o primeiro abaixo.</div>';
+      } else {
+        var base = (typeof BASE_URL !== "undefined" && BASE_URL) ? BASE_URL : window.location.origin;
+        container.innerHTML = filhos.map(function (f) {
+          var pct = Math.min(100, Math.round((f.vendas / rede.config.meta_filho) * 100));
+          var status = pct >= 100
+            ? '<span class="badge pago">Formado — Parceiro Pai</span>'
+            : (f.ativo ? '<span class="badge pendente">Filho ativo</span>' : '<span class="badge cancelado">Inativo</span>');
+          var link = base + "/?ref=" + f.codigo;
+          return '<div class="filho-card">' +
+            '<div class="f-head"><div><div class="f-nome">' + (f.nome || "Filho") + "</div>" +
+            '<div class="f-contato">' + (f.email || "") + (f.whatsapp ? " · " + f.whatsapp : "") + "</div></div>" + status + "</div>" +
+            '<div class="f-link"><input readonly value="' + link + '" onclick="this.select()" />' +
+            '<button onclick="copiarTexto(\'' + link + '\')">Copiar link</button>' +
+            (pct >= 100 ? "" : '<button onclick="alternarFilho(' + f.id + "," + (f.ativo ? 0 : 1) + ')">' + (f.ativo ? "Desativar" : "Ativar") + "</button>") +
+            "</div>" +
+            '<div class="mini-bar"><div class="fill' + (pct >= 100 ? " done" : "") + '" style="width:' + pct + '%"></div></div>' +
+            '<div class="f-meta-row"><span>Meta: ' + f.vendas + "/" + rede.config.meta_filho + " vendas (" + pct + '%)</span>' +
+            "<span>Bônus gerado p/ você: " + App.formatarPreco(f.bonus_gerado) + "</span></div>" +
+            "</div>";
+        }).join("");
+      }
+
+      // Botão de cadastro bloqueado se atingiu o limite.
+      document.getElementById("btnCadastrarFilho").disabled = filhos.length >= rede.limiteFilhos;
+    }
+
+    function copiarTexto(txt) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(function () { toast("Copiado!"); });
+      } else {
+        var i = document.createElement("input"); i.value = txt; document.body.appendChild(i);
+        i.select(); document.execCommand("copy"); document.body.removeChild(i); toast("Copiado!");
+      }
+    }
+
+    // Mensagem de divulgação pronta para WhatsApp/Instagram (com o link).
+    function copiarMensagemPronta() {
+      var link = document.getElementById("linkParceiro").value;
+      var msg = "Olha isso! 🚀 Crie seu currículo profissional em minutos com a Office Express — modelo moderno, aprovado por recrutadores, e você baixa na hora.\n\nFaça o seu aqui: " + link;
+      copiarTexto(msg);
+    }
+
+    function alternarFilho(id, ativo) {
+      App.api("/api/parceiro/rede/filhos/" + id + "/status", { method: "PUT", body: JSON.stringify({ ativo: !!ativo }) }).then(function (r) {
+        if (r.ok) { toast(ativo ? "Filho ativado." : "Filho desativado."); carregarRede(); }
+        else toast(r.data.error || "Erro.");
+      });
+    }
+
+    function cadastrarFilho() {
+      var nome = document.getElementById("fNome").value.trim();
+      var email = document.getElementById("fEmail").value.trim();
+      var whatsapp = document.getElementById("fWhatsapp").value.trim();
+      var senha = document.getElementById("fSenha").value;
+      if (!nome || !email || !senha) { toast("Preencha nome, e-mail e senha."); return; }
+      if (senha.length < 6) { toast("A senha deve ter no mínimo 6 caracteres."); return; }
+      var btn = document.getElementById("btnCadastrarFilho");
+      btn.disabled = true;
+      App.api("/api/parceiro/rede/filhos", { method: "POST", body: JSON.stringify({ nome: nome, email: email, whatsapp: whatsapp, senha: senha }) }).then(function (r) {
+        btn.disabled = false;
+        if (r.ok) {
+          toast("Filho cadastrado! Link gerado: ?ref=" + r.data.codigo);
+          ["fNome", "fEmail", "fWhatsapp", "fSenha"].forEach(function (id) { document.getElementById(id).value = ""; });
+          carregarRede();
+        } else {
+          toast(r.data.error || "Erro ao cadastrar.");
+        }
+      });
+    }
+
+    function carregarRede() {
+      App.api("/api/parceiro/rede").then(function (r) {
+        if (r.ok) renderRede(r.data);
+      });
+    }
+
     function carregar() {
       App.api("/api/parceiro/me").then(function (r) {
         if (!r.ok) { window.location.href = "/login-parceiro"; return; }
@@ -484,6 +727,8 @@
         document.getElementById("mDiaPagamento").textContent = "pago dia " + diaP + " de cada mês";
         document.getElementById("diaPagamentoInfo").textContent = "Dia de pagamento: dia " + diaP + " de cada mês";
         renderTrend(DASH.tendencia);
+        renderMeta(DASH);
+        carregarRede();
       });
 
       App.api("/api/parceiro/pedidos").then(function (r) {
