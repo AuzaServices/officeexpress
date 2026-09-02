@@ -37,7 +37,7 @@ const { MercadoPagoConfig, Payment } = require("mercadopago");
 const { pool, garantirSchema, getPreco } = require("./lib/db");
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
-const { enviarConfirmacao, enviarRecuperacao } = require("./lib/email");
+const { enviarConfirmacao, enviarRecuperacao, enviarConviteParceiro, enviarCodigoConvite } = require("./lib/email");
 const cron = require("node-cron");
 
 require("dotenv").config();
@@ -1324,23 +1324,35 @@ async function buscarParceiroPorId(id) {
 }
 
 // Cadastra um novo parceiro (admin) e gera o código/link.
+// A senha NÃO é definida aqui: o parceiro recebe um convite por e-mail com
+// link único, onde confirma o e-mail (código de 4 dígitos) e cria a senha.
 app.post("/api/admin/parceiros", protegerAdmin, async (req, res) => {
   try {
-    const { nome, email, whatsapp, senha, dia_pagamento = 5, comissao = 40 } = req.body || {};
+    const { nome, email, whatsapp, dia_pagamento = 5, comissao = 40 } = req.body || {};
     if (!nome || !email) return res.status(400).json({ error: "Nome e e-mail são obrigatórios." });
     const em = String(email).toLowerCase().trim();
     const [existe] = await pool.query("SELECT id FROM parceiros WHERE email = ?", [em]);
     if (existe.length) return res.status(409).json({ error: "Já existe um parceiro com este e-mail." });
     const codigo = "P" + Math.random().toString(36).slice(2, 8).toUpperCase() + Date.now().toString(36).slice(-3).toUpperCase();
-    const senhaHash = senha ? await bcrypt.hash(senha, 10) : null;
     const dia = Math.min(28, Math.max(1, parseInt(dia_pagamento, 10) || 5));
     const com = Math.min(100, Math.max(0, parseFloat(comissao)));
-    await pool.query(
-      "INSERT INTO parceiros (nome, email, whatsapp, senha, codigo, dia_pagamento, comissao) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [nome.trim(), em, whatsapp || null, senhaHash, codigo, dia, com]
+    // Esqueleto inativo e sem senha: só fica utilizável após o convite ser
+    // aceito (e-mail confirmado + senha criada pelo próprio convidado).
+    const [result] = await pool.query(
+      "INSERT INTO parceiros (nome, email, whatsapp, senha, codigo, dia_pagamento, comissao, tipo, ativo) VALUES (?, ?, ?, NULL, ?, ?, ?, 'pai', 0)",
+      [nome.trim(), em, whatsapp || null, codigo, dia, com]
     );
-    await registrarAdminLog("parceiro_cadastro", `${nome.trim()} (${codigo})`);
-    res.json({ success: true, codigo });
+    // Token de convite único (64 hex, 48h).
+    const token = gerarToken();
+    const expira = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await pool.query(
+      "INSERT INTO email_tokens (tipo, token, expira_em, payload_json) VALUES ('convite', ?, ?, ?)",
+      [token, expira, JSON.stringify({ parceiro_id: result.insertId, nome: nome.trim(), email: em, convidado_por: "Office Express", papel: "admin" })]
+    );
+    const url = `${process.env.BASE_URL || "https://www.officeexpress.com.br"}/convite?token=${token}`;
+    await enviarConviteParceiro(em, nome.trim(), "Office Express", url);
+    await registrarAdminLog("parceiro_cadastro", `${nome.trim()} (${codigo}) - convite enviado`);
+    res.json({ success: true, codigo, convite: true, message: `Convite enviado para ${em}. O parceiro definirá a própria senha pelo link.` });
   } catch (e) {
     console.error("Erro ao cadastrar parceiro:", e.message);
     res.status(500).json({ error: "Erro ao cadastrar parceiro." });
@@ -1582,6 +1594,116 @@ app.get("/api/admin/empresas/:id/curriculos", protegerAdmin, async (req, res) =>
   }
 });
 
+// ---------------------------------------------------------------------------
+// Convite de parceiro (link único): o convidado confirma o e-mail com código
+// de 4 dígitos e cria a própria senha. Ninguém define senha de outra pessoa.
+// ---------------------------------------------------------------------------
+async function buscarConviteValido(token) {
+  if (!token || String(token).length < 20) return null;
+  const [rows] = await pool.query(
+    "SELECT id, token, expira_em, usado, payload_json FROM email_tokens WHERE token = ? AND tipo = 'convite'",
+    [String(token)]
+  );
+  const t = rows[0];
+  if (!t || t.usado) return null;
+  if (new Date(t.expira_em) < new Date()) return null;
+  try { t.payload = JSON.parse(t.payload_json || "{}"); } catch (e) { t.payload = {}; }
+  return t;
+}
+
+// Dados do convite (para a tela mostrar quem convidou e o e-mail).
+app.get("/api/convite/:token", async (req, res) => {
+  try {
+    const t = await buscarConviteValido(req.params.token);
+    if (!t) return res.status(404).json({ error: "Convite inválido, expirado ou já utilizado. Peça um novo convite." });
+    res.json({ nome: t.payload.nome, email: t.payload.email, convidado_por: t.payload.convidado_por });
+  } catch (e) {
+    console.error("Erro ao validar convite:", e.message);
+    res.status(500).json({ error: "Erro ao validar convite." });
+  }
+});
+
+// Envia o código de 4 dígitos para o e-mail do convidado (confirma que o
+// e-mail é dele antes de liberar a criação da senha).
+app.post("/api/convite/:token/codigo", async (req, res) => {
+  try {
+    const t = await buscarConviteValido(req.params.token);
+    if (!t) return res.status(404).json({ error: "Convite inválido, expirado ou já utilizado." });
+    // Invalida códigos anteriores deste convite (mantém apenas o mais novo).
+    await pool.query(
+      "DELETE FROM email_tokens WHERE tipo = 'confirmacao' AND payload_json = ?",
+      [JSON.stringify({ convite_id: t.id })]
+    );
+    const codigo = gerarCodigoConfirmacao();
+    const expira = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await pool.query(
+      "INSERT INTO email_tokens (tipo, token, expira_em, payload_json) VALUES ('confirmacao', ?, ?, ?)",
+      [codigo, expira, JSON.stringify({ convite_id: t.id })]
+    );
+    await enviarCodigoConvite(t.payload.email, t.payload.nome, codigo);
+    res.json({ success: true, message: "Código enviado para " + t.payload.email });
+  } catch (e) {
+    console.error("Erro ao enviar código do convite:", e.message);
+    res.status(500).json({ error: "Erro ao enviar o código." });
+  }
+});
+
+// Confirma o código de 4 dígitos e libera a etapa de criação de senha.
+app.post("/api/convite/:token/confirmar", async (req, res) => {
+  try {
+    const t = await buscarConviteValido(req.params.token);
+    if (!t) return res.status(404).json({ error: "Convite inválido, expirado ou já utilizado." });
+    const { codigo } = req.body || {};
+    if (!codigo || String(codigo).trim().length !== 4) {
+      return res.status(400).json({ error: "Digite o código de 4 dígitos enviado ao seu e-mail." });
+    }
+    const [rows] = await pool.query(
+      "SELECT id, expira_em, usado, payload_json FROM email_tokens WHERE token = ? AND tipo = 'confirmacao'",
+      [String(codigo).trim()]
+    );
+    const c = rows[0];
+    if (!c || c.usado) return res.status(400).json({ error: "Código inválido." });
+    if (new Date(c.expira_em) < new Date()) return res.status(400).json({ error: "Código expirado. Solicite um novo." });
+    let payload = {};
+    try { payload = JSON.parse(c.payload_json || "{}"); } catch (e) {}
+    if (payload.convite_id !== t.id) return res.status(400).json({ error: "Código não corresponde a este convite." });
+    // Marca o código como usado (a senha é criada no próximo passo).
+    await pool.query("UPDATE email_tokens SET usado = 1, usado_em = NOW() WHERE id = ?", [c.id]);
+    res.json({ success: true, message: "E-mail confirmado! Agora crie sua senha." });
+  } catch (e) {
+    console.error("Erro ao confirmar código do convite:", e.message);
+    res.status(500).json({ error: "Erro ao confirmar o código." });
+  }
+});
+
+// Completa o cadastro: cria a senha do convidado e ativa a conta.
+app.post("/api/convite/:token/completar", async (req, res) => {
+  try {
+    const t = await buscarConviteValido(req.params.token);
+    if (!t) return res.status(404).json({ error: "Convite inválido, expirado ou já utilizado." });
+    const { senha, confirmar } = req.body || {};
+    if (!senha || senha !== confirmar) return res.status(400).json({ error: "As senhas não coincidem." });
+    if (!validarSenha(senha)) return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, com letras e números." });
+    // Exige que o e-mail tenha sido confirmado pelo código antes da senha.
+    // (O código de confirmação carrega payload {"convite_id": <id do convite>}.)
+    const [conf] = await pool.query(
+      "SELECT COUNT(*) AS c FROM email_tokens WHERE tipo = 'confirmacao' AND payload_json = ? AND usado = 1",
+      [JSON.stringify({ convite_id: t.id })]
+    );
+    if (Number(conf[0].c) === 0) {
+      return res.status(403).json({ error: "Confirme seu e-mail com o código de 4 dígitos antes de criar a senha." });
+    }
+    const hash = await bcrypt.hash(String(senha), 10);
+    await pool.query("UPDATE parceiros SET senha = ?, ativo = 1 WHERE id = ?", [hash, t.payload.parceiro_id]);
+    // Consome o token de convite (um único uso).
+    await pool.query("UPDATE email_tokens SET usado = 1, usado_em = NOW() WHERE id = ?", [t.id]);
+    res.json({ success: true, message: "Cadastro concluído! Faça login com seu e-mail e senha." });
+  } catch (e) {
+    console.error("Erro ao completar convite:", e.message);
+    res.status(500).json({ error: "Erro ao concluir o cadastro." });
+  }
+});
+
 // Login do parceiro.
 app.post("/api/parceiro/login", async (req, res) => {
   const { email, senha } = req.body || {};
@@ -1590,7 +1712,10 @@ app.post("/api/parceiro/login", async (req, res) => {
   const [rows] = await pool.query("SELECT * FROM parceiros WHERE email = ?", [em]);
   if (!rows.length) return res.status(401).json({ error: "E-mail ou senha incorretos." });
   const p = rows[0];
-  if (!p.senha || !(await bcrypt.compare(senha, p.senha))) return res.status(401).json({ error: "E-mail ou senha incorretos." });
+  // Cadastro incompleto: conta criada por convite, mas o convidado ainda não
+  // definiu a própria senha pelo link.
+  if (!p.senha) return res.status(403).json({ error: "Complete seu cadastro pelo link de convite enviado ao seu e-mail antes de fazer login." });
+  if (!(await bcrypt.compare(senha, p.senha))) return res.status(401).json({ error: "E-mail ou senha incorretos." });
   if (!p.ativo) return res.status(403).json({ error: "Parceiro desativado. Fale com o administrador." });
   req.session.parceiroId = p.id;
   req.session.save((err) => {
@@ -1782,14 +1907,16 @@ app.get("/api/parceiro/rede", protegerParceiro, async (req, res) => {
 });
 
 // Pai cadastra um novo filho (limite de vagas respeitado).
+// A senha NÃO é definida pelo pai: o filho recebe um convite por e-mail com
+// link único, confirma o e-mail (código de 4 dígitos) e cria a própria senha.
 app.post("/api/parceiro/rede/filhos", protegerParceiro, async (req, res) => {
   try {
     const pid = req.session.parceiroId;
-    const { nome, email, whatsapp, senha } = req.body || {};
-    if (!nome || !email || !senha || String(senha).length < 6) {
-      return res.status(400).json({ error: "Nome, e-mail e senha (mín. 6 caracteres) são obrigatórios." });
+    const { nome, email, whatsapp } = req.body || {};
+    if (!nome || !email) {
+      return res.status(400).json({ error: "Nome e e-mail são obrigatórios." });
     }
-    const [p] = await pool.query("SELECT id, tipo FROM parceiros WHERE id = ?", [pid]);
+    const [p] = await pool.query("SELECT id, tipo, nome FROM parceiros WHERE id = ?", [pid]);
     if (!p.length) return res.status(404).json({ error: "Parceiro não encontrado." });
     // Somente Parceiros Pai podem cadastrar filhos (filhos ainda não formados
     // não têm autonomia de rede).
@@ -1805,12 +1932,21 @@ app.post("/api/parceiro/rede/filhos", protegerParceiro, async (req, res) => {
     const [existe] = await pool.query("SELECT id FROM parceiros WHERE email = ?", [em]);
     if (existe.length) return res.status(409).json({ error: "Já existe um parceiro com este e-mail." });
     const codigo = "P" + Math.random().toString(36).slice(2, 8).toUpperCase() + Date.now().toString(36).slice(-3).toUpperCase();
-    const senhaHash = await bcrypt.hash(String(senha), 10);
-    await pool.query(
-      "INSERT INTO parceiros (nome, email, whatsapp, senha, codigo, dia_pagamento, comissao, pai_id, tipo) VALUES (?, ?, ?, ?, ?, 5, ?, ?, 'filho')",
-      [String(nome).trim(), em, whatsapp || null, senhaHash, codigo, cfg.comissao_pct, pid]
+    // Esqueleto inativo e sem senha: ativado só após o convite ser aceito.
+    const [result] = await pool.query(
+      "INSERT INTO parceiros (nome, email, whatsapp, senha, codigo, dia_pagamento, comissao, pai_id, tipo, ativo) VALUES (?, ?, ?, NULL, ?, 5, ?, ?, 'filho', 0)",
+      [String(nome).trim(), em, whatsapp || null, codigo, cfg.comissao_pct, pid]
     );
-    res.json({ success: true, codigo });
+    // Token de convite único (64 hex, 48h).
+    const token = gerarToken();
+    const expira = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await pool.query(
+      "INSERT INTO email_tokens (tipo, token, expira_em, payload_json) VALUES ('convite', ?, ?, ?)",
+      [token, expira, JSON.stringify({ parceiro_id: result.insertId, nome: String(nome).trim(), email: em, convidado_por: p[0].nome || "Seu padrinho", papel: "pai", pai_id: pid })]
+    );
+    const url = `${process.env.BASE_URL || "https://www.officeexpress.com.br"}/convite?token=${token}`;
+    await enviarConviteParceiro(em, String(nome).trim(), p[0].nome || "Office Express", url);
+    res.json({ success: true, codigo, convite: true, message: `Convite enviado para ${em}. O filho definirá a própria senha pelo link.` });
   } catch (e) {
     console.error("Erro ao cadastrar filho:", e.message);
     res.status(500).json({ error: "Erro ao cadastrar parceiro filho." });
@@ -2734,6 +2870,7 @@ app.get("/companies/pagar", (req, res) => res.sendFile(path.join(__dirname, "pub
 
 // Página de confirmação de email e redefinição de senha (rotas de API de token já tratadas acima)
 app.get("/confirmar-email", (req, res) => res.sendFile(path.join(__dirname, "public", "confirmar-email.html")));
+app.get("/convite", (req, res) => res.sendFile(path.join(__dirname, "public", "convite.html")));
 app.get("/recuperar-senha", (req, res) => res.sendFile(path.join(__dirname, "public", "recuperar-senha.html")));
 
 // Fluxo antigo removido — redireciona para o fluxo atual (seleção de modelo).

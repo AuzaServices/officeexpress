@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aceitar convite - Office Express</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #001f33; --brand: #ff8800; --brand-dark: #e67300;
+      --ink: #0f172a; --muted: #64748b; --border: #e2e8f0;
+      --green: #16a34a; --green-bg: #dcfce7; --red: #dc2626; --red-bg: #fee2e2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      font-family: "Inter", system-ui, -apple-system, sans-serif; color: var(--ink);
+      background: linear-gradient(160deg, #001f33 0%, #00324a 55%, #0a4a63 100%);
+      padding: 20px; line-height: 1.5;
+    }
+    .card {
+      background: #fff; border-radius: 20px; width: 100%; max-width: 460px;
+      padding: 36px 32px; box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    }
+    .logo { display: block; margin: 0 auto 18px; height: 34px; }
+    h1 { margin: 0 0 6px; font-size: 21px; text-align: center; }
+    .sub { margin: 0 0 22px; color: var(--muted); font-size: 14px; text-align: center; }
+    .sub b { color: var(--ink); }
+    .etapa { display: none; }
+    .etapa.ativa { display: block; }
+    label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: var(--ink); }
+    input[type="email"], input[type="password"], input[type="text"] {
+      width: 100%; padding: 13px 15px; border: 1.5px solid var(--border); border-radius: 12px;
+      font-size: 15px; font-family: inherit; transition: border-color .15s;
+    }
+    input:focus { outline: none; border-color: var(--brand); }
+    .otp { display: flex; gap: 10px; justify-content: center; margin: 18px 0 6px; }
+    .otp input {
+      width: 56px; height: 62px; text-align: center; font-size: 26px; font-weight: 800;
+      border: 1.5px solid var(--border); border-radius: 12px; font-family: inherit;
+    }
+    .otp input:focus { outline: none; border-color: var(--brand); }
+    .btn {
+      width: 100%; margin-top: 18px; background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff; border: none; padding: 14px; border-radius: 12px;
+      font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; transition: .2s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(255,136,0,.35); }
+    .btn:disabled { background: #c7cbe8; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-ghost {
+      width: 100%; margin-top: 10px; background: transparent; color: var(--muted);
+      border: 1.5px solid var(--border); padding: 12px; border-radius: 12px;
+      font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit;
+    }
+    .btn-ghost:hover { border-color: var(--brand); color: var(--brand-dark); }
+    .erro {
+      display: none; background: var(--red-bg); color: var(--red); border-radius: 10px;
+      padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
+    }
+    .ok {
+      display: none; background: var(--green-bg); color: var(--green); border-radius: 10px;
+      padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
+    }
+    .forca { height: 6px; background: #eef2f7; border-radius: 999px; margin-top: 8px; overflow: hidden; }
+    .forca .fill { height: 100%; width: 0; border-radius: 999px; transition: width .3s, background .3s; }
+    .dica { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .reenviar { text-align: center; margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .reenviar a { color: var(--brand-dark); font-weight: 700; cursor: pointer; text-decoration: none; }
+    .reenviar a.disabled { color: var(--muted); cursor: default; opacity: .5; }
+    .sucesso-final { text-align: center; padding: 10px 0 4px; }
+    .sucesso-final .check {
+      width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 50%;
+      background: var(--green-bg); color: var(--green); font-size: 38px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+    .steps span { width: 34px; height: 5px; border-radius: 999px; background: #e2e8f0; transition: .3s; }
+    .steps span.on { background: var(--brand); }
+    .convite-info {
+      background: #f8fafc; border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 6px; text-align: center; font-size: 14px;
+    }
+    .convite-info b { display: block; font-size: 15px; }
+    @media (max-width: 420px) { .otp input { width: 48px; height: 56px; font-size: 22px; } .card { padding: 28px 22px; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" />
+    <div class="steps" id="steps"><span></span><span></span><span></span></div>
+
+    <!-- ETAPA 0: carregando / erro de convite -->
+    <div class="etapa" id="etapa0">
+      <p class="sub" id="msg0">Validando seu convite...</p>
+      <div class="erro" id="erro0"></div>
+    </div>
+
+    <!-- ETAPA 1: e-mail → receber código -->
+    <div class="etapa" id="etapa1">
+      <div class="convite-info">
+        <b id="nomeConvidado">–</b>
+        convidado por <span id="convidadoPor">–</span>
+      </div>
+      <p class="sub">Confirme seu e-mail para começar</p>
+      <label for="email">Seu e-mail</label>
+      <input type="email" id="email" readonly />
+      <div class="erro" id="erro1"></div>
+      <button class="btn" id="btnCodigo" onclick="pedirCodigo()">Receber código de confirmação</button>
+    </div>
+
+    <!-- ETAPA 2: código de 4 dígitos -->
+    <div class="etapa" id="etapa2">
+      <p class="sub">Digite o <b>código de 4 dígitos</b> enviado para<br><b id="emailLabel">–</b></p>
+      <div class="otp">
+        <input type="text" inputmode="numeric" maxlength="1" id="otp0" />
+        <input type="text" inputmode="numeric" maxlength="1" id="otp1" />
+        <input type="text" inputmode="numeric" maxlength="1" id="otp2" />
+        <input type="text" inputmode="numeric" maxlength="1" id="otp3" />
+      </div>
+      <div class="erro" id="erro2"></div>
+      <div class="ok" id="ok2"></div>
+      <button class="btn" id="btnConfirmar" onclick="confirmarCodigo()">Confirmar código</button>
+      <div class="reenviar">Não recebeu? <a id="linkReenviar" onclick="pedirCodigo()">Reenviar código</a> (<span id="cooldown">30</span>s)</div>
+    </div>
+
+    <!-- ETAPA 3: senha -->
+    <div class="etapa" id="etapa3">
+      <p class="sub">E-mail confirmado! Agora <b>crie sua senha de acesso</b></p>
+      <label for="senha">Nova senha</label>
+      <input type="password" id="senha" oninput="medirForca()" placeholder="Mínimo 8 caracteres, com letras e números" />
+      <div class="forca"><div class="fill" id="forcaFill"></div></div>
+      <p class="dica" id="dicaForca">Use letras e números. Quanto mais longa, mais segura.</p>
+      <label for="confirmar">Confirmar senha</label>
+      <input type="password" id="confirmar" placeholder="Repita a senha" />
+      <div class="erro" id="erro3"></div>
+      <button class="btn" id="btnFinalizar" onclick="completarCadastro()">Concluir cadastro</button>
+    </div>
+
+    <!-- ETAPA 4: sucesso -->
+    <div class="etapa" id="etapa4">
+      <div class="sucesso-final">
+        <div class="check">✓</div>
+        <h1>Cadastro concluído!</h1>
+        <p class="sub">Sua conta de parceiro está ativa. Faça login com o seu e-mail e a senha que você acabou de criar.</p>
+        <button class="btn" onclick="location.href='/login-parceiro'">Ir para o login</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var TOKEN = new URLSearchParams(window.location.search).get("token") || "";
+    var COOLDOWN = 30;
+
+    function etapa(n) {
+      for (var i = 0; i <= 4; i++) {
+        var el = document.getElementById("etapa" + i);
+        if (el) el.className = "etapa" + (i === n ? " ativa" : "");
+      }
+      var spans = document.getElementById("steps").children;
+      for (var s = 0; s < spans.length; s++) spans[s].className = s < n && n <= 3 ? "on" : (n === 4 ? "on" : "");
+    }
+    function erro(id, msg) {
+      var el = document.getElementById(id);
+      el.textContent = msg; el.style.display = msg ? "block" : "none";
+    }
+    function codigoOtp() {
+      return ["otp0","otp1","otp2","otp3"].map(function(id){ return document.getElementById(id).value; }).join("");
+    }
+    // Auto-avanço e colagem do código OTP.
+    (function () {
+      var ids = ["otp0","otp1","otp2","otp3"];
+      ids.forEach(function (id, idx) {
+        var el = document.getElementById(id);
+        el.addEventListener("input", function () {
+          el.value = el.value.replace(/\D/g, "").slice(0, 1);
+          if (el.value && idx < 3) document.getElementById(ids[idx + 1]).focus();
+        });
+        el.addEventListener("keydown", function (e) {
+          if (e.key === "Backspace" && !el.value && idx > 0) document.getElementById(ids[idx - 1]).focus();
+        });
+        el.addEventListener("paste", function (e) {
+          e.preventDefault();
+          var txt = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, 4);
+          txt.split("").forEach(function (ch, i) { document.getElementById(ids[i]).value = ch; });
+          if (txt.length === 4) document.getElementById(ids[3]).focus();
+        });
+      });
+    })();
+
+    function medirForca() {
+      var v = document.getElementById("senha").value;
+      var nota = 0;
+      if (v.length >= 8) nota++;
+      if (/[a-zA-Z]/.test(v) && /\d/.test(v)) nota++;
+      if (v.length >= 12 || /[^a-zA-Z0-9]/.test(v)) nota++;
+      var fill = document.getElementById("forcaFill");
+      fill.style.width = (nota / 3) * 100 + "%";
+      fill.style.background = nota <= 1 ? "#dc2626" : (nota === 2 ? "#d97706" : "#16a34a");
+    }
+
+    async function iniciar() {
+      etapa(0);
+      if (!TOKEN) { mostrarConviteInvalido("Link de convite ausente. Peça um novo convite."); return; }
+      try {
+        var r = await fetch("/api/convite/" + encodeURIComponent(TOKEN));
+        var d = await r.json();
+        if (!r.ok) { mostrarConviteInvalido(d.error || "Convite inválido."); return; }
+        document.getElementById("nomeConvidado").textContent = d.nome || "Parceiro";
+        document.getElementById("convidadoPor").textContent = d.convidado_por || "Office Express";
+        var em = document.getElementById("email");
+        em.value = d.email || "";
+        document.getElementById("emailLabel").textContent = d.email || "";
+        etapa(1);
+      } catch (e) {
+        mostrarConviteInvalido("Não foi possível validar o convite. Tente novamente.");
+      }
+    }
+    function mostrarConviteInvalido(msg) {
+      etapa(0);
+      document.getElementById("msg0").textContent = "";
+      erro("erro0", msg);
+    }
+
+    async function pedirCodigo() {
+      erro("erro1", ""); erro("erro2", "");
+      var btn = document.getElementById("btnCodigo");
+      btn.disabled = true; btn.textContent = "Enviando...";
+      try {
+        var r = await fetch("/api/convite/" + encodeURIComponent(TOKEN) + "/codigo", { method: "POST" });
+        var d = await r.json();
+        if (!r.ok) { erro("erro1", d.error || "Erro ao enviar o código."); }
+        else { etapa(2); iniciarCooldown(); }
+      } catch (e) { erro("erro1", "Falha de conexão. Tente novamente."); }
+      btn.disabled = false; btn.textContent = "Receber código de confirmação";
+    }
+
+    function iniciarCooldown() {
+      var link = document.getElementById("linkReenviar");
+      var span = document.getElementById("cooldown");
+      link.className = "disabled";
+      var t = COOLDOWN;
+      span.textContent = t;
+      var timer = setInterval(function () {
+        t--;
+        span.textContent = t;
+        if (t <= 0) { clearInterval(timer); link.className = ""; span.textContent = COOLDOWN; }
+      }, 1000);
+    }
+
+    async function confirmarCodigo() {
+      erro("erro2", "");
+      var cod = codigoOtp();
+      if (cod.length !== 4) { erro("erro2", "Digite os 4 dígitos do código."); return; }
+      var btn = document.getElementById("btnConfirmar");
+      btn.disabled = true; btn.textContent = "Confirmando...";
+      try {
+        var r = await fetch("/api/convite/" + encodeURIComponent(TOKEN) + "/confirmar", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codigo: cod })
+        });
+        var d = await r.json();
+        if (!r.ok) { erro("erro2", d.error || "Código inválido."); }
+        else { etapa(3); document.getElementById("senha").focus(); }
+      } catch (e) { erro("erro2", "Falha de conexão. Tente novamente."); }
+      btn.disabled = false; btn.textContent = "Confirmar código";
+    }
+
+    async function completarCadastro() {
+      erro("erro3", "");
+      var s = document.getElementById("senha").value;
+      var c = document.getElementById("confirmar").value;
+      if (!s || s !== c) { erro("erro3", "As senhas não coincidem."); return; }
+      if (s.length < 8 || !/[a-zA-Z]/.test(s) || !/\d/.test(s)) {
+        erro("erro3", "A senha deve ter no mínimo 8 caracteres, com letras e números."); return;
+      }
+      var btn = document.getElementById("btnFinalizar");
+      btn.disabled = true; btn.textContent = "Concluindo...";
+      try {
+        var r = await fetch("/api/convite/" + encodeURIComponent(TOKEN) + "/completar", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ senha: s, confirmar: c })
+        });
+        var d = await r.json();
+        if (!r.ok) { erro("erro3", d.error || "Erro ao concluir."); }
+        else { etapa(4); }
+      } catch (e) { erro("erro3", "Falha de conexão. Tente novamente."); }
+      btn.disabled = false; btn.textContent = "Concluir cadastro";
+    }
+
+    iniciar();
+  </script>
+</body>
+</html>

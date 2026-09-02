@@ -449,9 +449,8 @@
         <div class="novo-filho">
           <input type="text" id="fNome" placeholder="Nome completo" />
           <input type="email" id="fEmail" placeholder="E-mail (login)" />
-          <input type="text" id="fWhatsapp" placeholder="WhatsApp (opcional)" />
-          <input type="password" id="fSenha" placeholder="Senha de acesso (mín. 6 caracteres)" />
-          <button class="btn-cadastrar-filho" id="btnCadastrarFilho" onclick="cadastrarFilho()">Cadastrar filho e gerar link</button>
+          <input type="text" id="fWhatsapp" placeholder="WhatsApp (opcional)" class="full" />
+          <button class="btn-cadastrar-filho" id="btnCadastrarFilho" onclick="cadastrarFilho()">Cadastrar filho e enviar convite</button>
         </div>
       </div>
     </div>
@@ -679,16 +678,14 @@
       var nome = document.getElementById("fNome").value.trim();
       var email = document.getElementById("fEmail").value.trim();
       var whatsapp = document.getElementById("fWhatsapp").value.trim();
-      var senha = document.getElementById("fSenha").value;
-      if (!nome || !email || !senha) { toast("Preencha nome, e-mail e senha."); return; }
-      if (senha.length < 6) { toast("A senha deve ter no mínimo 6 caracteres."); return; }
+      if (!nome || !email) { toast("Preencha nome e e-mail do filho."); return; }
       var btn = document.getElementById("btnCadastrarFilho");
       btn.disabled = true;
-      App.api("/api/parceiro/rede/filhos", { method: "POST", body: JSON.stringify({ nome: nome, email: email, whatsapp: whatsapp, senha: senha }) }).then(function (r) {
+      App.api("/api/parceiro/rede/filhos", { method: "POST", body: JSON.stringify({ nome: nome, email: email, whatsapp: whatsapp }) }).then(function (r) {
         btn.disabled = false;
         if (r.ok) {
-          toast("Filho cadastrado! Link gerado: ?ref=" + r.data.codigo);
-          ["fNome", "fEmail", "fWhatsapp", "fSenha"].forEach(function (id) { document.getElementById(id).value = ""; });
+          toast(r.data.message || ("Convite enviado para " + email + "!"));
+          ["fNome", "fEmail", "fWhatsapp"].forEach(function (id) { document.getElementById(id).value = ""; });
           carregarRede();
         } else {
           toast(r.data.error || "Erro ao cadastrar.");
