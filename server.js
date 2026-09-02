@@ -1350,9 +1350,13 @@ app.post("/api/admin/parceiros", protegerAdmin, async (req, res) => {
       [token, expira, JSON.stringify({ parceiro_id: result.insertId, nome: nome.trim(), email: em, convidado_por: "Office Express", papel: "admin" })]
     );
     const url = `${process.env.BASE_URL || "https://www.officeexpress.com.br"}/convite?token=${token}`;
-    await enviarConviteParceiro(em, nome.trim(), "Office Express", url);
-    await registrarAdminLog("parceiro_cadastro", `${nome.trim()} (${codigo}) - convite enviado`);
-    res.json({ success: true, codigo, convite: true, message: `Convite enviado para ${em}. O parceiro definirá a própria senha pelo link.` });
+    const envio = await enviarConviteParceiro(em, nome.trim(), "Office Express", url);
+    await registrarAdminLog("parceiro_cadastro", `${nome.trim()} (${codigo}) - convite ${envio && envio.ok ? "enviado" : "FALHOU no envio do e-mail"}`);
+    if (!envio || !envio.ok) {
+      console.error("🚨 E-mail de convite NÃO entregue para", em, ":", envio && (envio.error || envio.skippped) ? (envio.error || "BREVO_API_KEY ausente") : "desconhecido");
+      return res.json({ success: true, codigo, convite: true, emailEnviado: false, message: `Parceiro cadastrado, MAS o e-mail de convite NÃO foi entregue (${em}). Verifique a configuração BREVO no servidor ou reenvie o convite.` });
+    }
+    res.json({ success: true, codigo, convite: true, emailEnviado: true, message: `Convite enviado para ${em}. O parceiro definirá a própria senha pelo link.` });
   } catch (e) {
     console.error("Erro ao cadastrar parceiro:", e.message);
     res.status(500).json({ error: "Erro ao cadastrar parceiro." });
@@ -1640,7 +1644,11 @@ app.post("/api/convite/:token/codigo", async (req, res) => {
       "INSERT INTO email_tokens (tipo, token, expira_em, payload_json) VALUES ('confirmacao', ?, ?, ?)",
       [codigo, expira, JSON.stringify({ convite_id: t.id })]
     );
-    await enviarCodigoConvite(t.payload.email, t.payload.nome, codigo);
+    const envioCod = await enviarCodigoConvite(t.payload.email, t.payload.nome, codigo);
+    if (!envioCod || !envioCod.ok) {
+      console.error("🚨 Código de convite NÃO entregue para", t.payload.email, ":", envioCod && (envioCod.error || envioCod.skippped) ? (envioCod.error || "BREVO_API_KEY ausente") : "desconhecido");
+      return res.status(502).json({ error: "Não foi possível enviar o e-mail com o código agora. Tente novamente em instantes." });
+    }
     res.json({ success: true, message: "Código enviado para " + t.payload.email });
   } catch (e) {
     console.error("Erro ao enviar código do convite:", e.message);
@@ -1945,8 +1953,12 @@ app.post("/api/parceiro/rede/filhos", protegerParceiro, async (req, res) => {
       [token, expira, JSON.stringify({ parceiro_id: result.insertId, nome: String(nome).trim(), email: em, convidado_por: p[0].nome || "Seu padrinho", papel: "pai", pai_id: pid })]
     );
     const url = `${process.env.BASE_URL || "https://www.officeexpress.com.br"}/convite?token=${token}`;
-    await enviarConviteParceiro(em, String(nome).trim(), p[0].nome || "Office Express", url);
-    res.json({ success: true, codigo, convite: true, message: `Convite enviado para ${em}. O filho definirá a própria senha pelo link.` });
+    const envio = await enviarConviteParceiro(em, String(nome).trim(), p[0].nome || "Office Express", url);
+    if (!envio || !envio.ok) {
+      console.error("🚨 E-mail de convite (filho) NÃO entregue para", em, ":", envio && (envio.error || envio.skippped) ? (envio.error || "BREVO_API_KEY ausente") : "desconhecido");
+      return res.json({ success: true, codigo, convite: true, emailEnviado: false, message: `Filho cadastrado, MAS o e-mail de convite NÃO foi entregue (${em}). Informe o link a ele ou verifique a configuração BREVO.` });
+    }
+    res.json({ success: true, codigo, convite: true, emailEnviado: true, message: `Convite enviado para ${em}. O filho definirá a própria senha pelo link.` });
   } catch (e) {
     console.error("Erro ao cadastrar filho:", e.message);
     res.status(500).json({ error: "Erro ao cadastrar parceiro filho." });
