@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS `talentos` (
   `consentimento` TINYINT(1) NOT NULL DEFAULT 0,
   `modelo` VARCHAR(40) NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_talentos_pedido` (`pedido_id`),
   KEY `idx_talentos_estado` (`estado`),

@@ -1963,7 +1963,7 @@ async function garantirEmpresasSchema() {
         consentimento TINYINT(1) NOT NULL DEFAULT 0,
         modelo VARCHAR(40) NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        updated_at DATETIME NULL,
         PRIMARY KEY (id),
         UNIQUE KEY uq_talentos_pedido (pedido_id),
         KEY idx_talentos_estado (estado),
@@ -2003,13 +2003,13 @@ async function arquivarTalento(pedidoId) {
     const telefone = (telefones[0] || "").toString().slice(0, 60) || null;
 
     await pool.query(
-      `INSERT INTO talentos (pedido_id, usuario_id, nome, email, telefone, cargo, cidade, estado, objetivo, dados_json, consentimento, modelo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO talentos (pedido_id, usuario_id, nome, email, telefone, cargo, cidade, estado, objetivo, dados_json, consentimento, modelo, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
        ON DUPLICATE KEY UPDATE
          nome = VALUES(nome), email = VALUES(email), telefone = VALUES(telefone),
          cargo = VALUES(cargo), cidade = VALUES(cidade), estado = VALUES(estado),
          objetivo = VALUES(objetivo), dados_json = VALUES(dados_json),
-         consentimento = VALUES(consentimento), modelo = VALUES(modelo)`,
+         consentimento = VALUES(consentimento), modelo = VALUES(modelo), updated_at = NOW()`,
       [
         p.id,
         p.usuario_id || null,
