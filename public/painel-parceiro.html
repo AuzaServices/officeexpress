@@ -602,8 +602,9 @@
 
     function renderRede(rede) {
       var secao = document.getElementById("secaoRede");
-      // A aba Minha Rede aparece para pais E para filhos (o filho pode ver
-      // o próprio progresso e, ao ser promovido, cadastrar os próprios filhos).
+      // A aba Minha Rede (cadastrar filhos) é EXCLUSIVA do Parceiro Pai.
+      // O filho acompanha apenas a própria meta no card de progresso.
+      if (rede.tipo !== "pai") { secao.style.display = "none"; return; }
       secao.style.display = "block";
       var filhos = rede.filhos || [];
       document.getElementById("countFilhos").textContent = filhos.length + "/" + rede.limiteFilhos;

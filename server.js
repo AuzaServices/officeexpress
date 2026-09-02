@@ -1791,6 +1791,11 @@ app.post("/api/parceiro/rede/filhos", protegerParceiro, async (req, res) => {
     }
     const [p] = await pool.query("SELECT id, tipo FROM parceiros WHERE id = ?", [pid]);
     if (!p.length) return res.status(404).json({ error: "Parceiro não encontrado." });
+    // Somente Parceiros Pai podem cadastrar filhos (filhos ainda não formados
+    // não têm autonomia de rede).
+    if (p[0].tipo !== "pai") {
+      return res.status(403).json({ error: "Apenas Parceiros Pai podem cadastrar filhos. Bata a meta de vendas para se tornar Pai." });
+    }
     const cfg = await getConfigRede();
     const [count] = await pool.query("SELECT COUNT(*) AS c FROM parceiros WHERE pai_id = ?", [pid]);
     if (Number(count[0].c) >= cfg.limite_filhos) {
