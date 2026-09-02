@@ -416,7 +416,12 @@
 
           var acao;
           if (p.status === "pago") {
-            acao = '<a class="btn-mini btn-download" href="/api/pedidos/' + encodeURIComponent(p.id) + '/download">' +
+            // Token único de download (gerado no pagamento): permite baixar
+            // mesmo em navegadores embutidos (Instagram), onde a sessão de
+            // cookies não existe ou se perde ao abrir o link fora do app.
+            var urlDownload = "/api/pedidos/" + encodeURIComponent(p.id) + "/download";
+            if (p.download_token) urlDownload += "?token=" + encodeURIComponent(p.download_token);
+            acao = '<a class="btn-mini btn-download" href="' + urlDownload + '" target="_blank" rel="noopener">' +
                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Baixar</a>';
           } else {
             acao = '<a class="btn-mini btn-conta" href="/pagamento?pedido=' + encodeURIComponent(p.id) + '">' +

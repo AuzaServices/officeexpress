@@ -100,6 +100,24 @@ app.use(
 garantirSchema();
 garantirEmpresasSchema();
 
+// Preenche tokens de download faltantes em pedidos pagos antigos (o token é
+// gerado no pagamento; pedidos anteriores a essa feature não o tinham). Cada
+// pedido recebe um token único. Roda de forma assíncrona após o schema estar
+// garantido — não bloqueia a subida.
+(async () => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id FROM pedidos WHERE status = 'pago' AND (download_token IS NULL OR download_token = '')"
+    );
+    for (const row of rows) {
+      await pool.query("UPDATE pedidos SET download_token = ? WHERE id = ?", [gerarToken(), row.id]);
+    }
+    if (rows.length > 0) console.log(`🔑 Tokens de download retroativos: ${rows.length} pedido(s) atualizado(s).`);
+  } catch (e) {
+    // silencioso: ambiente sem DB (ex.: desenvolvimento offline)
+  }
+})();
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -383,7 +401,7 @@ app.get("/api/pedidos/meus", async (req, res) => {
   const id = usuarioDaSessao(req);
   if (!id) return res.status(401).json({ error: "Não autenticado." });
   const [rows] = await pool.query(
-    "SELECT id, modelo, valor, status, created_at, pago_at FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
+    "SELECT id, modelo, valor, status, created_at, pago_at, download_token FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
     [id]
   );
   res.json({ pedidos: rows });
@@ -513,15 +531,27 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
 // ---------------------------------------------------------------------------
 app.get("/api/pedidos/:id/download", async (req, res) => {
   const { id } = req.params;
-  // O download fica disponível enquanto a conta do cliente estiver ativa:
-  // exige sessão autenticada e que o pedido pertença ao usuário logado.
-  const usuarioId = usuarioDaSessao(req);
-  if (!usuarioId) return res.status(401).json({ error: "Faça login para baixar." });
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
-  if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
-  if (pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
+
+  // O download fica disponível enquanto a conta do cliente estiver ativa:
+  // exige sessão autenticada e que o pedido pertença ao usuário logado.
+  // Alternativa: token único de download (gerado no pagamento). Ele existe
+  // para navegadores embutidos (Instagram/Facebook), que não compartilham
+  // cookies com o navegador externo — quando o app força a abertura do link
+  // fora do in-app browser, a sessão se perde, mas o token segue válido.
+  const usuarioId = usuarioDaSessao(req);
+  const token = String(req.query.token || "");
+  if (!usuarioId && !token) return res.status(401).json({ error: "Faça login para baixar." });
+  if (!usuarioId) {
+    if (pedido.status !== "pago" || !pedido.download_token || token !== pedido.download_token) {
+      return res.status(403).json({ error: "Link de download inválido ou expirado. Faça login para baixar." });
+    }
+  } else {
+    if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
+    if (pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
+  }
 
   let dados;
   try { dados = JSON.parse(pedido.dados_json); } catch (e) { return res.status(500).json({ error: "Dados inválidos." }); }
@@ -535,9 +565,13 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
     // No iOS/Safari, "attachment" abre pelo Quick Look, que renderiza o PDF de
     // forma errada. Para iOS usamos "inline", fazendo o Safari abrir no
     // visualizador nativo e exibir o modelo corretamente (como no Android).
+    // Navegadores embutidos (Instagram/Facebook) também recebem "inline":
+    // com "attachment" o app força a abertura fora do in-app browser, onde a
+    // sessão não existe — com "inline" o PDF abre dentro do próprio app.
     const ua = (req.headers["user-agent"] || "").toLowerCase();
     const ehIOS = /iphone|ipad|ipod/.test(ua) || (ua.indexOf("macintosh") !== -1 && ua.indexOf("mobile") !== -1);
-    const disposicao = ehIOS ? "inline" : "attachment";
+    const ehInApp = /instagram|fbav|fbsv|fb_iab|line\//.test(ua);
+    const disposicao = ehIOS || ehInApp ? "inline" : "attachment";
     res.setHeader("Content-Disposition", `${disposicao}; filename="${arquivoNome}.pdf"`);
     res.send(buffer);
   } catch (err) {
