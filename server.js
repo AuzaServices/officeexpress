@@ -1317,7 +1317,7 @@ function protegerParceiro(req, res, next) {
 
 async function buscarParceiroPorId(id) {
   const [rows] = await pool.query(
-    "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, promovido_em, created_at FROM parceiros WHERE id = ?",
+      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, promovido_em, created_at FROM parceiros WHERE id = ?",
     [id]
   );
   return rows[0] || null;
