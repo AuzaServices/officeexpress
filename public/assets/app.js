@@ -79,6 +79,29 @@ window.App = (function () {
     }).join("");
   }
 
+  function menuRodapeHTML() {
+    return '<div class="menu-rodape">' +
+      '<div class="menu-social">' +
+        '<a href="https://wa.me/5585991340658" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>' +
+        '<a href="https://www.instagram.com/office.express/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>' +
+        '<a href="https://twitter.com/instrutorpro" target="_blank" rel="noopener" aria-label="X/Twitter"><i class="fab fa-x-twitter"></i></a>' +
+        '<a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>' +
+      '</div>' +
+      '<p class="menu-copy">© 2026 Office Express. Todos os direitos reservados.</p>' +
+    '</div>';
+  }
+
+  // Acordeão: sublinks só abrem ao tocar no item com a seta
+  function ativarAcordeaoSubmenus(mobile) {
+    if (!mobile) return;
+    mobile.querySelectorAll(".mobile-nav-group > a").forEach(function (trigger) {
+      trigger.addEventListener("click", function (e) {
+        e.preventDefault();
+        trigger.closest(".mobile-nav-group").classList.toggle("expandido");
+      });
+    });
+  }
+
   function carregarHeader(ativo) {
     const nav = document.getElementById("navMenu");
     const mobile = document.getElementById("mobileMenu");
@@ -120,10 +143,11 @@ window.App = (function () {
               '</div>' +
               '<button type="button" class="mobile-sair" onclick="App.logoutEmpresa();return false;">Sair</button>'
             : '<a href="/companies" onclick="mostrarFormCompanies(\'login\');return false;" class="btn-login-mobile">Entrar</a>';
-          mobile.innerHTML = '<div class="mobile-menu-inner">' + linksCompanies + areaEmpresaMobile + '</div>';
+          mobile.innerHTML = '<div class="mobile-menu-inner">' + linksCompanies + areaEmpresaMobile + menuRodapeHTML() + '</div>';
         }
 
         setupUserDropdown();
+        ativarAcordeaoSubmenus(mobile);
       });
       return;
     }
@@ -158,10 +182,11 @@ window.App = (function () {
             '<a href="/minha-conta">Minha conta</a>' +
             '<button type="button" class="mobile-sair" onclick="App.logout();return false;">Sair</button>'
           : '<a href="/login" class="btn-login-mobile">Login</a>';
-        mobile.innerHTML = '<div class="mobile-menu-inner">' + linksMobile + areaContaMobile + '</div>';
+        mobile.innerHTML = '<div class="mobile-menu-inner">' + linksMobile + areaContaMobile + menuRodapeHTML() + '</div>';
       }
 
       setupUserDropdown();
+      ativarAcordeaoSubmenus(mobile);
     });
   }
 

@@ -47,8 +47,31 @@ function loadHeader() {
   <div id="menuOverlay"></div>
   <nav id="mobileMenu" aria-label="Menu móvel">
     <div class="mobile-menu-inner">
+      <a href="/">Início</a>
+      <div class="nav-dropdown mobile-nav-group">
+        <a href="/modelos" class="nav-dropdown-trigger">Curriculum<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
+        <div class="nav-dropdown-menu mobile-nav-sub">
+          <a href="/modelos">Modelos</a>
+          <a href="/analise">Análise de Currículo (Gratuito)</a>
+        </div>
+      </div>
+      <div class="nav-dropdown mobile-nav-group">
+        <a href="#" class="nav-dropdown-trigger">Ferramentas<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
+        <div class="nav-dropdown-menu mobile-nav-sub">
+          <a href="/cartas">Gerar carta de apresentação</a>
+        </div>
+      </div>
       <a href="/contato">Contato</a>
       <a href="/sobre">Sobre nós</a>
+      <div class="menu-rodape">
+        <div class="menu-social">
+          <a href="https://wa.me/5585991340658" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.instagram.com/office.express/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://twitter.com/instrutorpro" target="_blank" rel="noopener" aria-label="X/Twitter"><i class="fab fa-x-twitter"></i></a>
+          <a href="https://www.facebook.com/profile.php?id=61580236144303" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        </div>
+        <p class="menu-copy">© 2026 Office Express. Todos os direitos reservados.</p>
+      </div>
     </div>
   </nav>
   `;
@@ -160,9 +183,17 @@ function setupMobileMenu() {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && mobileMenu.classList.contains('open')) setMenu(false);
     });
-    // Fecha ao navegar por qualquer link do menu
+    // Fecha ao navegar por qualquer link do menu (exceto triggers de acordeão)
     mobileMenu.addEventListener('click', (e) => {
-      if (e.target.closest('a')) setMenu(false);
+      const link = e.target.closest('a');
+      if (link && !link.classList.contains('nav-dropdown-trigger')) setMenu(false);
+    });
+    // Acordeão: sublinks só abrem ao tocar no item com a seta
+    mobileMenu.querySelectorAll('.mobile-nav-group > a').forEach(function (trigger) {
+      trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        trigger.closest('.mobile-nav-group').classList.toggle('expandido');
+      });
     });
   }
 }
