@@ -347,6 +347,10 @@
     <!-- Link de compartilhamento (campo principal) -->
     <div class="link-card">
       <div class="label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link de Compartilhamento — envie aos seus clientes</div>
+      <div id="seloPreco" style="display:none;align-items:center;gap:8px;margin:0 0 10px;font-size:.9rem;font-weight:700;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:7px 14px;width:fit-content">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Seu preço do currículo: <span id="precoParceiroTxt">—</span></span>
+      </div>
       <div class="link-row">
         <input class="link-field" id="linkParceiro" readonly value="Carregando..." onclick="this.select()" />
         <button class="btn-copy" onclick="copiarLink()">
@@ -705,6 +709,14 @@
         PARCEIRO = r.data.parceiro;
         document.getElementById("nomeParceiro").textContent = PARCEIRO.nome || "Parceiro";
         document.getElementById("avatar").textContent = iniciais(PARCEIRO.nome);
+
+        // Selo de preço customizado (definido pelo admin); se não houver, oculta.
+        if (PARCEIRO.preco_custom != null) {
+          var selo = document.getElementById("seloPreco");
+          selo.style.display = "flex";
+          document.getElementById("precoParceiroTxt").textContent =
+            "R$ " + Number(PARCEIRO.preco_custom).toFixed(2).replace(".", ",");
+        }
 
         // Se ainda não aceitou os termos, mostra o gate.
         if (!PARCEIRO.aceitou_termos) {

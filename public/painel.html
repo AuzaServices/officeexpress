@@ -178,7 +178,7 @@
         </div>
         <div class="tabela-wrap">
           <table class="tabela">
-            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>Link</th><th>Comissão</th><th>Dia pag.</th><th>Termos</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>Link</th><th>Comissão</th><th>Preço currículo</th><th>Dia pag.</th><th>Termos</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody id="tbodyParceiros"><tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr></tbody>
           </table>
         </div>
@@ -783,6 +783,16 @@
           "<td>" + (p.email || "-") + "</td>" +
           '<td style="max-width:220px;word-break:break-all;font-size:.78rem;color:var(--text-muted)">' + link + '</td>' +
           "<td>" + (p.comissao != null ? p.comissao + "%" : "40%") + "</td>" +
+          '<td>' +
+            '<div style="display:flex;align-items:center;gap:6px;justify-content:center">' +
+              '<span id="precoTxt' + p.id + '" style="font-weight:700;color:' + (p.preco_custom != null ? "var(--brand)" : "var(--text-muted)") + '">' +
+                (p.preco_custom != null ? "R$ " + Number(p.preco_custom).toFixed(2).replace(".", ",") : "padrão") +
+              '</span>' +
+              '<button type="button" class="btn-acao" title="Editar preço deste parceiro" onclick="editarPrecoParceiro(' + p.id + ',' + (p.preco_custom != null ? p.preco_custom : "null") + ')">' +
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</td>' +
           "<td>dia " + (p.dia_pagamento || 5) + "</td>" +
           "<td>" + aceitou + "</td>" +
           "<td>" + ativo + "</td>" +
@@ -793,8 +803,37 @@
           "</div></td>";
         tb.appendChild(tr);
       });
-      if (!data.parceiros || !data.parceiros.length) tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Nenhum parceiro cadastrado ainda.</td></tr>';
+      if (!data.parceiros || !data.parceiros.length) tb.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-muted)">Nenhum parceiro cadastrado ainda.</td></tr>';
     }
+
+    // ===== Preço customizado por parceiro =====
+    function editarPrecoParceiro(id, precoAtual) {
+      var atual = precoAtual != null ? Number(precoAtual).toFixed(2).replace(".", ",") : "";
+      var v = prompt(
+        "Preço do currículo para este parceiro (R$).\n\n" +
+        "• Digite um valor (ex.: 20,00) para cobrar esse preço apenas nos pedidos que vierem pelo link dele.\n" +
+        "• Deixe vazio para voltar ao preço padrão do sistema.",
+        atual
+      );
+      if (v === null) return; // cancelado
+      var { ok, data } = await App.api("/api/admin/parceiros/" + id + "/preco", { method: "PUT", body: JSON.stringify({ preco_custom: v.trim() }) });
+      if (ok) {
+        var span = document.getElementById("precoTxt" + id);
+        if (span) {
+          if (data.preco_custom != null) {
+            span.textContent = "R$ " + Number(data.preco_custom).toFixed(2).replace(".", ",");
+            span.style.color = "var(--brand)";
+          } else {
+            span.textContent = "padrão";
+            span.style.color = "var(--text-muted)";
+          }
+        }
+        setMsg("Preço do parceiro atualizado com sucesso.", true);
+      } else {
+        alert(data && data.error ? data.error : "Erro ao salvar preço.");
+      }
+    }
+    window.editarPrecoParceiro = editarPrecoParceiro;
 
     // ===== Programa de Rede (Pai / Filho) =====
     async function carregarConfigRede() {

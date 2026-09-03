@@ -34,7 +34,7 @@ const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
 const { MercadoPagoConfig, Payment } = require("mercadopago");
-const { pool, garantirSchema, getPreco } = require("./lib/db");
+const { pool, garantirSchema, getPreco, getPrecoParceiro, garantirPrecoParceiro } = require("./lib/db");
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao, enviarConviteParceiro, enviarCodigoConvite } = require("./lib/email");
@@ -99,6 +99,7 @@ app.use(
 
 garantirSchema();
 garantirEmpresasSchema();
+garantirPrecoParceiro();
 
 // Preenche tokens de download faltantes em pedidos pagos antigos (o token é
 // gerado no pagamento; pedidos anteriores a essa feature não o tinham). Cada
@@ -368,7 +369,6 @@ app.post("/api/pedidos", async (req, res) => {
   const catalogo = tipo === "carta" ? CARTAS : MODELOS;
   if (!modelo || !catalogo.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
   if (!dados || !dados.nome) return res.status(400).json({ error: "Dados do currículo incompletos." });
-  const valor = await getPreco();
   // Garante que a foto (base64) nunca seja persistida no banco — além de
   // não ser mais usada no currículo, ela inchava a tabela pedidos.
   const dadosLimpos = { ...(dados || {}) };
@@ -390,6 +390,10 @@ app.post("/api/pedidos", async (req, res) => {
       if (u.length && u[0].parceiro_id) parceiroId = u[0].parceiro_id;
     }
   }
+  // Preço do currículo: se o pedido veio pelo link de um parceiro com preço
+  // próprio (configurado no painel admin), usa o preço dele; senão, o padrão.
+  const precoParceiro = await getPrecoParceiro(parceiroId);
+  const valor = precoParceiro != null ? precoParceiro : await getPreco();
   const [result] = await pool.query(
     "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor, parceiro_id) VALUES (?, ?, ?, ?, ?)",
     [usuarioDaSessao(req), modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), valor, parceiroId]
@@ -764,6 +768,29 @@ app.put("/api/admin/preco", protegerAdmin, async (req, res) => {
   const { setPreco } = require("./lib/db");
   await setPreco(v);
   res.json({ success: true, preco: v });
+});
+
+// ---------------------------------------------------------------------------
+// Preço customizado POR PARCEIRO (pai ou filho)
+// null/vazio = usa o preço padrão do sistema
+// ---------------------------------------------------------------------------
+app.put("/api/admin/parceiros/:id/preco", protegerAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: "Parceiro inválido." });
+  const raw = req.body && req.body.preco_custom;
+  // vazio/null/remove = volta a usar o preço padrão
+  if (raw === null || raw === undefined || String(raw).trim() === "") {
+    await pool.query("UPDATE parceiros SET preco_custom = NULL WHERE id = ?", [id]);
+    await registrarAdminLog("parceiro_preco", `Preço do parceiro #${id} resetado para o padrão do sistema`);
+    return res.json({ success: true, preco_custom: null });
+  }
+  const v = parseFloat(String(raw).replace(",", "."));
+  if (isNaN(v) || v <= 0) return res.status(400).json({ error: "Preço inválido." });
+  if (v > 9999) return res.status(400).json({ error: "Preço muito alto." });
+  const [r] = await pool.query("UPDATE parceiros SET preco_custom = ? WHERE id = ?", [v, id]);
+  if (!r.affectedRows) return res.status(404).json({ error: "Parceiro não encontrado." });
+  await registrarAdminLog("parceiro_preco", `Preço do parceiro #${id} definido para R$ ${v.toFixed(2)}`);
+  res.json({ success: true, preco_custom: v });
 });
 
 // ---------------------------------------------------------------------------
@@ -1317,7 +1344,7 @@ function protegerParceiro(req, res, next) {
 
 async function buscarParceiroPorId(id) {
   const [rows] = await pool.query(
-      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, promovido_em, created_at FROM parceiros WHERE id = ?",
+      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, promovido_em, preco_custom, created_at FROM parceiros WHERE id = ?",
     [id]
   );
   return rows[0] || null;
@@ -1367,7 +1394,7 @@ app.post("/api/admin/parceiros", protegerAdmin, async (req, res) => {
 app.get("/api/admin/parceiros", protegerAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, created_at FROM parceiros ORDER BY id DESC"
+      "SELECT id, nome, email, whatsapp, codigo, dia_pagamento, comissao, aceitou_termos, termos_aceitos_em, ativo, tipo, pai_id, preco_custom, created_at FROM parceiros ORDER BY id DESC"
     );
     res.json({ parceiros: rows });
   } catch (e) {
