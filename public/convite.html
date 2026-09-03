@@ -7,86 +7,99 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="/imagens/icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/auth-premium.css" />
   <style>
-    :root {
-      --navy: #001f33; --brand: #ff8800; --brand-dark: #e67300;
-      --ink: #0f172a; --muted: #64748b; --border: #e2e8f0;
-      --green: #16a34a; --green-bg: #dcfce7; --red: #dc2626; --red-bg: #fee2e2;
-    }
+    /* A página do convite reutiliza o tema auth-premium (fundo navy, logos
+       desfocadas em movimento, card de vidro azul) e define aqui apenas o
+       que é próprio do fluxo de 3 etapas. */
     * { box-sizing: border-box; }
     body {
       margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      font-family: "Inter", system-ui, -apple-system, sans-serif; color: var(--ink);
-      background: linear-gradient(160deg, #001f33 0%, #00324a 55%, #0a4a63 100%);
+      font-family: "Inter", system-ui, -apple-system, sans-serif; color: #eef6ff;
+      background:
+        radial-gradient(1200px 800px at 15% -10%, #003a5c 0%, transparent 60%),
+        radial-gradient(1000px 700px at 110% 110%, #0a4a63 0%, transparent 55%),
+        linear-gradient(160deg, #001f33 0%, #00293f 55%, #003a55 100%);
       padding: 20px; line-height: 1.5;
     }
     .card {
-      background: #fff; border-radius: 20px; width: 100%; max-width: 460px;
-      padding: 36px 32px; box-shadow: 0 24px 60px rgba(0,0,0,.35);
+      position: relative; z-index: 1;
+      background: linear-gradient(150deg, rgba(16, 64, 102, .58), rgba(4, 32, 54, .72));
+      -webkit-backdrop-filter: blur(26px) saturate(1.4);
+      backdrop-filter: blur(26px) saturate(1.4);
+      border: 1px solid rgba(140, 190, 255, .28);
+      border-radius: 24px; width: 100%; max-width: 460px;
+      padding: 40px 34px; color: #eef6ff;
+      box-shadow: 0 30px 80px rgba(0, 10, 20, .55), inset 0 1px 0 rgba(180, 220, 255, .22);
+      animation: authCardIn .6s cubic-bezier(.22, 1, .36, 1) both;
     }
-    .logo { display: block; margin: 0 auto 18px; height: 34px; }
-    h1 { margin: 0 0 6px; font-size: 21px; text-align: center; }
-    .sub { margin: 0 0 22px; color: var(--muted); font-size: 14px; text-align: center; }
-    .sub b { color: var(--ink); }
+    .logo { display: block; margin: 0 auto 18px; height: 48px; filter: drop-shadow(0 4px 14px rgba(0,0,0,.4)); }
+    h1 { margin: 0 0 6px; font-size: 21px; text-align: center; color: #eef6ff; }
+    .sub { margin: 0 0 22px; color: rgba(210, 232, 255, .75); font-size: 14px; text-align: center; }
+    .sub b { color: #fff; }
     .etapa { display: none; }
     .etapa.ativa { display: block; }
-    label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: var(--ink); }
+    label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: rgba(210, 232, 255, .85); }
     input[type="email"], input[type="password"], input[type="text"] {
-      width: 100%; padding: 13px 15px; border: 1.5px solid var(--border); border-radius: 12px;
-      font-size: 15px; font-family: inherit; transition: border-color .15s;
+      width: 100%; padding: 14px 16px; border: 1.5px solid rgba(140, 190, 255, .22);
+      border-radius: 13px; font-size: 16px; font-family: inherit;
+      background: rgba(2, 20, 36, .5); color: #fff; transition: border-color .15s;
     }
+    input::placeholder { color: rgba(180, 205, 230, .45); }
     input:focus { outline: none; border-color: var(--brand); }
     .otp { display: flex; gap: 10px; justify-content: center; margin: 18px 0 6px; }
     .otp input {
       width: 56px; height: 62px; text-align: center; font-size: 26px; font-weight: 800;
-      border: 1.5px solid var(--border); border-radius: 12px; font-family: inherit;
+      border: 1.5px solid rgba(140, 190, 255, .25); border-radius: 12px; font-family: inherit;
+      background: rgba(2, 20, 36, .5); color: #fff;
     }
     .otp input:focus { outline: none; border-color: var(--brand); }
     .btn {
-      width: 100%; margin-top: 18px; background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-      color: #fff; border: none; padding: 14px; border-radius: 12px;
+      width: 100%; margin-top: 18px; background: linear-gradient(135deg, #ff8800, #e67300);
+      color: #fff; border: none; padding: 15px; border-radius: 13px;
       font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; transition: .2s;
+      box-shadow: 0 10px 26px rgba(230, 115, 0, .38);
     }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(255,136,0,.35); }
-    .btn:disabled { background: #c7cbe8; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn-ghost {
-      width: 100%; margin-top: 10px; background: transparent; color: var(--muted);
-      border: 1.5px solid var(--border); padding: 12px; border-radius: 12px;
-      font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit;
-    }
-    .btn-ghost:hover { border-color: var(--brand); color: var(--brand-dark); }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(230, 115, 0, .48); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
     .erro {
-      display: none; background: var(--red-bg); color: var(--red); border-radius: 10px;
-      padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
+      display: none; background: rgba(220, 38, 38, .18); color: #fecaca; border: 1px solid rgba(248, 113, 113, .45);
+      border-radius: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
     }
     .ok {
-      display: none; background: var(--green-bg); color: var(--green); border-radius: 10px;
-      padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
+      display: none; background: rgba(22, 163, 74, .16); color: #bbf7d0; border: 1px solid rgba(74, 222, 128, .4);
+      border-radius: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
     }
-    .forca { height: 6px; background: #eef2f7; border-radius: 999px; margin-top: 8px; overflow: hidden; }
+    .forca { height: 6px; background: rgba(2, 20, 36, .5); border-radius: 999px; margin-top: 8px; overflow: hidden; }
     .forca .fill { height: 100%; width: 0; border-radius: 999px; transition: width .3s, background .3s; }
-    .dica { font-size: 12px; color: var(--muted); margin-top: 6px; }
-    .reenviar { text-align: center; margin-top: 12px; font-size: 13px; color: var(--muted); }
-    .reenviar a { color: var(--brand-dark); font-weight: 700; cursor: pointer; text-decoration: none; }
-    .reenviar a.disabled { color: var(--muted); cursor: default; opacity: .5; }
+    .dica { font-size: 12px; color: rgba(210, 232, 255, .6); margin-top: 6px; }
+    .reenviar { text-align: center; margin-top: 12px; font-size: 13px; color: rgba(210, 232, 255, .65); }
+    .reenviar a { color: #ffb15e; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .reenviar a.disabled { color: rgba(210, 232, 255, .4); cursor: default; opacity: .5; }
     .sucesso-final { text-align: center; padding: 10px 0 4px; }
     .sucesso-final .check {
       width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 50%;
-      background: var(--green-bg); color: var(--green); font-size: 38px;
+      background: rgba(22, 163, 74, .2); color: #4ade80; font-size: 38px;
       display: flex; align-items: center; justify-content: center;
     }
     .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
-    .steps span { width: 34px; height: 5px; border-radius: 999px; background: #e2e8f0; transition: .3s; }
+    .steps span { width: 34px; height: 5px; border-radius: 999px; background: rgba(140, 190, 255, .2); transition: .3s; }
     .steps span.on { background: var(--brand); }
     .convite-info {
-      background: #f8fafc; border: 1px solid var(--border); border-radius: 12px;
-      padding: 14px 16px; margin-bottom: 6px; text-align: center; font-size: 14px;
+      background: rgba(2, 20, 36, .45); border: 1px solid rgba(140, 190, 255, .2);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 6px; text-align: center; font-size: 14px;
+      color: rgba(210, 232, 255, .8);
     }
-    .convite-info b { display: block; font-size: 15px; }
-    @media (max-width: 420px) { .otp input { width: 48px; height: 56px; font-size: 22px; } .card { padding: 28px 22px; } }
+    .convite-info b { display: block; font-size: 15px; color: #fff; }
+    @media (max-width: 480px) {
+      .card { padding: 30px 20px; }
+      .otp input { width: 48px; height: 56px; font-size: 22px; }
+    }
   </style>
 </head>
 <body>
+  <img class="auth-bg-logo a" src="/imagens/logo.png" alt="" aria-hidden="true" onerror="this.style.display='none'" />
+  <img class="auth-bg-logo b" src="/imagens/marca.png" alt="" aria-hidden="true" onerror="this.style.display='none'" />
   <div class="card">
     <img class="logo" src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" />
     <div class="steps" id="steps"><span></span><span></span><span></span></div>

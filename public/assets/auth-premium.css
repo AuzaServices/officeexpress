@@ -1,0 +1,193 @@
+/* ==========================================================================
+   AUTH PREMIUM — Telas de Login / Cadastro / Convite (Office Express)
+   Fundo navy da marca, logo gigante desfocada em movimento lento e card de
+   formulário com blur azul evidente. Vale para:
+   login, cadastro, login-parceiro, login-admin, esqueci-senha,
+   recuperar-senha, confirmar-email e convite.
+   ========================================================================== */
+
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 800px at 15% -10%, #003a5c 0%, transparent 60%),
+    radial-gradient(1000px 700px at 110% 110%, #0a4a63 0%, transparent 55%),
+    linear-gradient(160deg, #001f33 0%, #00293f 55%, #003a55 100%);
+  isolation: isolate;
+}
+
+/* Logo gigante desfocada no fundo — movimento devagar em órbita suave */
+.auth-bg-logo {
+  position: fixed;
+  width: min(78vmin, 640px);
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: blur(38px) saturate(1.25);
+  opacity: .42;
+  z-index: 0;
+  pointer-events: none;
+  animation: authLogoFloat 26s ease-in-out infinite alternate;
+}
+.auth-bg-logo.a { top: -12%; left: -14%; }
+.auth-bg-logo.b { bottom: -16%; right: -12%; width: min(64vmin, 520px); animation-duration: 34s; animation-delay: -12s; opacity: .3; }
+
+@keyframes authLogoFloat {
+  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50%  { transform: translate3d(4vw, 3vh, 0) scale(1.08) rotate(2deg); }
+  100% { transform: translate3d(-3vw, -4vh, 0) scale(1.03) rotate(-2deg); }
+}
+@keyframes authLogoFloatB {
+  0%   { transform: translate3d(0, 0, 0) scale(1.05) rotate(0deg); }
+  50%  { transform: translate3d(-4vw, -3vh, 0) scale(1) rotate(-2deg); }
+  100% { transform: translate3d(3vw, 4vh, 0) scale(1.1) rotate(2deg); }
+}
+.auth-bg-logo.b { animation-name: authLogoFloatB; }
+
+/* Brilhos de luz azul complementares (profundidade) */
+.auth-page::before,
+.auth-page::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  z-index: 0;
+  pointer-events: none;
+}
+.auth-page::before {
+  width: 44vmin; height: 44vmin;
+  background: rgba(255, 136, 0, .16); /* toque sutil do laranja da marca */
+  top: 8%; right: -10%;
+  animation: authGlow 22s ease-in-out infinite alternate;
+}
+.auth-page::after {
+  width: 56vmin; height: 56vmin;
+  background: rgba(64, 140, 255, .22);
+  bottom: -12%; left: -8%;
+  animation: authGlow 28s ease-in-out infinite alternate-reverse;
+}
+@keyframes authGlow {
+  from { transform: translate3d(0,0,0) scale(1); opacity: .7; }
+  to   { transform: translate3d(3vw, -3vh, 0) scale(1.15); opacity: 1; }
+}
+
+/* Card de formulário — blur azul evidente (glass azul da marca) */
+.auth-card {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(150deg, rgba(16, 64, 102, .58), rgba(4, 32, 54, .72));
+  -webkit-backdrop-filter: blur(26px) saturate(1.4);
+  backdrop-filter: blur(26px) saturate(1.4);
+  border: 1px solid rgba(140, 190, 255, .28);
+  border-radius: 24px;
+  padding: 44px 38px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow:
+    0 30px 80px rgba(0, 10, 20, .55),
+    inset 0 1px 0 rgba(180, 220, 255, .22),
+    inset 0 -30px 60px rgba(20, 90, 150, .12);
+  animation: authCardIn .6s cubic-bezier(.22, 1, .36, 1) both;
+}
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(22px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Textos do card (claros sobre o glass azul) */
+.auth-card, .auth-card h1, .auth-card .subtitle, .auth-card label { color: #eef6ff; }
+.auth-card h1 { font-size: 1.7rem; font-weight: 800; text-align: center; margin-bottom: 8px; letter-spacing: -.02em; }
+.auth-card .subtitle { text-align: center; color: rgba(210, 232, 255, .75); margin-bottom: 26px; font-size: .95rem; }
+.auth-logo { text-align: center; margin-bottom: 22px; }
+.auth-logo img { height: 52px; filter: drop-shadow(0 4px 14px rgba(0,0,0,.4)); }
+
+/* Campos: vidro escuro translúcido com foco laranja da marca */
+.auth-card .campo { margin-bottom: 18px; }
+.auth-card .campo label { display: block; margin-bottom: 8px; font-size: .82rem; font-weight: 700; letter-spacing: .02em; color: rgba(210, 232, 255, .85); }
+.auth-card .campo input, .auth-card .campo textarea {
+  width: 100%;
+  background: rgba(2, 20, 36, .5);
+  border: 1.5px solid rgba(140, 190, 255, .22);
+  border-radius: 13px;
+  padding: 14px 16px;
+  font-size: 15px;
+  color: #fff;
+  font-family: inherit;
+  transition: border-color .18s, box-shadow .18s, background .18s;
+}
+.auth-card .campo input::placeholder { color: rgba(180, 205, 230, .45); }
+.auth-card .campo input:focus {
+  outline: none;
+  border-color: var(--brand, #ff8800);
+  background: rgba(2, 24, 42, .65);
+  box-shadow: 0 0 0 4px rgba(255, 136, 0, .18);
+}
+
+/* Botão primário: gradiente laranja da marca */
+.auth-card .btn-primary, .auth-card .btn {
+  width: 100%;
+  background: linear-gradient(135deg, #ff8800, #e67300);
+  border: none;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15.5px;
+  padding: 15px;
+  border-radius: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform .18s, box-shadow .18s, filter .18s;
+  box-shadow: 0 10px 26px rgba(230, 115, 0, .38);
+}
+.auth-card .btn-primary:hover, .auth-card .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(230, 115, 0, .48); filter: brightness(1.05); }
+.auth-card .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+/* Links */
+.auth-links { text-align: center; margin-top: 22px; font-size: .9rem; color: rgba(210, 232, 255, .72); }
+.auth-links a { color: #ffb15e; text-decoration: none; font-weight: 600; }
+.auth-links a:hover { text-decoration: underline; }
+.auth-links p { margin: 6px 0; }
+
+/* Alertas sobre fundo escuro */
+.auth-card .alert { border-radius: 12px; font-size: .9rem; }
+.auth-card .alert-error { background: rgba(220, 38, 38, .18); border: 1px solid rgba(248, 113, 113, .45); color: #fecaca; }
+.auth-card .alert-success { background: rgba(22, 163, 74, .16); border: 1px solid rgba(74, 222, 128, .4); color: #bbf7d0; }
+.auth-card .alert-info { background: rgba(255, 136, 0, .12); border: 1px solid rgba(255, 168, 76, .4); color: #ffd9ad; }
+
+/* Responsivo mobile — extremamente polido */
+@media (max-width: 480px) {
+  .auth-page { padding: 24px 16px; align-items: center; }
+  .auth-card { padding: 32px 22px; border-radius: 20px; max-width: 100%; }
+  .auth-logo img { height: 46px; }
+  .auth-card h1 { font-size: 1.45rem; }
+  .auth-card .campo input { padding: 13px 14px; font-size: 16px; /* evita zoom no iOS */ }
+  .auth-bg-logo { filter: blur(30px) saturate(1.2); opacity: .38; }
+}
+@media (max-width: 360px) {
+  .auth-card { padding: 28px 16px; }
+}
+
+/* Respeita usuários com movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  .auth-bg-logo, .auth-page::before, .auth-page::after { animation: none; }
+  .auth-card { animation: none; }
+}
+
+/* ==========================================================================
+   Convite (convite.html usa markup próprio) — normaliza para o mesmo tema
+   ========================================================================== */
+body:has(.card) .card:not(.auth-card) {
+  background: linear-gradient(150deg, rgba(16, 64, 102, .58), rgba(4, 32, 54, .72)) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.4) !important;
+  backdrop-filter: blur(26px) saturate(1.4) !important;
+  border: 1px solid rgba(140, 190, 255, .28) !important;
+  box-shadow: 0 30px 80px rgba(0, 10, 20, .55) !important;
+}
+body:has(.card) .card:not(.auth-card) .otp input {
+  background: rgba(2, 20, 36, .5);
+  border-color: rgba(140, 190, 255, .25);
+  color: #fff;
+}
