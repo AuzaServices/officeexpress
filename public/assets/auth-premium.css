@@ -162,16 +162,31 @@
    atrás do formulário, e o card ganha blur profundo + moldura luminosa.
    ========================================================================== */
 @media (max-width: 1023px) {
-  /* Página: fundo base escuro; a imagem desfocada cobre tudo por cima */
+  /* Página: fundo base escuro; a imagem desfocada cobre tudo por cima.
+     Layout travado à viewport: card centralizado, sem rolagem quando
+     o conteúdo couber na tela. */
   .auth-page {
-    min-height: 100vh;
-    min-height: 100dvh; /* barra de endereço dinâmica no iOS/Android */
-    padding: 28px 16px 40px;
-    display: block;
+    height: 100vh;
+    height: 100dvh; /* barra de endereço dinâmica no iOS/Android */
+    padding: 24px 16px;
+    display: flex;
+    align-items: center;      /* container do form no MEIO da tela */
+    justify-content: center;
+    /* Sem rolagem quando o card couber; rola por dentro apenas se o
+       formulário for mais alto que a tela (ex.: cadastro completo). */
+    overflow-y: auto;
     overflow-x: hidden;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
     position: relative;
     background: #001a2c;
+    /* Esconde a barra de rolagem visualmente (mantém a função) */
+    scrollbar-width: none;
   }
+  .auth-page::-webkit-scrollbar { display: none; }
+  /* Truque de centralização segura: quando o card é maior que a tela,
+     `align-items: center` cortaria o topo — margin auto resolve. */
+  .auth-form-panel { margin-top: auto; margin-bottom: auto; }
 
   /* ---- Imagem da marca: fundo de tela cheia, desfocada e com tom azul ---- */
   .auth-side {
@@ -205,11 +220,12 @@
   /* Logos desfocadas extras fora do fluxo: desligadas (a imagem já cumpre) */
   .auth-form-panel .auth-bg-logo { display: none; }
 
-  /* ---- Formulário: card de luxo sobre o fundo desfocado ---- */
+  /* ---- Formulário: card de luxo centralizado sobre o fundo desfocado ---- */
   .auth-form-panel {
     display: block;
     padding: 0;
-    margin: 8px auto 0;
+    margin: 0 auto;
+    width: 100%;
     max-width: 480px;
     position: relative;
     z-index: 2;
