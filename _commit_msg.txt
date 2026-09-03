@@ -1,0 +1,8 @@
+feat: botao casinha para home nas telas auth + scroll devolvido no mobile
+
+- Botao minimalista de casinha (SVG) no canto superior esquerdo do
+  formulario, presente nas 8 telas de login/cadastro/convite, levando
+  a home (index.html) - mobile e desktop
+- Sem container/fundo: apenas o icone, com hover laranja da marca
+- Scroll do mobile restaurado: min-height em vez de height fixa,
+  overscroll-behavior auto e remocao da ocultacao da scrollbar

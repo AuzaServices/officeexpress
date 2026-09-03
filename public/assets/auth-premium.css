@@ -189,24 +189,19 @@
      Layout travado à viewport: card centralizado, sem rolagem quando
      o conteúdo couber na tela. */
   .auth-page {
-    height: 100vh;
-    height: 100dvh; /* barra de endereço dinâmica no iOS/Android */
+    min-height: 100vh;
+    min-height: 100dvh; /* barra de endereço dinâmica no iOS/Android */
     padding: 24px 16px;
     display: flex;
     align-items: center;      /* container do form no MEIO da tela */
     justify-content: center;
-    /* Sem rolagem quando o card couber; rola por dentro apenas se o
-       formulário for mais alto que a tela (ex.: cadastro completo). */
     overflow-y: auto;
     overflow-x: hidden;
-    overscroll-behavior: none;
+    overscroll-behavior: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
     background: #001a2c;
-    /* Esconde a barra de rolagem visualmente (mantém a função) */
-    scrollbar-width: none;
   }
-  .auth-page::-webkit-scrollbar { display: none; }
   /* Truque de centralização segura: quando o card é maior que a tela,
      `align-items: center` cortaria o topo — margin auto resolve. */
   .auth-form-panel { margin-top: auto; margin-bottom: auto; }
