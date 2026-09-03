@@ -141,7 +141,9 @@ window.App = (function () {
                 '<span class="user-avatar">' + iniciais(empresa.nome) + '</span>' +
                 '<span class="user-nome">' + (empresa.nome || "Empresa") + '</span>' +
               '</div>' +
-              '<button type="button" class="mobile-sair" onclick="App.logoutEmpresa();return false;">Sair</button>'
+              '<button type="button" class="mobile-sair" onclick="App.logoutEmpresa();return false;" aria-label="Sair da conta">' +
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>' +
+              '</button>'
             : '<a href="/companies" onclick="mostrarFormCompanies(\'login\');return false;" class="btn-login-mobile">Entrar</a>';
           mobile.innerHTML = '<div class="mobile-menu-inner">' + linksCompanies + areaEmpresaMobile + menuRodapeHTML() + '</div>';
         }
@@ -180,7 +182,9 @@ window.App = (function () {
               '<span class="user-nome">' + (usuario.nome || "Minha conta") + '</span>' +
             '</div>' +
             '<a href="/minha-conta">Minha conta</a>' +
-            '<button type="button" class="mobile-sair" onclick="App.logout();return false;">Sair</button>'
+            '<button type="button" class="mobile-sair" onclick="App.logout();return false;" aria-label="Sair da conta">' +
+              '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>' +
+            '</button>'
           : '<a href="/login" class="btn-login-mobile">Login</a>';
         mobile.innerHTML = '<div class="mobile-menu-inner">' + linksMobile + areaContaMobile + menuRodapeHTML() + '</div>';
       }
@@ -414,7 +418,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (e.key === "Escape" && mobileMenu.classList.contains("open")) setMenu(false);
     });
     mobileMenu.addEventListener("click", (e) => {
-      if (e.target.closest("a")) setMenu(false);
+      const link = e.target.closest("a");
+      // Trigger de acordeão não fecha o menu — só expande/colapsa os sublinks
+      if (link && !link.classList.contains("nav-dropdown-trigger")) setMenu(false);
     });
   }
   window.App.carregarHeader();
