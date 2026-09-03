@@ -211,41 +211,128 @@ nav.menu a.ativo::after { width: 100%; }
 .hamburguer.aberto span:nth-child(2) { opacity: 0; }
 .hamburguer.aberto span:nth-child(3) { top: 17px; transform: rotate(-45deg); }
 
-/* Menu mobile */
+/* ============================================================
+   Menu mobile — drawer lateral direito "vidro luxuoso"
+   ============================================================ */
 #mobileMenu {
-  display: none; max-height: 0; overflow: hidden;
-  background: rgba(0,31,51,0.98); border-bottom: 1px solid rgba(255,255,255,0.1);
-  transition: max-height 0.3s ease;
+  position: fixed; top: 0; right: 0; z-index: 2000;
+  height: 100vh; height: 100dvh;
+  width: min(320px, 86vw);
+  display: flex; flex-direction: column;
+  padding: 24px 22px calc(24px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(160deg, rgba(8, 44, 70, .72), rgba(2, 18, 32, .82));
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  backdrop-filter: blur(28px) saturate(1.5);
+  border-left: 1px solid rgba(140, 190, 255, .18);
+  box-shadow: -30px 0 80px rgba(0, 8, 16, .55);
+  overflow-y: auto; overflow-x: hidden;
+  transform: translateX(100%);
+  transition: transform .45s cubic-bezier(.22, 1, .3, 1), visibility 0s linear .45s;
+  visibility: hidden;
+  scrollbar-width: none;
 }
-#mobileMenu.open { display: block; max-height: calc(100vh - 62px); overflow-y: auto; }
-.mobile-menu-inner { display: flex; flex-direction: column; gap: 4px; padding: 12px 20px 20px; }
+#mobileMenu::-webkit-scrollbar { display: none; }
+#mobileMenu.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform .45s cubic-bezier(.22, 1, .3, 1);
+}
+
+/* Véu desfocado atrás do drawer */
+#menuOverlay {
+  position: fixed; inset: 0; z-index: 1900;
+  background: rgba(0, 12, 22, .45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s ease, visibility 0s linear .4s;
+  visibility: hidden;
+}
+#menuOverlay.open {
+  opacity: 1; pointer-events: auto; visibility: visible;
+  transition: opacity .4s ease;
+}
+
+/* Entrada gradual dos itens (stagger) */
+.mobile-menu-inner {
+  display: flex; flex-direction: column; gap: 6px;
+  margin: auto 0; /* conteúdo centrado verticalmente */
+}
+#mobileMenu .mobile-menu-inner > * {
+  opacity: 0; transform: translateX(28px);
+  transition: opacity .4s ease, transform .5s cubic-bezier(.22, 1, .3, 1);
+}
+#mobileMenu.open .mobile-menu-inner > * { opacity: 1; transform: translateX(0); }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(1) { transition-delay: .08s; }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(2) { transition-delay: .13s; }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(3) { transition-delay: .18s; }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(4) { transition-delay: .23s; }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(5) { transition-delay: .28s; }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(6) { transition-delay: .33s; }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(7) { transition-delay: .38s; }
+#mobileMenu.open .mobile-menu-inner > *:nth-child(n+8) { transition-delay: .43s; }
+
+/* Botões alinhados e organizados */
 #mobileMenu a:not(.btn-login-mobile) {
-  color: #ffffff; text-decoration: none; font-weight: 600; padding: 13px 12px;
-  border-radius: 10px; font-size: 1rem;
+  display: flex; align-items: center; gap: 12px;
+  color: #eaf4ff; text-decoration: none; font-weight: 600;
+  padding: 14px 16px; border-radius: 14px; font-size: 1rem;
+  border: 1px solid transparent;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
-#mobileMenu a:not(.btn-login-mobile):hover, #mobileMenu a:not(.btn-login-mobile).ativo {
-  background: rgba(255,136,0,0.1); color: var(--brand);
+#mobileMenu a:not(.btn-login-mobile):hover,
+#mobileMenu a:not(.btn-login-mobile).ativo {
+  background: rgba(255, 136, 0, .12);
+  border-color: rgba(255, 168, 76, .25);
+  color: var(--brand);
 }
 .mobile-nav-group { display: flex; flex-direction: column; gap: 2px; }
 .mobile-nav-group > a { display: flex; align-items: center; justify-content: space-between; }
-.mobile-nav-sub { padding-left: 24px !important; font-size: .92rem !important; color: #b9d0dc !important; }
+.mobile-nav-sub { padding-left: 28px !important; font-size: .92rem !important; color: #b9d0dc !important; }
+
+/* CTA de login em destaque */
 .btn-login-mobile {
-  margin-top: 8px; text-align: center; text-decoration: none; font-weight: 700;
+  margin-top: 10px; text-align: center; text-decoration: none; font-weight: 700;
   color: #001f33; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-  border-radius: 50px; padding: 13px; box-shadow: 0 4px 20px var(--brand-glow);
+  border-radius: 50px; padding: 14px;
+  box-shadow: 0 6px 24px var(--brand-glow);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
+.btn-login-mobile:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--brand-glow); }
+
+/* Bloco do usuário logado (avatar + nome) */
 .mobile-user {
-  display: flex; align-items: center; gap: 12px; padding: 12px;
-  margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.12); border-bottom: 1px solid rgba(255,255,255,0.12);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-top: 18px; padding: 22px 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .03));
+  border: 1px solid rgba(140, 190, 255, .18);
+  text-align: center;
 }
-.mobile-user .user-avatar { width: 38px; height: 38px; font-size: 0.9rem; }
-.mobile-user .user-nome { color: #ffffff; font-weight: 700; font-size: 0.98rem; max-width: none; }
+.mobile-user .user-avatar {
+  width: 56px; height: 56px; font-size: 1.15rem;
+  box-shadow: 0 8px 24px rgba(0, 10, 20, .4), 0 0 0 2px rgba(255, 168, 76, .35);
+}
+.mobile-user .user-nome {
+  color: #ffffff; font-weight: 700; font-size: 1.02rem;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .mobile-sair {
-  display: flex; align-items: center; gap: 10px; margin-top: 4px; text-align: left;
-  background: transparent; border: none; color: #fca5a5; font-weight: 600; font-size: 1rem;
-  padding: 13px 12px; border-radius: 10px; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; margin-top: 6px; text-align: center;
+  background: rgba(220, 38, 38, .1); border: 1px solid rgba(248, 113, 113, .25);
+  color: #fca5a5; font-weight: 600; font-size: .95rem;
+  padding: 12px; border-radius: 12px; cursor: pointer; font-family: inherit;
+  transition: background .2s ease, border-color .2s ease;
 }
-.mobile-sair:hover { background: rgba(220,38,38,0.12); }
+.mobile-sair:hover { background: rgba(220, 38, 38, .18); border-color: rgba(248, 113, 113, .45); }
+
+/* Botão hamburguer sempre visível (mobile) */
+.hamburguer { display: flex; align-items: center; justify-content: center; }
+
+@media (min-width: 861px) {
+  #mobileMenu, #menuOverlay { display: none; }
+}
 
 /* Cards */
 .card {

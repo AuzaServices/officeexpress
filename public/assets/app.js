@@ -366,15 +366,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Menu mobile
+  // Menu mobile (drawer lateral direito)
   const h = document.getElementById("hamburguer");
   const mobileMenu = document.getElementById("mobileMenu");
   if (h && mobileMenu) {
-    h.addEventListener("click", function () {
-      const abrir = !mobileMenu.classList.contains("open");
+    let overlay = document.getElementById("menuOverlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "menuOverlay";
+      document.body.appendChild(overlay);
+    }
+    const setMenu = (abrir) => {
       mobileMenu.classList.toggle("open", abrir);
+      overlay.classList.toggle("open", abrir);
       h.classList.toggle("aberto", abrir);
       h.setAttribute("aria-expanded", abrir);
+      document.body.style.overflow = abrir ? "hidden" : "";
+    };
+    h.addEventListener("click", () => setMenu(!mobileMenu.classList.contains("open")));
+    overlay.addEventListener("click", () => setMenu(false));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && mobileMenu.classList.contains("open")) setMenu(false);
+    });
+    mobileMenu.addEventListener("click", (e) => {
+      if (e.target.closest("a")) setMenu(false);
     });
   }
   window.App.carregarHeader();

@@ -43,13 +43,14 @@ function loadHeader() {
     </div>
   </header>
 
-  <!-- Mobile Menu -->
-  <div id="mobileMenu">
-    <div>
+  <!-- Mobile Menu (drawer lateral direito) -->
+  <div id="menuOverlay"></div>
+  <nav id="mobileMenu" aria-label="Menu móvel">
+    <div class="mobile-menu-inner">
       <a href="/contato">Contato</a>
       <a href="/sobre">Sobre nós</a>
     </div>
-  </div>
+  </nav>
   `;
 
   // Insere o header no início do body
@@ -136,27 +137,32 @@ function loadFooter() {
 function setupMobileMenu() {
   const btnMenu = document.getElementById('btnMenu');
   const mobileMenu = document.getElementById('mobileMenu');
+  const overlay = document.getElementById('menuOverlay');
 
   if (btnMenu && mobileMenu) {
-    btnMenu.addEventListener('click', function(e) {
+    // Converte o ícone FontAwesome em hambúrguer animado de 3 traços
+    btnMenu.innerHTML = '<span></span><span></span><span></span>';
+    btnMenu.classList.add('hamburguer');
+
+    const setMenu = (abrir) => {
+      mobileMenu.classList.toggle('open', abrir);
+      if (overlay) overlay.classList.toggle('open', abrir);
+      btnMenu.classList.toggle('aberto', abrir);
+      btnMenu.setAttribute('aria-expanded', abrir);
+      document.body.style.overflow = abrir ? 'hidden' : '';
+    };
+
+    btnMenu.addEventListener('click', function (e) {
       e.stopPropagation();
-      const isOpen = mobileMenu.classList.toggle('open');
-      btnMenu.setAttribute('aria-expanded', isOpen);
-      btnMenu.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+      setMenu(!mobileMenu.classList.contains('open'));
     });
-
-    // Fecha ao rolar
-    let lastScroll = 0;
-    window.addEventListener('scroll', function() {
-      const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-      if (currentScroll > lastScroll && currentScroll > 150) {
-        mobileMenu.classList.remove('open');
-        btnMenu.setAttribute('aria-expanded', 'false');
-        btnMenu.innerHTML = '<i class="fas fa-bars"></i>';
-      }
-      lastScroll = currentScroll <= 0 ? 0 : currentScroll;
-    }, { passive: true });
+    if (overlay) overlay.addEventListener('click', () => setMenu(false));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileMenu.classList.contains('open')) setMenu(false);
+    });
+    // Fecha ao navegar por qualquer link do menu
+    mobileMenu.addEventListener('click', (e) => {
+      if (e.target.closest('a')) setMenu(false);
+    });
   }
-}
-
 }
