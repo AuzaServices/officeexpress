@@ -369,8 +369,11 @@ nav.menu a.ativo::after { width: 100%; }
   color: #fecaca; transform: translateY(-2px);
 }
 
-/* Botão hamburguer sempre visível (mobile) */
+/* Botão hamburguer: apenas no mobile (até 860px) */
 .hamburguer { display: flex; align-items: center; justify-content: center; }
+@media (max-width: 860px) {
+  .hamburguer { display: flex; }
+}
 
 /* Sem contorno de foco/toque no drawer do menu e no hamburguer
    (o feedback visual já é dado pelo hover/ativo laranja) */
@@ -386,6 +389,7 @@ nav.menu a.ativo::after { width: 100%; }
 }
 
 @media (min-width: 861px) {
+  .hamburguer { display: none; }
   #mobileMenu, #menuOverlay { display: none; }
 }
 
