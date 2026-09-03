@@ -191,3 +191,163 @@ body:has(.card) .card:not(.auth-card) .otp input {
   border-color: rgba(140, 190, 255, .25);
   color: #fff;
 }
+
+/* ==========================================================================
+   DESKTOP TOP DE LINHA — Split-screen (imagem à esquerda, form à direita)
+   Ativa a partir de 1024px. No mobile o layout permanece o card central.
+   ========================================================================== */
+@media (min-width: 1024px) {
+
+  /* O card central vira o painel direito da tela dividida */
+  .auth-page {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+    background: #001f33; /* base sólida; a imagem cobre o lado esquerdo */
+  }
+  .auth-page::before, .auth-page::after { display: none; } /* halos não são necessários no split */
+
+  /* Imagem da marca ocupando o lado esquerdo inteiro */
+  .auth-side {
+    position: relative;
+    flex: 1 1 52%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 64px 60px;
+  }
+  .auth-side .auth-side-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Mescla a foto com o azul da marca — identidade imediata */
+    filter: saturate(1.05) contrast(1.02);
+  }
+  .auth-side .auth-side-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(200deg, rgba(0, 31, 51, .18) 0%, rgba(0, 31, 51, .55) 55%, rgba(0, 20, 34, .88) 100%),
+      radial-gradient(900px 500px at 20% 100%, rgba(255, 136, 0, .22) 0%, transparent 55%),
+      linear-gradient(90deg, rgba(0, 31, 51, .35) 0%, rgba(0, 31, 51, 0) 35%);
+  }
+  .auth-side .auth-side-content { position: relative; z-index: 1; max-width: 480px; }
+  .auth-side .auth-side-logo { height: 54px; margin-bottom: auto; filter: drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
+  .auth-side .auth-side-logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
+  .auth-side .auth-side-badge {
+    display: inline-block;
+    background: rgba(255, 136, 0, .92);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(230, 115, 0, .4);
+  }
+  .auth-side .auth-side-headline {
+    color: #fff;
+    font-size: clamp(1.9rem, 2.6vw, 2.7rem);
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -.02em;
+    margin: 0 0 16px;
+    text-shadow: 0 4px 30px rgba(0, 10, 20, .6);
+  }
+  .auth-side .auth-side-headline em { font-style: normal; color: #ffa54d; }
+  .auth-side .auth-side-text {
+    color: rgba(224, 238, 250, .88);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    margin: 0 0 30px;
+    max-width: 420px;
+  }
+  .auth-side .auth-side-feats { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+  .auth-side .auth-side-feats li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(228, 240, 252, .92);
+    font-size: .95rem;
+    font-weight: 600;
+  }
+  .auth-side .auth-side-feats .feat-ico {
+    width: 34px; height: 34px;
+    flex: none;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    background: rgba(255, 136, 0, .18);
+    border: 1px solid rgba(255, 168, 76, .4);
+    color: #ffb15e;
+    font-size: 15px;
+  }
+
+  /* Painel do formulário (direita): fundo navy com glass azul */
+  .auth-form-panel {
+    flex: 1 1 48%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 56px 48px;
+    position: relative;
+    background:
+      radial-gradient(800px 600px at 110% -10%, rgba(64, 140, 255, .12) 0%, transparent 55%),
+      radial-gradient(700px 500px at -10% 110%, rgba(255, 136, 0, .08) 0%, transparent 50%),
+      linear-gradient(160deg, #00293f 0%, #001f33 100%);
+    overflow: hidden;
+  }
+  /* Logo desfocada sutil apenas atrás do formulário */
+  .auth-form-panel .auth-bg-logo {
+    position: absolute;
+    width: 46vmin;
+    opacity: .22;
+    filter: blur(46px) saturate(1.2);
+    animation: none;
+  }
+  .auth-form-panel .auth-bg-logo.a { top: -8%; left: -6%; }
+  .auth-form-panel .auth-bg-logo.b { bottom: -10%; right: -6%; opacity: .15; }
+
+  /* O card ganha vidro mais refinado e moldura luminosa no desktop */
+  .auth-card {
+    max-width: 460px;
+    padding: 48px 44px;
+    border-radius: 26px;
+    background: linear-gradient(150deg, rgba(16, 64, 102, .5), rgba(4, 32, 54, .66));
+    border: 1px solid rgba(140, 190, 255, .22);
+    box-shadow:
+      0 40px 100px rgba(0, 8, 16, .6),
+      inset 0 1px 0 rgba(180, 220, 255, .2),
+      0 0 0 1px rgba(0, 12, 22, .4);
+  }
+
+  /* Transição de entrada mais elegante */
+  .auth-card { animation: authCardIn .7s cubic-bezier(.22, 1, .36, 1) both; }
+  .auth-side .auth-side-content { animation: authCardIn .8s .1s cubic-bezier(.22, 1, .36, 1) both; }
+}
+
+/* Telas entre 1024px e 1280px: lado esquerdo um pouco menor, texto menor */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .auth-side { padding: 44px 40px; }
+  .auth-form-panel { padding: 44px 36px; }
+  .auth-card { padding: 40px 34px; }
+}
+
+/* Quando NÃO há imagem de lado (páginas sem .auth-side), o card central
+   continua flutuando sobre o fundo animado original — comportamento intacto. */
+@media (min-width: 1024px) {
+  .auth-page:not(:has(.auth-side)) {
+    background:
+      radial-gradient(1200px 800px at 15% -10%, #003a5c 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 110%, #0a4a63 0%, transparent 55%),
+      linear-gradient(160deg, #001f33 0%, #00293f 55%, #003a55 100%);
+    padding: 48px 20px;
+    align-items: center;
+    justify-content: center;
+  }
+  .auth-page:not(:has(.auth-side))::before,
+  .auth-page:not(:has(.auth-side))::after { display: block; } /* halos voltam */
+}
