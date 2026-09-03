@@ -428,16 +428,20 @@ app.post("/api/talentos/cadastro", async (req, res) => {
     const nome = String(b.nome || "").trim().slice(0, 200);
     const email = String(b.email || "").trim().toLowerCase().slice(0, 200);
     const consentimento = !!b.consentimento;
+    const telefone = String(b.telefone || "").trim().slice(0, 60);
+    const cargo = String(b.cargo || "").trim().slice(0, 200);
+    const cidade = String(b.cidade || "").trim().slice(0, 120);
+    const estado = String(b.estado || "").trim().toUpperCase().slice(0, 4);
+    const objetivo = String(b.objetivo || "").trim().slice(0, 2000);
 
     if (!nome || nome.split(/\s+/).length < 2) return res.status(400).json({ ok: false, error: "Informe seu nome completo." });
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: "Informe um e-mail válido." });
+    if (!telefone) return res.status(400).json({ ok: false, error: "Informe seu WhatsApp ou telefone." });
+    if (!cargo) return res.status(400).json({ ok: false, error: "Informe a área ou cargo desejado." });
+    if (!cidade) return res.status(400).json({ ok: false, error: "Informe sua cidade." });
+    if (!estado || estado.length < 2) return res.status(400).json({ ok: false, error: "Informe o estado (UF)." });
+    if (!objetivo || objetivo.length < 10) return res.status(400).json({ ok: false, error: "Escreva um objetivo profissional (mín. 10 caracteres)." });
     if (!consentimento) return res.status(400).json({ ok: false, error: "O consentimento LGPD é obrigatório para participar." });
-
-    const telefone = String(b.telefone || "").trim().slice(0, 60) || null;
-    const cargo = String(b.cargo || "").trim().slice(0, 200) || null;
-    const cidade = String(b.cidade || "").trim().slice(0, 120) || null;
-    const estado = String(b.estado || "").trim().toUpperCase().slice(0, 4) || null;
-    const objetivo = String(b.objetivo || "").trim().slice(0, 2000) || null;
 
     // dados_json preserva tudo (inclusive campos extras futuros)
     const dadosJson = JSON.stringify({ origem: "talentos.html", ...b });
