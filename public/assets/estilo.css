@@ -328,15 +328,17 @@ nav.menu a.ativo::after { width: 100%; }
   color: rgba(185, 208, 220, .55);
 }
 
-/* CTA de login em destaque */
+/* CTA de login em destaque (minimalista) */
 .btn-login-mobile {
-  margin-top: 10px; text-align: center; text-decoration: none; font-weight: 700;
-  color: #001f33; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-  border-radius: 50px; padding: 14px;
-  box-shadow: 0 6px 24px var(--brand-glow);
-  transition: transform .2s ease, box-shadow .2s ease;
+  margin-top: 10px; text-align: center; text-decoration: none; font-weight: 600;
+  font-size: .9rem; color: var(--brand); background: rgba(255, 136, 0, .1);
+  border: 1px solid rgba(255, 168, 76, .35);
+  border-radius: 50px; padding: 10px;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
-.btn-login-mobile:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--brand-glow); }
+.btn-login-mobile:hover {
+  background: rgba(255, 136, 0, .18); border-color: rgba(255, 168, 76, .55);
+}
 
 /* Bloco do usuário logado (avatar + nome) */
 .mobile-user {
