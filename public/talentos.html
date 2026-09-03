@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banco de Talentos — Cadastro Gratuito | Office Express</title>
+  <meta name="description" content="Cadastre-se gratuitamente no Banco de Talentos Office Express e seja encontrado por empresas que estão contratando." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Office Express" />
+  <meta property="og:title" content="Banco de Talentos — Cadastro Gratuito | Office Express" />
+  <meta property="og:image" content="https://i.imgur.com/XBTHBTw.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://i.imgur.com/XBTHBTw.png" />
+  <link rel="icon" href="/imagens/icon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <script src="/assets/app.js"></script>
+  <style>
+    :root {
+      --navy: #001f33;
+      --navy-2: #002a44;
+      --brand: #ff8800;
+      --brand-dark: #e67300;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Inter", system-ui, sans-serif;
+      background: linear-gradient(165deg, var(--navy) 0%, var(--navy-2) 55%, #01304d 100%);
+      color: #eaf4ff; min-height: 100vh;
+    }
+    .tal-wrap { max-width: 560px; margin: 0 auto; padding: 40px 20px 70px; }
+
+    /* Topo */
+    .tal-hero { text-align: center; margin-bottom: 28px; }
+    .tal-hero .logo { height: 46px; margin-bottom: 20px; }
+    .tal-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,136,0,.14); border: 1px solid rgba(255,168,76,.45);
+      color: #ffb15e; font-size: .8rem; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase; padding: 7px 16px; border-radius: 50px; margin-bottom: 16px;
+    }
+    .tal-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: #ffb15e; animation: pulse 1.6s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.8); } }
+    .tal-hero h1 {
+      font-size: clamp(1.7rem, 6vw, 2.4rem); font-weight: 900; line-height: 1.15;
+      margin: 0 0 12px; color: #ffffff;
+    }
+    .tal-hero h1 em { font-style: normal; color: var(--brand); }
+    .tal-hero p { margin: 0 auto; max-width: 440px; color: rgba(210, 232, 255, .78); font-size: 1rem; line-height: 1.55; }
+
+    /* Benefícios */
+    .tal-benefits { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0 30px; }
+    .tal-benefits span {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(140,190,255,.16);
+      color: #cfe4f5; font-size: .78rem; font-weight: 600;
+      padding: 6px 12px; border-radius: 50px;
+    }
+    .tal-benefits svg { color: var(--brand); flex-shrink: 0; }
+
+    /* Card do formulário */
+    .tal-card {
+      background: rgba(255,255,255,.045);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid rgba(140,190,255,.16);
+      border-radius: 22px; padding: 28px 24px;
+      box-shadow: 0 24px 70px rgba(0,8,16,.5);
+    }
+    .tal-card h2 { font-size: 1.15rem; font-weight: 800; margin: 0 0 4px; color: #fff; }
+    .tal-card .sub { color: rgba(210,232,255,.6); font-size: .85rem; margin: 0 0 22px; }
+
+    .campo { margin-bottom: 16px; }
+    .campo label {
+      display: block; margin-bottom: 7px; font-size: .8rem; font-weight: 600;
+      color: rgba(210,232,255,.85); letter-spacing: .01em;
+    }
+    .campo label .req { color: var(--brand); }
+    .campo input, .campo select, .campo textarea {
+      width: 100%; padding: 13px 15px; border-radius: 12px;
+      border: 1.5px solid rgba(140,190,255,.22);
+      background: rgba(2, 20, 34, .55); color: #fff; font-size: .95rem;
+      font-family: inherit; outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease;
+      -webkit-appearance: none; appearance: none;
+    }
+    .campo textarea { resize: vertical; min-height: 84px; }
+    .campo input::placeholder, .campo textarea::placeholder { color: rgba(160,190,215,.45); }
+    .campo input:focus, .campo select:focus, .campo textarea:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(255,136,0,.18);
+    }
+    .campo select option { background: var(--navy); color: #fff; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .grid-2 { grid-template-columns: 1fr; gap: 0; } }
+
+    /* LGPD */
+    .lgpd-box {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: rgba(255,136,0,.07); border: 1px solid rgba(255,168,76,.3);
+      border-radius: 14px; padding: 14px; margin: 20px 0 6px; cursor: pointer;
+      transition: border-color .18s ease, background .18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .lgpd-box:has(input:checked) { border-color: rgba(255,168,76,.65); background: rgba(255,136,0,.13); }
+    .lgpd-box input[type="checkbox"] {
+      appearance: none; -webkit-appearance: none; flex-shrink: 0;
+      width: 22px; height: 22px; border-radius: 7px; cursor: pointer;
+      border: 2px solid rgba(255,168,76,.55); background: transparent;
+      display: flex; align-items: center; justify-content: center; margin: 1px 0 0;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .lgpd-box input[type="checkbox"]:checked { background: var(--brand); border-color: var(--brand); }
+    .lgpd-box input[type="checkbox"]:checked::after {
+      content: ""; width: 6px; height: 11px;
+      border: solid #001f33; border-width: 0 2.5px 2.5px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+    .lgpd-box .txt { font-size: .8rem; line-height: 1.5; color: rgba(210,232,255,.8); }
+    .lgpd-box .txt strong { color: #ffd9ae; }
+    .lgpd-box .txt a { color: #ffb15e; text-decoration: underline; }
+
+    /* Botão */
+    .btn-tal {
+      width: 100%; margin-top: 20px; padding: 16px; border: none; cursor: pointer;
+      font-family: inherit; font-size: 1.05rem; font-weight: 800; color: #001f33;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      border-radius: 14px; letter-spacing: .01em;
+      box-shadow: 0 10px 30px rgba(255,136,0,.35);
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-tal:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(255,136,0,.45); }
+    .btn-tal:active { transform: scale(.98); }
+    .btn-tal:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    /* Alerta / sucesso */
+    .tal-alert {
+      display: none; margin-top: 16px; padding: 13px 15px; border-radius: 12px;
+      font-size: .88rem; line-height: 1.45; font-weight: 500;
+    }
+    .tal-alert.sucesso { display: block; background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.4); color: #86efac; }
+    .tal-alert.erro { display: block; background: rgba(220,38,38,.12); border: 1px solid rgba(220,38,38,.4); color: #fca5a5; }
+
+    /* Sucesso fullscreen */
+    #talSucesso { display: none; text-align: center; padding: 40px 10px; }
+    #talSucesso .check {
+      width: 78px; height: 78px; margin: 0 auto 22px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 14px 40px rgba(255,136,0,.45);
+      animation: pop .5s cubic-bezier(.22,1.4,.36,1);
+    }
+    @keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    #talSucesso h2 { font-size: 1.5rem; font-weight: 900; color: #fff; margin: 0 0 10px; }
+    #talSucesso p { color: rgba(210,232,255,.75); max-width: 380px; margin: 0 auto 26px; line-height: 1.6; font-size: .95rem; }
+    .btn-voltar {
+      display: inline-block; padding: 13px 30px; border-radius: 50px; text-decoration: none;
+      font-weight: 700; color: #001f33; background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      box-shadow: 0 8px 24px rgba(255,136,0,.35);
+    }
+
+    /* Rodapé discreto */
+    .tal-foot { text-align: center; margin-top: 30px; font-size: .72rem; color: rgba(185,208,220,.45); }
+    .tal-foot a { color: rgba(255,177,94,.7); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      .tal-wrap { padding: 28px 16px 50px; }
+      .tal-card { padding: 22px 18px; border-radius: 18px; }
+      .tal-hero .logo { height: 38px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="tal-wrap">
+    <div class="tal-hero">
+      <img src="/imagens/logo.png" alt="Office Express" class="logo" onerror="this.style.display='none'" />
+      <div class="tal-badge"><span class="dot"></span> Vagas abertas o ano todo</div>
+      <h1>Entre no <em>Banco de Talentos</em> — é <em>gratuito</em></h1>
+      <p>Cadastre seu perfil e seja encontrado por empresas que buscam profissionais como você. Leva menos de 2 minutos.</p>
+      <div class="tal-benefits">
+        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> 100% gratuito</span>
+        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Empresas te encontram</span>
+        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Sem cadastro de senha</span>
+      </div>
+    </div>
+
+    <div class="tal-card" id="talFormWrap">
+      <h2>Cadastre seu perfil</h2>
+      <p class="sub">Preencha os dados abaixo. Quanto mais completo, maior a chance de ser encontrado.</p>
+
+      <form id="talForm" novalidate>
+        <div class="campo">
+          <label for="nome">Nome completo <span class="req">*</span></label>
+          <input id="nome" name="nome" type="text" required maxlength="200" placeholder="Ex.: Maria Silva" autocomplete="name" />
+        </div>
+        <div class="grid-2">
+          <div class="campo">
+            <label for="email">E-mail <span class="req">*</span></label>
+            <input id="email" name="email" type="email" required maxlength="200" placeholder="voce@email.com" autocomplete="email" />
+          </div>
+          <div class="campo">
+            <label for="telefone">WhatsApp</label>
+            <input id="telefone" name="telefone" type="tel" maxlength="60" placeholder="(85) 99999-0000" autocomplete="tel" />
+          </div>
+        </div>
+        <div class="campo">
+          <label for="cargo">Área ou cargo desejado</label>
+          <input id="cargo" name="cargo" type="text" maxlength="200" placeholder="Ex.: Assistente administrativo" />
+        </div>
+        <div class="grid-2">
+          <div class="campo">
+            <label for="cidade">Cidade</label>
+            <input id="cidade" name="cidade" type="text" maxlength="120" placeholder="Ex.: Fortaleza" />
+          </div>
+          <div class="campo">
+            <label for="estado">Estado (UF)</label>
+            <input id="estado" name="estado" type="text" maxlength="2" placeholder="CE" style="text-transform:uppercase" />
+          </div>
+        </div>
+        <div class="campo">
+          <label for="objetivo">Objetivo profissional</label>
+          <textarea id="objetivo" name="objetivo" maxlength="2000" placeholder="Conte em poucas linhas o que você busca e suas principais habilidades..."></textarea>
+        </div>
+
+        <label class="lgpd-box">
+          <input type="checkbox" id="consentimento" required />
+          <span class="txt">
+            <strong>Consentimento LGPD (Lei nº 13.709/2018):</strong> autorizo o tratamento dos meus dados pessoais
+            (nome, contato, área profissional, cidade e objetivo) para inclusão no Banco de Talentos da Office Express,
+            podendo ser compartilhados com empresas parceiras para fins de recrutamento e seleção. Posso solicitar
+            a exclusão dos meus dados a qualquer momento pelos nossos canais de contato, conforme a
+            <a href="/politica" target="_blank">Política de Privacidade</a> e os <a href="/termos" target="_blank">Termos de Uso</a>.
+          </span>
+        </label>
+
+        <button type="submit" class="btn-tal" id="btnEnviar">Quero participar — Grátis</button>
+        <div id="talAlert" class="tal-alert"></div>
+      </form>
+    </div>
+
+    <div id="talSucesso">
+      <div class="check">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#001f33" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h2>Cadastro enviado!</h2>
+      <p>Seu perfil entrou no nosso Banco de Talentos. Quando uma empresa buscar um profissional com o seu perfil, você poderá ser contatado. Fique de olho no seu e-mail e WhatsApp!</p>
+      <a href="/" class="btn-voltar">Voltar ao início</a>
+    </div>
+
+    <div class="tal-foot">
+      Office Express · Banco de Talentos · <a href="/politica">Privacidade</a> · <a href="/termos">Termos</a>
+    </div>
+  </div>
+
+<script>
+  document.getElementById("talForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var alerta = document.getElementById("talAlert");
+    alerta.className = "tal-alert";
+    alerta.textContent = "";
+
+    var nome = document.getElementById("nome").value.trim();
+    var email = document.getElementById("email").value.trim();
+    var consentimento = document.getElementById("consentimento").checked;
+
+    if (!nome || nome.split(" ").length < 2) { alerta.className = "tal-alert erro"; alerta.textContent = "Informe seu nome completo."; return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alerta.className = "tal-alert erro"; alerta.textContent = "Informe um e-mail válido."; return; }
+    if (!consentimento) { alerta.className = "tal-alert erro"; alerta.textContent = "É necessário aceitar o consentimento LGPD para participar."; return; }
+
+    var btn = document.getElementById("btnEnviar");
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+
+    try {
+      var resp = await fetch("/api/talentos/cadastro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: nome,
+          email: email,
+          telefone: document.getElementById("telefone").value.trim(),
+          cargo: document.getElementById("cargo").value.trim(),
+          cidade: document.getElementById("cidade").value.trim(),
+          estado: document.getElementById("estado").value.trim().toUpperCase(),
+          objetivo: document.getElementById("objetivo").value.trim(),
+          consentimento: consentimento
+        })
+      });
+      var data = {};
+      try { data = await resp.json(); } catch (err) {}
+      if (resp.ok && data.ok) {
+        document.getElementById("talFormWrap").style.display = "none";
+        document.getElementById("talSucesso").style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        throw new Error(data.error || "Não foi possível enviar seu cadastro. Tente novamente.");
+      }
+    } catch (err) {
+      alerta.className = "tal-alert erro";
+      alerta.textContent = err.message;
+      btn.disabled = false;
+      btn.textContent = "Quero participar — Grátis";
+    }
+  });
+</script>
+</body>
+</html>

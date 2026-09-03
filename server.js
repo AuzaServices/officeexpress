@@ -419,6 +419,46 @@ app.get("/api/pedidos/meus", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Banco de Talentos — captação pública (página talentos.html)
+// Grava direto na tabela 'talentos' com consentimento LGPD obrigatório.
+// ---------------------------------------------------------------------------
+app.post("/api/talentos/cadastro", async (req, res) => {
+  try {
+    const b = req.body || {};
+    const nome = String(b.nome || "").trim().slice(0, 200);
+    const email = String(b.email || "").trim().toLowerCase().slice(0, 200);
+    const consentimento = !!b.consentimento;
+
+    if (!nome || nome.split(/\s+/).length < 2) return res.status(400).json({ ok: false, error: "Informe seu nome completo." });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: "Informe um e-mail válido." });
+    if (!consentimento) return res.status(400).json({ ok: false, error: "O consentimento LGPD é obrigatório para participar." });
+
+    const telefone = String(b.telefone || "").trim().slice(0, 60) || null;
+    const cargo = String(b.cargo || "").trim().slice(0, 200) || null;
+    const cidade = String(b.cidade || "").trim().slice(0, 120) || null;
+    const estado = String(b.estado || "").trim().toUpperCase().slice(0, 4) || null;
+    const objetivo = String(b.objetivo || "").trim().slice(0, 2000) || null;
+
+    // dados_json preserva tudo (inclusive campos extras futuros)
+    const dadosJson = JSON.stringify({ origem: "talentos.html", ...b });
+
+    await pool.query(
+      `INSERT INTO talentos (pedido_id, usuario_id, nome, email, telefone, cargo, cidade, estado, objetivo, dados_json, consentimento, modelo, updated_at)
+       VALUES (NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'captacao', NOW())
+       ON DUPLICATE KEY UPDATE
+         nome = VALUES(nome), telefone = VALUES(telefone), cargo = VALUES(cargo),
+         cidade = VALUES(cidade), estado = VALUES(estado), objetivo = VALUES(objetivo),
+         dados_json = VALUES(dados_json), consentimento = 1, updated_at = NOW()`,
+      [nome, email, telefone, cargo, cidade, estado, objetivo, dadosJson]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao cadastrar talento:", e.message);
+    res.status(500).json({ ok: false, error: "Erro interno. Tente novamente em instantes." });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Pagamento (Mercado Pago: Pix e Cartão)
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
