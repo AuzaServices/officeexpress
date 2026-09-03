@@ -151,6 +151,35 @@
 .auth-links a:hover { text-decoration: underline; }
 .auth-links p { margin: 6px 0; }
 
+/* Botão "voltar para a home" — casinha minimalista no canto do card */
+.auth-home-btn {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(2, 22, 38, .45);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(140, 190, 255, .22);
+  color: rgba(210, 232, 255, .85);
+  transition: background .18s, color .18s, border-color .18s, transform .18s;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 3;
+}
+.auth-home-btn:hover {
+  background: rgba(255, 136, 0, .18);
+  border-color: rgba(255, 168, 76, .5);
+  color: #ffb15e;
+  transform: translateY(-1px);
+}
+.auth-home-btn:active { transform: scale(.94); }
+.auth-home-btn svg { display: block; }
+
 /* Alertas sobre fundo escuro */
 .auth-card .alert { border-radius: 12px; font-size: .9rem; }
 .auth-card .alert-error { background: rgba(220, 38, 38, .18); border: 1px solid rgba(248, 113, 113, .45); color: #fecaca; }
