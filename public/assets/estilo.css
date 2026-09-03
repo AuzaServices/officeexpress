@@ -370,6 +370,19 @@ nav.menu a.ativo::after { width: 100%; }
 /* Botão hamburguer sempre visível (mobile) */
 .hamburguer { display: flex; align-items: center; justify-content: center; }
 
+/* Sem contorno de foco/toque no drawer do menu e no hamburguer
+   (o feedback visual já é dado pelo hover/ativo laranja) */
+#mobileMenu a:focus, #mobileMenu a:focus-visible,
+#mobileMenu button:focus, #mobileMenu button:focus-visible,
+#menuOverlay:focus, #menuOverlay:focus-visible,
+.hamburguer:focus, .hamburguer:focus-visible,
+.hamburguer::-moz-focus-inner, .hamburguer:focus::-moz-focus-inner {
+  outline: none;
+}
+.hamburguer, #mobileMenu a, .menu-social a, .mobile-sair {
+  -webkit-tap-highlight-color: transparent;
+}
+
 @media (min-width: 861px) {
   #mobileMenu, #menuOverlay { display: none; }
 }
