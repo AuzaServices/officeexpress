@@ -807,7 +807,7 @@
     }
 
     // ===== Preço customizado por parceiro =====
-    function editarPrecoParceiro(id, precoAtual) {
+    async function editarPrecoParceiro(id, precoAtual) {
       var atual = precoAtual != null ? Number(precoAtual).toFixed(2).replace(".", ",") : "";
       var v = prompt(
         "Preço do currículo para este parceiro (R$).\n\n" +
