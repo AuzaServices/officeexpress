@@ -2788,7 +2788,7 @@ app.get("/api/companies/curriculos", async (req, res) => {
 
     // Lê do banco PERMANENTE de talentos — os dados sobrevivem à exclusão
     // do pedido original (pendentes +24h, limpeza admin, exclusão de usuário).
-    let sql = "SELECT id, nome, cargo, cidade, estado FROM talentos WHERE consentimento = 1";
+    let sql = "SELECT id, nome, cargo, cidade, estado, modelo, created_at FROM talentos WHERE consentimento = 1";
     const params = [];
     if (cargo) { sql += " AND (cargo LIKE ? OR objetivo LIKE ?)"; params.push("%" + cargo + "%", "%" + cargo + "%"); }
     if (cidade) { sql += " AND cidade LIKE ?"; params.push("%" + cidade + "%"); }
@@ -2803,6 +2803,8 @@ app.get("/api/companies/curriculos", async (req, res) => {
       cidade: r.cidade || "",
       estado: r.estado || "",
       experiencia: null,
+      modelo: r.modelo === "captacao" ? "Minimal" : (r.modelo || "Minimal"),
+      cadastro: r.created_at,
     }));
 
     // Contadores
@@ -3024,6 +3026,42 @@ app.get("/api/companies/talentos/:id/pdf", async (req, res) => {
   } catch (e) {
     console.error("Erro PDF talento:", e.message);
     res.status(500).json({ error: "Erro ao gerar PDF." });
+  }
+});
+
+// Miniatura REAL do currículo do talento: renderiza o HTML do currículo
+// (mesmo gerador da visualização/PDF) dentro de um shell isolado, exibido
+// em iframe escalado nos cards do painel da empresa.
+app.get("/api/companies/talentos/:id/miniatura", async (req, res) => {
+  try {
+    const r = await carregarTalentoParaEmpresa(req, res, req.params.id);
+    if (!r) return;
+    const { gerarHTML } = require("./lib/renderHTML");
+    const veioDeTalentos = r.dados && r.dados.origem === "talentos.html";
+    let modelo;
+    if (veioDeTalentos) {
+      modelo = "minimal";
+    } else {
+      const modeloTalento = r.talento.modelo;
+      const modeloDados = r.dados && r.dados._modelo_visualizacao;
+      modelo = modeloTalento && modeloTalento !== "minimal" && modeloTalento !== "captacao"
+        ? modeloTalento
+        : (modeloDados && modeloDados !== "minimal" ? modeloDados : "classico");
+    }
+    // Escala 0.35: o currículo A4 (~794px de largura) vira ~278px — cabe no card.
+    const html = gerarHTML(modelo, r.dados);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "private, max-age=600");
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      html,body{width:794px;height:auto;overflow:hidden;background:#fff;
+        transform:scale(0.35);transform-origin:top left;
+        font-family:Helvetica,Arial,sans-serif}
+      img{max-width:100%}
+    </style></head><body>${html}</body></html>`);
+  } catch (e) {
+    console.error("Erro miniatura talento:", e.message);
+    res.status(500).send("erro");
   }
 });
 
