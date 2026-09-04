@@ -22,7 +22,7 @@
       background: linear-gradient(165deg, #001f33 0%, #002a44 55%, #01304d 100%);
       color: #eaf4ff; min-height: 100vh; -webkit-font-smoothing: antialiased;
     }
-    .tal-wrap { max-width: 600px; margin: 0 auto; padding: 44px 20px 70px; }
+    .tal-wrap { max-width: 680px; margin: 0 auto; padding: 44px 20px 70px; }
 
     /* ---------- Topo ---------- */
     .tal-hero { text-align: center; margin-bottom: 30px; }
@@ -47,7 +47,7 @@
     }
     .tal-benefits svg { color: #ff9d2e; flex-shrink: 0; }
 
-    /* ---------- Card ---------- */
+    /* ---------- Card / seções ---------- */
     .tal-card {
       background: rgba(255,255,255,.05);
       -webkit-backdrop-filter: blur(26px) saturate(1.4);
@@ -55,9 +55,18 @@
       border: 1px solid rgba(140,190,255,.18);
       border-radius: 22px; padding: 30px 26px;
       box-shadow: 0 26px 70px rgba(0,8,16,.55);
+      margin-bottom: 18px;
     }
     .tal-card h2 { font-size: 1.18rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
     .tal-sub { color: #8fb0c5; font-size: .86rem; margin-bottom: 24px; line-height: 1.5; }
+    .tal-secao-titulo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1rem; font-weight: 800; color: #ffd9ae;
+      margin: 26px 0 16px; padding-top: 22px;
+      border-top: 1px solid rgba(140,190,255,.14);
+    }
+    .tal-secao-titulo:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
+    .tal-secao-titulo svg { color: #ff9d2e; flex-shrink: 0; }
 
     /* ---------- Campos ---------- */
     .campo { margin-bottom: 16px; }
@@ -72,9 +81,33 @@
     }
     .campo input::placeholder, .campo textarea::placeholder { color: #56718a; }
     .campo input:focus, .campo textarea:focus { border-color: #ff9d2e; box-shadow: 0 0 0 3px rgba(255,157,46,.18); }
-    .campo textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+    .campo textarea { resize: vertical; min-height: 88px; line-height: 1.5; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
     .tal-nota { font-size: .74rem; color: #6d8aa3; margin-top: 5px; line-height: 1.4; }
+
+    /* ---------- Blocos dinâmicos (experiências/cursos/telefones) ---------- */
+    .bloco-din {
+      border: 1.5px dashed rgba(140,190,255,.28); border-radius: 14px;
+      padding: 16px 14px 6px; margin-bottom: 14px; position: relative;
+      background: rgba(2,35,58,.35);
+    }
+    .bloco-din .btn-rem {
+      position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer;
+      background: rgba(220,38,38,.14); color: #fca5a5; font-size: 1rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .bloco-din .btn-rem:hover { background: rgba(220,38,38,.28); }
+    .btn-add {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: transparent; border: 1.5px dashed rgba(255,168,76,.5);
+      color: #ffb15e; font-family: inherit; font-size: .85rem; font-weight: 700;
+      padding: 10px 18px; border-radius: 12px; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-add:hover { background: rgba(255,136,0,.1); border-color: #ff9d2e; }
 
     /* ---------- LGPD ---------- */
     .lgpd-box {
@@ -132,17 +165,11 @@
     }
     @keyframes pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     #talSucesso h2 { font-size: 1.55rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
-    #talSucesso p { color: #b9d0dc; max-width: 400px; margin: 0 auto 28px; line-height: 1.65; font-size: .95rem; }
-    .btn-voltar {
-      display: inline-block; padding: 13px 32px; border-radius: 50px; text-decoration: none;
-      font-weight: 700; font-size: .95rem; color: #001f33;
-      background: linear-gradient(135deg, #ff9d2e, #e67300);
-      box-shadow: 0 8px 24px rgba(255,136,0,.35);
-    }
+    #talSucesso p { color: #b9d0dc; max-width: 420px; margin: 0 auto 28px; line-height: 1.65; font-size: .95rem; }
 
     /* ---------- CTA currículo profissional ---------- */
     .cta-destaque {
-      max-width: 440px; margin: 0 auto 30px; padding: 22px 20px;
+      max-width: 460px; margin: 0 auto 30px; padding: 22px 20px;
       border-radius: 18px; text-align: center;
       background: linear-gradient(160deg, rgba(255,157,46,.14), rgba(230,115,0,.08));
       border: 1.5px solid rgba(255,168,76,.45);
@@ -170,15 +197,22 @@
     .cta-botao:active { transform: scale(.98); }
     .cta-mini { margin-top: 10px; font-size: .72rem; color: #8fb0c5; font-weight: 500; }
 
+    .btn-voltar {
+      display: inline-block; padding: 13px 32px; border-radius: 50px; text-decoration: none;
+      font-weight: 700; font-size: .95rem; color: #001f33;
+      background: linear-gradient(135deg, #ff9d2e, #e67300);
+      box-shadow: 0 8px 24px rgba(255,136,0,.35);
+    }
+
     .tal-foot { text-align: center; margin-top: 32px; font-size: .72rem; color: #56718a; }
     .tal-foot a { color: #c98d4f; text-decoration: none; }
     .tal-foot a:hover { color: #ffb15e; }
 
-    @media (max-width: 480px) {
+    @media (max-width: 560px) {
       .tal-wrap { padding: 30px 16px 50px; }
       .tal-card { padding: 24px 18px; border-radius: 18px; }
       .tal-logo { height: 40px; }
-      .grid-2 { grid-template-columns: 1fr; gap: 0; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 0; }
     }
   </style>
 </head>
@@ -188,79 +222,144 @@
       <img src="/imagens/logo.png" alt="Office Express" class="tal-logo" onerror="this.style.display='none'" />
       <div class="tal-badge"><span class="dot"></span> Vagas abertas o ano todo</div>
       <h1>Entre no <em>Banco de Talentos</em><br />é <em>100% gratuito</em></h1>
-      <p>Cadastre seu perfil profissional e seja encontrado por empresas que estão contratando em todo o Brasil. Leva menos de 2 minutos.</p>
+      <p>Monte seu currículo completo aqui mesmo — igual ao dos planos pagos — e seja encontrado por empresas que estão contratando em todo o Brasil.</p>
       <div class="tal-benefits">
         <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Gratuito</span>
+        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Currículo completo</span>
         <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Empresas te encontram</span>
-        <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Sem criar senha</span>
       </div>
     </div>
 
-    <div class="tal-card" id="talFormWrap">
-      <h2>Cadastre seu perfil</h2>
-      <p class="sub">Quanto mais completo, maior a chance de uma empresa encontrar você.</p>
+    <form id="talForm" novalidate>
+      <!-- ===== SEÇÃO: DADOS PESSOAIS ===== -->
+      <div class="tal-card">
+        <h2>Cadastre seu perfil</h2>
+        <p class="tal-sub">Quanto mais completo, maior a chance de uma empresa encontrar você.</p>
 
-      <form id="talForm" novalidate>
         <div class="campo">
           <label for="nome">Nome completo <span class="req">*</span></label>
           <input id="nome" name="nome" type="text" maxlength="200" placeholder="Ex.: Maria da Silva" autocomplete="name" />
         </div>
-
         <div class="campo">
           <label for="email">E-mail <span class="req">*</span></label>
           <input id="email" name="email" type="email" maxlength="200" placeholder="voce@email.com" autocomplete="email" />
         </div>
-
         <div class="campo">
-          <label for="telefone">WhatsApp / Telefone <span class="req">*</span></label>
-          <input id="telefone" name="telefone" type="tel" maxlength="60" placeholder="(85) 99999-0000" autocomplete="tel" />
-          <div class="tal-nota">Usado apenas para empresas entrarem em contato sobre vagas.</div>
+          <label>WhatsApp / Telefone <span class="req">*</span></label>
+          <div id="listaTels"></div>
+          <button type="button" class="btn-add" onclick="addTel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Adicionar outro telefone
+          </button>
         </div>
 
-        <div class="campo">
-          <label for="cargo">Área ou cargo desejado <span class="req">*</span></label>
-          <input id="cargo" name="cargo" type="text" maxlength="200" placeholder="Ex.: Assistente administrativo, Vendedor, Designer..." />
+        <div class="tal-secao-titulo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Endereço
         </div>
-
+        <div class="grid-3">
+          <div class="campo">
+            <label for="endereco">Rua</label>
+            <input id="endereco" type="text" maxlength="200" placeholder="Av. Paulista" />
+          </div>
+          <div class="campo">
+            <label for="numero">Número</label>
+            <input id="numero" type="text" maxlength="20" placeholder="1000" />
+          </div>
+          <div class="campo">
+            <label for="bairro">Bairro</label>
+            <input id="bairro" type="text" maxlength="120" placeholder="Centro" />
+          </div>
+        </div>
         <div class="grid-2">
           <div class="campo">
             <label for="cidade">Cidade <span class="req">*</span></label>
-            <input id="cidade" name="cidade" type="text" maxlength="120" placeholder="Ex.: Fortaleza" />
+            <input id="cidade" type="text" maxlength="120" placeholder="Ex.: Fortaleza" />
           </div>
           <div class="campo">
             <label for="estado">Estado (UF) <span class="req">*</span></label>
-            <input id="estado" name="estado" type="text" maxlength="2" placeholder="CE" style="text-transform:uppercase" />
+            <input id="estado" type="text" maxlength="2" placeholder="CE" style="text-transform:uppercase" />
           </div>
         </div>
+      </div>
 
+      <!-- ===== SEÇÃO: OBJETIVO E FORMAÇÃO ===== -->
+      <div class="tal-card">
+        <div class="tal-secao-titulo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          Objetivo e formação
+        </div>
         <div class="campo">
           <label for="objetivo">Objetivo profissional <span class="req">*</span></label>
-          <textarea id="objetivo" name="objetivo" maxlength="2000" placeholder="Conte em poucas linhas o que você busca e suas principais habilidades e experiências..."></textarea>
-          <div class="tal-nota">Este texto aparece para as empresas que buscarem seu perfil.</div>
+          <textarea id="objetivo" maxlength="2000" placeholder="Conte em poucas linhas o que você busca e seu perfil profissional..."></textarea>
+        </div>
+        <div class="campo">
+          <label for="formacao">Formação <span class="req">*</span></label>
+          <textarea id="formacao" maxlength="2000" placeholder="Ex.: Ensino Médio completo, Cursando Administração..." style="min-height:70px"></textarea>
+        </div>
+        <div class="campo">
+          <label for="habilidades">Habilidades <span class="req">*</span></label>
+          <input id="habilidades" type="text" maxlength="500" placeholder="Ex.: Pacote Office, Vendas, Trabalho em equipe (separe por vírgula)" />
+        </div>
+        <div class="campo">
+          <label for="hobbies">Hobbies e interesses</label>
+          <input id="hobbies" type="text" maxlength="300" placeholder="Ex.: Leitura, futebol, música" />
+        </div>
+        <div class="campo">
+          <label for="infoAdicional">Informações adicionais</label>
+          <textarea id="infoAdicional" maxlength="1000" placeholder="CPF, CNH, disponibilidade de horário..." style="min-height:64px"></textarea>
         </div>
 
+        <div class="tal-secao-titulo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Cursos e instituições
+        </div>
+        <div id="listaCursos"></div>
+        <button type="button" class="btn-add" onclick="addCurso()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Adicionar curso
+        </button>
+
+        <div class="tal-secao-titulo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Experiências profissionais
+        </div>
+        <div class="tal-nota" style="margin:-8px 0 14px">Sem experiência? Marque abaixo e deixe esta seção vazia.</div>
+        <label style="display:flex;align-items:center;gap:9px;font-size:.85rem;color:#cfe4f5;cursor:pointer;margin-bottom:14px;-webkit-tap-highlight-color:transparent">
+          <input type="checkbox" id="primeiroEmprego" style="width:18px;height:18px;accent-color:#ff9d2e" />
+          Este é meu primeiro emprego
+        </label>
+        <div id="listaExp"></div>
+        <button type="button" class="btn-add" id="btnAddExp" onclick="addExp()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Adicionar experiência
+        </button>
+      </div>
+
+      <!-- ===== SEÇÃO: LGPD + ENVIO ===== -->
+      <div class="tal-card">
         <label class="lgpd-box" id="lgpdBox">
           <input type="checkbox" id="consentimento" />
           <span class="txt">
             <strong>Consentimento LGPD (Lei nº 13.709/2018):</strong> autorizo o tratamento dos meus dados pessoais
-            (nome, contato, área profissional, cidade e objetivo) para inclusão no Banco de Talentos da Office Express,
-            podendo ser compartilhados com empresas parceiras para fins de recrutamento e seleção.
-            Posso solicitar a exclusão dos meus dados a qualquer momento pelos nossos canais de contato, conforme a
-            <a href="/politica" target="_blank">Política de Privacidade</a> e os <a href="/termos" target="_blank">Termos de Uso</a>.
+            (nome, contato, endereço, área profissional, formação, experiências e objetivo) para inclusão no Banco de
+            Talentos da Office Express, podendo ser compartilhados com empresas parceiras para fins de recrutamento e
+            seleção. Posso solicitar a exclusão dos meus dados a qualquer momento pelos nossos canais de contato,
+            conforme a <a href="/politica" target="_blank">Política de Privacidade</a> e os <a href="/termos" target="_blank">Termos de Uso</a>.
           </span>
         </label>
 
-        <button type="submit" class="btn-tal" id="btnEnviar">Quero participar — Grátis</button>
+        <button type="submit" class="btn-tal" id="btnEnviar">Enviar meu cadastro — Grátis</button>
         <div id="talAlert" class="tal-alert"></div>
-      </form>
-    </div>
+      </div>
+    </form>
 
     <div id="talSucesso">
       <div class="check">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#001f33" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
       </div>
       <h2>Cadastro enviado!</h2>
-      <p>Seu perfil entrou no nosso Banco de Talentos. Quando uma empresa buscar um profissional com o seu perfil, você poderá ser contatada. Fique de olho no seu e-mail e WhatsApp!</p>
+      <p>Seu currículo completo entrou no nosso Banco de Talentos no modelo <strong style="color:#ffd9ae">Minimal</strong>. Quando uma empresa buscar um profissional com o seu perfil, ela poderá ver e baixar seu currículo. Fique de olho no seu e-mail e WhatsApp!</p>
 
       <div class="cta-destaque">
         <div class="cta-selo">Dica de especialista</div>
@@ -282,11 +381,67 @@
   </div>
 
 <script>
-  // Destaque visual do LGPD ao marcar
-  var lgpdBox = document.getElementById("lgpdBox");
-  document.getElementById("consentimento").addEventListener("change", function () {
-    lgpdBox.classList.toggle("checked", this.checked);
+  // ============ BLOCOS DINÂMICOS (igual editor.html) ============
+  function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+
+  function addTel(valor) {
+    var d = document.createElement("div");
+    d.className = "bloco-din";
+    d.innerHTML = '<button type="button" class="btn-rem" title="Remover" onclick="this.parentElement.remove()">×</button>' +
+      '<div class="campo"><input type="tel" class="tel" maxlength="60" placeholder="(85) 99999-0000" autocomplete="tel" value="' + esc(valor || "") + '" /></div>';
+    document.getElementById("listaTels").appendChild(d);
+  }
+
+  function addCurso(v) {
+    var v = v || {};
+    var d = document.createElement("div");
+    d.className = "bloco-din";
+    d.innerHTML = '<button type="button" class="btn-rem" title="Remover" onclick="this.parentElement.remove()">×</button>' +
+      '<div class="campo"><label>Curso <span class="req">*</span></label><input type="text" class="c-curso" maxlength="200" placeholder="Ex.: Informática básica" value="' + esc(v.curso || "") + '" /></div>' +
+      '<div class="grid-2"><div class="campo"><label>Instituição</label><input type="text" class="c-inst" maxlength="200" placeholder="Ex.: SENAC" value="' + esc(v.instituicao || "") + '" /></div>' +
+      '<div class="campo"><label>Carga horária</label><input type="text" class="c-carga" maxlength="60" placeholder="Ex.: 40 horas" value="' + esc(v.carga || "") + '" /></div></div>';
+    document.getElementById("listaCursos").appendChild(d);
+  }
+
+  function addExp(v) {
+    var v = v || {};
+    var d = document.createElement("div");
+    d.className = "bloco-din";
+    d.innerHTML = '<button type="button" class="btn-rem" title="Remover" onclick="this.parentElement.remove()">×</button>' +
+      '<div class="grid-2"><div class="campo"><label>Empresa <span class="req">*</span></label><input type="text" class="e-empresa" maxlength="200" placeholder="Nome da empresa" value="' + esc(v.empresa || "") + '" /></div>' +
+      '<div class="campo"><label>Cargo <span class="req">*</span></label><input type="text" class="e-cargo" maxlength="200" placeholder="Seu cargo" value="' + esc(v.cargoExp || "") + '" /></div></div>' +
+      '<div class="grid-2"><div class="campo"><label>Início</label><input type="text" class="e-inicio" maxlength="30" placeholder="Ex.: 01/2022" value="' + esc(v.periodo_inicio || "") + '" /></div>' +
+      '<div class="campo"><label>Fim</label><input type="text" class="e-fim" maxlength="30" placeholder="Ex.: 12/2023 ou Atual" value="' + esc(v.periodo_fim || "") + '" /></div></div>' +
+      '<div class="campo"><label>Atividades</label><textarea class="e-ativ" maxlength="1000" placeholder="Principais atividades que você exercia..." style="min-height:64px">' + esc(v.atividades || "") + '</textarea></div>';
+    document.getElementById("listaExp").appendChild(d);
+  }
+  window.addTel = addTel; window.addCurso = addCurso; window.addExp = addExp;
+
+  // Telefones: começa com 1; experiências/cursos: começa com 1 bloco vazio
+  addTel();
+  addCurso();
+  addExp();
+
+  // Primeiro emprego: esconde botão de adicionar experiência
+  document.getElementById("primeiroEmprego").addEventListener("change", function () {
+    document.getElementById("btnAddExp").style.display = this.checked ? "none" : "inline-flex";
+    if (this.checked) document.getElementById("listaExp").innerHTML = "";
   });
+
+  // LGPD highlight
+  document.getElementById("consentimento").addEventListener("change", function () {
+    document.getElementById("lgpdBox").classList.toggle("checked", this.checked);
+  });
+
+  function getArray(sel) {
+    return Array.prototype.map.call(document.querySelectorAll(sel), function (el) { return el.value.trim(); });
+  }
+
+  function mostrarErro(msg) {
+    var a = document.getElementById("talAlert");
+    a.className = "tal-alert erro"; a.textContent = msg;
+    a.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   document.getElementById("talForm").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -296,21 +451,44 @@
     var dados = {
       nome: document.getElementById("nome").value.trim(),
       email: document.getElementById("email").value.trim(),
-      telefone: document.getElementById("telefone").value.trim(),
-      cargo: document.getElementById("cargo").value.trim(),
+      telefone: getArray(".tel").filter(Boolean),
+      endereco: document.getElementById("endereco").value.trim(),
+      numero: document.getElementById("numero").value.trim(),
+      bairro: document.getElementById("bairro").value.trim(),
       cidade: document.getElementById("cidade").value.trim(),
       estado: document.getElementById("estado").value.trim().toUpperCase(),
       objetivo: document.getElementById("objetivo").value.trim(),
-      consentimento: document.getElementById("consentimento").checked
+      formacao: document.getElementById("formacao").value.trim(),
+      habilidades: document.getElementById("habilidades").value.trim(),
+      hobbies: document.getElementById("hobbies").value.trim(),
+      infoAdicional: document.getElementById("infoAdicional").value.trim(),
+      primeiroEmprego: document.getElementById("primeiroEmprego").checked,
+      curso: getArray(".c-curso").filter(Boolean),
+      instituicao: getArray(".c-inst").filter(Boolean),
+      carga: getArray(".c-carga").filter(Boolean),
+      empresa: getArray(".e-empresa").filter(Boolean),
+      cargo: getArray(".e-cargo").filter(Boolean),
+      periodo_inicio: getArray(".e-inicio").filter(Boolean),
+      periodo_fim: getArray(".e-fim").filter(Boolean),
+      atividades: getArray(".e-ativ").filter(Boolean),
+      consentimento: document.getElementById("consentimento").checked,
+      _modelo_visualizacao: "minimal",
+      origem: "talentos.html"
     };
 
+    // Validações (iguais ao editor)
     if (dados.nome.split(" ").filter(Boolean).length < 2) return mostrarErro("Informe seu nome completo (nome e sobrenome).");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email)) return mostrarErro("Informe um e-mail válido.");
-    if (!dados.telefone) return mostrarErro("Informe seu WhatsApp ou telefone.");
-    if (!dados.cargo) return mostrarErro("Informe a área ou cargo desejado.");
+    if (!dados.telefone.length) return mostrarErro("Informe pelo menos um telefone/WhatsApp.");
     if (!dados.cidade) return mostrarErro("Informe sua cidade.");
     if (!dados.estado || dados.estado.length !== 2) return mostrarErro("Informe o estado com 2 letras (ex.: CE).");
     if (dados.objetivo.length < 10) return mostrarErro("Escreva um objetivo profissional com pelo menos 10 caracteres.");
+    if (!dados.formacao) return mostrarErro("Informe sua formação.");
+    if (!dados.habilidades) return mostrarErro("Informe suas habilidades.");
+    if (!dados.primeiroEmprego) {
+      if (!dados.empresa.length) return mostrarErro("Adicione pelo menos uma experiência profissional (ou marque 'primeiro emprego').");
+      if (dados.empresa.some(function (x) { return !x; })) return mostrarErro("Preencha a empresa em todas as experiências ou remova o bloco vazio.");
+    }
     if (!dados.consentimento) return mostrarErro("É necessário aceitar o consentimento LGPD para participar.");
 
     var btn = document.getElementById("btnEnviar");
@@ -325,7 +503,8 @@
       var data = {};
       try { data = await resp.json(); } catch (err) {}
       if (resp.ok && data.ok) {
-        document.getElementById("talFormWrap").style.display = "none";
+        Array.prototype.forEach.call(document.querySelectorAll("#talForm"), function (f) { f.style.display = "none"; });
+        document.querySelectorAll(".tal-card").forEach(function (c) { c.style.display = "none"; });
         document.getElementById("talSucesso").style.display = "block";
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
@@ -333,10 +512,8 @@
       }
     } catch (err) {
       mostrarErro(err.message);
-      btn.disabled = false; btn.textContent = "Quero participar — Grátis";
+      btn.disabled = false; btn.textContent = "Enviar meu cadastro — Grátis";
     }
-
-    function mostrarErro(msg) { alerta.className = "tal-alert erro"; alerta.textContent = msg; }
   });
 </script>
 </body>

@@ -428,8 +428,12 @@ app.post("/api/talentos/cadastro", async (req, res) => {
     const nome = String(b.nome || "").trim().slice(0, 200);
     const email = String(b.email || "").trim().toLowerCase().slice(0, 200);
     const consentimento = !!b.consentimento;
-    const telefone = String(b.telefone || "").trim().slice(0, 60);
-    const cargo = String(b.cargo || "").trim().slice(0, 200);
+    // Telefone: o editor envia array; captação simples envia string — normaliza para string principal
+    const telefoneArr = Array.isArray(b.telefone) ? b.telefone.filter(Boolean) : [b.telefone].filter(Boolean);
+    const telefone = telefoneArr.map(t => String(t).trim().slice(0, 60)).filter(Boolean).join(" / ").slice(0, 60) || null;
+    const cargo = String(
+      (Array.isArray(b.cargo) && b.cargo.length ? b.cargo[0] : b.cargo) || ""
+    ).trim().slice(0, 200);
     const cidade = String(b.cidade || "").trim().slice(0, 120);
     const estado = String(b.estado || "").trim().toUpperCase().slice(0, 4);
     const objetivo = String(b.objetivo || "").trim().slice(0, 2000);
@@ -437,7 +441,6 @@ app.post("/api/talentos/cadastro", async (req, res) => {
     if (!nome || nome.split(/\s+/).length < 2) return res.status(400).json({ ok: false, error: "Informe seu nome completo." });
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: "Informe um e-mail válido." });
     if (!telefone) return res.status(400).json({ ok: false, error: "Informe seu WhatsApp ou telefone." });
-    if (!cargo) return res.status(400).json({ ok: false, error: "Informe a área ou cargo desejado." });
     if (!cidade) return res.status(400).json({ ok: false, error: "Informe sua cidade." });
     if (!estado || estado.length < 2) return res.status(400).json({ ok: false, error: "Informe o estado (UF)." });
     if (!objetivo || objetivo.length < 10) return res.status(400).json({ ok: false, error: "Escreva um objetivo profissional (mín. 10 caracteres)." });
@@ -2940,6 +2943,65 @@ app.post("/api/companies/contatar/:id", async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     res.json({ ok: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Visualizar / baixar o CURRÍCULO REAL do talento (modelo Minimal, igual ao
+// que o candidato criou e pagou). HTML renderizado no navegador e PDF.
+// ---------------------------------------------------------------------------
+async function carregarTalentoParaEmpresa(req, res, talentoId) {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const emp = await buscarEmpresaPorId(id);
+  if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+  if (emp.plano === "enterprise" ? false : !emp.assinatura_ativa) {
+    return res.status(403).json({ error: "Empresa sem assinatura ativa." });
+  }
+  const [rows] = await pool.query("SELECT id, pedido_id, dados_json FROM talentos WHERE id = ? AND consentimento = 1", [talentoId]);
+  if (!rows.length) return res.status(404).json({ error: "Currículo não encontrado." });
+  let d = {};
+  try { d = JSON.parse(rows[0].dados_json || "{}"); } catch (e) { d = {}; }
+  if (!d.consentimento) return res.status(403).json({ error: "Currículo sem autorização para consulta." });
+  return { talento: rows[0], dados: d };
+}
+
+// HTML do currículo no modelo Minimal (abre em nova aba / modal iframe)
+app.get("/api/companies/talentos/:id/visualizar", async (req, res) => {
+  try {
+    const r = await carregarTalentoParaEmpresa(req, res, req.params.id);
+    if (!r) return;
+    const { gerarHTML } = require("./lib/renderHTML");
+    // Origem decide o modelo: página talentos.html → Minimal fixo;
+    // fluxo normal (pedido pago) → o modelo escolhido pelo cliente no editor.
+    const veioDeTalentos = r.dados && r.dados.origem === "talentos.html";
+    const modelo = veioDeTalentos ? "minimal" : (r.talento.modelo || (r.dados && r.dados._modelo_visualizacao) || "minimal");
+    const html = gerarHTML(modelo, r.dados);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Currículo — Office Express para Empresas</title><style>body{margin:0;background:#3a4a57;display:flex;justify-content:center;padding:24px 10px}@media(max-width:600px){body{padding:8px 2px}}.page{background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.35)}</style></head><body>${html}</body></html>`);
+  } catch (e) {
+    console.error("Erro visualizar talento:", e.message);
+    res.status(500).json({ error: "Erro ao abrir currículo." });
+  }
+});
+
+// PDF do currículo no modelo Minimal
+app.get("/api/companies/talentos/:id/pdf", async (req, res) => {
+  try {
+    const r = await carregarTalentoParaEmpresa(req, res, req.params.id);
+    if (!r) return;
+    const { gerarPDF } = require("./lib/modelos");
+    // Mesma regra da visualização: talentos.html → Minimal; fluxo normal → modelo do cliente.
+    const veioDeTalentos = r.dados && r.dados.origem === "talentos.html";
+    const modelo = veioDeTalentos ? "minimal" : (r.talento.modelo || (r.dados && r.dados._modelo_visualizacao) || "minimal");
+    const buffer = await gerarPDF(modelo, r.dados);
+    const nome = (r.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="curriculo_${nome}.pdf"`);
+    res.send(buffer);
+  } catch (e) {
+    console.error("Erro PDF talento:", e.message);
+    res.status(500).json({ error: "Erro ao gerar PDF." });
   }
 });
 

@@ -844,7 +844,12 @@
               (exp ? '<span class="cand-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:-1px;margin-right:3px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + escapeHtml(exp) + '</span>' : '') +
             '</div>' +
             '<div class="cand-acoes">' +
-              '<button class="btn-mini btn-download" onclick="verCurriculo(' + c.id + ')">Ver currículo</button>' +
+              '<button class="btn-mini btn-download" title="Ver o currículo profissional criado pelo candidato (modelo Minimal)" onclick="abrirCurriculoReal(' + c.id + ')">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Ver currículo' +
+              '</button>' +
+              '<button class="btn-mini btn-conta" title="Baixar este currículo em PDF" onclick="baixarCurriculoReal(' + c.id + ', event)">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF' +
+              '</button>' +
               (c.telefone ? '<button class="btn-mini btn-conta" onclick="contatarCandidato(' + c.id + ')">Contatar</button>' : '') +
             '</div>';
           card.addEventListener("click", function (e) { if (e.target.tagName !== "BUTTON") verCurriculo(c.id); });
@@ -908,6 +913,36 @@
       }
       window.verCurriculo = verCurriculo;
       window.fecharModal = function () { var b = document.getElementById("modalBackdrop"); if (b) b.remove(); };
+
+      // Abre o CURRÍCULO REAL do candidato (modelo Minimal, igual ao que ele criou)
+      // num modal com iframe — além do resumo textual já existente.
+      function abrirCurriculoReal(id) {
+        verCurriculo(id);
+        // Aguarda o modal base montar e injeta o iframe com o currículo real
+        setTimeout(function () {
+          var box = document.querySelector("#modalBackdrop .card");
+          if (!box) return;
+          var frame = document.createElement("div");
+          frame.style.cssText = "margin-top:22px;border:1px solid var(--border);border-radius:12px;overflow:hidden";
+          frame.innerHTML =
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(255,136,0,.08);border-bottom:1px solid var(--border)">' +
+              '<span style="font-size:.8rem;font-weight:700;color:var(--brand)">Currículo original do candidato — modelo Minimal</span>' +
+              '<a href="/api/companies/talentos/' + id + '/pdf" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:700;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:5px">' +
+                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar PDF' +
+              '</a>' +
+            '</div>' +
+            '<iframe src="/api/companies/talentos/' + id + '/visualizar" style="width:100%;height:520px;border:0;display:block;background:#fff" title="Currículo do candidato"></iframe>';
+          box.appendChild(frame);
+        }, 350);
+      }
+      window.abrirCurriculoReal = abrirCurriculoReal;
+
+      // Baixa o PDF do currículo real (modelo Minimal)
+      function baixarCurriculoReal(id, ev) {
+        if (ev) ev.stopPropagation();
+        window.open("/api/companies/talentos/" + id + "/pdf", "_blank", "noopener");
+      }
+      window.baixarCurriculoReal = baixarCurriculoReal;
 
       // Contatar candidato (registra contato + abre WhatsApp)
       async function contatarCandidato(id) {
