@@ -2420,11 +2420,54 @@ async function registrarVisualizacao(empresaId, talentoRow) {
 
 async function buscarEmpresaPorId(id) {
   const [rows] = await pool.query(
-    "SELECT id, nome, cnpj, email, plano, assinatura_ativa, status FROM empresas WHERE id = ?",
+    "SELECT id, nome, cnpj, email, plano, assinatura_ativa, status, msg_whatsapp FROM empresas WHERE id = ?",
     [id]
   );
   return rows[0] || null;
 }
+
+// Migração: coluna da mensagem automática de WhatsApp da empresa.
+async function garantirMsgWhatsapp() {
+  try {
+    const [cols] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'empresas' AND COLUMN_NAME = 'msg_whatsapp'"
+    );
+    if (Number(cols[0].c) === 0) {
+      await pool.query("ALTER TABLE empresas ADD COLUMN msg_whatsapp TEXT NULL");
+      console.log("✅ Coluna empresas.msg_whatsapp adicionada");
+    }
+  } catch (e) {
+    console.error("🚨 FALHA ao garantir empresas.msg_whatsapp:", e.message);
+  }
+}
+garantirMsgWhatsapp();
+
+// Mensagem automática de WhatsApp da empresa logada.
+app.get("/api/companies/msg-whatsapp", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [rows] = await pool.query("SELECT msg_whatsapp FROM empresas WHERE id = ?", [id]);
+    res.json({ ok: true, msg: rows.length ? rows[0].msg_whatsapp : null });
+  } catch (e) {
+    console.error("Erro ao carregar mensagem:", e.message);
+    res.status(500).json({ error: "Erro ao carregar mensagem." });
+  }
+});
+
+app.put("/api/companies/msg-whatsapp", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    let msg = req.body && typeof req.body.msg === "string" ? req.body.msg.trim() : "";
+    if (msg.length > 1000) return res.status(400).json({ error: "Mensagem muito longa (máx. 1000 caracteres)." });
+    await pool.query("UPDATE empresas SET msg_whatsapp = ? WHERE id = ?", [msg || null, id]);
+    res.json({ ok: true, msg: msg || null });
+  } catch (e) {
+    console.error("Erro ao salvar mensagem:", e.message);
+    res.status(500).json({ error: "Erro ao salvar mensagem." });
+  }
+});
 
 // Uso atual das cotas do plano (para as barras diária/semanal do painel).
 app.get("/api/companies/uso", async (req, res) => {
