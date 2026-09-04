@@ -50,13 +50,13 @@
     }
 
     /* ===== Office Express | Companies — estilos específicos ===== */
-    .companies-wrap { max-width: 1080px; margin: 0 auto; }
+    .companies-wrap { max-width: 1320px; margin: 0 auto; }
 
     /* Hero da landing */
     .hero-c {
       position: relative; overflow: hidden;
       background: linear-gradient(135deg, #0e2b44 0%, #174a6b 55%, #1f5d82 100%);
-      border-radius: 20px; padding: 40px 44px; margin-bottom: 28px;
+      border-radius: 8px; padding: 40px 44px; margin-bottom: 28px;
       color: #ffffff;
       box-shadow: 0 18px 44px rgba(14,43,68,0.28);
     }
@@ -81,7 +81,7 @@
     .plano-card ul li svg { width: 16px; height: 16px; color: var(--success); flex-shrink: 0; }
     .plano-card .btn { margin-top: auto; }
     .plano-destaque { border: 2px solid var(--brand); box-shadow: 0 10px 30px var(--brand-glow); }
-    .plano-badge { display: inline-block; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; }
+    .plano-badge { display: inline-block; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; font-size: 0.7rem; font-weight: 800; padding: 3px 10px; border-radius: 4px; margin-bottom: 8px; }
 
     /* Formulário (cadastro/login) */
     .form-card { max-width: 520px; margin: 0 auto; }
@@ -91,7 +91,7 @@
     /* Painel: KPIs */
     .companies-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
     .stat-card { text-align: left; }
-    .stat-card .stat-icone { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .stat-card .stat-icone { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
     .stat-card .stat-value { font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1.1; }
     .stat-card .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 6px; font-weight: 500; }
     .stat-icone-azul { background: rgba(59,130,246,0.14); color: #2563eb; }
@@ -106,14 +106,14 @@
     .resultados-titulo h3 { font-size: 1.15rem; font-weight: 800; margin: 0; }
 
     /* Cards de candidatos */
-    .candidatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .candidatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
     .cand-card { cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
     .cand-card:hover { transform: translateY(-3px); border-color: rgba(255,136,0,.45); box-shadow: 0 14px 34px rgba(0,10,20,.14); }
 
     /* Miniatura real do currículo: página A4 INTEIRA, escala ajustada por JS */
     .cand-thumb {
       position: relative; margin: -4px -4px 14px; overflow: hidden;
-      border-radius: 12px; border: 1px solid var(--border);
+      border-radius: 6px; border: 1px solid var(--border);
       background: #ffffff;
       aspect-ratio: 794 / 1123; /* proporção A4 → a folha inteira cabe */
     }
@@ -130,7 +130,7 @@
       position: absolute; right: 8px; bottom: 8px;
       background: rgba(0,31,51,.82); color: #ffd9ae;
       font-size: .66rem; font-weight: 800; letter-spacing: .05em;
-      text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 4px;
       -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
       z-index: 2;
     }
@@ -138,7 +138,7 @@
     .cand-card .cand-nome { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
     .cand-card .cand-cargo { color: var(--brand-dark); font-weight: 700; font-size: 0.92rem; margin-bottom: 10px; }
     .cand-card .cand-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .cand-tag { background: rgba(59,130,246,0.1); color: #2563eb; border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; }
+    .cand-tag { background: rgba(59,130,246,0.1); color: #2563eb; border-radius: 4px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; }
     .cand-card .cand-acoes { display: flex; gap: 8px; margin-top: 4px; }
 
     /* Modal de currículo */
@@ -166,12 +166,12 @@
     .portal-wrap { display: flex; gap: 24px; align-items: flex-start; }
     .portal-sidebar {
       width: 250px; flex-shrink: 0; position: sticky; top: 88px;
-      background: var(--card, #ffffff); border: 1px solid var(--border); border-radius: 16px;
+      background: var(--card, #ffffff); border: 1px solid var(--border); border-radius: 8px;
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
     }
     .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
     .pse-avatar {
-      width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+      width: 42px; height: 42px; border-radius: 6px; flex-shrink: 0;
       background: linear-gradient(135deg, var(--brand), var(--brand-dark, #b45309));
       color: #001f33; font-weight: 800; font-size: 1.05rem;
       display: flex; align-items: center; justify-content: center;
@@ -184,7 +184,7 @@
       display: flex; align-items: center; gap: 10px; width: 100%;
       background: transparent; border: none; cursor: pointer; text-align: left;
       font-family: inherit; font-size: .9rem; font-weight: 600; color: var(--text-muted);
-      padding: 11px 12px; border-radius: 10px; transition: background .15s, color .15s;
+      padding: 11px 12px; border-radius: 6px; transition: background .15s, color .15s;
     }
     .portal-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
     .portal-nav-item:hover { background: rgba(59,130,246,.08); color: var(--text-primary, inherit); }
@@ -199,7 +199,7 @@
     @keyframes portalFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .portal-menu-btn {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+      width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--border);
       background: var(--card, #ffffff); color: var(--text-primary, inherit); cursor: pointer; flex-shrink: 0;
     }
     .portal-sidebar-backdrop { display: none; }
@@ -223,6 +223,14 @@
     /* Responsivo */
     @media (max-width: 900px) { .companies-stats { grid-template-columns: repeat(2, 1fr); } .planos-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 600px) { .planos-grid { grid-template-columns: 1fr; } .hero-c { padding: 28px 22px; } .companies-stats { grid-template-columns: 1fr 1fr; gap: 12px; } .stat-card { padding: 16px; } }
+  
+    /* ==== Painel corporativo: cantos sóbrios (escopo: apenas companies) ==== */
+    .companies-wrap .card { border-radius: 8px !important; }
+    .companies-wrap .card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,10,20,.10); }
+    .companies-wrap .btn { border-radius: 6px !important; }
+    .companies-wrap .btn-mini { border-radius: 6px !important; }
+    .companies-wrap input, .companies-wrap select, .companies-wrap textarea { border-radius: 6px !important; }
+    .companies-wrap .modal-curriculo { border-radius: 8px !important; }
   </style>
 </head>
 <body>
@@ -431,7 +439,7 @@
                   <h3>Resultados</h3>
                   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                     <span class="contagem" id="contagemResultados" style="color:var(--text-muted);font-size:.85rem"></span>
-                    <select id="ordenacao" onchange="ordenarLista()" style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--border);font-family:inherit;font-size:.85rem;background:#fff;color:var(--text-primary);cursor:pointer">
+                    <select id="ordenacao" onchange="ordenarLista()" style="padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);font-family:inherit;font-size:.85rem;background:#fff;color:var(--text-primary);cursor:pointer">
                       <option value="recentes">Mais recentes</option>
                       <option value="antigos">Mais antigos</option>
                       <option value="nome">Nome (A–Z)</option>
@@ -783,7 +791,7 @@
             '</div>' +
             '<div class="cand-nome">' + escapeHtml(nome) +
               (c.cadastro && (agora - new Date(c.cadastro).getTime()) < 7 * 24 * 3600 * 1000
-                ? ' <span style="display:inline-block;vertical-align:2px;margin-left:6px;background:rgba(34,197,94,.15);color:#16a34a;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:20px">NOVO</span>'
+                ? ' <span style="display:inline-block;vertical-align:2px;margin-left:6px;background:rgba(34,197,94,.15);color:#16a34a;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:4px">NOVO</span>'
                 : "") +
             '</div>' +
             '<div class="cand-cargo">' + escapeHtml(cargo) + '</div>' +
@@ -898,7 +906,7 @@
             '</div>' +
             '<div class="cand-nome">' + escapeHtml(nome) +
               (c.cadastro && (agora - new Date(c.cadastro).getTime()) < 7 * 24 * 3600 * 1000
-                ? ' <span style="display:inline-block;vertical-align:2px;margin-left:6px;background:rgba(34,197,94,.15);color:#16a34a;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:20px">NOVO</span>'
+                ? ' <span style="display:inline-block;vertical-align:2px;margin-left:6px;background:rgba(34,197,94,.15);color:#16a34a;font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:4px">NOVO</span>'
                 : "") +
             '</div>' +
             '<div class="cand-cargo">' + escapeHtml(cargo) + '</div>' +
@@ -1046,7 +1054,7 @@
           var box = document.querySelector("#modalBackdrop .card");
           if (!box) return;
           var frame = document.createElement("div");
-          frame.style.cssText = "margin-top:22px;border:1px solid var(--border);border-radius:12px;overflow:hidden";
+          frame.style.cssText = "margin-top:22px;border:1px solid var(--border);border-radius:6px;overflow:hidden";
           frame.innerHTML =
             '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(255,136,0,.08);border-bottom:1px solid var(--border)">' +
               '<span style="font-size:.8rem;font-weight:700;color:var(--brand)">Currículo original do candidato — modelo Minimal</span>' +
