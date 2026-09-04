@@ -613,6 +613,10 @@
       if (!dados.nome) { alert("Informe seu nome completo."); etapaAtual = 0; showEtapa(0); return; }
       if (!dados.email) { alert("Informe seu e-mail de contato."); etapaAtual = 1; showEtapa(1); return; }
       if (!dados.objetivo) { alert("Informe seu objetivo profissional."); etapaAtual = 2; showEtapa(2); return; }
+      // Marca o modelo escolhido dentro dos dados: assim o espelho no Banco de
+      // Talentos (Companies) sabe qual modelo o cliente usou, mesmo que o
+      // campo 'modelo' do pedido seja alterado depois.
+      dados._modelo_visualizacao = modelo;
       localStorage.setItem("curriculo", JSON.stringify(dados));
       window.location.href = "/preview";
     }

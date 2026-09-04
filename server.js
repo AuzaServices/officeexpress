@@ -2974,8 +2974,20 @@ app.get("/api/companies/talentos/:id/visualizar", async (req, res) => {
     const { gerarHTML } = require("./lib/renderHTML");
     // Origem decide o modelo: página talentos.html → Minimal fixo;
     // fluxo normal (pedido pago) → o modelo escolhido pelo cliente no editor.
+    // 'minimal' é EXCLUSIVO da captação: se um pedido normal tiver gravado
+    // 'minimal' (escolha antiga/teste), respeita o modelo visual dos dados
+    // (_modelo_visualizacao) ou cai no clássico.
     const veioDeTalentos = r.dados && r.dados.origem === "talentos.html";
-    const modelo = veioDeTalentos ? "minimal" : (r.talento.modelo || (r.dados && r.dados._modelo_visualizacao) || "minimal");
+    let modelo;
+    if (veioDeTalentos) {
+      modelo = "minimal";
+    } else {
+      const modeloTalento = r.talento.modelo;
+      const modeloDados = r.dados && r.dados._modelo_visualizacao;
+      modelo = modeloTalento && modeloTalento !== "minimal" && modeloTalento !== "captacao"
+        ? modeloTalento
+        : (modeloDados && modeloDados !== "minimal" ? modeloDados : "classico");
+    }
     const html = gerarHTML(modelo, r.dados);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Currículo — Office Express para Empresas</title><style>body{margin:0;background:#3a4a57;display:flex;justify-content:center;padding:24px 10px}@media(max-width:600px){body{padding:8px 2px}}.page{background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.35)}</style></head><body>${html}</body></html>`);
@@ -2991,9 +3003,19 @@ app.get("/api/companies/talentos/:id/pdf", async (req, res) => {
     const r = await carregarTalentoParaEmpresa(req, res, req.params.id);
     if (!r) return;
     const { gerarPDF } = require("./lib/modelos");
-    // Mesma regra da visualização: talentos.html → Minimal; fluxo normal → modelo do cliente.
+    // Mesma regra da visualização: talentos.html → Minimal; fluxo normal → modelo do cliente
+    // ('minimal' é exclusivo da captação; pedidos normais nunca caem nele).
     const veioDeTalentos = r.dados && r.dados.origem === "talentos.html";
-    const modelo = veioDeTalentos ? "minimal" : (r.talento.modelo || (r.dados && r.dados._modelo_visualizacao) || "minimal");
+    let modelo;
+    if (veioDeTalentos) {
+      modelo = "minimal";
+    } else {
+      const modeloTalento = r.talento.modelo;
+      const modeloDados = r.dados && r.dados._modelo_visualizacao;
+      modelo = modeloTalento && modeloTalento !== "minimal" && modeloTalento !== "captacao"
+        ? modeloTalento
+        : (modeloDados && modeloDados !== "minimal" ? modeloDados : "classico");
+    }
     const buffer = await gerarPDF(modelo, r.dados);
     const nome = (r.dados.nome || "curriculo").replace(/[^a-zA-Z0-9]/g, "_");
     res.setHeader("Content-Type", "application/pdf");
