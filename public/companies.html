@@ -178,6 +178,42 @@
     }
     .pse-info { min-width: 0; }
     .pse-nome { font-weight: 700; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Widget de uso (barras diária/semanal, estilo Verdent) */
+    .uso-widget {
+      background: rgba(59,130,246,.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 14px 12px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .uso-widget.uso-alerta { border-color: rgba(234,88,12,.45); background: rgba(234,88,12,.07); }
+    .uso-titulo {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--text-muted);
+    }
+    .uso-titulo svg { color: var(--brand); }
+    .uso-linha { display: flex; flex-direction: column; gap: 4px; }
+    .uso-label {
+      display: flex; justify-content: space-between;
+      font-size: .78rem; font-weight: 700; color: var(--text-primary);
+    }
+    .uso-label span:last-child { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .uso-barra {
+      height: 8px; border-radius: 4px; overflow: hidden;
+      background: rgba(0,31,51,.08);
+    }
+    .uso-preench {
+      height: 100%; width: 0%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #16a34a, #22c55e);
+      transition: width .6s cubic-bezier(.22,1,.3,1), background .3s;
+    }
+    .uso-preench.uso-atencao { background: linear-gradient(90deg, #d97706, #f59e0b); }
+    .uso-preench.uso-cheio { background: linear-gradient(90deg, #dc2626, #ef4444); }
+    .uso-msg { font-size: .74rem; line-height: 1.35; color: var(--text-muted); }
+    .uso-msg.uso-visivel { color: #b45309; font-weight: 600; }
     .pse-plano { font-size: .74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
     .portal-nav { display: flex; flex-direction: column; gap: 4px; }
     .portal-nav-item {
@@ -374,6 +410,21 @@
                 Dados da empresa
               </button>
             </nav>
+            <div class="uso-widget" id="usoWidget">
+              <div class="uso-titulo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Seu uso
+              </div>
+              <div class="uso-linha">
+                <div class="uso-label"><span>Hoje</span><span id="usoDiaTxt">—</span></div>
+                <div class="uso-barra"><div class="uso-preench" id="usoDiaBar"></div></div>
+              </div>
+              <div class="uso-linha">
+                <div class="uso-label"><span>Esta semana</span><span id="usoSemTxt">—</span></div>
+                <div class="uso-barra"><div class="uso-preench" id="usoSemBar"></div></div>
+              </div>
+              <div class="uso-msg" id="usoMsg"></div>
+            </div>
             <div class="portal-sidebar-footer">
               <button class="btn btn-secondary btn-block" onclick="sairEmpresa()" style="color:var(--danger)">Sair da conta</button>
             </div>
@@ -444,11 +495,7 @@
                       <option value="antigos">Mais antigos</option>
                       <option value="nome">Nome (A–Z)</option>
                     </select>
-                    <button type="button" class="btn-mini btn-conta" onclick="exportarCSV()" title="Exportar resultados atuais para CSV">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      CSV
-                    </button>
-                  </div>
+                    </div>
                 </div>
                 <div id="candVazio" style="text-align:center;padding:30px;color:var(--text-muted)" class="oculto">
                   Nenhum candidato encontrado com os filtros atuais.
@@ -718,10 +765,48 @@
         document.getElementById("dEmail").value = e.email || "";
         mostrarView("painel");
         atualizarStats();
+        atualizarUso();
         mostrarSecao("busca", true);
         buscar();
       }
       window.carregarPainel = carregarPainel;
+
+      // ----- Widget de uso: barras diária/semanal (janela deslizante) -----
+      async function atualizarUso() {
+        try {
+          var { ok, data } = await App.api("/api/companies/uso");
+          if (!ok || !data.ok) return;
+          var w = document.getElementById("usoWidget");
+          if (data.ilimitado) {
+            document.getElementById("usoDiaTxt").textContent = "Ilimitado";
+            document.getElementById("usoSemTxt").textContent = "Ilimitado";
+            document.getElementById("usoDiaBar").style.width = "0%";
+            document.getElementById("usoSemBar").style.width = "0%";
+            document.getElementById("usoMsg").classList.remove("uso-visivel");
+            document.getElementById("usoMsg").textContent = "Seu plano Enterprise não tem limites de consulta.";
+            w.classList.remove("uso-alerta");
+            return;
+          }
+          var d = data.uso.dia, s = data.uso.semana;
+          var cd = data.cotas.diario, cs = data.cotas.semanal;
+          var pd = Math.min(100, Math.round((d / cd) * 100));
+          var ps = Math.min(100, Math.round((s / cs) * 100));
+          var barD = document.getElementById("usoDiaBar");
+          var barS = document.getElementById("usoSemBar");
+          barD.style.width = pd + "%";
+          barS.style.width = ps + "%";
+          barD.className = "uso-preench" + (pd >= 100 ? " uso-cheio" : pd >= 75 ? " uso-atencao" : "");
+          barS.className = "uso-preench" + (ps >= 100 ? " uso-cheio" : ps >= 75 ? " uso-atencao" : "");
+          document.getElementById("usoDiaTxt").textContent = d + "/" + cd;
+          document.getElementById("usoSemTxt").textContent = s + "/" + cs;
+          var msg = document.getElementById("usoMsg");
+          if (pd >= 100) { msg.textContent = "Cota diária esgotada — a janela renova em breve."; msg.classList.add("uso-visivel"); w.classList.add("uso-alerta"); }
+          else if (ps >= 100) { msg.textContent = "Cota semanal esgotada — faça upgrade para continuar."; msg.classList.add("uso-visivel"); w.classList.add("uso-alerta"); }
+          else if (pd >= 75) { msg.textContent = "Restam poucos hoje. Planos maiores têm janelas amplas."; msg.classList.add("uso-visivel"); w.classList.add("uso-alerta"); }
+          else { msg.textContent = ""; msg.classList.remove("uso-visivel"); w.classList.remove("uso-alerta"); }
+        } catch (err) { /* silencioso */ }
+      }
+      window.atualizarUso = atualizarUso;
 
       // Navegação entre seções do portal
       var SECOES = {
@@ -971,25 +1056,7 @@
       }
       window.ordenarLista = ordenarLista;
 
-      function exportarCSV() {
-        if (!LISTA_ATUAL.length) return;
-        var linhas = [["Nome", "Cargo", "Cidade", "Estado", "Modelo", "Cadastro"]];
-        LISTA_ATUAL.forEach(function (c) {
-          linhas.push([c.nome || "", c.cargo || "", c.cidade || "", c.estado || "", c.modelo || "", c.cadastro ? String(c.cadastro).slice(0, 10) : ""]);
-        });
-        var csv = linhas.map(function (l) {
-          return l.map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(";");
-        }).join("\r\n");
-        var blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-        var a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "talentos_office_express.csv";
-        a.click();
-        URL.revokeObjectURL(a.href);
-      }
-      window.exportarCSV = exportarCSV;
-
-      function escapeHtml(s) {
+            function escapeHtml(s) {
         return String(s == null ? "" : s).replace(/[&<>"']/g, function (m) {
           return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
         });
@@ -998,7 +1065,17 @@
       // Ver currículo
       async function verCurriculo(id) {
         var { ok, data } = await App.api("/api/companies/curriculos/" + id + "/detalhe");
-        if (!ok) { alert(data && data.error ? data.error : "Erro ao abrir currículo."); return; }
+        if (!ok) {
+          var motivo = data && data.motivo;
+          var msg = data && data.error ? data.error : "Erro ao abrir currículo.";
+          if (motivo === "diaria" || motivo === "semanal") {
+            if (confirm(msg + "\n\nVer planos com janelas maiores?")) window.location.href = "/companies/pagar";
+          } else {
+            alert(msg);
+          }
+          atualizarUso();
+          return;
+        }
         var c = data.curriculo;
         var contato = [];
         if (c.telefone) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.34 1.79.66 2.64a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.44-1.23a2 2 0 0 1 2.11-.45c.85.32 1.74.54 2.64.66A2 2 0 0 1 22 16.92z"/></svg>' + escapeHtml(c.telefone) + '</span>');

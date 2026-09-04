@@ -2367,6 +2367,57 @@ function empresaDaSessao(req) {
   return req.session.empresaId || null;
 }
 
+// ---------------------------------------------------------------------------
+// Cotas de currículos por plano (janela deslizante: últimas 24h / últimos 7d).
+// Enterprise é ilimitado. Favoritar não consome cota — só abrir o currículo.
+// ---------------------------------------------------------------------------
+const COTAS_PLANOS = {
+  starter:     { diario: 20, semanal: 80 },
+  pro:         { diario: 60, semanal: 240 },
+  enterprise:  null, // ilimitado
+};
+
+async function usoEmpresa(id) {
+  const [rows] = await pool.query(
+    `SELECT
+       SUM(visto_em >= DATE_SUB(NOW(), INTERVAL 24 HOUR)) AS dia,
+       SUM(visto_em >= DATE_SUB(NOW(), INTERVAL 7 DAY))  AS semana,
+       COUNT(DISTINCT pedido_id) AS total
+     FROM empresas_curriculos_vistos
+     WHERE empresa_id = ?`,
+    [id]
+  );
+  return {
+    dia: Number(rows[0].dia) || 0,
+    semana: Number(rows[0].semana) || 0,
+    total: Number(rows[0].total) || 0,
+  };
+}
+
+// Retorna { ok: true, uso, cotas } ou { ok: false, motivo, uso, cotas }.
+async function checarCotaEmpresa(emp) {
+  const cotas = COTAS_PLANOS[emp.plano];
+  if (!cotas) return { ok: true }; // enterprise ou plano desconhecido → ilimitado
+  const uso = await usoEmpresa(emp.id);
+  if (uso.dia >= cotas.diario) return { ok: false, motivo: "diaria", uso, cotas };
+  if (uso.semana >= cotas.semanal) return { ok: false, motivo: "semanal", uso, cotas };
+  return { ok: true, uso, cotas };
+}
+
+// Registra a visualização. O visto grava pedido_id (padrão da tabela);
+// talento de captação sem pedido grava o próprio id — a leitura resolve ambos.
+async function registrarVisualizacao(empresaId, talentoRow) {
+  try {
+    const refId = talentoRow.pedido_id != null ? talentoRow.pedido_id : talentoRow.id;
+    await pool.query(
+      "INSERT INTO empresas_curriculos_vistos (empresa_id, pedido_id) VALUES (?, ?)",
+      [empresaId, refId]
+    );
+  } catch (e) {
+    console.error("Erro ao registrar visualização:", e.message);
+  }
+}
+
 async function buscarEmpresaPorId(id) {
   const [rows] = await pool.query(
     "SELECT id, nome, cnpj, email, plano, assinatura_ativa, status FROM empresas WHERE id = ?",
@@ -2374,6 +2425,28 @@ async function buscarEmpresaPorId(id) {
   );
   return rows[0] || null;
 }
+
+// Uso atual das cotas do plano (para as barras diária/semanal do painel).
+app.get("/api/companies/uso", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const emp = await buscarEmpresaPorId(id);
+    if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+    const cotas = COTAS_PLANOS[emp.plano] || null;
+    const uso = await usoEmpresa(id);
+    res.json({
+      ok: true,
+      plano: emp.plano,
+      ilimitado: !cotas,
+      cotas: cotas || { diario: null, semanal: null },
+      uso,
+    });
+  } catch (e) {
+    console.error("Erro ao carregar uso:", e.message);
+    res.status(500).json({ error: "Erro ao carregar uso." });
+  }
+});
 
 // Preços atuais dos planos (configuráveis pelo admin no painel).
 app.get("/api/companies/planos/precos", async (req, res) => {
@@ -2885,6 +2958,19 @@ app.get("/api/companies/curriculos/:id/detalhe", async (req, res) => {
   if (emp.plano === "enterprise" ? false : !emp.assinatura_ativa) {
     return res.status(403).json({ error: "Empresa sem assinatura ativa." });
   }
+  // Cota do plano (janela deslizante diária/semanal). Enterprise passa direto.
+  const cota = await checarCotaEmpresa(emp);
+  if (!cota.ok) {
+    return res.status(429).json({
+      error: cota.motivo === "diaria"
+        ? "Você usou seus currículos de hoje. Sua janela diária renova em breve — ou amplie seu plano."
+        : "Você atingiu o limite semanal do seu plano. Faça upgrade para continuar.",
+      motivo: cota.motivo,
+      uso: cota.uso,
+      cotas: cota.cotas,
+      upgrade: true,
+    });
+  }
   try {
     // Lê do banco PERMANENTE de talentos. O id recebido é o id do talento;
     // se o pedido original já foi apagado, o talento continua acessível.
@@ -2971,8 +3057,28 @@ async function carregarTalentoParaEmpresa(req, res, talentoId) {
 // HTML do currículo no modelo Minimal (abre em nova aba / modal iframe)
 app.get("/api/companies/talentos/:id/visualizar", async (req, res) => {
   try {
+    const idSessao = empresaDaSessao(req);
+    if (!idSessao) return res.status(401).json({ error: "Não autenticado." });
+    const emp = await buscarEmpresaPorId(idSessao);
+    if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+
+    // Cota do plano (janela deslizante diária/semanal). Enterprise passa direto.
+    const cota = await checarCotaEmpresa(emp);
+    if (!cota.ok) {
+      return res.status(429).json({
+        error: cota.motivo === "diaria"
+          ? "Você usou seus currículos de hoje. Sua janela diária renova em breve — ou amplie seu plano."
+          : "Você atingiu o limite semanal do seu plano. Faça upgrade para continuar.",
+        motivo: cota.motivo,
+        uso: cota.uso,
+        cotas: cota.cotas,
+        upgrade: true,
+      });
+    }
+
     const r = await carregarTalentoParaEmpresa(req, res, req.params.id);
     if (!r) return;
+    registrarVisualizacao(idSessao, r.talento);
     const { gerarHTML } = require("./lib/renderHTML");
     // Origem decide o modelo: página talentos.html → Minimal fixo;
     // fluxo normal (pedido pago) → o modelo escolhido pelo cliente no editor.
