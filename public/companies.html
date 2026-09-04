@@ -112,14 +112,18 @@
 
     /* Miniatura real do currículo (iframe escalado) */
     .cand-thumb {
-      position: relative; height: 220px; margin: -4px -4px 14px; overflow: hidden;
+      position: relative; height: 240px; margin: -4px -4px 14px; overflow: hidden;
       border-radius: 12px; border: 1px solid var(--border);
-      background: linear-gradient(160deg, #f4f7fb, #e8eef5);
+      background: #ffffff;
     }
     .cand-thumb-frame {
-      width: 794px; height: 630px; border: 0;
-      transform: scale(0.35); transform-origin: top left;
+      width: 794px; height: 1123px; border: 0;
+      transform: scale(0.3445); transform-origin: top left;
       pointer-events: none; display: block;
+    }
+    .cand-thumb::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(0,31,51,.06), inset 0 -30px 40px -30px rgba(0,31,51,.18);
     }
     .cand-thumb-modelo {
       position: absolute; right: 8px; bottom: 8px;
@@ -127,6 +131,7 @@
       font-size: .66rem; font-weight: 800; letter-spacing: .05em;
       text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
       -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      z-index: 2;
     }
 
     .cand-card .cand-nome { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }

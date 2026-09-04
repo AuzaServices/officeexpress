@@ -3054,9 +3054,7 @@ app.get("/api/companies/talentos/:id/miniatura", async (req, res) => {
     res.setHeader("Cache-Control", "private, max-age=600");
     res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
       *{margin:0;padding:0;box-sizing:border-box}
-      html,body{width:794px;height:auto;overflow:hidden;background:#fff;
-        transform:scale(0.35);transform-origin:top left;
-        font-family:Helvetica,Arial,sans-serif}
+      html,body{width:794px;min-height:1123px;overflow:hidden;background:#fff}
       img{max-width:100%}
     </style></head><body>${html}</body></html>`);
   } catch (e) {
