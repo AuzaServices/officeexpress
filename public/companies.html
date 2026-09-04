@@ -110,20 +110,21 @@
     .cand-card { cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
     .cand-card:hover { transform: translateY(-3px); border-color: rgba(255,136,0,.45); box-shadow: 0 14px 34px rgba(0,10,20,.14); }
 
-    /* Miniatura real do currículo (iframe escalado) */
+    /* Miniatura real do currículo: página A4 INTEIRA, escala ajustada por JS */
     .cand-thumb {
-      position: relative; height: 240px; margin: -4px -4px 14px; overflow: hidden;
+      position: relative; margin: -4px -4px 14px; overflow: hidden;
       border-radius: 12px; border: 1px solid var(--border);
       background: #ffffff;
+      aspect-ratio: 794 / 1123; /* proporção A4 → a folha inteira cabe */
     }
     .cand-thumb-frame {
       width: 794px; height: 1123px; border: 0;
-      transform: scale(0.3445); transform-origin: top left;
+      transform-origin: top left;
       pointer-events: none; display: block;
     }
     .cand-thumb::after {
       content: ""; position: absolute; inset: 0; pointer-events: none;
-      box-shadow: inset 0 0 0 1px rgba(0,31,51,.06), inset 0 -30px 40px -30px rgba(0,31,51,.18);
+      box-shadow: inset 0 0 0 1px rgba(0,31,51,.08);
     }
     .cand-thumb-modelo {
       position: absolute; right: 8px; bottom: 8px;
@@ -924,15 +925,28 @@
               if (en.isIntersecting) {
                 var fr = en.target;
                 if (fr.dataset.src) { fr.src = fr.dataset.src; delete fr.dataset.src; }
+                ajustarEscalaMiniatura(fr);
                 io.unobserve(fr);
               }
             });
           }, { rootMargin: "150px" });
           document.querySelectorAll(".cand-thumb-frame[data-src]").forEach(function (fr) { io.observe(fr); });
         } else {
-          document.querySelectorAll(".cand-thumb-frame[data-src]").forEach(function (fr) { fr.src = fr.dataset.src; });
+          document.querySelectorAll(".cand-thumb-frame[data-src]").forEach(function (fr) { fr.src = fr.dataset.src; ajustarEscalaMiniatura(fr); });
         }
       }
+      // Escala a página A4 (794px) para caber EXATAMENTE na largura do card → folha inteira visível
+      function ajustarEscalaMiniatura(fr) {
+        function aplicar() {
+          var largura = fr.parentElement.clientWidth;
+          if (largura > 0) fr.style.transform = "scale(" + (largura / 794) + ")";
+        }
+        if (fr.parentElement.clientWidth > 0) aplicar();
+        else window.addEventListener("load", aplicar, { once: true });
+      }
+      window.addEventListener("resize", function () {
+        document.querySelectorAll(".cand-thumb-frame").forEach(ajustarEscalaMiniatura);
+      });
       window.buscar = buscar;
 
       // ----- Ordenação + exportação CSV (melhorias profissionais) -----
