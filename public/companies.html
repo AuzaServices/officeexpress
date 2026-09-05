@@ -544,33 +544,33 @@
             <button class="btn btn-secondary" onclick="mostrarForm('contato')">Falar com vendas</button>
           </div>
         </div>
-      </div>
 
-      <!-- ===== Como funciona ===== -->
-      <div class="section-header" style="margin-top:48px">
-        <h2>Como funciona</h2>
-        <p>Do cadastro à contratação em 4 passos simples.</p>
-      </div>
-      <div class="como-grid">
-        <div class="card como-card">
-          <span class="como-num">1</span>
-          <h4>Crie sua conta</h4>
-          <p>Cadastre a empresa e confirme o e-mail em menos de 2 minutos.</p>
+        <!-- ===== Como funciona (dentro da landing) ===== -->
+        <div class="section-header" id="comoFunciona" style="margin-top:48px">
+          <h2>Como funciona</h2>
+          <p>Do cadastro à contratação em 4 passos simples.</p>
         </div>
-        <div class="card como-card">
-          <span class="como-num">2</span>
-          <h4>Escolha o plano</h4>
-          <p>Pague por Pix ou cartão e tenha acesso imediato ao banco de currículos.</p>
-        </div>
-        <div class="card como-card">
-          <span class="como-num">3</span>
-          <h4>Busque e filtre</h4>
-          <p>Filtre por cargo, cidade, estado e formação até achar o perfil ideal.</p>
-        </div>
-        <div class="card como-card">
-          <span class="como-num">4</span>
-          <h4>Contate o candidato</h4>
-          <p>Fale direto pelo WhatsApp com mensagem automática personalizada.</p>
+        <div class="como-grid">
+          <div class="card como-card">
+            <span class="como-num">1</span>
+            <h4>Crie sua conta</h4>
+            <p>Cadastre a empresa e confirme o e-mail em menos de 2 minutos.</p>
+          </div>
+          <div class="card como-card">
+            <span class="como-num">2</span>
+            <h4>Escolha o plano</h4>
+            <p>Pague por Pix ou cartão e tenha acesso imediato ao banco de currículos.</p>
+          </div>
+          <div class="card como-card">
+            <span class="como-num">3</span>
+            <h4>Busque e filtre</h4>
+            <p>Filtre por cargo, cidade, estado e formação até achar o perfil ideal.</p>
+          </div>
+          <div class="card como-card">
+            <span class="como-num">4</span>
+            <h4>Contate o candidato</h4>
+            <p>Fale direto pelo WhatsApp com mensagem automática personalizada.</p>
+          </div>
         </div>
       </div>
 
@@ -1043,12 +1043,17 @@
       window.mostrarAlerta = mostrarAlerta;
 
       function mostrarView(nome) {
-        IDS.landing.classList.add("oculto");
-        IDS.form.classList.add("oculto");
-        IDS.painel.classList.add("oculto");
-        if (nome === "landing") IDS.landing.classList.remove("oculto");
-        else if (nome === "form") IDS.form.classList.remove("oculto");
-        else if (nome === "painel") IDS.painel.classList.remove("oculto");
+        // Alterna as 3 views de forma explícita e mutuamente exclusiva.
+        // "oculto" usa display:none !important — nada da view escondida
+        // (hero, como-funciona, planos ou painel) pode vazar para outra.
+        var alvo = nome === "landing" ? IDS.landing : nome === "form" ? IDS.form : nome === "painel" ? IDS.painel : null;
+        if (!alvo) return;
+        [IDS.landing, IDS.form, IDS.painel].forEach(function (el) {
+          if (el) el.classList.toggle("oculto", el !== alvo);
+        });
+        // Sempre volta ao topo ao trocar de view (evita chegar no painel
+        // já rolando e ver conteúdo da landing anterior).
+        window.scrollTo(0, 0);
       }
 
       // Passo de confirmação de e-mail (após cadastro da empresa)

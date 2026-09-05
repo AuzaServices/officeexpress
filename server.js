@@ -530,13 +530,36 @@ async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
   try { await arquivarTalento(pedidoId); } catch (e) {}
 
   try {
-    const [p] = await pool.query("SELECT id, usuario_id, valor, parceiro_id, modelo FROM pedidos WHERE id = ?", [pedidoId]);
+    const [p] = await pool.query(
+      "SELECT id, usuario_id, valor, parceiro_id, modelo FROM pedidos WHERE id = ?",
+      [pedidoId]
+    );
     if (p.length) {
+      let parceiroId = p[0].parceiro_id;
+
+      // REDE DE SEGURANÇA 1: se o pedido foi criado sem parceiro (ex.: o
+      // usuário navegou para fora da rota do link e o ref não chegou na
+      // criação), recupera o vínculo da CONTA do usuário no momento do
+      // pagamento. Sem isso, a comissão se perde silenciosamente.
+      if (!parceiroId && p[0].usuario_id) {
+        try {
+          const [u] = await pool.query(
+            "SELECT parceiro_id FROM usuarios WHERE id = ? AND parceiro_id IS NOT NULL",
+            [p[0].usuario_id]
+          );
+          if (u.length && u[0].parceiro_id) {
+            parceiroId = u[0].parceiro_id;
+            // Persiste o vínculo no pedido para consistência futura.
+            await pool.query("UPDATE pedidos SET parceiro_id = ? WHERE id = ?", [parceiroId, pedidoId]);
+          }
+        } catch (e) { console.error("Erro no fallback de parceiro:", e.message); }
+      }
+
       // Congela, no momento da venda: a % do parceiro vendedor e, se o
       // vendedor for um filho vinculado, o bônus do pai dele.
       let bonusPaiId = null;
       let bonusPct = null;
-      const vendedorId = p[0].parceiro_id;
+      const vendedorId = parceiroId;
       if (vendedorId) {
         try {
           const [vd] = await pool.query("SELECT id, tipo, pai_id FROM parceiros WHERE id = ? AND ativo = 1", [vendedorId]);
@@ -551,9 +574,20 @@ async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
           }
         } catch (e) { console.error("Erro ao calcular bônus do pai:", e.message); }
       }
+
+      // REDE DE SEGURANÇA 2: grava a transação SEMPARCEIRO sempre correto.
+      // Usa ON DUPLICATE KEY UPDATE em vez de INSERT IGNORE: se uma transação
+      // antiga existir para o pedido com parceiro NULL (pedido criado antes do
+      // ref chegar), ela é CORRIGIDA aqui em vez de descartada silenciosamente.
       await pool.query(
-        "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, bonus_pai_id, bonus_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), ?, ?, 'venda', ?)",
-        [pedidoId, p[0].usuario_id, p[0].parceiro_id, p[0].modelo, p[0].valor, p[0].parceiro_id, bonusPaiId, bonusPct, tipo || "pix"]
+        `INSERT INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, bonus_pai_id, bonus_pct, tipo, pagamento_tipo)
+         VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), ?, ?, 'venda', ?)
+         ON DUPLICATE KEY UPDATE
+           parceiro_id = IF(parceiro_id IS NULL, VALUES(parceiro_id), parceiro_id),
+           comissao_pct = IF(comissao_pct IS NULL, VALUES(comissao_pct), comissao_pct),
+           bonus_pai_id = IF(bonus_pai_id IS NULL, VALUES(bonus_pai_id), bonus_pai_id),
+           bonus_pct = IF(bonus_pct IS NULL, VALUES(bonus_pct), bonus_pct)`,
+        [pedidoId, p[0].usuario_id, parceiroId, p[0].modelo, p[0].valor, parceiroId, bonusPaiId, bonusPct, tipo || "pix"]
       );
       // Verifica se o vendedor bateu a meta e deve ser promovido a pai.
       if (vendedorId) verificarPromocaoFilhoWrapper(vendedorId);
@@ -652,7 +686,18 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
   const { pagamentoId, tipo } = req.body || {};
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
-  if (rows[0].status === "pago") return res.json({ success: true });
+  if (rows[0].status === "pago") {
+    // REDE DE SEGURANÇA 3: o pedido já foi marcado como pago (ex.: webhook
+    // chegou antes), mas a transação financeira pode não ter sido criada
+    // (falha transitória). Chamar registrarPedidoPago de novo é seguro:
+    // o UPDATE é idempotente e a transação usa ON DUPLICATE KEY UPDATE.
+    const [t] = await pool.query("SELECT id FROM transacoes WHERE pedido_id = ? AND parceiro_id IS NOT NULL", [id]);
+    if (!t.length) {
+      await registrarPedidoPago(id, rows[0].pagamento_id || pagamentoId || null, rows[0].pagamento_tipo || tipo || "pix");
+      console.log("🔁 Transação recuperada para o pedido", id, "(pago mas sem transação de parceiro).");
+    }
+    return res.json({ success: true });
+  }
   await registrarPedidoPago(id, pagamentoId || null, tipo || "pix");
   res.json({ success: true });
 });
@@ -1126,13 +1171,27 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
       );
       // Registra a transação financeira (fonte de verdade dos valores),
       // também quando o admin marca um pedido como pago manualmente.
-      // Inclui o bônus do pai, se o vendedor for filho vinculado.
+      // Inclui fallback do vínculo da conta e correção de transação antiga
+      // sem parceiro (mesma lógica do registrarPedidoPago).
       try {
+        let parceiroId = pedido.parceiro_id;
+        if (!parceiroId && pedido.usuario_id) {
+          try {
+            const [u] = await pool.query(
+              "SELECT parceiro_id FROM usuarios WHERE id = ? AND parceiro_id IS NOT NULL",
+              [pedido.usuario_id]
+            );
+            if (u.length && u[0].parceiro_id) {
+              parceiroId = u[0].parceiro_id;
+              await pool.query("UPDATE pedidos SET parceiro_id = ? WHERE id = ?", [parceiroId, id]);
+            }
+          } catch (e) {}
+        }
         let bonusPaiId = null;
         let bonusPct = null;
-        if (pedido.parceiro_id) {
+        if (parceiroId) {
           try {
-            const [vd] = await pool.query("SELECT id, tipo, pai_id FROM parceiros WHERE id = ? AND ativo = 1", [pedido.parceiro_id]);
+            const [vd] = await pool.query("SELECT id, tipo, pai_id FROM parceiros WHERE id = ? AND ativo = 1", [parceiroId]);
             const v = vd[0];
             if (v && v.tipo === "filho" && v.pai_id) {
               const cfg = await getConfigRede();
@@ -1142,8 +1201,14 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
           } catch (e) {}
         }
         await pool.query(
-          "INSERT IGNORE INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, bonus_pai_id, bonus_pct, tipo, pagamento_tipo) VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), ?, ?, 'venda', ?)",
-          [id, pedido.usuario_id, pedido.parceiro_id, pedido.modelo, pedido.valor, pedido.parceiro_id, bonusPaiId, bonusPct, pedido.pagamento_tipo || "pix"]
+          `INSERT INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, bonus_pai_id, bonus_pct, tipo, pagamento_tipo)
+           VALUES (?, ?, ?, ?, ?, COALESCE((SELECT comissao FROM parceiros WHERE id = ?), NULL), ?, ?, 'venda', ?)
+           ON DUPLICATE KEY UPDATE
+             parceiro_id = IF(parceiro_id IS NULL, VALUES(parceiro_id), parceiro_id),
+             comissao_pct = IF(comissao_pct IS NULL, VALUES(comissao_pct), comissao_pct),
+             bonus_pai_id = IF(bonus_pai_id IS NULL, VALUES(bonus_pai_id), bonus_pai_id),
+             bonus_pct = IF(bonus_pct IS NULL, VALUES(bonus_pct), bonus_pct)`,
+          [id, pedido.usuario_id, parceiroId, pedido.modelo, pedido.valor, parceiroId, bonusPaiId, bonusPct, pedido.pagamento_tipo || "pix"]
         );
       } catch (e) {
         console.error("Erro ao registrar transação financeira (admin):", e.message);
