@@ -163,20 +163,21 @@
     .mt-2 { margin-top: 20px; }
 
     /* Cabeçalho fixo: o overflow-x do body quebra o sticky do header,
-       então aqui ele vira fixed e o body compensa com padding-top. */
+       então aqui ele vira fixed e o body compensa com padding-top.
+       Altura real do header no Companies: logo 44 + padding 24 + borda 1 ≈ 69px. */
     header.cabecalho { position: fixed; top: 0; left: 0; right: 0; }
-    body { padding-top: 80px; } /* altura do cabeçalho (logo 56 + 2×12) */
+    body { padding-top: 68px; }
 
     /* ===== Portal B2B (painel logado) ===== */
     /* Layout "console administrativo": o painel escapa do container central.
        A sidebar colada na borda esquerda e no header; o conteúdo estica à direita. */
-    #viewPainel { margin-top: -80px; } /* anula o padding-top da .section → sidebar encosta no header */
+    #viewPainel { margin-top: -68px; } /* anula o padding-top da .section → sidebar encosta no header */
     .portal-wrap-full { display: flex; align-items: stretch; gap: 24px; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding-left: 0; padding-right: 24px; }
-    .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; padding-top: 80px; } /* o conteúdo respira; a sidebar não */
+    .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; padding-top: 68px; } /* o conteúdo respira; a sidebar não */
     .portal-sidebar {
-      width: 260px; flex-shrink: 0; position: sticky; top: 80px;
+      width: 260px; flex-shrink: 0; position: sticky; top: 68px;
       align-self: flex-start;
-      height: calc(100vh - 80px);
+      height: calc(100vh - 68px);
       background: var(--card, #ffffff);
       border: 1px solid var(--border); border-left: none; border-top: none; border-radius: 0;
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
