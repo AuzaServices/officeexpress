@@ -163,11 +163,18 @@
     .mt-2 { margin-top: 20px; }
 
     /* ===== Portal B2B (painel logado) ===== */
-    .portal-wrap { display: flex; gap: 24px; align-items: flex-start; }
+    /* Layout "console administrativo": o painel escapa do container central.
+       A sidebar colada na borda esquerda e no header; o conteúdo estica à direita. */
+    .portal-wrap-full { display: flex; align-items: stretch; gap: 24px; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding-left: 0; padding-right: 24px; }
+    .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; }
     .portal-sidebar {
-      width: 250px; flex-shrink: 0; position: sticky; top: 88px;
-      background: var(--card, #ffffff); border: 1px solid var(--border); border-radius: 8px;
+      width: 260px; flex-shrink: 0; position: sticky; top: 81px;
+      align-self: flex-start;
+      height: calc(100vh - 81px);
+      background: var(--card, #ffffff);
+      border: 1px solid var(--border); border-left: none; border-top: none; border-radius: 0;
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
+      box-shadow: 4px 0 18px -14px rgba(0,10,20,.25);
     }
     .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
     .pse-avatar {
@@ -241,7 +248,8 @@
     .portal-sidebar-backdrop { display: none; }
 
     @media (max-width: 900px) {
-      .portal-wrap { display: block; }
+      .portal-wrap-full { display: block; margin-left: 0; margin-right: 0; padding-right: 0; }
+      .portal-sidebar { height: auto; }
       .portal-topbar {
         display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
       }
@@ -382,7 +390,7 @@
 
       <!-- ===== PAINEL (logado) — Portal B2B ===== -->
       <div id="viewPainel" class="oculto">
-        <div class="portal-wrap">
+        <div class="portal-wrap-full">
           <!-- Sidebar -->
           <aside class="portal-sidebar" id="portalSidebar">
             <div class="portal-sidebar-empresa">
