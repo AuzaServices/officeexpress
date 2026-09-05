@@ -2443,9 +2443,11 @@ async function garantirMsgWhatsapp() {
 garantirMsgWhatsapp();
 
 // Mensagem automática de WhatsApp da empresa logada.
+// Header no-cache: evita que CDN/proxy devolva resposta 401 cacheada de outro visitante.
 app.get("/api/companies/msg-whatsapp", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store, private");
   const id = empresaDaSessao(req);
-  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  if (!id) return res.status(401).json({ error: "Não autenticado.", rota: "msg-whatsapp" });
   try {
     const [rows] = await pool.query("SELECT msg_whatsapp FROM empresas WHERE id = ?", [id]);
     res.json({ ok: true, msg: rows.length ? rows[0].msg_whatsapp : null });
@@ -2456,8 +2458,9 @@ app.get("/api/companies/msg-whatsapp", async (req, res) => {
 });
 
 app.put("/api/companies/msg-whatsapp", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store, private");
   const id = empresaDaSessao(req);
-  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  if (!id) return res.status(401).json({ error: "Não autenticado.", rota: "msg-whatsapp" });
   try {
     let msg = req.body && typeof req.body.msg === "string" ? req.body.msg.trim() : "";
     if (msg.length > 1000) return res.status(400).json({ error: "Mensagem muito longa (máx. 1000 caracteres)." });
