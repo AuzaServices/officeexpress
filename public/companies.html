@@ -162,6 +162,11 @@
     .oculto { display: none !important; }
     .mt-2 { margin-top: 20px; }
 
+    /* Cabeçalho fixo: o overflow-x do body quebra o sticky do header,
+       então aqui ele vira fixed e o body compensa com padding-top. */
+    header.cabecalho { position: fixed; top: 0; left: 0; right: 0; }
+    body { padding-top: 80px; } /* altura do cabeçalho (logo 56 + 2×12) */
+
     /* ===== Portal B2B (painel logado) ===== */
     /* Layout "console administrativo": o painel escapa do container central.
        A sidebar colada na borda esquerda e no header; o conteúdo estica à direita. */
@@ -253,6 +258,8 @@
       .portal-sidebar { height: auto; }
       #viewPainel { margin-top: 0; }
       .portal-wrap-full .portal-conteudo { padding-top: 0; }
+      /* Cabeçalho fixo também no mobile (logo 44 + 2×12 ≈ 68px) */
+      body { padding-top: 68px; }
       .portal-topbar {
         display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
       }
