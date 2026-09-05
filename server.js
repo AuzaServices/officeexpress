@@ -591,9 +591,50 @@ async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
       );
       // Verifica se o vendedor bateu a meta e deve ser promovido a pai.
       if (vendedorId) verificarPromocaoFilhoWrapper(vendedorId);
+      // Comissão cai em tempo real no "A receber" do painel do parceiro
+      // (mês corrente), incluindo o bônus do pai quando for filho.
+      if (parceiroId) await acumularComissaoMes(parceiroId);
+      if (bonusPaiId) await acumularComissaoMes(bonusPaiId);
     }
   } catch (e) {
     console.error("Erro ao registrar transação financeira:", e.message);
+  }
+}
+
+// Acumula em tempo real a comissão do parceiro no mês corrente de
+// pagamentos_parceiros. Chamada logo após cada venda paga, para que o
+// valor apareça no painel do parceiro imediatamente — sem esperar o
+// fechamento do dia 05. O fechamento mensal continua existindo como
+// consolidação (e recalcula com os mesmos dados, então é idempotente).
+async function acumularComissaoMes(parceiroId) {
+  if (!parceiroId) return;
+  try {
+    const hoje = new Date();
+    const mesRef = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+    // Comissão própria do mês...
+    const [prop] = await pool.query(
+      `SELECT COALESCE(SUM(valor * comissao_pct / 100), 0) AS total
+       FROM transacoes
+       WHERE tipo='venda' AND parceiro_id = ? AND comissao_pct IS NOT NULL
+         AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
+      [parceiroId, mesRef]
+    );
+    // ...mais bônus recebido como pai naquele mês.
+    const [bonus] = await pool.query(
+      `SELECT COALESCE(SUM(valor * bonus_pct / 100), 0) AS total
+       FROM transacoes
+       WHERE tipo='venda' AND bonus_pai_id = ? AND bonus_pct IS NOT NULL
+         AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
+      [parceiroId, mesRef]
+    );
+    const total = (Number(prop[0].total) || 0) + (Number(bonus[0].total) || 0);
+    await pool.query(
+      `INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE valor = IF(status = 'apagar', VALUES(valor), valor)`,
+      [parceiroId, mesRef, total]
+    );
+  } catch (e) {
+    console.error("Erro ao acumular comissão do mês:", e.message);
   }
 }
 
@@ -1210,6 +1251,9 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
              bonus_pct = IF(bonus_pct IS NULL, VALUES(bonus_pct), bonus_pct)`,
           [id, pedido.usuario_id, parceiroId, pedido.modelo, pedido.valor, parceiroId, bonusPaiId, bonusPct, pedido.pagamento_tipo || "pix"]
         );
+        // Comissão em tempo real também na aprovação manual pelo admin.
+        if (parceiroId) await acumularComissaoMes(parceiroId);
+        if (bonusPaiId) await acumularComissaoMes(bonusPaiId);
       } catch (e) {
         console.error("Erro ao registrar transação financeira (admin):", e.message);
       }

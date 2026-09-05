@@ -397,6 +397,9 @@
       </div>
     </div>
 
+    <!-- Aviso de nova comissão (aparece em tempo real quando entra venda) -->
+    <div id="avisoNovaComissao" style="display:none;background:linear-gradient(135deg,#dcfce7,#d1fae5);border:1px solid #86efac;color:#166534;font-weight:700;font-size:.92rem;padding:14px 18px;border-radius:12px;margin-bottom:18px;box-shadow:0 8px 24px rgba(22,163,74,.15)"></div>
+
     <!-- Comissão banner -->
     <div class="comissao-banner">
       <div>
@@ -755,6 +758,48 @@
         if (r.ok) renderPedidos(r.data.pedidos);
       });
     }
+
+    // Atualização em tempo real: consulta o dashboard a cada 30s e, quando o
+    // "A receber" aumenta, destaca o card e mostra o aviso de nova comissão.
+    var ultimoApagar = null;
+    function pulseComissao() {
+      var card = document.getElementById("mAPagar");
+      if (!card) return;
+      var wrapper = card.closest(".metric");
+      if (wrapper) {
+        wrapper.style.transition = "box-shadow .4s, transform .4s";
+        wrapper.style.boxShadow = "0 0 0 3px rgba(34,197,94,.35)";
+        wrapper.style.transform = "scale(1.02)";
+        setTimeout(function () {
+          wrapper.style.boxShadow = "";
+          wrapper.style.transform = "";
+        }, 1800);
+      }
+    }
+    function verificarComissao() {
+      App.api("/api/parceiro/dashboard").then(function (r) {
+        if (!r || !r.ok) return;
+        var d = r.data;
+        var apagar = Number(d.totalApagar) || 0;
+        var comissao = Number(d.valorComissao) || 0;
+        document.getElementById("mComissao").textContent = App.formatarPreco(comissao);
+        document.getElementById("comissaoBanner").textContent = App.formatarPreco(comissao);
+        document.getElementById("mAPagar").textContent = App.formatarPreco(apagar);
+        document.getElementById("mPagos").textContent = d.pagos;
+        document.getElementById("mValorVendas").textContent = App.formatarPreco(Number(d.valorVendas) || 0) + " em vendas";
+        if (ultimoApagar !== null && apagar > ultimoApagar) {
+          pulseComissao();
+          var aviso = document.getElementById("avisoNovaComissao");
+          if (aviso) {
+            aviso.textContent = "💰 Nova comissão registrada!";
+            aviso.style.display = "block";
+            setTimeout(function () { aviso.style.display = "none"; }, 6000);
+          }
+        }
+        ultimoApagar = apagar;
+      }).catch(function () { /* silencioso */ });
+    }
+    setInterval(verificarComissao, 30000);
 
     carregar();
   </script>
