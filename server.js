@@ -628,11 +628,42 @@ async function acumularComissaoMes(parceiroId) {
       [parceiroId, mesRef]
     );
     const total = (Number(prop[0].total) || 0) + (Number(bonus[0].total) || 0);
-    await pool.query(
-      `INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE valor = IF(status = 'apagar', VALUES(valor), valor)`,
-      [parceiroId, mesRef, total]
+    // Acumulação incremental: soma a diferença (total recalculado - o que já
+    // foi pago/histórico do mês) na linha em aberto ('apagar'). Se a linha
+    // anterior foi paga pelo admin, nasce uma linha nova em aberto acumulando
+    // apenas o valor ainda não repassado — nunca reabre o que já foi pago.
+    const [jaPago] = await pool.query(
+      `SELECT COALESCE(SUM(valor),0) AS total FROM pagamentos_parceiros
+       WHERE parceiro_id = ? AND mes_ref = ? AND status = 'pago'`,
+      [parceiroId, mesRef]
     );
+    const restante = total - (Number(jaPago[0].total) || 0);
+    if (restante > 0.004) {
+      await pool.query(
+        `INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE valor = VALUES(valor)`,
+        [parceiroId, mesRef, restante]
+      );
+      // Se existirem múltiplas linhas 'apagar' do mesmo mês (caso raro),
+      // consolida em uma única.
+      await pool.query(
+        `UPDATE pagamentos_parceiros pp
+         JOIN (
+           SELECT MIN(id) AS manter_id
+           FROM pagamentos_parceiros
+           WHERE parceiro_id = ? AND mes_ref = ? AND status = 'apagar'
+         ) m ON pp.id > m.manter_id
+         SET pp.valor = 0
+         WHERE pp.parceiro_id = ? AND pp.mes_ref = ? AND pp.status = 'apagar'`,
+        [parceiroId, mesRef, parceiroId, mesRef]
+      );
+    } else if (restante <= 0) {
+      // Tudo já foi repassado — zera a linha em aberto se existir.
+      await pool.query(
+        "UPDATE pagamentos_parceiros SET valor = 0 WHERE parceiro_id = ? AND mes_ref = ? AND status = 'apagar'",
+        [parceiroId, mesRef]
+      );
+    }
   } catch (e) {
     console.error("Erro ao acumular comissão do mês:", e.message);
   }
@@ -3549,13 +3580,19 @@ async function fecharComissoesMes(mesRef) {
     mapa.set(b.parceiro_id, (mapa.get(b.parceiro_id) || 0) + (Number(b.total) || 0));
   }
   for (const [parceiroId, total] of mapa) {
-    // Proteção: meses já PAGOS ao parceiro não são recalculados (imutabilidade
-    // do repasse). Meses 'apagar' podem ser atualizados (ex.: venda atrasada
-    // que caiu no banco depois do fechamento, ou recuperação na inicialização).
+    // Modelo acumulativo: soma apenas o que ainda não foi repassado no mês
+    // (total recalculado - histórico já pago). Meses pagos ficam imutáveis;
+    // a linha em aberto ('apagar') reflete sempre o saldo a pagar.
+    const [jaPago] = await pool.query(
+      `SELECT COALESCE(SUM(valor),0) AS total FROM pagamentos_parceiros
+       WHERE parceiro_id = ? AND mes_ref = ? AND status = 'pago'`,
+      [parceiroId, mesRef]
+    );
+    const restante = total - (Number(jaPago[0].total) || 0);
     await pool.query(
       `INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE valor = IF(status = 'apagar', VALUES(valor), valor)`,
-      [parceiroId, mesRef, total]
+       ON DUPLICATE KEY UPDATE valor = VALUES(valor)`,
+      [parceiroId, mesRef, restante > 0 ? restante : 0]
     );
   }
   console.log(`🗓️ Comissões do mês ${mesRef} fechadas (${mapa.size} parceiro(s), bônus de rede incluído).`);
