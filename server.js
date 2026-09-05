@@ -37,7 +37,7 @@ const { MercadoPagoConfig, Payment } = require("mercadopago");
 const { pool, garantirSchema, getPreco, getPrecoParceiro, garantirPrecoParceiro } = require("./lib/db");
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
-const { enviarConfirmacao, enviarRecuperacao, enviarConviteParceiro, enviarCodigoConvite } = require("./lib/email");
+const { enviarConfirmacao, enviarRecuperacao, enviarConviteParceiro, enviarCodigoConvite, enviarCodigoEmpresa, enviarReciboEmpresa } = require("./lib/email");
 const cron = require("node-cron");
 
 require("dotenv").config();
@@ -2575,6 +2575,22 @@ async function garantirEmpresasSchema() {
         PRIMARY KEY (id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
 
+    // Confirmação de e-mail da empresa (migração retroativa — colunas podem
+    // não existir em bancos criados antes desta feature).
+    try {
+      await pool.query("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS email_confirmado TINYINT(1) NOT NULL DEFAULT 0");
+      await pool.query("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS email_cod_confirmacao VARCHAR(10) NULL");
+      await pool.query("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS email_cod_expira DATETIME NULL");
+    } catch (errCol) {
+      // MySQL < 8 não aceita ADD COLUMN IF NOT EXISTS: verifica e adiciona uma a uma.
+      const [cols] = await pool.query("SHOW COLUMNS FROM empresas LIKE 'email_confirmado'");
+      if (!cols.length) await pool.query("ALTER TABLE empresas ADD COLUMN email_confirmado TINYINT(1) NOT NULL DEFAULT 0");
+      const [cols2] = await pool.query("SHOW COLUMNS FROM empresas LIKE 'email_cod_confirmacao'");
+      if (!cols2.length) await pool.query("ALTER TABLE empresas ADD COLUMN email_cod_confirmacao VARCHAR(10) NULL");
+      const [cols3] = await pool.query("SHOW COLUMNS FROM empresas LIKE 'email_cod_expira'");
+      if (!cols3.length) await pool.query("ALTER TABLE empresas ADD COLUMN email_cod_expira DATETIME NULL");
+    }
+
     // ---------------------------------------------------------------------
     // Banco permanente de talentos (Office Express | Companies).
     // Espelha os dados essenciais do currículo pago com consentimento, para
@@ -2691,6 +2707,7 @@ app.post("/api/companies/cadastro", async (req, res) => {
   try {
     const { nome, cnpj, email, senha, plano = "starter" } = req.body || {};
     if (!nome || !email || !senha) return res.status(400).json({ error: "Nome, e-mail e senha são obrigatórios." });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "E-mail inválido." });
     if (!validarSenha(senha)) return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, com letra e número." });
     if (!["starter", "pro", "enterprise"].includes(plano)) return res.status(400).json({ error: "Plano inválido." });
     const senhaHash = await bcrypt.hash(senha, 10);
@@ -2698,12 +2715,84 @@ app.post("/api/companies/cadastro", async (req, res) => {
       "INSERT INTO empresas (nome, cnpj, email, senha_hash, plano) VALUES (?, ?, ?, ?, ?)",
       [String(nome).trim(), String(cnpj || "").trim(), String(email).trim().toLowerCase(), senhaHash, plano]
     );
-    const empresa = await buscarEmpresaPorId(result.insertId);
-    res.json({ ok: true, empresa });
+    const empresaId = result.insertId;
+
+    // Envia código de confirmação de 4 dígitos para o e-mail cadastrado.
+    // A conta só vira sessão (pode pagar/entrar no painel) após confirmar.
+    const codigo = gerarCodigoConfirmacao();
+    const expira = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await pool.query(
+      "UPDATE empresas SET email_confirmado = 0, email_cod_confirmacao = ?, email_cod_expira = ? WHERE id = ?",
+      [codigo, expira, empresaId]
+    );
+    await enviarCodigoEmpresa(String(email).trim().toLowerCase(), String(nome).trim(), codigo);
+
+    res.json({ ok: true, precisaConfirmar: true, email: String(email).trim().toLowerCase() });
   } catch (e) {
     if (e && e.code === "ER_DUP_ENTRY") return res.status(409).json({ error: "Já existe uma conta com este e-mail." });
     console.error("Erro cadastro empresa:", e.message);
     res.status(500).json({ error: "Erro ao criar conta." });
+  }
+});
+
+// Confirmação do e-mail da empresa via código de 4 dígitos.
+// Ao confirmar, já inicia a sessão da empresa e libera o fluxo de pagamento.
+app.post("/api/companies/confirmar-email", async (req, res) => {
+  try {
+    const { email, codigo } = req.body || {};
+    if (!email || !codigo || !/^\d{4}$/.test(String(codigo).trim())) {
+      return res.status(400).json({ error: "Informe o código de 4 dígitos." });
+    }
+    const [rows] = await pool.query("SELECT * FROM empresas WHERE email = ?", [String(email).trim().toLowerCase()]);
+    if (!rows.length) return res.status(404).json({ error: "Empresa não encontrada." });
+    const emp = rows[0];
+    if (emp.email_confirmado) {
+      // já confirmado: apenas autentica
+      req.session.empresaId = emp.id;
+      return res.json({ ok: true, empresa: { id: emp.id, nome: emp.nome, plano: emp.plano } });
+    }
+    if (!emp.email_cod_confirmacao || emp.email_cod_confirmacao !== String(codigo).trim()) {
+      return res.status(400).json({ error: "Código inválido." });
+    }
+    if (emp.email_cod_expira && new Date(emp.email_cod_expira) < new Date()) {
+      return res.status(400).json({ error: "Código expirado. Solicite um novo." });
+    }
+    await pool.query(
+      "UPDATE empresas SET email_confirmado = 1, email_cod_confirmacao = NULL, email_cod_expira = NULL WHERE id = ?",
+      [emp.id]
+    );
+    // Isolamento de sessão (mesma regra do login de empresa)
+    delete req.session.usuarioId;
+    delete req.session.adminId;
+    delete req.session.parceiroId;
+    req.session.empresaId = emp.id;
+    res.json({ ok: true, empresa: { id: emp.id, nome: emp.nome, plano: emp.plano } });
+  } catch (e) {
+    console.error("Erro confirmar email empresa:", e.message);
+    res.status(500).json({ error: "Erro ao confirmar e-mail." });
+  }
+});
+
+// Reenvia o código de confirmação para o e-mail da empresa.
+app.post("/api/companies/reenviar-codigo", async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ error: "Informe o e-mail." });
+    const [rows] = await pool.query("SELECT * FROM empresas WHERE email = ?", [String(email).trim().toLowerCase()]);
+    if (!rows.length) return res.status(404).json({ error: "Empresa não encontrada." });
+    const emp = rows[0];
+    if (emp.email_confirmado) return res.status(400).json({ error: "E-mail já confirmado. Faça login." });
+    const codigo = gerarCodigoConfirmacao();
+    const expira = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await pool.query(
+      "UPDATE empresas SET email_cod_confirmacao = ?, email_cod_expira = ? WHERE id = ?",
+      [codigo, expira, emp.id]
+    );
+    await enviarCodigoEmpresa(emp.email, emp.nome, codigo);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro reenviar codigo empresa:", e.message);
+    res.status(500).json({ error: "Erro ao reenviar código." });
   }
 });
 
@@ -2715,6 +2804,7 @@ app.post("/api/companies/login", async (req, res) => {
     if (!rows.length) return res.status(401).json({ error: "E-mail ou senha inválidos." });
     const emp = rows[0];
     if (emp.status === "inativo") return res.status(403).json({ error: "Conta desativada." });
+    if (!emp.email_confirmado) return res.status(403).json({ error: "Confirme seu e-mail antes de entrar. Verifique a caixa de entrada." });
     const okSenha = await bcrypt.compare(String(senha || ""), emp.senha_hash);
     if (!okSenha) return res.status(401).json({ error: "E-mail ou senha inválidos." });
     // Isolamento de sessão: logar como empresa encerra sessões de usuário
@@ -2837,6 +2927,9 @@ app.post("/api/companies/assinatura/cartao", async (req, res) => {
     const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `empresa-card-${empresaId}-${plano}-${Date.now()}` } });
     if (pago.status === "approved") {
       await pool.query("UPDATE empresas SET plano = ?, assinatura_ativa = 1 WHERE id = ?", [plano, empresaId]);
+      await enviarReciboEmpresa(emp.email, {
+        empresa: emp.nome, plano, valor, pagamentoId: String(pago.id), tipo: "card", data: new Date()
+      }).catch((err) => console.error("Erro recibo empresa:", err.message));
     }
     await pool.query(
       "INSERT INTO empresas_pagamentos (empresa_id, pagamento_id, plano, valor, status, tipo) VALUES (?, ?, ?, ?, ?, 'card')",
@@ -2876,6 +2969,17 @@ app.post("/api/companies/webhook/mp", async (req, res) => {
       await pool.query("UPDATE empresas SET plano = ?, assinatura_ativa = 1 WHERE id = ?", [plano, empresaId]);
       await pool.query("UPDATE empresas_pagamentos SET status = 'pago', pago_at = NOW() WHERE pagamento_id = ?", [pagamentoId]);
       console.log("✅ Assinatura de empresa", empresaId, "(", plano, ") paga.");
+      // Recibo profissional por e-mail com link do painel (sessão já ativa).
+      try {
+        const emp = await buscarEmpresaPorId(empresaId);
+        if (emp) {
+          await enviarReciboEmpresa(emp.email, {
+            empresa: emp.nome, plano, valor: pago.transaction_amount, pagamentoId, tipo: "pix", data: new Date()
+          });
+        }
+      } catch (errRecibo) {
+        console.error("Erro recibo empresa (webhook):", errRecibo.message);
+      }
     }
     res.sendStatus(200);
   } catch (e) {

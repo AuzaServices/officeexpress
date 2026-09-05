@@ -37,22 +37,79 @@
     /* ===== Office Express | Companies — estilos específicos ===== */
     .companies-wrap { max-width: 1320px; margin: 0 auto; }
 
-    /* Hero da landing */
+    /* Hero da landing — premium, 2 colunas com foto */
     .hero-c {
       position: relative; overflow: hidden;
       background: linear-gradient(135deg, #0e2b44 0%, #174a6b 55%, #1f5d82 100%);
-      border-radius: 8px; padding: 40px 44px; margin-bottom: 28px;
+      border-radius: 20px; margin-bottom: 40px;
       color: #ffffff;
-      box-shadow: 0 18px 44px rgba(14,43,68,0.28);
+      box-shadow: 0 24px 60px rgba(14,43,68,0.32);
+      display: grid; grid-template-columns: 1.15fr 1fr; align-items: center;
     }
     .hero-c::after {
       content: ''; position: absolute; inset: 0; pointer-events: none;
       background: radial-gradient(circle at 85% 15%, rgba(255,136,0,0.28) 0, transparent 34%),
                   radial-gradient(circle at 10% 90%, rgba(73,190,203,0.22) 0, transparent 36%);
     }
-    .hero-c h2 { font-size: clamp(1.7rem, 4.5vw, 2.4rem); font-weight: 800; margin: 0 0 8px; position: relative; z-index: 1; }
-    .hero-c p { margin: 0 0 20px; color: rgba(255,255,255,0.85); font-size: 1.05rem; max-width: 560px; position: relative; z-index: 1; }
+    .hero-c-texto { position: relative; z-index: 1; padding: 56px 24px 56px 48px; }
+    .hero-c-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,136,0,.16); border: 1px solid rgba(255,136,0,.4);
+      color: #ffc98a; font-size: .74rem; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase; padding: 7px 16px; border-radius: 999px; margin-bottom: 20px;
+    }
+    .hero-c-badge svg { color: var(--brand); }
+    .hero-c h2 {
+      font-size: clamp(2rem, 4.6vw, 3rem); font-weight: 900; line-height: 1.12;
+      margin: 0 0 16px; letter-spacing: -.02em;
+    }
+    .hero-c h2 .destaque { color: var(--brand-light); }
+    .hero-c .hero-sub {
+      margin: 0 0 14px; color: rgba(255,255,255,0.88); font-size: 1.1rem;
+      max-width: 540px; line-height: 1.6;
+    }
+    .hero-c .hero-provas { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 0 0 26px; padding: 0; list-style: none; }
+    .hero-c .hero-provas li { display: flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 600; color: rgba(255,255,255,.85); }
+    .hero-c .hero-provas svg { color: #22c55e; flex-shrink: 0; }
     .hero-c .hero-acoes { display: flex; gap: 12px; flex-wrap: wrap; position: relative; z-index: 1; }
+    .hero-c .hero-acoes .btn { padding: 15px 30px; font-size: 1rem; border-radius: 999px; }
+    .hero-c .hero-acoes .btn-secondary { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.3); color: #fff; }
+    .hero-c .hero-acoes .btn-secondary:hover { background: rgba(255,255,255,.18); }
+    .hero-c .hero-micro { margin: 14px 0 0; font-size: .78rem; color: rgba(255,255,255,.55); }
+
+    /* Foto do hero */
+    .hero-c-foto { position: relative; z-index: 1; height: 100%; min-height: 460px; }
+    .hero-c-foto img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12%);
+      mask-image: linear-gradient(90deg, transparent 0, #000 12%);
+    }
+    .hero-c-foto::before {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(90deg, #0e2b44 0%, rgba(14,43,68,0) 40%);
+    }
+    .hero-card-flutuante {
+      position: absolute; z-index: 2; left: 24px; bottom: 28px;
+      background: rgba(255,255,255,.96); color: var(--text-primary);
+      border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 16px 40px rgba(0,10,20,.35);
+    }
+    .hero-card-flutuante .hcf-icone {
+      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+      background: rgba(34,197,94,.14); color: #16a34a;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-card-flutuante .hcf-num { font-weight: 900; font-size: 1.15rem; line-height: 1.15; }
+    .hero-card-flutuante .hcf-label { font-size: .74rem; color: var(--text-muted); font-weight: 600; }
+
+    @media (max-width: 980px) {
+      .hero-c { grid-template-columns: 1fr; }
+      .hero-c-texto { padding: 44px 28px 36px; }
+      .hero-c-foto { min-height: 300px; order: -1; }
+      .hero-c-foto::before { background: linear-gradient(180deg, rgba(14,43,68,.55), rgba(14,43,68,0) 45%); }
+      .hero-c-foto img { -webkit-mask-image: none; mask-image: none; }
+    }
 
     /* Cards de planos */
     .planos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
@@ -92,6 +149,21 @@
 
     /* Cards de candidatos */
     .candidatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+
+    /* Como funciona */
+    .como-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 40px; }
+    .como-card { position: relative; padding-top: 24px; }
+    .como-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 999px; margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33;
+      font-weight: 900; font-size: 1rem;
+    }
+    .como-card h4 { font-weight: 800; margin-bottom: 6px; }
+    .como-card p { color: var(--text-muted); font-size: .9rem; line-height: 1.55; }
+    @media (max-width: 900px) { .como-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .como-grid { grid-template-columns: 1fr; } }
+
     .cand-card { cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
     .cand-card:hover { transform: translateY(-3px); border-color: rgba(255,136,0,.45); box-shadow: 0 14px 34px rgba(0,10,20,.14); }
 
@@ -149,27 +221,27 @@
 
     /* ============================================================
        Cabeçalho PRÓPRIO do Companies (ch-*) — independente do site.
-       Fixo no topo, arredondado ("redondo"), tema azul-marinho.
-       Altura real: 64px → todas as medidas do layout usam 64px.
+       Mesmas medidas do cabeçalho do fluxo principal: logo 56px,
+       padding vertical 12px → altura total 80px (56 + 2×12 = 80).
+       Todas as medidas do layout usam 80px.
        ============================================================ */
     header.ch-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      padding: 10px 16px;
       background: linear-gradient(135deg, #0e2b44 0%, #174a6b 100%);
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .ch-bar { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; gap: 14px; height: 44px; }
+    .ch-bar { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; gap: 16px; height: 80px; padding: 0 24px; }
     .ch-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .ch-logo { height: 40px; width: auto; display: block; }
-    .ch-sep { color: #fff; font-weight: 300; font-size: 1.15rem; line-height: 1; }
+    .ch-logo { height: 56px; width: auto; display: block; }
+    .ch-sep { color: #fff; font-weight: 300; font-size: 1.2rem; line-height: 1; }
     .ch-label {
-      font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.05rem;
+      font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem;
       letter-spacing: -.02em; color: #fff; text-transform: lowercase;
     }
     .ch-nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
     .ch-link {
       color: rgba(255,255,255,.85); text-decoration: none; font-weight: 600; font-size: .92rem;
-      padding: 8px 16px; border-radius: 999px; transition: background .2s, color .2s;
+      padding: 10px 18px; border-radius: 999px; transition: background .2s, color .2s;
     }
     .ch-link:hover { background: rgba(255,255,255,.12); color: #fff; }
     .ch-link.ativo { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; }
@@ -254,19 +326,19 @@
       padding: 12px 16px; border-radius: 12px; margin-top: 12px;
     }
 
-    /* Compensação da altura do header fixo (64px) */
-    body { padding-top: 64px; }
+    /* Compensação da altura do header fixo (80px, igual ao fluxo principal) */
+    body { padding-top: 80px; }
 
     /* ===== Portal B2B (painel logado) ===== */
     /* Layout "console administrativo": o painel escapa do container central.
        A sidebar colada na borda esquerda e no header; o conteúdo estica à direita. */
-    #viewPainel { margin-top: -64px; } /* anula o padding-top da .section → sidebar encosta no header */
+    #viewPainel { margin-top: -80px; } /* anula o padding-top da .section → sidebar encosta no header */
     .portal-wrap-full { display: flex; align-items: stretch; gap: 24px; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding-left: 0; padding-right: 24px; }
-    .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; padding-top: 64px; } /* o conteúdo respira; a sidebar não */
+    .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; padding-top: 80px; } /* o conteúdo respira; a sidebar não */
     .portal-sidebar {
-      width: 260px; flex-shrink: 0; position: sticky; top: 64px;
+      width: 260px; flex-shrink: 0; position: sticky; top: 80px;
       align-self: flex-start;
-      height: calc(100vh - 64px);
+      height: calc(100vh - 80px);
       background: var(--card, #ffffff);
       border: 1px solid var(--border); border-left: none; border-top: none; border-radius: 0;
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
@@ -397,11 +469,36 @@
       <!-- ===== LANDING (não logado) ===== -->
       <div id="viewLanding">
         <div class="hero-c">
-          <h2>Encontre os melhores talentos da Office Express</h2>
-          <p>Acesse o banco de currículos profissionais dos nossos clientes e contrate com agilidade.</p>
-          <div class="hero-acoes">
-            <button class="btn btn-primary" onclick="mostrarForm('cadastro')">Quero contratar</button>
-            <button class="btn btn-secondary" onclick="mostrarForm('login')">Já sou empresa</button>
+          <div class="hero-c-texto">
+            <span class="hero-c-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Banco de talentos verificados
+            </span>
+            <h2>Contrate o candidato ideal <span class="destaque">em minutos</span>, não em semanas</h2>
+            <p class="hero-sub">Acesse milhares de currículos de profissionais verificados, prontos para a sua vaga. Filtre por cargo, cidade e habilidade — e fale direto com o candidato pelo WhatsApp.</p>
+            <ul class="hero-provas">
+              <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Currículos verificados</li>
+              <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Sem taxa por contratação</li>
+              <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Cancele quando quiser</li>
+            </ul>
+            <div class="hero-acoes">
+              <button class="btn btn-primary" onclick="mostrarForm('cadastro')">Quero contratar talentos</button>
+              <button class="btn btn-secondary" onclick="mostrarForm('login')">Já sou empresa</button>
+            </div>
+            <p class="hero-micro">A partir de R$ 99/mês · Sem fidelidade · Acesso imediato ao banco</p>
+          </div>
+          <div class="hero-c-foto">
+            <!-- Foto profissional (gerada por IA — instruções no final desta página) -->
+            <img src="/imagens/hero-companies.jpg" alt="Recrutadora analisando currículos de candidatos na plataforma Office Express" onerror="this.style.display='none'" />
+            <div class="hero-card-flutuante">
+              <span class="hcf-icone">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <span>
+                <span class="hcf-num" id="heroTotalTalentos">+1000</span>
+                <span class="hcf-label" style="display:block">profissionais disponíveis</span>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -449,6 +546,34 @@
         </div>
       </div>
 
+      <!-- ===== Como funciona ===== -->
+      <div class="section-header" style="margin-top:48px">
+        <h2>Como funciona</h2>
+        <p>Do cadastro à contratação em 4 passos simples.</p>
+      </div>
+      <div class="como-grid">
+        <div class="card como-card">
+          <span class="como-num">1</span>
+          <h4>Crie sua conta</h4>
+          <p>Cadastre a empresa e confirme o e-mail em menos de 2 minutos.</p>
+        </div>
+        <div class="card como-card">
+          <span class="como-num">2</span>
+          <h4>Escolha o plano</h4>
+          <p>Pague por Pix ou cartão e tenha acesso imediato ao banco de currículos.</p>
+        </div>
+        <div class="card como-card">
+          <span class="como-num">3</span>
+          <h4>Busque e filtre</h4>
+          <p>Filtre por cargo, cidade, estado e formação até achar o perfil ideal.</p>
+        </div>
+        <div class="card como-card">
+          <span class="como-num">4</span>
+          <h4>Contate o candidato</h4>
+          <p>Fale direto pelo WhatsApp com mensagem automática personalizada.</p>
+        </div>
+      </div>
+
       <!-- ===== FORM (cadastro / login / contato) ===== -->
       <div id="viewForm" class="oculto">
         <div class="card form-card">
@@ -469,6 +594,27 @@
               </select>            </div>
             <button type="submit" class="btn btn-primary btn-block">Criar conta e assinar</button>
             <p style="text-align:center;margin-top:16px;font-size:.9rem;color:var(--text-muted)">Já tem conta? <a href="#" onclick="mostrarForm('login');return false;" style="color:var(--brand)">Entrar</a></p>
+          </form>
+
+          <!-- Passo 2 do cadastro: confirmação do e-mail com código de 4 dígitos -->
+          <form id="formConfirmaEmail" class="oculto">
+            <div style="text-align:center;margin-bottom:20px">
+              <div style="width:56px;height:56px;border-radius:999px;background:rgba(255,136,0,.12);color:var(--brand);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <h3 style="font-weight:800;margin-bottom:6px">Confirme seu e-mail</h3>
+              <p style="color:var(--text-muted);font-size:.9rem">Enviamos um código de 4 dígitos para <strong id="confEmailDestino">seu e-mail</strong>.</p>
+            </div>
+            <div class="campo">
+              <label style="text-align:center;display:block">Código de confirmação</label>
+              <input type="text" id="confCodigo" inputmode="numeric" maxlength="4" autocomplete="one-time-code"
+                     placeholder="0000" required
+                     style="text-align:center;font-size:2rem;font-weight:800;letter-spacing:14px;padding:14px 0 14px 14px;max-width:220px;margin:0 auto;display:block" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Confirmar e continuar</button>
+            <p style="text-align:center;margin-top:16px;font-size:.85rem;color:var(--text-muted)">
+              Não recebeu? <a href="#" id="linkReenviar" style="color:var(--brand);font-weight:700">Reenviar código</a>
+            </p>
           </form>
 
           <form id="formLogin" class="oculto">
@@ -905,11 +1051,26 @@
         else if (nome === "painel") IDS.painel.classList.remove("oculto");
       }
 
+      // Passo de confirmação de e-mail (após cadastro da empresa)
+      var emailPendenteConfirmacao = null;
+      function mostrarConfirmaEmail(email) {
+        emailPendenteConfirmacao = email;
+        document.getElementById("confEmailDestino").textContent = email;
+        document.getElementById("formCadastro").classList.add("oculto");
+        document.getElementById("formLogin").classList.add("oculto");
+        document.getElementById("formContato").classList.add("oculto");
+        document.getElementById("formConfirmaEmail").classList.remove("oculto");
+        document.getElementById("confCodigo").value = "";
+        setTimeout(function () { document.getElementById("confCodigo").focus(); }, 100);
+      }
+
       function mostrarForm(tipo) {
         mostrarView("form");
         IDS.formCadastro.classList.add("oculto");
         IDS.formLogin.classList.add("oculto");
         IDS.formContato.classList.add("oculto");
+        var formConf = document.getElementById("formConfirmaEmail");
+        if (formConf) formConf.classList.add("oculto");
         IDS.alert.className = "alert";
         if (tipo === "cadastro") {
           IDS.formTitulo.textContent = "Assine o Office Express | Companies";
@@ -939,12 +1100,38 @@
         };
         var { ok, data } = await App.api("/api/companies/cadastro", { method: "POST", body: JSON.stringify(body) });
         if (!ok) return mostrarAlerta(data.error || "Erro ao criar conta.", false);
-        // Enterprise = sob consulta; envia e-mail de aprovação
-        if (body.plano === "enterprise") {
-          mostrarAlerta("Conta criada! Para o plano Enterprise entraremos em contato para a assinatura sob consulta.", true);
-          return;
+        // Fluxo novo: confirma o e-mail com código de 4 dígitos antes de pagar.
+        mostrarConfirmaEmail(data.email || body.email);
+      });
+
+      // Confirmação do código de 4 dígitos
+      document.getElementById("formConfirmaEmail").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var codigo = document.getElementById("confCodigo").value.trim();
+        if (!/^\d{4}$/.test(codigo)) return mostrarAlerta("Digite o código de 4 dígitos enviado ao seu e-mail.", false);
+        var { ok, data } = await App.api("/api/companies/confirmar-email", {
+          method: "POST",
+          body: JSON.stringify({ email: emailPendenteConfirmacao, codigo: codigo })
+        });
+        if (!ok) return mostrarAlerta(data.error || "Código inválido ou expirado.", false);
+        // E-mail confirmado e sessão iniciada → segue para o pagamento.
+        // Enterprise é sob consulta: vai para o painel direto.
+        if (data.empresa && data.empresa.plano === "enterprise") {
+          return carregarPainel();
         }
-        window.location.href = "/companies/pagar?empresa=" + encodeURIComponent(data.empresa.id) + "&plano=" + body.plano;
+        var plano = document.getElementById("cPlano").value;
+        window.location.href = "/companies/pagar?empresa=" + encodeURIComponent(data.empresa.id) + "&plano=" + plano;
+      });
+
+      // Reenvio do código
+      document.getElementById("linkReenviar").addEventListener("click", async function (e) {
+        e.preventDefault();
+        if (!emailPendenteConfirmacao) return;
+        var { ok, data } = await App.api("/api/companies/reenviar-codigo", {
+          method: "POST",
+          body: JSON.stringify({ email: emailPendenteConfirmacao })
+        });
+        mostrarAlerta(ok ? "Novo código enviado! Verifique a caixa de entrada." : (data.error || "Erro ao reenviar."), ok);
       });
 
       // Login
