@@ -3505,8 +3505,12 @@ async function fecharComissoesMes(mesRef) {
     mapa.set(b.parceiro_id, (mapa.get(b.parceiro_id) || 0) + (Number(b.total) || 0));
   }
   for (const [parceiroId, total] of mapa) {
+    // Proteção: meses já PAGOS ao parceiro não são recalculados (imutabilidade
+    // do repasse). Meses 'apagar' podem ser atualizados (ex.: venda atrasada
+    // que caiu no banco depois do fechamento, ou recuperação na inicialização).
     await pool.query(
-      "INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)",
+      `INSERT INTO pagamentos_parceiros (parceiro_id, mes_ref, valor) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE valor = IF(status = 'apagar', VALUES(valor), valor)`,
       [parceiroId, mesRef, total]
     );
   }
@@ -3532,6 +3536,32 @@ cron.schedule(
   { timezone: "America/Sao_Paulo" }
 );
 console.log("🗓️ Fechamento mensal agendado: dia 05 às 00h00 (Brasília).");
+
+// Recuperação na inicialização: fecha automaticamente os meses anteriores
+// que ainda não foram fechados (ex.: sistema novo, servidor offline no dia 05,
+// ou meses anteriores à criação da feature). Idempotente — o
+// ON DUPLICATE KEY UPDATE de fecharComissoesMes só recalcula meses que
+// ainda estão 'apagar'; meses já pagos ao parceiro não são reabertos.
+// Reprocessa no máximo 6 meses para não pesar a subida.
+(async () => {
+  try {
+    const hoje = new Date();
+    for (let i = 1; i <= 6; i++) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const mesRef = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      // Só fecha se houver transações naquele mês.
+      const [tem] = await pool.query(
+        "SELECT COUNT(*) AS c FROM transacoes WHERE tipo='venda' AND DATE_FORMAT(created_at, '%Y-%m') = ?",
+        [mesRef]
+      );
+      if (!tem.length || !tem[0].c) continue;
+      await fecharComissoesMes(mesRef);
+      console.log(`🗓️ Fechamento de recuperação executado para ${mesRef}.`);
+    }
+  } catch (e) {
+    console.error("❌ Erro no fechamento de recuperação na inicialização:", e.message);
+  }
+})();
 
 // ---------------------------------------------------------------------------
 // Expiração de pedidos pendentes (currículos não pagos).
