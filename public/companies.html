@@ -1109,6 +1109,7 @@
           return;
         }
         var c = data.curriculo;
+        candidatoModal = c; // guardado para o botão "Contatar via WhatsApp" do modal
         var contato = [];
         if (c.telefone) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.34 1.79.66 2.64a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.44-1.23a2 2 0 0 1 2.11-.45c.85.32 1.74.54 2.64.66A2 2 0 0 1 22 16.92z"/></svg>' + escapeHtml(c.telefone) + '</span>');
         if (c.email) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + escapeHtml(c.email) + '</span>');
@@ -1129,7 +1130,7 @@
                 '<div class="mc-nome">' + escapeHtml(c.nome || "Candidato") + '</div>' +
                 '<div class="mc-cargo">' + escapeHtml(c.cargo || "Não informado") + '</div>' +
               '</div>' +
-              '<a class="btn btn-primary" style="padding:10px 18px;font-size:.9rem" href="https://wa.me/55' + (c.telefone ? String(c.telefone).replace(/\D/g,"") : "") + '" target="_blank" rel="noopener">Contatar via WhatsApp</a>' +
+              '<button class="btn btn-primary" style="padding:10px 18px;font-size:.9rem" onclick="contatarViaModal(' + c.id + ')">Contatar via WhatsApp</button>' +
             '</div>' +
             '<div class="mc-contato">' + contato.join("") + '</div>' +
             secao("Sobre", c.resumo ? "<p>" + escapeHtml(c.resumo) + "</p>" : "") +
@@ -1207,6 +1208,39 @@
         atualizarStats();
       }
       window.contatarCandidato = contatarCandidato;
+
+      // Botão "Contatar via WhatsApp" do modal: usa o objeto do candidato já
+      // carregado por verCurriculo (evita chamar /detalhe de novo, que consumiria
+      // cota em duplicidade) e aplica a mensagem automática da empresa.
+      var candidatoModal = null;      // preenchido em verCurriculo
+      var empresaMsgCache = null;     // mensagem salva (cache de sessão)
+      var empresaMsgBuscada = false;
+      function montarTextoWhatsapp(c) {
+        var modelo = empresaMsgCache || "";
+        if (!modelo) return "";
+        return modelo
+          .split("{nome}").join(c.nome || "")
+          .split("{cargo}").join(c.cargo || "")
+          .split("{empresa}").join((empresaLogada && empresaLogada.nome) || "")
+          .split("{cidade}").join([c.cidade, c.estado].filter(Boolean).join(" - ") || "");
+      }
+      async function contatarViaModal(id) {
+        var c = candidatoModal && candidatoModal.id === id ? candidatoModal : null;
+        if (!c || !c.telefone) { alert("Telefone não disponível para este candidato."); return; }
+        if (!empresaMsgBuscada) {
+          try {
+            var r = await App.api("/api/companies/msg-whatsapp");
+            if (r.ok && r.data && r.data.msg) empresaMsgCache = r.data.msg;
+            empresaMsgBuscada = true;
+          } catch (e) { /* sem mensagem → WhatsApp abre em branco */ }
+        }
+        var t = String(c.telefone).replace(/\D/g, "");
+        App.api("/api/companies/contatar/" + id, { method: "POST" });
+        var texto = montarTextoWhatsapp(c);
+        window.open("https://wa.me/55" + t + (texto ? "?text=" + encodeURIComponent(texto) : ""), "_blank");
+        atualizarStats();
+      }
+      window.contatarViaModal = contatarViaModal;
 
       // ----- Editor da mensagem automática de WhatsApp -----
       var MSG_PADRAO = "Olá {nome}! Vi seu currículo de {cargo} aqui na Office Express e gostaria de conversar sobre uma oportunidade na {empresa}. Podemos falar?";
