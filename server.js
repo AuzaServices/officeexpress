@@ -264,6 +264,12 @@ app.post("/api/auth/login", async (req, res) => {
     if (par.length) await pool.query("UPDATE usuarios SET parceiro_id = ? WHERE id = ?", [par[0].id, rows[0].id]);
   }
   if (!match) return res.status(401).json({ error: "E-mail ou senha incorretos." });
+  // Isolamento de sessão: usuário tradicional e empresa NUNCA coexistem no mesmo
+  // cookie. Logar na plataforma de currículos encerra a sessão de empresa (e
+  // admin/parceiro), evitando que o header de uma plataforma mostre dados da outra.
+  delete req.session.empresaId;
+  delete req.session.adminId;
+  delete req.session.parceiroId;
   req.session.usuarioId = rows[0].id;
   req.session.save((err) => {
     if (err) {
@@ -275,7 +281,11 @@ app.post("/api/auth/login", async (req, res) => {
 });
 
 app.post("/api/auth/logout", (req, res) => {
-  req.session.destroy(() => res.json({ success: true }));
+  // Logout do usuário tradicional: derruba APENAS a sessão dele — a sessão de
+  // empresa (portal Companies) aberta no mesmo navegador permanece intacta.
+  delete req.session.usuarioId;
+  delete req.session.parceiroId;
+  res.json({ success: true });
 });
 
 app.get("/api/auth/me", async (req, res) => {
@@ -1799,6 +1809,10 @@ app.post("/api/parceiro/login", async (req, res) => {
   if (!p.senha) return res.status(403).json({ error: "Complete seu cadastro pelo link de convite enviado ao seu e-mail antes de fazer login." });
   if (!(await bcrypt.compare(senha, p.senha))) return res.status(401).json({ error: "E-mail ou senha incorretos." });
   if (!p.ativo) return res.status(403).json({ error: "Parceiro desativado. Fale com o administrador." });
+  // Isolamento de sessão: parceiro também é exclusivo no cookie.
+  delete req.session.usuarioId;
+  delete req.session.empresaId;
+  delete req.session.adminId;
   req.session.parceiroId = p.id;
   req.session.save((err) => {
     if (err) return res.status(500).json({ error: "Erro ao iniciar sessão." });
@@ -2703,6 +2717,11 @@ app.post("/api/companies/login", async (req, res) => {
     if (emp.status === "inativo") return res.status(403).json({ error: "Conta desativada." });
     const okSenha = await bcrypt.compare(String(senha || ""), emp.senha_hash);
     if (!okSenha) return res.status(401).json({ error: "E-mail ou senha inválidos." });
+    // Isolamento de sessão: logar como empresa encerra sessões de usuário
+    // tradicional/parceiro/admin no mesmo cookie — nunca se misturam.
+    delete req.session.usuarioId;
+    delete req.session.adminId;
+    delete req.session.parceiroId;
     req.session.empresaId = emp.id;
     res.json({ ok: true, empresa: { id: emp.id, nome: emp.nome, plano: emp.plano } });
   } catch (e) {
@@ -2713,6 +2732,8 @@ app.post("/api/companies/login", async (req, res) => {
 
 // Logout de empresa
 app.post("/api/companies/logout", (req, res) => {
+  // Logout da empresa: derruba APENAS a sessão de empresa — se houver um
+  // usuário tradicional logado no mesmo navegador, ele permanece logado.
   delete req.session.empresaId;
   res.json({ ok: true });
 });

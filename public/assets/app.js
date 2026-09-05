@@ -113,8 +113,13 @@ window.App = (function () {
     // cliente): navegação própria e conta da EMPRESA logada.
     // -----------------------------------------------------------------
     if (ativo === "companies") {
+      // Header DEDICADO da plataforma Companies: consome EXCLUSIVAMENTE a
+      // sessão de empresa (/api/companies/me → req.session.empresaId no
+      // servidor). Nunca consulta /api/auth/me (sessão de usuário tradicional)
+      // — os dois tipos de sessão são mutuamente exclusivos no backend, então
+      // não há como o avatar de um "vazar" para o header do outro.
       api("/api/companies/me").then((r) => {
-        const empresa = r && r.ok ? r.data.empresa : null;
+        const empresa = r && r.ok && r.data && r.data.empresa ? r.data.empresa : null;
         const linksCompanies =
           '<a href="/companies" class="ativo">Para empresas</a>' +
           '<a href="/companies" onclick="irParaSecao(\'planos\');return false;">Planos</a>' +
