@@ -27,6 +27,19 @@
     /* ---------- Topo ---------- */
     .tal-hero { text-align: center; margin-bottom: 30px; }
     .tal-logo { height: 48px; margin-bottom: 22px; }
+    /* Parceria: Office Express | Parceiro — centralizado, perfeito no mobile */
+    .tal-parceria {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; margin-bottom: 22px; flex-wrap: nowrap;
+    }
+    .tal-parceria img {
+      height: 48px; width: auto; max-width: 42vw;
+      object-fit: contain; display: block;
+    }
+    .tal-parceria .tal-sep {
+      width: 1px; height: 34px; flex-shrink: 0;
+      background: linear-gradient(180deg, transparent, rgba(210,232,255,.55), transparent);
+    }
     .tal-badge {
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(255,136,0,.14); border: 1px solid rgba(255,168,76,.5);
@@ -211,7 +224,8 @@
     @media (max-width: 560px) {
       .tal-wrap { padding: 30px 16px 50px; }
       .tal-card { padding: 24px 18px; border-radius: 18px; }
-      .tal-logo { height: 40px; }
+      .tal-parceria { gap: 10px; }
+      .tal-parceria img { height: 34px; max-width: 38vw; }
       .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 0; }
     }
   </style>
@@ -219,7 +233,11 @@
 <body>
   <div class="tal-wrap">
     <div class="tal-hero">
-      <img src="/imagens/logo.png" alt="Office Express" class="tal-logo" onerror="this.style.display='none'" />
+      <div class="tal-parceria">
+        <img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" />
+        <div class="tal-sep"></div>
+        <img src="/imagens/parceiro.png" alt="Parceiro" onerror="this.parentElement.parentElement.querySelector('.tal-sep').style.display='none'; this.style.display='none'" />
+      </div>
       <div class="tal-badge"><span class="dot"></span> Vagas abertas o ano todo</div>
       <h1>Entre no <em>Banco de Talentos</em><br />é <em>100% gratuito</em></h1>
       <p>Monte seu currículo completo aqui mesmo — igual ao dos planos pagos — e seja encontrado por empresas que estão contratando em todo o Brasil.</p>
