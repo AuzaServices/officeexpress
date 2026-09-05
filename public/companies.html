@@ -34,21 +34,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
   <style>
-    /* Marca no cabeçalho: logo + "| Companies" */
-    .brand-companies { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .brand-companies .logo { height: 44px; width: auto; display: block; }
-    .brand-sep { color: #ffffff; font-weight: 300; font-size: 1.2rem; line-height: 1; }
-    .brand-companies-label {
-      font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.1rem; letter-spacing: -.02em;
-      color: #ffffff;
-      text-transform: lowercase;
-    }
-    @media (max-width: 768px) {
-      .brand-companies .logo { height: 38px; }
-      .brand-companies-label { font-size: 1rem; }
-      .brand-sep { font-size: 1.2rem; }
-    }
-
     /* ===== Office Express | Companies — estilos específicos ===== */
     .companies-wrap { max-width: 1320px; margin: 0 auto; }
 
@@ -162,22 +147,126 @@
     .oculto { display: none !important; }
     .mt-2 { margin-top: 20px; }
 
-    /* Cabeçalho fixo: o overflow-x do body quebra o sticky do header,
-       então aqui ele vira fixed e o body compensa com padding-top.
-       Altura real do header no Companies: logo 44 + padding 24 + borda 1 ≈ 69px. */
-    header.cabecalho { position: fixed; top: 0; left: 0; right: 0; }
-    body { padding-top: 68px; }
+    /* ============================================================
+       Cabeçalho PRÓPRIO do Companies (ch-*) — independente do site.
+       Fixo no topo, arredondado ("redondo"), tema azul-marinho.
+       Altura real: 64px → todas as medidas do layout usam 64px.
+       ============================================================ */
+    header.ch-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #0e2b44 0%, #174a6b 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .ch-bar { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; gap: 14px; height: 44px; }
+    .ch-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .ch-logo { height: 40px; width: auto; display: block; }
+    .ch-sep { color: #fff; font-weight: 300; font-size: 1.15rem; line-height: 1; }
+    .ch-label {
+      font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1.05rem;
+      letter-spacing: -.02em; color: #fff; text-transform: lowercase;
+    }
+    .ch-nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .ch-link {
+      color: rgba(255,255,255,.85); text-decoration: none; font-weight: 600; font-size: .92rem;
+      padding: 8px 16px; border-radius: 999px; transition: background .2s, color .2s;
+    }
+    .ch-link:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .ch-link.ativo { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33; }
+
+    /* Conta da empresa (dropdown redondo) */
+    .ch-conta { position: relative; }
+    .ch-user-btn {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px; padding: 4px 12px 4px 4px; color: #fff; font-family: inherit;
+    }
+    .ch-user-btn:hover { background: rgba(255,255,255,.18); }
+    .ch-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #001f33; font-weight: 800; font-size: .9rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ch-user-nome { font-weight: 600; font-size: .88rem; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ch-caret { transition: transform .2s; }
+    .ch-conta.open .ch-caret { transform: rotate(180deg); }
+    .ch-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0; min-width: 200px;
+      background: var(--card, #fff); border: 1px solid var(--border); border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(0,10,20,.22); padding: 8px;
+      opacity: 0; visibility: hidden; transform: translateY(-6px);
+      transition: opacity .18s, transform .18s, visibility 0s linear .18s;
+    }
+    .ch-conta.open .ch-dropdown { opacity: 1; visibility: visible; transform: none; transition: opacity .18s, transform .18s; }
+    .ch-dropdown-item {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      background: transparent; border: none; cursor: pointer; text-align: left;
+      font-family: inherit; font-size: .9rem; font-weight: 600; color: var(--text-primary);
+      padding: 10px 12px; border-radius: 10px; text-decoration: none; transition: background .15s;
+    }
+    .ch-dropdown-item:hover { background: rgba(255,136,0,.1); }
+    .ch-dropdown-item svg { flex-shrink: 0; }
+    .ch-dropdown-sair { color: var(--danger); }
+    .ch-dropdown-sair:hover { background: rgba(220,38,38,.08); }
+    .ch-entrar-btn {
+      display: inline-flex; align-items: center; text-decoration: none;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33;
+      font-weight: 700; font-size: .9rem; padding: 9px 20px; border-radius: 999px; transition: filter .2s;
+    }
+    .ch-entrar-btn:hover { filter: brightness(1.08); }
+
+    /* Hamburguer (só mobile) */
+    .ch-hamburguer {
+      display: none; flex-direction: column; justify-content: center; gap: 5px;
+      width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2);
+      background: rgba(255,255,255,.08); cursor: pointer; padding: 0 9px;
+    }
+    .ch-hamburguer span { display: block; height: 2px; width: 100%; background: #fff; border-radius: 2px; transition: transform .25s, opacity .25s; }
+    .ch-hamburguer.aberto span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .ch-hamburguer.aberto span:nth-child(2) { opacity: 0; }
+    .ch-hamburguer.aberto span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Drawer mobile */
+    .ch-overlay {
+      position: fixed; inset: 0; z-index: 1900; background: rgba(0,12,22,.45);
+      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .3s, visibility 0s linear .3s;
+    }
+    .ch-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .3s; }
+    .ch-drawer {
+      position: fixed; top: 0; right: 0; z-index: 2000; height: 100dvh;
+      width: min(320px, 86vw); display: flex; flex-direction: column; gap: 6px;
+      padding: 80px 20px 24px;
+      background: linear-gradient(160deg, #0e2b44, #174a6b);
+      box-shadow: -30px 0 80px rgba(0,8,16,.5);
+      transform: translateX(100%); visibility: hidden;
+      transition: transform .35s cubic-bezier(.22,1,.3,1), visibility 0s linear .35s;
+      overflow-y: auto;
+    }
+    .ch-drawer.open { transform: translateX(0); visibility: visible; transition: transform .35s cubic-bezier(.22,1,.3,1); }
+    .ch-drawer a.ch-link { color: #fff; padding: 13px 16px; border-radius: 12px; font-size: .98rem; }
+    .ch-drawer a.ch-link.ativo { color: #001f33; }
+    .ch-drawer-user { display: flex; align-items: center; gap: 10px; color: #fff; padding: 8px 10px 16px; border-bottom: 1px solid rgba(255,255,255,.14); margin-bottom: 8px; }
+    .ch-drawer-sair {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      background: rgba(220,38,38,.12); color: #fca5a5; border: none; cursor: pointer;
+      font-family: inherit; font-weight: 700; font-size: .92rem;
+      padding: 12px 16px; border-radius: 12px; margin-top: 12px;
+    }
+
+    /* Compensação da altura do header fixo (64px) */
+    body { padding-top: 64px; }
 
     /* ===== Portal B2B (painel logado) ===== */
     /* Layout "console administrativo": o painel escapa do container central.
        A sidebar colada na borda esquerda e no header; o conteúdo estica à direita. */
-    #viewPainel { margin-top: -68px; } /* anula o padding-top da .section → sidebar encosta no header */
+    #viewPainel { margin-top: -64px; } /* anula o padding-top da .section → sidebar encosta no header */
     .portal-wrap-full { display: flex; align-items: stretch; gap: 24px; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding-left: 0; padding-right: 24px; }
-    .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; padding-top: 68px; } /* o conteúdo respira; a sidebar não */
+    .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; padding-top: 64px; } /* o conteúdo respira; a sidebar não */
     .portal-sidebar {
-      width: 260px; flex-shrink: 0; position: sticky; top: 68px;
+      width: 260px; flex-shrink: 0; position: sticky; top: 64px;
       align-self: flex-start;
-      height: calc(100vh - 68px);
+      height: calc(100vh - 64px);
       background: var(--card, #ffffff);
       border: 1px solid var(--border); border-left: none; border-top: none; border-radius: 0;
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
@@ -241,17 +330,11 @@
     .portal-nav-item.ativo { background: linear-gradient(135deg, var(--brand), var(--brand-dark, #b45309)); color: #001f33; }
     .portal-sidebar-footer { border-top: 1px solid var(--border); padding-top: 14px; }
     .portal-conteudo { flex: 1; min-width: 0; }
-    .portal-topbar { display: none; }
     .portal-saudacao { margin-bottom: 20px; }
     .portal-saudacao h2 { margin: 0 0 4px; font-weight: 800; }
     .portal-saudacao p { margin: 0; color: var(--text-muted); font-size: .95rem; }
     .portal-secao { animation: portalFade .25s ease; }
     @keyframes portalFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-    .portal-menu-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--card, #ffffff); color: var(--text-primary, inherit); cursor: pointer; flex-shrink: 0;
-    }
     .portal-sidebar-backdrop { display: none; }
 
     @media (max-width: 900px) {
@@ -259,20 +342,11 @@
       .portal-sidebar { height: auto; }
       #viewPainel { margin-top: 0; }
       .portal-wrap-full .portal-conteudo { padding-top: 0; }
-      /* Cabeçalho fixo também no mobile (logo 44 + 2×12 ≈ 68px) */
-      body { padding-top: 68px; }
-      .portal-topbar {
-        display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-      }
-      .portal-topbar-titulo { font-weight: 800; font-size: 1.05rem; }
-      .portal-sidebar {
-        position: fixed; inset: 0 auto 0 0; top: 0; z-index: 1500; width: 280px; max-width: 85vw;
-        border-radius: 0; transform: translateX(-105%); transition: transform .25s ease;
-        box-shadow: 0 10px 40px rgba(0,0,0,.3); overflow-y: auto;
-      }
-      .portal-sidebar.aberta { transform: translateX(0); }
-      .portal-sidebar-backdrop.aberta { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1400; }
       .companies-stats { grid-template-columns: 1fr 1fr; }
+      /* Cabeçalho Companies no mobile: some o nav, entra o drawer */
+      .ch-nav { display: none; }
+      .ch-conta { display: none; }
+      .ch-hamburguer { display: flex; margin-left: auto; }
     }
 
     /* Responsivo */
@@ -289,18 +363,33 @@
   </style>
 </head>
 <body>
-  <header class="cabecalho">
-    <div class="container wrap">
-      <a href="/companies" class="brand-companies">
-        <img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" />
-        <span class="brand-sep">|</span>
-        <span class="brand-companies-label">Companies</span>
+  <!-- ============================================================
+       Cabeçalho PRÓPRIO do Companies (não usa app.js/carregarHeader).
+       IDs diferentes (ch-*) para o app.js ignorar esta página.
+       ============================================================ -->
+  <header class="ch-header" id="chHeader">
+    <div class="ch-bar">
+      <a href="/companies" class="ch-brand">
+        <img src="/imagens/logo.png" class="ch-logo" alt="Office Express" onerror="this.style.display='none'" />
+        <span class="ch-sep">|</span>
+        <span class="ch-label">Companies</span>
       </a>
-      <nav class="menu" id="navMenu"></nav>
-      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <nav class="ch-nav" id="chNav">
+        <a href="/companies" class="ch-link ativo">Para empresas</a>
+        <a href="/companies" class="ch-link" onclick="irParaSecao('planos');return false;">Planos</a>
+        <a href="/" class="ch-link">Office Express</a>
+      </nav>
+      <div class="ch-conta" id="chConta"><!-- preenchido via /api/companies/me --></div>
+      <button class="ch-hamburguer" id="chHamburguer" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
-  <div id="mobileMenu"></div>
+  <div class="ch-overlay" id="chOverlay"></div>
+  <div class="ch-drawer" id="chDrawer">
+    <div class="ch-drawer-inner" id="chDrawerInner"><!-- preenchido via /api/companies/me --></div>
+  </div>
+
 
   <section class="section container">
     <div class="companies-wrap">
@@ -456,14 +545,6 @@
 
           <!-- Conteúdo -->
           <div class="portal-conteudo">
-            <!-- Topbar mobile -->
-            <div class="portal-topbar">
-              <button class="portal-menu-btn" type="button" onclick="toggleSidebar(true)" aria-label="Abrir menu">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-              </button>
-              <div class="portal-topbar-titulo" id="portalTitulo">Buscar talentos</div>
-            </div>
-
             <div class="portal-saudacao">
               <h2 id="painelSaudacao">Olá!</h2>
               <p id="painelSaudacaoSub">Encontre talentos no banco de currículos.</p>
@@ -658,7 +739,104 @@
   <script>
     (function () {
       document.getElementById("ano").textContent = new Date().getFullYear();
-      App.carregarHeader("companies");
+
+      // =====================================================================
+      // Cabeçalho PRÓPRIO do Companies — independente do app.js.
+      // O app.js tenta carregar o header dos clientes ao iniciar, mas como
+      // esta página não tem #navMenu/#mobileMenu, ele não encontra os
+      // elementos e não interfere mais.
+      // =====================================================================
+      function iniciais(nome) {
+        return (nome || "E").trim().split(/\s+/).map(function (p) { return p.charAt(0); })
+          .slice(0, 2).join("").toUpperCase();
+      }
+      function iconeSair() {
+        return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>';
+      }
+      function escapar(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+
+      function renderHeaderEmpresa(empresa) {
+        var nav = document.getElementById("chNav");
+        var conta = document.getElementById("chConta");
+        var drawer = document.getElementById("chDrawerInner");
+
+        if (empresa) {
+          var nome = empresa.nome || "Empresa";
+          var primeiro = nome.split(" ")[0];
+          conta.innerHTML =
+            '<button type="button" class="ch-user-btn" id="chUserBtn" aria-haspopup="true" aria-expanded="false">' +
+              '<span class="ch-avatar">' + escapar(iniciais(nome)) + '</span>' +
+              '<span class="ch-user-nome">' + escapar(primeiro) + '</span>' +
+              '<svg class="ch-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+            '</button>' +
+            '<div class="ch-dropdown">' +
+              '<button type="button" class="ch-dropdown-item ch-dropdown-sair" onclick="sairEmpresa()">' + iconeSair() + 'Sair</button>' +
+            '</div>';
+
+          drawer.innerHTML =
+            '<div class="ch-drawer-user">' +
+              '<span class="ch-avatar">' + escapar(iniciais(nome)) + '</span>' +
+              '<span class="ch-user-nome" style="max-width:180px;color:#fff">' + escapar(nome) + '</span>' +
+            '</div>' +
+            '<a href="/companies" class="ch-link ativo">Para empresas</a>' +
+            '<a href="/" class="ch-link">Office Express</a>' +
+            '<button type="button" class="ch-drawer-sair" onclick="sairEmpresa()">' + iconeSair() + 'Sair da conta</button>';
+        } else {
+          conta.innerHTML = '<a href="/companies" onclick="mostrarForm(\'login\');return false;" class="ch-entrar-btn">Entrar</a>';
+          drawer.innerHTML =
+            '<a href="/companies" class="ch-link ativo">Para empresas</a>' +
+            '<a href="/companies" class="ch-link" onclick="fecharDrawer();irParaSecao(\'planos\');return false;">Planos</a>' +
+            '<a href="/" class="ch-link">Office Express</a>' +
+            '<a href="/companies" onclick="fecharDrawer();mostrarForm(\'login\');return false;" class="ch-link" style="background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#001f33;font-weight:700">Entrar</a>';
+        }
+        if (nav) nav.style.display = ""; // nav desktop é estático no HTML
+
+        configurarDropdown();
+      }
+
+      function configurarDropdown() {
+        var wrap = document.getElementById("chConta");
+        var btn = document.getElementById("chUserBtn");
+        if (!wrap || !btn) return;
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var abrir = !wrap.classList.contains("open");
+          wrap.classList.toggle("open", abrir);
+          btn.setAttribute("aria-expanded", abrir);
+        });
+        document.addEventListener("click", function (e) {
+          if (!wrap.contains(e.target)) {
+            wrap.classList.remove("open");
+            btn.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+
+      // Drawer mobile
+      var hamb = document.getElementById("chHamburguer");
+      var drawerEl = document.getElementById("chDrawer");
+      var overlayEl = document.getElementById("chOverlay");
+      function setDrawer(abrir) {
+        drawerEl.classList.toggle("open", abrir);
+        overlayEl.classList.toggle("open", abrir);
+        hamb.classList.toggle("aberto", abrir);
+        hamb.setAttribute("aria-expanded", abrir);
+        document.body.style.overflow = abrir ? "hidden" : "";
+      }
+      window.fecharDrawer = function () { setDrawer(false); };
+      hamb.addEventListener("click", function () { setDrawer(!drawerEl.classList.contains("open")); });
+      overlayEl.addEventListener("click", function () { setDrawer(false); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && drawerEl.classList.contains("open")) setDrawer(false);
+      });
+
+      App.api("/api/companies/me").then(function (r) {
+        renderHeaderEmpresa(r && r.ok && r.data && r.data.empresa ? r.data.empresa : null);
+      }).catch(function () { renderHeaderEmpresa(null); });
 
       // Rola até a seção de planos (usado pelo link do cabeçalho).
       window.irParaSecao = function (id) {
