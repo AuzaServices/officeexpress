@@ -938,9 +938,12 @@
         if (empresa) {
           var nome = empresa.nome || "Empresa";
           var primeiro = nome.split(" ")[0];
+          var avatarHtml = empresa.foto_url
+            ? '<img src="' + escapar(empresa.foto_url) + '" alt="Logo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.remove()" />'
+            : escapar(iniciais(nome));
           conta.innerHTML =
             '<button type="button" class="ch-user-btn" id="chUserBtn" aria-haspopup="true" aria-expanded="false">' +
-              '<span class="ch-avatar">' + escapar(iniciais(nome)) + '</span>' +
+              '<span class="ch-avatar" style="overflow:hidden;padding:0">' + avatarHtml + '</span>' +
               '<span class="ch-user-nome">' + escapar(primeiro) + '</span>' +
               '<svg class="ch-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
             '</button>' +
@@ -950,7 +953,7 @@
 
           drawer.innerHTML =
             '<div class="ch-drawer-user">' +
-              '<span class="ch-avatar">' + escapar(iniciais(nome)) + '</span>' +
+              '<span class="ch-avatar" style="overflow:hidden;padding:0">' + avatarHtml + '</span>' +
               '<span class="ch-user-nome" style="max-width:180px;color:#fff">' + escapar(nome) + '</span>' +
             '</div>' +
             '<a href="/companies" class="ch-link ativo">Para empresas</a>' +
@@ -1219,7 +1222,12 @@
         // Sidebar
         document.getElementById("pseNome").textContent = e.nome || "Empresa";
         document.getElementById("psePlano").textContent = (e.plano || "—") + (e.assinatura_ativa ? " · ativo" : "");
-        document.getElementById("pseAvatar").textContent = (e.nome || "E").trim().charAt(0).toUpperCase();
+        var pseAvatar = document.getElementById("pseAvatar");
+        if (e.foto_url) {
+          pseAvatar.innerHTML = '<img src="' + escapar(e.foto_url) + '" alt="Logo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block" onerror="this.remove();this.parentElement.textContent=\'' + escapar((e.nome || "E").trim().charAt(0).toUpperCase()) + '\'" />';
+        } else {
+          pseAvatar.textContent = (e.nome || "E").trim().charAt(0).toUpperCase();
+        }
         document.getElementById("dNome").value = e.nome || "";
         document.getElementById("dCnpj").value = e.cnpj || "";
         document.getElementById("dEmail").value = e.email || "";
@@ -1267,6 +1275,36 @@
           else { msg.textContent = ""; msg.classList.remove("uso-visivel"); w.classList.remove("uso-alerta"); }
         } catch (err) { /* silencioso */ }
       }
+      window.atualizarUso = atualizarUso;
+
+      // Tempo real: reconsulta o uso periodicamente e logo após cada busca,
+      // para que as barras cresçam assim que uma consulta é consumida.
+      // Só atualiza quando o valor muda (evita reflow/animar sem motivo).
+      setInterval(atualizarUso, 20000);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) atualizarUso();
+      });
+      var _ultimoUso = "";
+      var _atualizarUsoOriginal = atualizarUso;
+      atualizarUso = async function () {
+        await _atualizarUsoOriginal();
+        try {
+          var txt = (document.getElementById("usoDiaTxt").textContent || "") + "|" + (document.getElementById("usoSemTxt").textContent || "");
+          if (txt !== _ultimoUso) {
+            // Reanima as barras para dar feedback visual de crescimento.
+            ["usoDiaBar", "usoSemBar"].forEach(function (id) {
+              var bar = document.getElementById(id);
+              bar.style.transition = "none";
+              var w = bar.style.width;
+              bar.style.width = "0%";
+              void bar.offsetWidth; // força reflow
+              bar.style.transition = "";
+              bar.style.width = w;
+            });
+          }
+          _ultimoUso = txt;
+        } catch (e) { /* silencioso */ }
+      };
       window.atualizarUso = atualizarUso;
 
       // Navegação entre seções do portal
@@ -1470,6 +1508,7 @@
         var url = "/api/companies/curriculos" + (qs.length ? "?" + qs.join("&") : "");
 
         var { ok, data } = await App.api(url);
+        if (ok) atualizarUso(); // barras crescem em tempo real após cada busca
         IDS.candVazio.classList.add("oculto");
         IDS.candErro.classList.add("oculto");
         if (!ok) {
