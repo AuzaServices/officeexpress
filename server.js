@@ -3111,7 +3111,10 @@ async function garantirMsgWhatsapp() {
       "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'empresas' AND COLUMN_NAME = 'estado'"
     );
     if (Number(colsUf[0].c) === 0) {
-      await pool.query("ALTER TABLE empresas ADD COLUMN estado CHAR(2) NULL");
+      await pool.query("ALTER TABLE empresas ADD COLUMN estado CHAR(2) NULL").catch((e) => {
+        // ER_DUP_ENTRY: corrida com a migração paralela do garantirVagas — inofensivo.
+        if (e.code !== "ER_DUP_ENTRY") throw e;
+      });
       console.log("✅ Coluna empresas.estado adicionada");
     }
     // Foto de perfil do usuário/cliente (Cloudinary).
@@ -3174,7 +3177,10 @@ async function garantirVagas() {
       await pool.query("ALTER TABLE empresas ADD COLUMN estado CHAR(2) NULL");
       console.log("✅ Coluna empresas.estado adicionada (garantirVagas)");
     }
-  } catch (e) { console.error("⚠️ Migração empresas.estado:", e.message); }
+  } catch (e) {
+    // ER_DUP_ENTRY: a outra migração de boot criou a coluna em paralelo — inofensivo.
+    if (e.code !== "ER_DUP_ENTRY") console.error("⚠️ Migração empresas.estado:", e.message);
+  }
 }
 garantirMsgWhatsapp();
 garantirVagas();
