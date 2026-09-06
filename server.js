@@ -497,13 +497,16 @@ app.get("/api/pedidos/meus", async (req, res) => {
         via_talentos: true, // o download busca da tabela talentos
       });
     });
-    // Espelha o consentimento REAL (tabela talentos) nos pedidos ainda vivos:
-    // o checkbox do cliente altera talento.consentimento, então a exibição do
-    // selo/checkbox no pedido antigo precisa refletir esse valor atualizado.
+    // Espelha o consentimento REAL e o talento_id (tabela talentos) nos
+    // pedidos ainda vivos: o checkbox de visibilidade precisa aparecer em
+    // TODO currículo pago — inclusive quando o pedido original ainda existe.
     const talPorPedido = new Map(talentos.filter((t) => t.pedido_id).map((t) => [t.pedido_id, t]));
     pedidos.forEach((p) => {
       const t = talPorPedido.get(p.id);
-      if (t) p.consentimento = !!t.consentimento;
+      if (t) {
+        p.consentimento = !!t.consentimento;
+        p.talento_id = t.id;
+      }
     });
   } catch (e) {
     console.error("Erro ao enriquecer pedidos com talentos:", e.message);
