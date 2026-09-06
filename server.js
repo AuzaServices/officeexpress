@@ -3024,13 +3024,48 @@ function validarCnpjDigitos(cnpj) {
   return Number(c[13]) === d2;
 }
 
+// ---------------------------------------------------------------------------
+// Cache local de CNPJs: cada CNPJ consultado na Receita fica gravado no MySQL.
+// Cálculo societário/cadastral não muda a cada minuto — o cache elimina
+// consultas repetidas às APIs (ReceitaWS free limita 3 req/min). Resultado:
+// CNPJ já visto = resposta instantânea, sem gastar cota; CNPJ novo = 1 chamada.
+// ---------------------------------------------------------------------------
+async function garantirCacheCnpj() {
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS cnpj_cache (
+        cnpj VARCHAR(14) PRIMARY KEY,
+        dados_json TEXT NOT NULL,
+        consultado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+  } catch (e) {
+    console.error("🚨 FALHA ao garantir cnpj_cache:", e.message);
+  }
+}
+garantirCacheCnpj();
+
+const CNPJ_CACHE_DIAS = 30; // revalida dados de CNPJs antigos a cada 30 dias
+
 async function consultarCnpj(cnpjLimpo) {
+  // 0) Cache local (fonte primária): evita a API em consultas repetidas.
+  try {
+    const [cache] = await pool.query(
+      "SELECT dados_json, consultado_em FROM cnpj_cache WHERE cnpj = ? AND consultado_em >= (NOW() - INTERVAL ? DAY)",
+      [cnpjLimpo, CNPJ_CACHE_DIAS]
+    );
+    if (cache.length) {
+      const c = JSON.parse(cache[0].dados_json);
+      c._doCache = true;
+      return c;
+    }
+  } catch (e) { /* cache indisponível: segue para a API */ }
+
+  let resultado = null;
   // 1) BrasilAPI — retorna razao_social, municipio, uf, descricao_situacao_cadastral
   try {
     const r = await fetch("https://brasilapi.com.br/api/cnpj/v1/" + cnpjLimpo, { signal: AbortSignal.timeout(8000) });
     if (r.ok) {
       const d = await r.json();
-      return {
+      resultado = {
         nome: d.razao_social || "",
         fantasia: d.nome_fantasia || "",
         municipio: d.municipio || "",
@@ -3040,17 +3075,28 @@ async function consultarCnpj(cnpjLimpo) {
     }
   } catch (e) { /* cai no fallback */ }
   // 2) ReceitaWS — nome, municipio, uf, situacao (free: 3 req/min)
-  const r2 = await fetch("https://receitaws.com.br/v1/cnpj/" + cnpjLimpo, { signal: AbortSignal.timeout(8000) });
-  if (!r2.ok) throw new Error("Serviço de consulta indisponível.");
-  const d2 = await r2.json();
-  if (d2.status === "ERROR") throw new Error(d2.message || "CNPJ não encontrado.");
-  return {
-    nome: d2.nome || "",
-    fantasia: d2.fantasia || "",
-    municipio: d2.municipio || "",
-    uf: d2.uf || "",
-    situacao: d2.situacao || "",
-  };
+  if (!resultado) {
+    const r2 = await fetch("https://receitaws.com.br/v1/cnpj/" + cnpjLimpo, { signal: AbortSignal.timeout(8000) });
+    if (!r2.ok) throw new Error("Serviço de consulta indisponível.");
+    const d2 = await r2.json();
+    if (d2.status === "ERROR") throw new Error(d2.message || "CNPJ não encontrado.");
+    resultado = {
+      nome: d2.nome || "",
+      fantasia: d2.fantasia || "",
+      municipio: d2.municipio || "",
+      uf: d2.uf || "",
+      situacao: d2.situacao || "",
+    };
+  }
+
+  // 3) Grava no cache para as próximas consultas (fire-and-forget).
+  pool.query(
+    `INSERT INTO cnpj_cache (cnpj, dados_json) VALUES (?, ?)
+     ON DUPLICATE KEY UPDATE dados_json = VALUES(dados_json), consultado_em = NOW()`,
+    [cnpjLimpo, JSON.stringify(resultado)]
+  ).catch(() => {});
+
+  return resultado;
 }
 
 app.get("/api/cnpj/:numero", async (req, res) => {
