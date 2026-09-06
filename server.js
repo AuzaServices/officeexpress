@@ -3104,6 +3104,16 @@ async function garantirMsgWhatsapp() {
       await pool.query("ALTER TABLE empresas ADD COLUMN cidade VARCHAR(160) NULL");
       console.log("✅ Coluna empresas.cidade adicionada");
     }
+    // UF da empresa (preenchida via consulta CNPJ). Sem ela, as queries de
+    // vagas que fazem JOIN com e.estado falham ("Unknown column") e a
+    // página /vagas fica vazia mesmo com vagas publicadas.
+    const [colsUf] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'empresas' AND COLUMN_NAME = 'estado'"
+    );
+    if (Number(colsUf[0].c) === 0) {
+      await pool.query("ALTER TABLE empresas ADD COLUMN estado CHAR(2) NULL");
+      console.log("✅ Coluna empresas.estado adicionada");
+    }
     // Foto de perfil do usuário/cliente (Cloudinary).
     const [colsFoto] = await pool.query(
       "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'foto_url'"
@@ -3153,6 +3163,18 @@ async function garantirVagas() {
   } catch (e) {
     console.error("🚨 FALHA ao garantir tabelas de vagas:", e.message);
   }
+  // Defensivo: as queries públicas de vagas fazem JOIN com e.estado — se a
+  // coluna não existir (banco criado antes dessa feature), TODA a listagem
+  // /vagas quebra com "Unknown column" e a página fica vazia.
+  try {
+    const [colsUf2] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'empresas' AND COLUMN_NAME = 'estado'"
+    );
+    if (Number(colsUf2[0].c) === 0) {
+      await pool.query("ALTER TABLE empresas ADD COLUMN estado CHAR(2) NULL");
+      console.log("✅ Coluna empresas.estado adicionada (garantirVagas)");
+    }
+  } catch (e) { console.error("⚠️ Migração empresas.estado:", e.message); }
 }
 garantirMsgWhatsapp();
 garantirVagas();
