@@ -626,16 +626,107 @@
       .mc-col-dados { max-height: none; }
     }
 
-    /* ===== Cadastro em 2 colunas (desktop) ===== */
-    .cad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 26px; }
-    .cad-col-titulo {
-      margin: 0 0 14px; font-size: .72rem; font-weight: 800;
-      letter-spacing: .1em; text-transform: uppercase;
-      color: var(--brand, #ff8800);
-      padding-bottom: 8px; border-bottom: 1px solid var(--border, #e2e8f0);
+    /* ===== Cadastro em 2 colunas (desktop) — premium ===== */
+    .cad-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 28px 36px; align-items: start;
     }
+    .cad-col-titulo {
+      display: flex; align-items: center; gap: 10px;
+      margin: 0 0 18px; font-size: .7rem; font-weight: 800;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--brand, #ff8800);
+    }
+    .cad-col-titulo svg { width: 13px; height: 13px; flex: none; }
+    .cad-col-titulo::after {
+      content: ""; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border, #e2e8f0), transparent);
+    }
+    /* Campos com acabamento premium */
+    #formCadastro .campo { margin-bottom: 16px; }
+    #formCadastro .campo > label {
+      display: block; margin-bottom: 6px;
+      font-size: .78rem; font-weight: 700; color: var(--text-secondary, #475569);
+    }
+    #formCadastro input[type="text"],
+    #formCadastro input[type="email"],
+    #formCadastro input[type="password"],
+    #formCadastro select {
+      width: 100%; box-sizing: border-box;
+      padding: 12px 14px;
+      font-size: .95rem;
+      border: 1.5px solid var(--border, #dbe3ec);
+      border-radius: 12px;
+      background: #fbfcfe;
+      color: var(--text-primary, #0f172a);
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    #formCadastro input:hover, #formCadastro select:hover { border-color: #c3cfdb; }
+    #formCadastro input:focus, #formCadastro select:focus {
+      border-color: var(--brand, #ff8800);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(255, 136, 0, .13);
+    }
+    /* Campos preenchidos pela Receita: leitura, com selo discreto */
+    #formCadastro input[readonly] {
+      background: linear-gradient(180deg, #f2f6fa, #f8fafc);
+      color: var(--text-secondary, #475569);
+      font-weight: 600;
+      border-style: solid;
+      cursor: default;
+    }
+    #formCadastro input[readonly]:hover { border-color: var(--border, #dbe3ec); box-shadow: none; }
+    /* Select com seta customizada */
+    #formCadastro select {
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+      cursor: pointer;
+    }
+    /* Status do CNPJ: pílula animada */
+    #cnpjStatus {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 8px; padding: 4px 11px;
+      border-radius: 999px; font-size: .74rem; font-weight: 700;
+    }
+    #cnpjStatus.ok  { background: rgba(34, 197, 94, .12);  color: #16a34a; }
+    #cnpjStatus.erro { background: rgba(239, 68, 68, .12); color: #dc2626; }
+    #cnpjStatus.load { background: rgba(255, 136, 0, .12); color: var(--brand, #ff8800); }
+    #cnpjStatus .cnpj-dot {
+      width: 7px; height: 7px; border-radius: 999px; background: currentColor; flex: none;
+    }
+    #cnpjStatus.load .cnpj-dot { animation: cnpjPulse 1s ease-in-out infinite; }
+    @keyframes cnpjPulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+    /* Zona de upload da logo */
+    .upload-zone {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 14px;
+      border: 1.5px dashed var(--border, #dbe3ec);
+      border-radius: 12px;
+      background: #fbfcfe;
+      cursor: pointer;
+      transition: border-color .18s ease, background .18s ease;
+      font-size: .86rem; color: var(--text-secondary, #475569);
+    }
+    .upload-zone:hover { border-color: var(--brand, #ff8800); background: #fff; }
+    .upload-zone svg { width: 18px; height: 18px; color: var(--brand, #ff8800); flex: none; }
+    .upload-zone strong { font-weight: 700; color: var(--text-primary, #0f172a); }
+    #formCadastro input[type="file"] { display: none; }
+    /* Rodapé do form: botão com presença */
+    #formCadastro .btn-block {
+      margin-top: 6px; padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 1rem; font-weight: 800; letter-spacing: .01em;
+      box-shadow: 0 8px 20px rgba(255, 136, 0, .28);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    #formCadastro .btn-block:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(255, 136, 0, .34); }
+    #formCadastro .btn-block:active { transform: translateY(0); }
     @media (max-width: 720px) {
-      .cad-grid { grid-template-columns: 1fr; }
+      .cad-grid { grid-template-columns: 1fr; gap: 20px; }
       .cad-col-titulo { margin-top: 4px; }
     }
   </style>
@@ -815,25 +906,31 @@
           <form id="formCadastro" class="oculto">
             <div class="cad-grid">
               <div class="cad-col">
-                <h4 class="cad-col-titulo">Dados da empresa</h4>
+                <h4 class="cad-col-titulo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/></svg>
+                  Dados da empresa
+                </h4>
                 <div class="campo">
                   <label>CNPJ da empresa</label>
-                  <input type="text" id="cCnpj" placeholder="00.000.000/0000-00" inputmode="numeric" maxlength="18" required />
-                  <div id="cnpjStatus" style="font-size:.78rem;margin-top:6px;display:none"></div>
+                  <input type="text" id="cCnpj" placeholder="00.000.000/0000-00" inputmode="numeric" maxlength="18" autocomplete="off" required />
+                  <div id="cnpjStatus" style="display:none"><span class="cnpj-dot"></span><span id="cnpjStatusTxt"></span></div>
                 </div>
                 <div class="campo">
                   <label>Nome da empresa <span style="font-weight:400;color:var(--text-muted)">(preenchido pela Receita Federal)</span></label>
-                  <input type="text" id="cNome" required readonly style="background:rgba(0,0,0,.03)" />
+                  <input type="text" id="cNome" required readonly placeholder="Aguardando CNPJ…" />
                 </div>
                 <div class="campo" id="cCidadeCampo" style="display:none">
                   <label>Cidade/UF <span style="font-weight:400;color:var(--text-muted)">(da Receita Federal)</span></label>
-                  <input type="text" id="cCidade" readonly style="background:rgba(0,0,0,.03)" />
+                  <input type="text" id="cCidade" readonly />
                 </div>
               </div>
               <div class="cad-col">
-                <h4 class="cad-col-titulo">Acesso e plano</h4>
-                <div class="campo"><label>E-mail de acesso</label><input type="email" id="cEmail" required /></div>
-                <div class="campo"><label>Senha (mín. 8 caracteres)</label><input type="password" id="cSenha" required /></div>
+                <h4 class="cad-col-titulo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Acesso e plano
+                </h4>
+                <div class="campo"><label>E-mail de acesso</label><input type="email" id="cEmail" autocomplete="email" required /></div>
+                <div class="campo"><label>Senha (mín. 8 caracteres)</label><input type="password" id="cSenha" autocomplete="new-password" minlength="8" required /></div>
                 <div class="campo"><label>Plano</label>
                   <select id="cPlano">
                     <option value="starter">Starter — R$ 99/mês</option>
@@ -843,6 +940,10 @@
                 </div>
                 <div class="campo">
                   <label>Logo da empresa <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+                  <label class="upload-zone" for="cLogo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span><strong>Enviar logo</strong> — png, jpg ou webp</span>
+                  </label>
                   <input type="file" id="cLogo" accept="image/png,image/jpeg,image/webp,image/gif" />
                 </div>
               </div>
@@ -1389,16 +1490,20 @@
         cnpjInput.dataset.validado = "";
         document.getElementById("cNome").value = "";
         document.getElementById("cCidadeCampo").style.display = "none";
-        cnpjStatus.style.display = "none";
+        cnpjStatus.className = ""; cnpjStatus.style.display = "none";
         // Consulta automática quando completar 14 dígitos (com debounce)
         clearTimeout(cnpjTimer);
         if (v.replace(/\D/g, "").length === 14) {
-          cnpjStatus.textContent = "Consultando a Receita Federal…";
-          cnpjStatus.style.display = "block";
-          cnpjStatus.style.color = "var(--text-muted)";
+          cnpjSetStatus("load", "Consultando a Receita Federal…");
           cnpjTimer = setTimeout(consultarCnpjCadastro, 600);
         }
       });
+
+      function cnpjSetStatus(tipo, texto) {
+        cnpjStatus.className = tipo;
+        cnpjStatus.style.display = "inline-flex";
+        document.getElementById("cnpjStatusTxt").textContent = texto;
+      }
 
       async function consultarCnpjCadastro() {
         var limpo = cnpjInput.value.replace(/\D/g, "");
@@ -1416,19 +1521,14 @@
               document.getElementById("cCidadeCampo").style.display = "block";
             }
             cnpjInput.dataset.validado = "1";
-            cnpjStatus.textContent = d.ativo
-              ? "✓ CNPJ ativo na Receita Federal"
-              : "⚠ CNPJ encontrado, porém com situação: " + (d.situacao || "não ativa");
-            cnpjStatus.style.color = d.ativo ? "#16a34a" : "var(--brand)";
+            cnpjSetStatus(d.ativo ? "ok" : "erro",
+              d.ativo ? "✓ CNPJ ativo na Receita Federal"
+                      : "⚠ Situação: " + (d.situacao || "não ativa"));
           } else {
-            cnpjStatus.textContent = d.error || "CNPJ não encontrado na Receita Federal.";
-            cnpjStatus.style.color = "#dc2626";
-            cnpjStatus.style.display = "block";
+            cnpjSetStatus("erro", d.error || "CNPJ não encontrado na Receita Federal.");
           }
         } catch (e) {
-          cnpjStatus.textContent = "Erro ao consultar o CNPJ. Tente novamente.";
-          cnpjStatus.style.color = "#dc2626";
-          cnpjStatus.style.display = "block";
+          cnpjSetStatus("erro", "Erro ao consultar o CNPJ. Tente novamente.");
         }
       }
 
