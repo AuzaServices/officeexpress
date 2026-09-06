@@ -10,9 +10,25 @@
   <link rel="stylesheet" href="/assets/auth-premium.css" />
 </head>
 <body>
-  <img class="auth-bg-logo a" src="/imagens/logo.png" alt="" aria-hidden="true" onerror="this.style.display='none'" />
-  <img class="auth-bg-logo b" src="/imagens/marca.png" alt="" aria-hidden="true" onerror="this.style.display='none'" />
   <div class="auth-page">
+    <div class="auth-side">
+      <img class="auth-side-img" src="/imagens/auth/senha.jpg" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='/imagens/auth/login.jpg';" />
+      <div class="auth-side-overlay"></div>
+      <div class="auth-side-content">
+        <div class="auth-side-logo-row">
+          <img class="auth-side-logo" src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" />
+          <span class="auth-side-badge">Office Express</span>
+        </div>
+        <h2 class="auth-side-headline">Vamos <em>recuperar</em> seu acesso.</h2>
+        <p class="auth-side-text">Informe seu e-mail e enviaremos um link seguro para você criar uma nova senha.</p>
+        <ul class="auth-side-feats">
+          <li><span class="feat-ico">📧</span>Link enviado por e-mail</li>
+          <li><span class="feat-ico">🔒</span>Processo seguro e criptografado</li>
+          <li><span class="feat-ico">⏱️</span>Rápido, leva menos de 1 minuto</li>
+        </ul>
+      </div>
+    </div>
+    <div class="auth-form-panel">
     <div class="auth-card">
 
       <a class="auth-home-btn" href="/" aria-label="Voltar para a página inicial" title="Voltar para a home">
@@ -38,7 +54,8 @@
 
       <div class="auth-links"><p><a href="/login">Voltar ao login</a></p></div>
     </div>
-  </div>
+    </div><!-- /.auth-form-panel -->
+  </div><!-- /.auth-page -->
 
   <script src="/assets/app.js"></script>
   <script>

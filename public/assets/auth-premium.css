@@ -1,357 +1,66 @@
 /* ==========================================================================
-   AUTH PREMIUM — Telas de Login / Cadastro / Convite (Office Express)
-   Fundo navy da marca, logo gigante desfocada em movimento lento e card de
-   formulário com blur azul evidente. Vale para:
-   login, cadastro, login-parceiro, login-admin, esqueci-senha,
-   recuperar-senha, confirmar-email e convite.
+   AUTH SPLIT — Layout "metade imagem | metade formulário" em todas as telas
+   de autenticação (login, cadastro, admin, parceiro, senha, confirmar).
+   Padrão: <div class="auth-page"> > .auth-side (imagem 50%) + .auth-form-panel.
+   Em telas < 1024px a imagem vira fundo imersivo atrás do card (fallback
+   elegante), e em >= 1024px vira a metade esquerda definitiva.
+   As imagens vivem em /imagens/auth/<pagina>.jpg — com fallback para
+   login.jpg e, por fim, para o gradiente navy da marca.
    ========================================================================== */
 
-.auth-page {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 20px;
-  overflow: hidden;
-  background:
-    radial-gradient(1200px 800px at 15% -10%, #003a5c 0%, transparent 60%),
-    radial-gradient(1000px 700px at 110% 110%, #0a4a63 0%, transparent 55%),
-    linear-gradient(160deg, #001f33 0%, #00293f 55%, #003a55 100%);
-  isolation: isolate;
-}
-
-/* Logo gigante desfocada no fundo — movimento devagar em órbita suave */
-.auth-bg-logo {
+/* ---------- Mobile-first: imagem como fundo imersivo ---------- */
+.auth-side {
   position: fixed;
-  width: min(78vmin, 640px);
-  aspect-ratio: 1;
-  object-fit: contain;
-  filter: blur(38px) saturate(1.25);
-  opacity: .42;
+  inset: 0;
   z-index: 0;
-  pointer-events: none;
-  animation: authLogoFloat 26s ease-in-out infinite alternate;
-}
-.auth-bg-logo.a { top: -12%; left: -14%; }
-.auth-bg-logo.b { bottom: -16%; right: -12%; width: min(64vmin, 520px); animation-duration: 34s; animation-delay: -12s; opacity: .3; }
-
-@keyframes authLogoFloat {
-  0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-  50%  { transform: translate3d(4vw, 3vh, 0) scale(1.08) rotate(2deg); }
-  100% { transform: translate3d(-3vw, -4vh, 0) scale(1.03) rotate(-2deg); }
-}
-@keyframes authLogoFloatB {
-  0%   { transform: translate3d(0, 0, 0) scale(1.05) rotate(0deg); }
-  50%  { transform: translate3d(-4vw, -3vh, 0) scale(1) rotate(-2deg); }
-  100% { transform: translate3d(3vw, 4vh, 0) scale(1.1) rotate(2deg); }
-}
-.auth-bg-logo.b { animation-name: authLogoFloatB; }
-
-/* Brilhos de luz azul complementares (profundidade) */
-.auth-page::before,
-.auth-page::after {
-  content: '';
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(90px);
-  z-index: 0;
+  height: auto;
+  padding: 0;
+  display: block;
   pointer-events: none;
 }
-.auth-page::before {
-  width: 44vmin; height: 44vmin;
-  background: rgba(255, 136, 0, .16); /* toque sutil do laranja da marca */
-  top: 8%; right: -10%;
-  animation: authGlow 22s ease-in-out infinite alternate;
-}
-.auth-page::after {
-  width: 56vmin; height: 56vmin;
-  background: rgba(64, 140, 255, .22);
-  bottom: -12%; left: -8%;
-  animation: authGlow 28s ease-in-out infinite alternate-reverse;
-}
-@keyframes authGlow {
-  from { transform: translate3d(0,0,0) scale(1); opacity: .7; }
-  to   { transform: translate3d(3vw, -3vh, 0) scale(1.15); opacity: 1; }
-}
-
-/* Card de formulário — blur azul evidente (glass azul da marca) */
-.auth-card {
-  position: relative;
-  z-index: 1;
-  background: linear-gradient(150deg, rgba(16, 64, 102, .58), rgba(4, 32, 54, .72));
-  -webkit-backdrop-filter: blur(26px) saturate(1.4);
-  backdrop-filter: blur(26px) saturate(1.4);
-  border: 1px solid rgba(140, 190, 255, .28);
-  border-radius: 24px;
-  padding: 44px 38px;
+.auth-side .auth-side-img {
   width: 100%;
-  max-width: 440px;
-  box-shadow:
-    0 30px 80px rgba(0, 10, 20, .55),
-    inset 0 1px 0 rgba(180, 220, 255, .22),
-    inset 0 -30px 60px rgba(20, 90, 150, .12);
-  animation: authCardIn .6s cubic-bezier(.22, 1, .36, 1) both;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  transform: scale(1.12);
+  filter: blur(22px) saturate(1.15) brightness(.65);
 }
-@keyframes authCardIn {
-  from { opacity: 0; transform: translateY(22px) scale(.97); }
-  to   { opacity: 1; transform: none; }
-}
-
-/* Textos do card (claros sobre o glass azul) */
-.auth-card, .auth-card h1, .auth-card .subtitle, .auth-card label { color: #eef6ff; }
-.auth-card h1 { font-size: 1.7rem; font-weight: 800; text-align: center; margin-bottom: 8px; letter-spacing: -.02em; }
-.auth-card .subtitle { text-align: center; color: rgba(210, 232, 255, .75); margin-bottom: 26px; font-size: .95rem; }
-.auth-logo { text-align: center; margin-bottom: 22px; }
-.auth-logo img { height: 52px; filter: drop-shadow(0 4px 14px rgba(0,0,0,.4)); }
-
-/* Campos: vidro escuro translúcido com foco laranja da marca */
-.auth-card .campo { margin-bottom: 18px; }
-.auth-card .campo label { display: block; margin-bottom: 8px; font-size: .82rem; font-weight: 700; letter-spacing: .02em; color: rgba(210, 232, 255, .85); }
-.auth-card .campo input, .auth-card .campo textarea {
-  width: 100%;
-  background: rgba(2, 20, 36, .5);
-  border: 1.5px solid rgba(140, 190, 255, .22);
-  border-radius: 13px;
-  padding: 14px 16px;
-  font-size: 15px;
-  color: #fff;
-  font-family: inherit;
-  transition: border-color .18s, box-shadow .18s, background .18s;
-}
-.auth-card .campo input::placeholder { color: rgba(180, 205, 230, .45); }
-.auth-card .campo input:focus {
-  outline: none;
-  border-color: var(--brand, #ff8800);
-  background: rgba(2, 24, 42, .65);
-  box-shadow: 0 0 0 4px rgba(255, 136, 0, .18);
-}
-
-/* Botão primário: gradiente laranja da marca */
-.auth-card .btn-primary, .auth-card .btn {
-  width: 100%;
-  background: linear-gradient(135deg, #ff8800, #e67300);
-  border: none;
-  color: #fff;
-  font-weight: 800;
-  font-size: 15.5px;
-  padding: 15px;
-  border-radius: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: transform .18s, box-shadow .18s, filter .18s;
-  box-shadow: 0 10px 26px rgba(230, 115, 0, .38);
-}
-.auth-card .btn-primary:hover, .auth-card .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(230, 115, 0, .48); filter: brightness(1.05); }
-.auth-card .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
-
-/* Links */
-.auth-links { text-align: center; margin-top: 22px; font-size: .9rem; color: rgba(210, 232, 255, .72); }
-.auth-links a { color: #ffb15e; text-decoration: none; font-weight: 600; }
-.auth-links a:hover { text-decoration: underline; }
-.auth-links p { margin: 6px 0; }
-
-/* Botão "voltar para a home" — casinha minimalista no canto do card */
-.auth-home-btn {
+.auth-side .auth-side-overlay {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  color: rgba(210, 232, 255, .8);
-  transition: color .18s, transform .18s;
-  -webkit-tap-highlight-color: transparent;
-  z-index: 3;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 26, 44, .55) 0%, rgba(0, 31, 51, .68) 50%, rgba(0, 18, 30, .82) 100%),
+    radial-gradient(500px 320px at 85% 8%, rgba(255, 136, 0, .16) 0%, transparent 60%);
 }
-.auth-home-btn:hover {
-  color: #ffb15e;
-  transform: translateY(-1px);
-}
-.auth-home-btn:active { transform: scale(.94); }
-.auth-home-btn svg { display: block; }
+.auth-side .auth-side-content { display: none; }
+.auth-side .auth-side-logo-row,
+.auth-side .auth-side-headline,
+.auth-side .auth-side-text,
+.auth-side .auth-side-feats { display: none; }
 
-/* Alertas sobre fundo escuro */
-.auth-card .alert { border-radius: 12px; font-size: .9rem; }
-.auth-card .alert-error { background: rgba(220, 38, 38, .18); border: 1px solid rgba(248, 113, 113, .45); color: #fecaca; }
-.auth-card .alert-success { background: rgba(22, 163, 74, .16); border: 1px solid rgba(74, 222, 128, .4); color: #bbf7d0; }
-.auth-card .alert-info { background: rgba(255, 136, 0, .12); border: 1px solid rgba(255, 168, 76, .4); color: #ffd9ad; }
-
-/* ==========================================================================
-   MOBILE — luxo total: a imagem da marca cobre a tela inteira desfocada
-   atrás do formulário, e o card ganha blur profundo + moldura luminosa.
-   ========================================================================== */
-@media (max-width: 1023px) {
-  /* Página: fundo base escuro; a imagem desfocada cobre tudo por cima.
-     Layout travado à viewport: card centralizado, sem rolagem quando
-     o conteúdo couber na tela. */
-  .auth-page {
-    min-height: 100vh;
-    min-height: 100dvh; /* barra de endereço dinâmica no iOS/Android */
-    padding: 24px 16px;
-    display: flex;
-    align-items: center;      /* container do form no MEIO da tela */
-    justify-content: center;
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: auto;
-    -webkit-overflow-scrolling: touch;
-    position: relative;
-    background: #001a2c;
-  }
-  /* Truque de centralização segura: quando o card é maior que a tela,
-     `align-items: center` cortaria o topo — margin auto resolve. */
-  .auth-form-panel { margin-top: auto; margin-bottom: auto; }
-
-  /* ---- Imagem da marca: fundo de tela cheia, desfocada e com tom azul ---- */
-  .auth-side {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    height: auto;
-    padding: 0;
-    display: block;
-    pointer-events: none; /* deixa rolar o formulário por cima */
-  }
-  .auth-side .auth-side-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 30%;
-    /* Desfoque luxuoso + leve zoom para evitar bordas claras nas margens */
-    transform: scale(1.12);
-    filter: blur(22px) saturate(1.15) brightness(.65);
-  }
-  .auth-side .auth-side-overlay {
-    background:
-      linear-gradient(180deg, rgba(0, 26, 44, .55) 0%, rgba(0, 31, 51, .68) 50%, rgba(0, 18, 30, .82) 100%),
-      radial-gradient(500px 320px at 85% 8%, rgba(255, 136, 0, .16) 0%, transparent 60%),
-      radial-gradient(600px 400px at 10% 100%, rgba(64, 140, 255, .18) 0%, transparent 55%);
-  }
-  /* Esconde texto/logo/efeitos do painel — no mobile é só atmosfera */
-  .auth-side .auth-side-content,
-  .auth-side .auth-side-logo-row { display: none; }
-
-  /* Logos desfocadas extras fora do fluxo: desligadas (a imagem já cumpre) */
-  .auth-form-panel .auth-bg-logo { display: none; }
-
-  /* ---- Formulário: card de luxo centralizado sobre o fundo desfocado ---- */
-  .auth-form-panel {
-    display: block;
-    padding: 0;
-    margin: 0 auto;
-    width: 100%;
-    max-width: 480px;
-    position: relative;
-    z-index: 2;
-    background: transparent;
-  }
-
-  .auth-card {
-    max-width: 100%;
-    padding: 32px 22px 28px;
-    border-radius: 26px;
-    /* Blur MUITO mais profundo — vidro de luxo sobre a foto desfocada */
-    -webkit-backdrop-filter: blur(34px) saturate(1.6) brightness(1.06);
-    backdrop-filter: blur(34px) saturate(1.6) brightness(1.06);
-    background: linear-gradient(150deg, rgba(14, 58, 94, .42), rgba(3, 26, 44, .58));
-    border: 1px solid rgba(160, 205, 255, .3);
-    box-shadow:
-      0 30px 90px rgba(0, 8, 16, .65),
-      inset 0 1px 0 rgba(200, 230, 255, .3),
-      inset 0 -1px 0 rgba(255, 168, 76, .12);
-  }
-  .auth-logo img { height: 42px; }
-  .auth-card h1 { font-size: 1.35rem; margin-bottom: 6px; text-shadow: 0 2px 12px rgba(0, 8, 16, .4); }
-  .auth-card .subtitle { font-size: .88rem; margin-bottom: 20px; }
-
-  /* Toque confortável: campos e botão altos, sem zoom iOS */
-  .auth-card .campo { margin-bottom: 15px; }
-  .auth-card .campo input { padding: 14px 15px; font-size: 16px; border-radius: 12px; }
-  .auth-card .campo label { font-size: .78rem; }
-  .auth-card .btn-primary, .auth-card .btn {
-    padding: 16px;
-    font-size: 16px;
-    border-radius: 14px;
-    /* área de toque generosa + feedback ao pressionar */
-    -webkit-tap-highlight-color: transparent;
-  }
-  .auth-card .btn-primary:active { transform: scale(.985); }
-  .auth-links { font-size: .85rem; margin-top: 18px; }
-
-  /* Alerta mais compacto */
-  .auth-card .alert { font-size: .82rem; padding: 12px 14px; }
-
-  /* Scroll do card nunca estoura a viewport em telas muito baixas */
-  @media (max-height: 700px) {
-    .auth-page { padding: 20px 14px 28px; }
-    .auth-card { padding: 26px 18px 22px; }
-  }
-}
-
-/* Responsivo mobile base (páginas sem .auth-side) — polimento geral */
-@media (max-width: 480px) {
-  .auth-page { padding: 24px 16px; align-items: center; }
-  .auth-page:not(:has(.auth-side)) { padding-top: 32px; }
-  .auth-card { padding: 32px 22px; border-radius: 20px; max-width: 100%; }
-  .auth-logo img { height: 46px; }
-  .auth-card h1 { font-size: 1.45rem; }
-  .auth-card .campo input { padding: 13px 14px; font-size: 16px; /* evita zoom no iOS */ }
-  .auth-bg-logo { filter: blur(30px) saturate(1.2); opacity: .38; }
-}
-@media (max-width: 360px) {
-  .auth-card { padding: 28px 16px; }
-}
-
-/* Respeita usuários com movimento reduzido */
-@media (prefers-reduced-motion: reduce) {
-  .auth-bg-logo, .auth-page::before, .auth-page::after { animation: none; }
-  .auth-card { animation: none; }
-}
-
-/* ==========================================================================
-   Convite (convite.html usa markup próprio) — normaliza para o mesmo tema
-   ========================================================================== */
-body:has(.card) .card:not(.auth-card) {
-  background: linear-gradient(150deg, rgba(16, 64, 102, .58), rgba(4, 32, 54, .72)) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(1.4) !important;
-  backdrop-filter: blur(26px) saturate(1.4) !important;
-  border: 1px solid rgba(140, 190, 255, .28) !important;
-  box-shadow: 0 30px 80px rgba(0, 10, 20, .55) !important;
-}
-body:has(.card) .card:not(.auth-card) .otp input {
-  background: rgba(2, 20, 36, .5);
-  border-color: rgba(140, 190, 255, .25);
-  color: #fff;
-}
-
-/* ==========================================================================
-   DESKTOP TOP DE LINHA — Split-screen (imagem à esquerda, form à direita)
-   Ativa a partir de 1024px. No mobile o layout permanece o card central.
-   ========================================================================== */
+/* ---------- Desktop >= 1024px: metade imagem | metade formulário ---------- */
 @media (min-width: 1024px) {
-
-  /* O card central vira o painel direito da tela dividida */
   .auth-page {
     padding: 0;
     align-items: stretch;
     justify-content: stretch;
-    background: #001f33; /* base sólida; a imagem cobre o lado esquerdo */
+    background: #001f33;
   }
-  .auth-page::before, .auth-page::after { display: none; } /* halos não são necessários no split */
+  .auth-page::before,
+  .auth-page::after { display: none; }
 
-  /* Imagem da marca ocupando o lado esquerdo inteiro */
   .auth-side {
     position: relative;
+    inset: auto;
     flex: 1 1 52%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     padding: 64px 60px;
+    pointer-events: auto;
+    background: linear-gradient(150deg, #0a2236 0%, #0e2b44 45%, #174a6b 100%);
   }
   .auth-side .auth-side-img {
     position: absolute;
@@ -359,131 +68,131 @@ body:has(.card) .card:not(.auth-card) .otp input {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Mescla a foto com o azul da marca — identidade imediata */
+    object-position: center;
+    transform: none;
     filter: saturate(1.05) contrast(1.02);
   }
   .auth-side .auth-side-overlay {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(200deg, rgba(0, 31, 51, .18) 0%, rgba(0, 31, 51, .55) 55%, rgba(0, 20, 34, .88) 100%),
-      radial-gradient(900px 500px at 20% 100%, rgba(255, 136, 0, .22) 0%, transparent 55%),
-      linear-gradient(90deg, rgba(0, 31, 51, .35) 0%, rgba(0, 31, 51, 0) 35%);
+    background: linear-gradient(200deg, rgba(10, 34, 54, .30) 0%, rgba(8, 26, 42, .62) 68%, rgba(6, 20, 34, .82) 100%);
   }
-  .auth-side .auth-side-content { position: relative; z-index: 1; max-width: 480px; }
-  .auth-side .auth-side-logo { height: 54px; margin-bottom: auto; filter: drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
-  .auth-side .auth-side-logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
-  .auth-side .auth-side-badge {
-    display: inline-block;
-    background: rgba(255, 136, 0, .92);
+  .auth-side .auth-side-content {
+    display: block;
+    position: relative;
+    z-index: 2;
     color: #fff;
-    font-size: .72rem;
-    font-weight: 800;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: 7px 14px;
-    border-radius: 999px;
-    box-shadow: 0 6px 18px rgba(230, 115, 0, .4);
   }
-  .auth-side .auth-side-headline {
-    color: #fff;
-    font-size: clamp(1.9rem, 2.6vw, 2.7rem);
-    font-weight: 900;
-    line-height: 1.12;
-    letter-spacing: -.02em;
-    margin: 0 0 16px;
-    text-shadow: 0 4px 30px rgba(0, 10, 20, .6);
-  }
-  .auth-side .auth-side-headline em { font-style: normal; color: #ffa54d; }
-  .auth-side .auth-side-text {
-    color: rgba(224, 238, 250, .88);
-    font-size: 1.02rem;
-    line-height: 1.65;
-    margin: 0 0 30px;
-    max-width: 420px;
-  }
-  .auth-side .auth-side-feats { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
-  .auth-side .auth-side-feats li {
+  .auth-side .auth-side-logo-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    color: rgba(228, 240, 252, .92);
-    font-size: .95rem;
+    position: absolute;
+    top: 44px;
+    left: 60px;
+  }
+  .auth-side .auth-side-logo {
+    height: 40px;
+    width: auto;
+    filter: brightness(0) invert(1);
+  }
+  .auth-side .auth-side-badge {
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .85);
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 999px;
+    padding: 5px 12px;
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, .08);
+  }
+  .auth-side .auth-side-headline {
+    font-size: clamp(1.5rem, 2.2vw, 2.15rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0 0 12px;
+    max-width: 460px;
+    text-wrap: balance;
+  }
+  .auth-side .auth-side-headline em {
+    font-style: normal;
+    color: var(--brand, #ff8800);
+  }
+  .auth-side .auth-side-text {
+    font-size: 1rem;
+    line-height: 1.55;
+    opacity: .88;
+    margin: 0 0 26px;
+    max-width: 430px;
+  }
+  .auth-side .auth-side-feats {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .auth-side .auth-side-feats li {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: .92rem;
     font-weight: 600;
+    opacity: .96;
   }
   .auth-side .auth-side-feats .feat-ico {
-    width: 34px; height: 34px;
-    flex: none;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 10px;
-    background: rgba(255, 136, 0, .18);
-    border: 1px solid rgba(255, 168, 76, .4);
-    color: #ffb15e;
-    font-size: 15px;
+    width: 23px;
+    height: 23px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    background: rgba(255, 136, 0, .92);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .72rem;
+    box-shadow: 0 4px 12px rgba(255, 136, 0, .4);
   }
 
-  /* Painel do formulário (direita): fundo navy com glass azul */
+  /* Painel do formulário ocupa a metade direita */
   .auth-form-panel {
     flex: 1 1 48%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 56px 48px;
-    position: relative;
-    background:
-      radial-gradient(800px 600px at 110% -10%, rgba(64, 140, 255, .12) 0%, transparent 55%),
-      radial-gradient(700px 500px at -10% 110%, rgba(255, 136, 0, .08) 0%, transparent 50%),
-      linear-gradient(160deg, #00293f 0%, #001f33 100%);
-    overflow: hidden;
+    padding: 48px 40px;
+    overflow-y: auto;
+    background: var(--card, #ffffff);
   }
-  /* Logo desfocada sutil apenas atrás do formulário */
-  .auth-form-panel .auth-bg-logo {
-    position: absolute;
-    width: 46vmin;
-    opacity: .22;
-    filter: blur(46px) saturate(1.2);
-    animation: none;
-  }
-  .auth-form-panel .auth-bg-logo.a { top: -8%; left: -6%; }
-  .auth-form-panel .auth-bg-logo.b { bottom: -10%; right: -6%; opacity: .15; }
-
-  /* O card ganha vidro mais refinado e moldura luminosa no desktop */
-  .auth-card {
+  .auth-form-panel .auth-card {
+    width: 100%;
     max-width: 460px;
-    padding: 48px 44px;
-    border-radius: 26px;
-    background: linear-gradient(150deg, rgba(16, 64, 102, .5), rgba(4, 32, 54, .66));
-    border: 1px solid rgba(140, 190, 255, .22);
-    box-shadow:
-      0 40px 100px rgba(0, 8, 16, .6),
-      inset 0 1px 0 rgba(180, 220, 255, .2),
-      0 0 0 1px rgba(0, 12, 22, .4);
+    margin: 0;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(4, 16, 28, .10);
+    border: 1px solid var(--border, #e2e8f0);
   }
+  .auth-form-panel .auth-card:hover { transform: none; box-shadow: 0 24px 60px rgba(4, 16, 28, .10); }
 
-  /* Transição de entrada mais elegante */
-  .auth-card { animation: authCardIn .7s cubic-bezier(.22, 1, .36, 1) both; }
-  .auth-side .auth-side-content { animation: authCardIn .8s .1s cubic-bezier(.22, 1, .36, 1) both; }
+  /* Alinhamento dos campos no painel desktop */
+  .auth-form-panel .auth-card .campo { margin-bottom: 18px; }
+  .auth-form-panel .auth-card .campo label { display: block; margin-bottom: 8px; font-size: .85rem; font-weight: 600; }
+  .auth-form-panel .auth-card .campo input,
+  .auth-form-panel .auth-card .campo select,
+  .auth-form-panel .auth-card .campo textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 15px;
+    font-size: .95rem;
+    border-radius: 10px;
+  }
+  .auth-form-panel .auth-card .btn-block { margin-top: 6px; }
 }
 
-/* Telas entre 1024px e 1280px: lado esquerdo um pouco menor, texto menor */
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .auth-side { padding: 44px 40px; }
-  .auth-form-panel { padding: 44px 36px; }
-  .auth-card { padding: 40px 34px; }
-}
+/* Botão voltar discreto (topo do card) — presente em todas as páginas */
+.auth-home-btn { position: relative; z-index: 5; }
 
-/* Quando NÃO há imagem de lado (páginas sem .auth-side), o card central
-   continua flutuando sobre o fundo animado original — comportamento intacto. */
-@media (min-width: 1024px) {
-  .auth-page:not(:has(.auth-side)) {
-    background:
-      radial-gradient(1200px 800px at 15% -10%, #003a5c 0%, transparent 60%),
-      radial-gradient(1000px 700px at 110% 110%, #0a4a63 0%, transparent 55%),
-      linear-gradient(160deg, #001f33 0%, #00293f 55%, #003a55 100%);
-    padding: 48px 20px;
-    align-items: center;
-    justify-content: center;
-  }
-  .auth-page:not(:has(.auth-side))::before,
-  .auth-page:not(:has(.auth-side))::after { display: block; } /* halos voltam */
+@media (max-width: 1023px) {
+  .auth-form-panel .auth-card .campo { margin-bottom: 16px; }
 }
