@@ -565,6 +565,98 @@ app.get("/api/companies/vagas/:id/candidaturas", async (req, res) => {
   }
 });
 
+// Empresa abre o currículo COMPLETO de um candidato da sua vaga.
+// Consome a mesma cota diária/semanal do plano (como no banco de currículos):
+// a listagem de candidatos é grátis; abrir o currículo consome crédito.
+app.get("/api/companies/vagas/:id/candidatos/:uid/curriculo", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    // Autorização: a vaga pertence à empresa E o usuário se candidatou a ela.
+    const [dono] = await pool.query("SELECT id FROM vagas WHERE id = ? AND empresa_id = ?", [req.params.id, id]);
+    if (!dono.length) return res.status(404).json({ error: "Vaga não encontrada." });
+    const [cand] = await pool.query(
+      "SELECT id FROM vagas_candidaturas WHERE vaga_id = ? AND usuario_id = ?",
+      [req.params.id, req.params.uid]
+    );
+    if (!cand.length) return res.status(404).json({ error: "Candidatura não encontrada." });
+
+    const emp = await buscarEmpresaPorId(id);
+    if (!emp) return res.status(401).json({ error: "Não autenticado." });
+    if (emp.plano === "enterprise" ? false : !emp.assinatura_ativa) {
+      return res.status(403).json({ error: "Empresa sem assinatura ativa." });
+    }
+    // Cota do plano (janela deslizante diária/semanal). Enterprise passa direto.
+    const cota = await checarCotaEmpresa(emp);
+    if (!cota.ok) {
+      return res.status(429).json({
+        error: cota.motivo === "diaria"
+          ? "Você usou seus currículos de hoje. Sua janela diária renova em breve — ou amplie seu plano."
+          : "Você atingiu o limite semanal do seu plano. Faça upgrade para continuar.",
+        motivo: cota.motivo,
+        uso: cota.uso,
+        cotas: cota.cotas,
+        upgrade: true,
+      });
+    }
+
+    // Currículo permanente do candidato (tabela talentos).
+    const [rows] = await pool.query("SELECT id, pedido_id, dados_json FROM talentos WHERE usuario_id = ? ORDER BY id DESC LIMIT 1", [req.params.uid]);
+    let d = {};
+    let talentoId = null, pedidoId = null;
+    if (rows.length) {
+      talentoId = rows[0].id; pedidoId = rows[0].pedido_id;
+      try { d = JSON.parse(rows[0].dados_json || "{}"); } catch (e) { d = {}; }
+    } else {
+      // Sem talento (candidato sem currículo pago): monta a partir do cadastro.
+      const [u] = await pool.query("SELECT nome, email FROM usuarios WHERE id = ?", [req.params.uid]);
+      if (u.length) { d = { nome: u[0].nome, email: u[0].email }; }
+    }
+    if (!d.nome && !d.email) return res.status(404).json({ error: "Currículo não encontrado." });
+
+    await registrarVisualizacao(id, { pedido_id: pedidoId, id: talentoId });
+
+    const arr = (k) => (Array.isArray(d[k]) ? d[k].filter(Boolean) : []);
+    const empresas = arr("empresa");
+    const cargos = arr("cargo");
+    const experiencias = empresas.map(function (e, i) {
+      var t = (e || "") + (cargos[i] ? " - " + cargos[i] : "");
+      return t || null;
+    }).filter(Boolean);
+    const cursos = arr("curso");
+    const instituicoes = arr("instituicao");
+    const formacoes = cursos.map(function (c, i) {
+      var t = c || "";
+      if (instituicoes[i]) t += " - " + instituicoes[i];
+      return t || null;
+    }).filter(Boolean);
+
+    res.json({
+      ok: true,
+      curriculo: {
+        id: talentoId,
+        pedido_id: pedidoId,
+        nome: d.nome || "Candidato",
+        cargo: (Array.isArray(d.cargo) && d.cargo.length ? d.cargo[0] : (d.objetivo || "")).toString(),
+        cidade: d.cidade || "",
+        estado: d.estado || "",
+        telefone: arr("telefone")[0] || "",
+        email: d.email || "",
+        resumo: d.objetivo || "",
+        experiencias: experiencias,
+        formacoes: formacoes,
+        habilidades: String(d.habilidades || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12),
+        idiomas: []
+      },
+      uso: cota.uso || null,
+      cotas: cota.cotas || null
+    });
+  } catch (e) {
+    console.error("Erro curriculo candidato:", e.message);
+    res.status(500).json({ error: "Erro ao abrir currículo." });
+  }
+});
+
 // ===== Público =====
 
 // Lista vagas ativas (página /vagas).

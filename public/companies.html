@@ -855,6 +855,33 @@
     }
 
     /* ===== Vagas do painel ===== */
+    .vg-subtabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .vg-subtab {
+      padding: 9px 20px; border-radius: 999px; border: 1px solid var(--border, #e2e8f0);
+      background: transparent; font-family: inherit; font-weight: 800; font-size: .86rem;
+      color: var(--text-secondary); cursor: pointer; transition: all .15s ease;
+    }
+    .vg-subtab:hover { border-color: var(--brand, #ff8800); color: var(--brand, #ff8800); }
+    .vg-subtab.ativo { background: var(--brand, #ff8800); border-color: var(--brand, #ff8800); color: #fff; }
+    .vcan-item {
+      display: flex; align-items: center; gap: 14px; padding: 14px 0;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+    .vcan-item:last-child { border-bottom: none; }
+    .vcan-avatar {
+      width: 44px; height: 44px; border-radius: 999px; flex: none; overflow: hidden;
+      background: linear-gradient(135deg, #0e2b44, #174a6b); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .85rem;
+    }
+    .vcan-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .vcan-info { flex: 1; min-width: 0; }
+    .vcan-nome { font-weight: 800; font-size: .95rem; margin: 0 0 2px; }
+    .vcan-meta { font-size: .78rem; color: var(--text-muted); }
+    .vcan-quando { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+    @media (max-width: 600px) {
+      .vcan-item { flex-wrap: wrap; }
+      .vcan-quando { width: 100%; }
+    }
     .vaga-item {
       display: flex; gap: 14px; align-items: flex-start;
       padding: 14px 0; border-bottom: 1px solid var(--border, #e2e8f0);
@@ -1364,6 +1391,13 @@
 
             <!-- ===== Seção: Vagas (divulgações) ===== -->
             <div class="portal-secao oculto" id="secaoVagas">
+              <!-- Sub-abas: Divulgações | Candidatos -->
+              <div class="vg-subtabs">
+                <button type="button" class="vg-subtab ativo" id="tabVgDivulg" onclick="vgSubAba('divulg')">Divulgações</button>
+                <button type="button" class="vg-subtab" id="tabVgCands" onclick="vgSubAba('cands')">Candidatos</button>
+              </div>
+
+              <div id="vgPainelDivulg">
               <div class="card" style="margin-bottom:20px">
                 <h3 style="font-weight:800;margin-bottom:4px">Divulgar vaga</h3>
                 <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">
@@ -1427,6 +1461,22 @@
                   <span class="contagem" id="vgContagem" style="color:var(--text-muted);font-size:.85rem"></span>
                 </div>
                 <div id="vgLista"></div>
+              </div>
+              </div><!-- /vgPainelDivulg -->
+
+              <!-- Sub-aba: Candidatos -->
+              <div id="vgPainelCands" style="display:none">
+                <div class="card">
+                  <div class="resultados-titulo">
+                    <h3>Candidatos das suas vagas</h3>
+                    <span style="color:var(--text-muted);font-size:.8rem">Abrir o currículo completo consome créditos do plano</span>
+                  </div>
+                  <div class="campo" style="max-width:340px;margin-bottom:14px">
+                    <label>Selecionar vaga</label>
+                    <select id="vcanSel" onchange="carregarCandidatosVaga()"></select>
+                  </div>
+                  <div id="vcanLista"></div>
+                </div>
               </div>
             </div>
 
@@ -2031,6 +2081,7 @@
       };
 
       async function carregarVagasEmpresa() {
+        vcanVagas = []; // invalida cache do select de candidatos (sub-aba Candidatos)
         var { ok, data } = await App.api("/api/companies/vagas");
         if (!ok) return;
         // Cota no formulário
@@ -2093,6 +2144,140 @@
         return "em " + Math.max(1, Math.floor(ms / 60000)) + "min";
       }
       window.tempoRestante = tempoRestante;
+
+      /* ===== Sub-abas da seção Vagas ===== */
+      window.vgSubAba = function (qual) {
+        var div = qual === "divulg";
+        document.getElementById("tabVgDivulg").classList.toggle("ativo", div);
+        document.getElementById("tabVgCands").classList.toggle("ativo", !div);
+        document.getElementById("vgPainelDivulg").style.display = div ? "" : "none";
+        document.getElementById("vgPainelCands").style.display = div ? "none" : "";
+        if (!div) carregarCandidatosVaga();
+      };
+
+      /* ===== Candidatos das vagas ===== */
+      var vcanVagas = [];
+      async function carregarCandidatosVaga() {
+        var sel = document.getElementById("vcanSel");
+        var listaEl = document.getElementById("vcanLista");
+        // Popula o select na primeira abertura (ou após publicar/encerrar)
+        if (!vcanVagas.length) {
+          var r = await App.api("/api/companies/vagas");
+          vcanVagas = (r.ok && r.data && r.data.vagas) ? r.data.vagas : [];
+          if (!vcanVagas.length) {
+            sel.innerHTML = '<option value="">—</option>';
+            listaEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px 0">Nenhuma divulgação ainda. Publique uma vaga para receber candidatos.</p>';
+            return;
+          }
+          sel.innerHTML = vcanVagas.map(function (v) {
+            return '<option value="' + v.id + '">' + escapar(v.titulo) + ' (' + v.candidatos + ')</option>';
+          }).join("");
+        }
+        var vagaId = sel.value;
+        if (!vagaId) return;
+        listaEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:18px 0">Carregando…</p>';
+        var { ok, data } = await App.api("/api/companies/vagas/" + vagaId + "/candidaturas");
+        if (!ok) { listaEl.innerHTML = '<p style="text-align:center;color:#dc2626;padding:18px 0">' + escapar((data && data.error) || "Erro ao carregar candidatos.") + '</p>'; return; }
+        var cands = (data && data.candidaturas) || [];
+        if (!cands.length) {
+          listaEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px 0">Ninguém se candidatou a esta vaga ainda.</p>';
+          return;
+        }
+        listaEl.innerHTML = cands.map(function (u) {
+          var ini = (u.nome || "?").trim().split(/\s+/);
+          var ab = ((ini[0] || "?")[0] + (ini.length > 1 ? ini[ini.length - 1][0] : "")).toUpperCase();
+          var avatar = u.foto_url
+            ? '<div class="vcan-avatar"><img src="' + escapar(u.foto_url) + '" alt="" /></div>'
+            : '<div class="vcan-avatar">' + ab + '</div>';
+          var meta = [];
+          if (u.area) meta.push(escapar(u.area));
+          if (u.cidade) meta.push(escapar(u.cidade) + (u.estado ? "/" + escapar(u.estado) : ""));
+          var quando = "";
+          try { quando = new Date(u.criada_em).toLocaleDateString("pt-BR") + " às " + new Date(u.criada_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); } catch (e) {}
+          return '<div class="vcan-item">' +
+            avatar +
+            '<div class="vcan-info">' +
+              '<p class="vcan-nome">' + escapar(u.nome || "Candidato") + '</p>' +
+              '<div class="vcan-meta">' + (meta.length ? meta.join(" · ") : "Currículo disponível") + '</div>' +
+              (quando ? '<div class="vcan-quando">Candidatou-se em ' + quando + '</div>' : '') +
+            '</div>' +
+            '<button type="button" class="btn btn-primary" style="padding:8px 16px;font-size:.82rem" onclick="verCurriculoCandidato(' + vagaId + ',' + u.usuario_id + ')">Ver currículo</button>' +
+          '</div>';
+        }).join("");
+      }
+      window.carregarCandidatosVaga = carregarCandidatosVaga;
+
+      // Abre o currículo completo do candidato — consome crédito do plano.
+      // Reutiliza o mesmo modal de 2 colunas do banco de currículos.
+      async function verCurriculoCandidato(vagaId, uid) {
+        var { ok, data } = await App.api("/api/companies/vagas/" + vagaId + "/candidatos/" + uid + "/curriculo");
+        if (!ok) {
+          var motivo = data && data.motivo;
+          var msg = data && data.error ? data.error : "Erro ao abrir currículo.";
+          if (motivo === "diaria" || motivo === "semanal") {
+            if (confirm(msg + "\n\nVer planos com janelas maiores?")) window.location.href = "/companies/pagar";
+          } else {
+            alert(msg);
+          }
+          atualizarUso();
+          return;
+        }
+        var c = data.curriculo;
+        candidatoModal = c;
+        var contato = [];
+        if (c.telefone) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' + escapeHtml(c.telefone) + '</span>');
+        if (c.email) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + escapeHtml(c.email) + '</span>');
+        if (c.cidade) contato.push('<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escapeHtml(c.cidade + (c.estado ? "/" + c.estado : "")) + '</span>');
+
+        function secao(titulo, html) { if (!html) return ""; return '<div class="mc-secao"><h4>' + titulo + '</h4>' + html + '</div>'; }
+        function lista(arr) { if (!arr || !arr.length) return ""; return "<ul>" + arr.map(function (i) { return "<li>" + escapeHtml(i) + "</li>"; }).join("") + "</ul>"; }
+
+        var html =
+          '<div class="modal-curriculo">' +
+            '<div class="mc-topo">' +
+              '<div>' +
+                '<div class="mc-nome">' + escapeHtml(c.nome || "Candidato") + '</div>' +
+                '<div class="mc-cargo">' + escapeHtml(c.cargo || "Não informado") + '</div>' +
+              '</div>' +
+              '<button class="btn btn-primary" style="padding:10px 18px;font-size:.9rem" onclick="contatarViaModal(' + (c.id || 0) + ')">Contatar via WhatsApp</button>' +
+            '</div>' +
+            '<div class="mc-contato">' + contato.join("") + '</div>' +
+            secao("Sobre", c.resumo ? "<p>" + escapeHtml(c.resumo) + "</p>" : "") +
+            secao("Experiências", lista(c.experiencias)) +
+            secao("Formação", lista(c.formacoes)) +
+            secao("Habilidades", c.habilidades && c.habilidades.length ? '<div class="cand-meta">' + c.habilidades.map(function (h) { return '<span class="cand-tag">' + escapeHtml(h) + '</span>'; }).join("") + '</div>' : "") +
+          '</div>';
+
+        var backdrop = document.createElement("div");
+        backdrop.style.cssText = "position:fixed;inset:0;background:rgba(6,18,30,.62);backdrop-filter:blur(3px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden";
+        var box = document.createElement("div");
+        box.className = "card";
+        box.style.cssText = "max-width:1100px;width:100%;height:min(84vh,760px);padding:0;position:relative;overflow:hidden;border-radius:16px;display:flex;flex-direction:column";
+        box.innerHTML =
+          '<button onclick="fecharModal()" style="position:absolute;top:10px;right:12px;z-index:5;width:30px;height:30px;border-radius:999px;border:none;background:rgba(14,43,68,.08);font-size:1.15rem;line-height:1;cursor:pointer;color:var(--text-muted);transition:background .15s ease" onmouseover="this.style.background=\'rgba(14,43,68,.16)\'" onmouseout="this.style.background=\'rgba(14,43,68,.08)\'" aria-label="Fechar">&times;</button>' +
+          '<div class="mc-grid" style="flex:1;min-height:0;padding:0">' +
+            '<div class="mc-col-dados" style="padding:22px 22px">' + html + '</div>' +
+            (c.id ?
+              '<div class="mc-col-pdf" id="mcColPdf" style="border-radius:0;border:none;border-left:1px solid var(--border,#e2e8f0);box-shadow:none;height:100%">' +
+                '<div class="mc-pdf-bar">' +
+                  '<span>Currículo original — modelo Minimal</span>' +
+                  '<a href="/api/companies/talentos/' + c.id + '/pdf" target="_blank" rel="noopener">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+                    'Baixar PDF</a>' +
+                '</div>' +
+                '<iframe src="/api/companies/talentos/' + c.id + '/visualizar" loading="lazy" style="height:calc(100% - 37px)" title="Currículo do candidato"></iframe>' +
+              '</div>'
+            :
+              '<div class="mc-col-pdf" style="border-left:1px solid var(--border,#e2e8f0);display:flex;align-items:center;justify-content:center;padding:24px;color:var(--text-muted);font-size:.88rem;text-align:center">Este candidato ainda não possui currículo pago — exibindo apenas os dados do cadastro.</div>') +
+          '</div>';
+        backdrop.appendChild(box);
+        backdrop.id = "modalBackdrop";
+        document.getElementById("modalCurriculo").appendChild(backdrop);
+        backdrop.addEventListener("click", function (e) { if (e.target === backdrop) fecharModal(); });
+        atualizarUso();
+      }
+      window.verCurriculoCandidato = verCurriculoCandidato;
+
 
       async function publicarVaga() {
         var titulo = document.getElementById("vgTitulo").value.trim();
