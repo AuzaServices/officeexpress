@@ -1,11 +1,12 @@
 /* ==========================================================================
    AUTH SPLIT — Layout "metade imagem | metade formulário" em todas as telas
    de autenticação (login, cadastro, admin, parceiro, senha, confirmar).
-   Padrão: <div class="auth-page"> > .auth-side (imagem 50%) + .auth-form-panel.
-   Em telas < 1024px a imagem vira fundo imersivo atrás do card (fallback
-   elegante), e em >= 1024px vira a metade esquerda definitiva.
-   As imagens vivem em /imagens/auth/<pagina>.jpg — com fallback para
-   login.jpg e, por fim, para o gradiente navy da marca.
+   - Desktop >= 1024px: metade esquerda imagem presa à viewport (sticky) —
+     nunca estica quando o formulário é mais alto que a tela (ex.: cadastro).
+   - Mobile: imagem como fundo imersivo desfocado atrás do card.
+   - Sem logos: apenas o formulário à direita e o link "← Voltar ao site".
+   As imagens vivem em /imagens/auth/<pagina>.jpg, com fallback para login.jpg
+   e, por fim, para o gradiente navy da marca.
    ========================================================================== */
 
 /* ---------- Mobile-first: imagem como fundo imersivo ---------- */
@@ -34,14 +35,11 @@
     radial-gradient(500px 320px at 85% 8%, rgba(255, 136, 0, .16) 0%, transparent 60%);
 }
 .auth-side .auth-side-content { display: none; }
-.auth-side .auth-side-logo-row,
-.auth-side .auth-side-headline,
-.auth-side .auth-side-text,
-.auth-side .auth-side-feats { display: none; }
 
 /* ---------- Desktop >= 1024px: metade imagem | metade formulário ---------- */
 @media (min-width: 1024px) {
   .auth-page {
+    display: flex;
     padding: 0;
     align-items: stretch;
     justify-content: stretch;
@@ -50,18 +48,21 @@
   .auth-page::before,
   .auth-page::after { display: none; }
 
+  /* Metade esquerda: presa à viewport. Com o formulário mais alto (cadastro),
+     o scroll acontece só à direita e a imagem nunca é esticada alongada. */
   .auth-side {
-    position: relative;
-    inset: auto;
-    flex: 1 1 52%;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    max-height: 100vh;
+    flex: 1 1 50%;
+    min-width: 0;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 64px 60px;
     pointer-events: auto;
     background: linear-gradient(150deg, #0a2236 0%, #0e2b44 45%, #174a6b 100%);
   }
+  /* Imagem cobrindo exatamente a metade visível — sem deformar (cover) */
   .auth-side .auth-side-img {
     position: absolute;
     inset: 0;
@@ -75,43 +76,25 @@
   .auth-side .auth-side-overlay {
     background: linear-gradient(200deg, rgba(10, 34, 54, .30) 0%, rgba(8, 26, 42, .62) 68%, rgba(6, 20, 34, .82) 100%);
   }
+  /* Conteúdo da lateral: ancorado na base, sem sobrepor nada */
   .auth-side .auth-side-content {
     display: block;
     position: relative;
     z-index: 2;
+    height: 100%;
     color: #fff;
-  }
-  .auth-side .auth-side-logo-row {
+    padding: 64px 56px;
     display: flex;
-    align-items: center;
-    gap: 12px;
-    position: absolute;
-    top: 44px;
-    left: 60px;
-  }
-  .auth-side .auth-side-logo {
-    height: 40px;
-    width: auto;
-    filter: brightness(0) invert(1);
-  }
-  .auth-side .auth-side-badge {
-    font-size: .8rem;
-    font-weight: 800;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, .85);
-    border: 1px solid rgba(255, 255, 255, .35);
-    border-radius: 999px;
-    padding: 5px 12px;
-    backdrop-filter: blur(6px);
-    background: rgba(255, 255, 255, .08);
+    flex-direction: column;
+    justify-content: flex-end;
+    box-sizing: border-box;
   }
   .auth-side .auth-side-headline {
-    font-size: clamp(1.5rem, 2.2vw, 2.15rem);
+    font-size: clamp(1.5rem, 2.1vw, 2.1rem);
     font-weight: 800;
     line-height: 1.2;
     margin: 0 0 12px;
-    max-width: 460px;
+    max-width: 440px;
     text-wrap: balance;
   }
   .auth-side .auth-side-headline em {
@@ -123,7 +106,7 @@
     line-height: 1.55;
     opacity: .88;
     margin: 0 0 26px;
-    max-width: 430px;
+    max-width: 420px;
   }
   .auth-side .auth-side-feats {
     list-style: none;
@@ -155,14 +138,17 @@
     box-shadow: 0 4px 12px rgba(255, 136, 0, .4);
   }
 
-  /* Painel do formulário ocupa a metade direita */
+  /* Metade direita: formulário, centralizado, com scroll próprio */
   .auth-form-panel {
-    flex: 1 1 48%;
+    flex: 1 1 50%;
+    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 48px 40px;
     overflow-y: auto;
+    max-height: 100vh;
+    box-sizing: border-box;
     background: var(--card, #ffffff);
   }
   .auth-form-panel .auth-card {
@@ -190,8 +176,19 @@
   .auth-form-panel .auth-card .btn-block { margin-top: 6px; }
 }
 
-/* Botão voltar discreto (topo do card) — presente em todas as páginas */
-.auth-home-btn { position: relative; z-index: 5; }
+/* Link "← Voltar ao site" no topo do card (mesmo padrão do login de empresas) */
+.auth-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  margin-bottom: 18px;
+  transition: color .15s ease;
+}
+.auth-voltar:hover { color: var(--brand, #ff8800); }
 
 @media (max-width: 1023px) {
   .auth-form-panel .auth-card .campo { margin-bottom: 16px; }
