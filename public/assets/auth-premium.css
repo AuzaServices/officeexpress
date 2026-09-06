@@ -36,6 +36,62 @@
 }
 .auth-side .auth-side-content { display: none; }
 
+/* ---------- Mobile < 861px: card centralizado sobre a imagem ----------
+   O estilo.css só define .auth-page/.auth-card a partir de 861px. Abaixo
+   disso, sem estas regras o card perde fundo/borda/centralização e "some"
+   sobre a imagem (sobrando só o botão). Aqui garantimos o layout completo. */
+@media (max-width: 860px) {
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    box-sizing: border-box;
+  }
+  .auth-form-panel {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .auth-card {
+    background: var(--card, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 20px;
+    padding: 28px 20px;
+    width: 100%;
+    max-width: 430px;
+    box-sizing: border-box;
+    box-shadow: 0 25px 50px rgba(4, 16, 28, .35);
+  }
+  .auth-card h1 { font-size: 1.45rem; font-weight: 800; text-align: center; margin: 0 0 8px; }
+  .auth-card .subtitle { text-align: center; color: var(--text-muted, #64748b); margin: 0 0 24px; font-size: .93rem; }
+  .auth-card .campo { margin-bottom: 16px; }
+  .auth-card .campo label { display: block; margin-bottom: 8px; font-size: .85rem; font-weight: 600; color: var(--text-secondary, #475569); }
+  .auth-card .campo input,
+  .auth-card .campo select,
+  .auth-card .campo textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 15px;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 2px solid var(--border, #e2e8f0);
+    background: #ffffff;
+    color: var(--text-primary, #0f172a);
+    outline: none;
+  }
+  .auth-card .campo input:focus,
+  .auth-card .campo select:focus,
+  .auth-card .campo textarea:focus { border-color: var(--brand, #ff8800); box-shadow: 0 0 0 4px rgba(255, 136, 0, .15); }
+  .auth-voltar { color: var(--text-muted, #64748b); }
+  .auth-links { text-align: center; margin-top: 16px; }
+  .auth-links a { color: var(--brand, #ff8800); font-weight: 700; text-decoration: none; }
+}
+
 /* ---------- Desktop >= 1024px: metade imagem | metade formulário ---------- */
 @media (min-width: 1024px) {
   .auth-page {

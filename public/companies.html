@@ -800,8 +800,19 @@
               <div class="alert" id="alertC"></div>
 
           <form id="formCadastro" class="oculto">
-            <div class="campo"><label>Nome da empresa</label><input type="text" id="cNome" required /></div>
-            <div class="campo"><label>CNPJ</label><input type="text" id="cCnpj" placeholder="00.000.000/0000-00" /></div>
+            <div class="campo">
+              <label>CNPJ da empresa</label>
+              <input type="text" id="cCnpj" placeholder="00.000.000/0000-00" inputmode="numeric" maxlength="18" required />
+              <div id="cnpjStatus" style="font-size:.78rem;margin-top:6px;display:none"></div>
+            </div>
+            <div class="campo">
+              <label>Nome da empresa <span style="font-weight:400;color:var(--text-muted)">(preenchido pela Receita Federal)</span></label>
+              <input type="text" id="cNome" required readonly style="background:rgba(0,0,0,.03)" />
+            </div>
+            <div class="campo" id="cCidadeCampo" style="display:none">
+              <label>Cidade/UF <span style="font-weight:400;color:var(--text-muted)">(da Receita Federal)</span></label>
+              <input type="text" id="cCidade" readonly style="background:rgba(0,0,0,.03)" />
+            </div>
             <div class="campo"><label>E-mail de acesso</label><input type="email" id="cEmail" required /></div>
             <div class="campo"><label>Senha (mín. 8 caracteres)</label><input type="password" id="cSenha" required /></div>
             <div class="campo"><label>Plano</label>
@@ -1341,17 +1352,79 @@
       }
       window.mostrarForm = mostrarForm;
 
+      // ===== CNPJ: máscara + consulta automática na Receita Federal =====
+      var cnpjInput = document.getElementById("cCnpj");
+      var cnpjStatus = document.getElementById("cnpjStatus");
+      var cnpjTimer = null;
+
+      cnpjInput.addEventListener("input", function () {
+        // Máscara 00.000.000/0000-00
+        var v = cnpjInput.value.replace(/\D/g, "").slice(0, 14);
+        v = v.replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+             .replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+        cnpjInput.value = v;
+        // Limpa estado de validação ao editar
+        cnpjInput.dataset.validado = "";
+        document.getElementById("cNome").value = "";
+        document.getElementById("cCidadeCampo").style.display = "none";
+        cnpjStatus.style.display = "none";
+        // Consulta automática quando completar 14 dígitos (com debounce)
+        clearTimeout(cnpjTimer);
+        if (v.replace(/\D/g, "").length === 14) {
+          cnpjStatus.textContent = "Consultando a Receita Federal…";
+          cnpjStatus.style.display = "block";
+          cnpjStatus.style.color = "var(--text-muted)";
+          cnpjTimer = setTimeout(consultarCnpjCadastro, 600);
+        }
+      });
+
+      async function consultarCnpjCadastro() {
+        var limpo = cnpjInput.value.replace(/\D/g, "");
+        if (limpo.length !== 14) return;
+        try {
+          var r = await fetch("/api/cnpj/" + limpo, { credentials: "same-origin" });
+          var d = await r.json().catch(function () { return {}; });
+          if (r.ok && d.ok) {
+            // Preenche com a razão social oficial (ou fantasia, se houver).
+            var nomeOficial = d.nome || "";
+            if (d.fantasia && nomeOficial.length > 34) nomeOficial = d.fantasia;
+            document.getElementById("cNome").value = nomeOficial;
+            if (d.municipio || d.uf) {
+              document.getElementById("cCidade").value = (d.municipio || "") + (d.uf ? "/" + d.uf : "");
+              document.getElementById("cCidadeCampo").style.display = "block";
+            }
+            cnpjInput.dataset.validado = "1";
+            cnpjStatus.textContent = d.ativo
+              ? "✓ CNPJ ativo na Receita Federal"
+              : "⚠ CNPJ encontrado, porém com situação: " + (d.situacao || "não ativa");
+            cnpjStatus.style.color = d.ativo ? "#16a34a" : "var(--brand)";
+          } else {
+            cnpjStatus.textContent = d.error || "CNPJ não encontrado na Receita Federal.";
+            cnpjStatus.style.color = "#dc2626";
+            cnpjStatus.style.display = "block";
+          }
+        } catch (e) {
+          cnpjStatus.textContent = "Erro ao consultar o CNPJ. Tente novamente.";
+          cnpjStatus.style.color = "#dc2626";
+          cnpjStatus.style.display = "block";
+        }
+      }
+
       // Cadastro
       document.getElementById("formCadastro").addEventListener("submit", async function (e) {
         e.preventDefault();
         var arquivoLogo = document.getElementById("cLogo") && document.getElementById("cLogo").files.length
           ? document.getElementById("cLogo").files[0] : null;
+        var cnpjLimpo = document.getElementById("cCnpj").value.replace(/\D/g, "");
+        if (cnpjLimpo.length !== 14) return mostrarAlerta("Digite um CNPJ válido com 14 dígitos.", false);
+        if (!document.getElementById("cCnpj").dataset.validado) return mostrarAlerta("Aguarde a confirmação do CNPJ pela Receita Federal.", false);
         var resp;
         if (arquivoLogo) {
           // Com logo: envia multipart para o servidor hospedar no Cloudinary.
           var fd = new FormData();
           fd.append("nome", document.getElementById("cNome").value.trim());
-          fd.append("cnpj", document.getElementById("cCnpj").value.trim());
+          fd.append("cnpj", cnpjLimpo);
+          fd.append("cidade", document.getElementById("cCidade").value.trim());
           fd.append("email", document.getElementById("cEmail").value.trim());
           fd.append("senha", document.getElementById("cSenha").value);
           fd.append("plano", document.getElementById("cPlano").value);
@@ -1361,7 +1434,8 @@
         } else {
           var body = {
             nome: document.getElementById("cNome").value.trim(),
-            cnpj: document.getElementById("cCnpj").value.trim(),
+            cnpj: cnpjLimpo,
+            cidade: document.getElementById("cCidade").value.trim(),
             email: document.getElementById("cEmail").value.trim(),
             senha: document.getElementById("cSenha").value,
             plano: document.getElementById("cPlano").value

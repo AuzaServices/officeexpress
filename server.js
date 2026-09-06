@@ -2736,8 +2736,16 @@ async function garantirMsgWhatsapp() {
       await pool.query("ALTER TABLE empresas ADD COLUMN msg_whatsapp TEXT NULL");
       console.log("✅ Coluna empresas.msg_whatsapp adicionada");
     }
+    // Cidade/UF oficiais da Receita Federal (preenchidas via consulta CNPJ).
+    const [colsCid] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'empresas' AND COLUMN_NAME = 'cidade'"
+    );
+    if (Number(colsCid[0].c) === 0) {
+      await pool.query("ALTER TABLE empresas ADD COLUMN cidade VARCHAR(160) NULL");
+      console.log("✅ Coluna empresas.cidade adicionada");
+    }
   } catch (e) {
-    console.error("🚨 FALHA ao garantir empresas.msg_whatsapp:", e.message);
+    console.error("🚨 FALHA ao garantir colunas de empresas:", e.message);
   }
 }
 garantirMsgWhatsapp();
@@ -2997,18 +3005,104 @@ async function arquivarTalento(pedidoId) {
 
 // Cadastro de empresa (aceita logo opcional via multipart/form-data,
 // hospedada no Cloudinary).
+// ---------------------------------------------------------------------------
+// Consulta de CNPJ (validação real na Receita Federal via APIs públicas).
+// Fontes: BrasilAPI (1ª) e ReceitaWS (fallback). Ambas gratuitas e sem chave.
+// Valida também os dígitos verificadores localmente (rejeita CNPJ inventado
+// mesmo se a API estiver fora do ar).
+// ---------------------------------------------------------------------------
+function validarCnpjDigitos(cnpj) {
+  const c = String(cnpj || "").replace(/\D/g, "");
+  if (c.length !== 14 || /^(\d)\1{13}$/.test(c)) return false;
+  let soma = 0, peso = 5;
+  for (let i = 0; i < 12; i++) { soma += Number(c[i]) * peso; peso = peso === 2 ? 9 : peso - 1; }
+  let dv = soma % 11; const d1 = dv < 2 ? 0 : 11 - dv;
+  if (Number(c[12]) !== d1) return false;
+  soma = 0; peso = 6;
+  for (let i = 0; i < 13; i++) { soma += Number(c[i]) * peso; peso = peso === 2 ? 9 : peso - 1; }
+  dv = soma % 11; const d2 = dv < 2 ? 0 : 11 - dv;
+  return Number(c[13]) === d2;
+}
+
+async function consultarCnpj(cnpjLimpo) {
+  // 1) BrasilAPI — retorna razao_social, municipio, uf, descricao_situacao_cadastral
+  try {
+    const r = await fetch("https://brasilapi.com.br/api/cnpj/v1/" + cnpjLimpo, { signal: AbortSignal.timeout(8000) });
+    if (r.ok) {
+      const d = await r.json();
+      return {
+        nome: d.razao_social || "",
+        fantasia: d.nome_fantasia || "",
+        municipio: d.municipio || "",
+        uf: d.uf || "",
+        situacao: d.descricao_situacao_cadastral || "",
+      };
+    }
+  } catch (e) { /* cai no fallback */ }
+  // 2) ReceitaWS — nome, municipio, uf, situacao (free: 3 req/min)
+  const r2 = await fetch("https://receitaws.com.br/v1/cnpj/" + cnpjLimpo, { signal: AbortSignal.timeout(8000) });
+  if (!r2.ok) throw new Error("Serviço de consulta indisponível.");
+  const d2 = await r2.json();
+  if (d2.status === "ERROR") throw new Error(d2.message || "CNPJ não encontrado.");
+  return {
+    nome: d2.nome || "",
+    fantasia: d2.fantasia || "",
+    municipio: d2.municipio || "",
+    uf: d2.uf || "",
+    situacao: d2.situacao || "",
+  };
+}
+
+app.get("/api/cnpj/:numero", async (req, res) => {
+  const cnpjLimpo = String(req.params.numero || "").replace(/\D/g, "");
+  if (!validarCnpjDigitos(cnpjLimpo)) {
+    return res.status(400).json({ error: "CNPJ inválido (dígitos verificadores não conferem)." });
+  }
+  try {
+    const dados = await consultarCnpj(cnpjLimpo);
+    if (!dados.nome) return res.status(404).json({ error: "CNPJ não encontrado na Receita Federal." });
+    res.json({
+      ok: true,
+      cnpj: cnpjLimpo,
+      nome: dados.nome,
+      fantasia: dados.fantasia,
+      municipio: dados.municipio,
+      uf: dados.uf,
+      situacao: dados.situacao,
+      ativo: /ativa/i.test(dados.situacao || ""),
+    });
+  } catch (e) {
+    console.error("Erro ao consultar CNPJ:", e.message);
+    res.status(502).json({ error: "Não foi possível consultar o CNPJ agora. Tente novamente em instantes." });
+  }
+});
+
 app.post("/api/companies/cadastro", uploadEmpresaLogoMiddleware, async (req, res) => {
   try {
-    const { nome, cnpj, email, senha, plano = "starter" } = req.body || {};
+    const { nome, cnpj, email, senha, plano = "starter", cidade } = req.body || {};
     if (!nome || !email || !senha) return res.status(400).json({ error: "Nome, e-mail e senha são obrigatórios." });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "E-mail inválido." });
     if (!validarSenha(senha)) return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, com letra e número." });
     if (!["starter", "pro", "enterprise"].includes(plano)) return res.status(400).json({ error: "Plano inválido." });
+    // CNPJ obrigatório e validado: dígitos verificadores + confirmação real
+    // na Receita Federal (a consulta já foi feita no preenchimento automático,
+    // mas revalidamos aqui para evitar burla do formulário).
+    const cnpjLimpo = String(cnpj || "").replace(/\D/g, "");
+    if (!validarCnpjDigitos(cnpjLimpo)) return res.status(400).json({ error: "CNPJ inválido." });
+    let dadosReceita = null;
+    try { dadosReceita = await consultarCnpj(cnpjLimpo); } catch (e) { /* segue com os dados do form */ }
+    if (dadosReceita && !/ativa/i.test(dadosReceita.situacao || "")) {
+      return res.status(400).json({ error: "Este CNPJ não está com situação ativa na Receita Federal (" + (dadosReceita.situacao || "situação desconhecida") + ")." });
+    }
+    const nomeFinal = (dadosReceita && dadosReceita.nome) ? dadosReceita.nome : String(nome).trim();
+    const cidadeFinal = (dadosReceita && dadosReceita.municipio)
+      ? dadosReceita.municipio + (dadosReceita.uf ? "/" + dadosReceita.uf : "")
+      : String(cidade || "").trim();
     const senhaHash = await bcrypt.hash(senha, 10);
     const fotoUrl = req.file && req.file.path ? req.file.path : null;
     const [result] = await pool.query(
-      "INSERT INTO empresas (nome, cnpj, email, senha_hash, plano, foto_url) VALUES (?, ?, ?, ?, ?, ?)",
-      [String(nome).trim(), String(cnpj || "").trim(), String(email).trim().toLowerCase(), senhaHash, plano, fotoUrl]
+      "INSERT INTO empresas (nome, cnpj, cidade, email, senha_hash, plano, foto_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [nomeFinal, cnpjLimpo, cidadeFinal || null, String(email).trim().toLowerCase(), senhaHash, plano, fotoUrl]
     );
     const empresaId = result.insertId;
 
