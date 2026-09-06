@@ -148,7 +148,9 @@
       position: relative; overflow: hidden; min-height: 100%;
       background: linear-gradient(150deg, #0a2236 0%, #0e2b44 45%, #174a6b 100%);
     }
-    .auth-visual img {
+    /* Apenas a imagem de FUNDO (filho direto) — sem afetar a .auth-logo,
+       que é um <img> mais profundo na árvore. */
+    .auth-visual > img {
       position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover;
       filter: saturate(.92) contrast(1.02);
