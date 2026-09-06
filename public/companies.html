@@ -135,7 +135,11 @@
     body:has(#viewForm:not(.oculto)) .ch-overlay,
     body:has(#viewForm:not(.oculto)) .ch-drawer,
     body:has(#viewForm:not(.oculto)) .footer { display: none !important; }
+    /* Sem header/footer: zera TODOS os espaços externos (body, section e
+       container) para a imagem chegar ao topo e à base da viewport. */
     body:has(#viewForm:not(.oculto)) { padding-top: 0 !important; }
+    body:has(#viewForm:not(.oculto)) .section { padding: 0 !important; }
+    body:has(#viewForm:not(.oculto)) .container { max-width: none !important; padding: 0 !important; margin: 0 !important; }
 
     .auth-split {
       display: grid; grid-template-columns: 1fr 1fr;
