@@ -38,7 +38,7 @@ const { pool, garantirSchema, getPreco, getPrecoParceiro, garantirPrecoParceiro 
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao, enviarConviteParceiro, enviarCodigoConvite, enviarCodigoEmpresa, enviarReciboEmpresa } = require("./lib/email");
-const { cloudinary, uploadEmpresaLogoMiddleware } = require("./lib/cloudinary");
+const { cloudinary, uploadEmpresaLogoMiddleware, uploadUsuarioFotoMiddleware } = require("./lib/cloudinary");
 const cron = require("node-cron");
 
 require("dotenv").config();
@@ -143,7 +143,7 @@ function usuarioDaSessao(req) {
 }
 
 async function buscarUsuarioPorId(id) {
-  const [rows] = await pool.query("SELECT id, nome, email, email_confirmado, created_at FROM usuarios WHERE id = ?", [id]);
+  const [rows] = await pool.query("SELECT id, nome, email, email_confirmado, foto_url, created_at FROM usuarios WHERE id = ?", [id]);
   return rows[0] || null;
 }
 
@@ -299,6 +299,75 @@ app.get("/api/auth/me", async (req, res) => {
   } catch (err) {
     console.error("❌ Erro ao buscar usuário em /api/auth/me:", err.message);
     res.status(500).json({ error: "Erro ao carregar a conta." });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// CONTA DO CLIENTE: foto de perfil + exclusão de conta
+// ---------------------------------------------------------------------------
+
+// Usuário logado envia/atualiza sua foto de perfil (multipart, campo 'foto').
+app.post("/api/auth/me/foto", uploadUsuarioFotoMiddleware, async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  if (!req.file || !req.file.path) return res.status(400).json({ error: "Envie uma imagem válida (jpg, png, webp ou gif, até 5MB)." });
+  try {
+    const [rows] = await pool.query("SELECT foto_url FROM usuarios WHERE id = ?", [id]);
+    if (rows.length && rows[0].foto_url) await removerFotoCloudinary(rows[0].foto_url);
+    await pool.query("UPDATE usuarios SET foto_url = ? WHERE id = ?", [req.file.path, id]);
+    res.json({ ok: true, foto_url: req.file.path });
+  } catch (e) {
+    console.error("Erro ao salvar foto do usuário:", e.message);
+    res.status(500).json({ error: "Erro ao salvar a foto." });
+  }
+});
+
+// Usuário logado remove sua foto de perfil.
+app.delete("/api/auth/me/foto", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [rows] = await pool.query("SELECT foto_url FROM usuarios WHERE id = ?", [id]);
+    if (rows.length && rows[0].foto_url) await removerFotoCloudinary(rows[0].foto_url);
+    await pool.query("UPDATE usuarios SET foto_url = NULL WHERE id = ?", [id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao remover foto do usuário:", e.message);
+    res.status(500).json({ error: "Erro ao remover a foto." });
+  }
+});
+
+// Usuário logado exclui a própria conta (pedidos permanecem para fins
+// financeiros/fiscais, mas são anonimizados; currículos públicos da tabela
+// talentos são desativados para não aparecerem na busca das empresas).
+app.delete("/api/auth/conta", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const u = await buscarUsuarioPorId(id);
+    if (!u) return res.status(401).json({ error: "Não autenticado." });
+
+    // Remove a foto do Cloudinary, se houver.
+    if (u.foto_url) await removerFotoCloudinary(u.foto_url);
+
+    // Currículos públicos: oculta da busca das empresas (consentimento = 0)
+    // mas mantém o registro de pagamentos intacto.
+    await pool.query("UPDATE talentos SET consentimento = 0 WHERE usuario_id = ?", [id]);
+
+    // Anonimiza pedidos: preserva valores/datas, remove dados pessoais.
+    await pool.query(
+      "UPDATE pedidos SET nome = ?, email = ?, telefone = NULL WHERE usuario_id = ?",
+      ["Conta excluída", "excluido@" + Date.now() + ".local", id]
+    );
+
+    // Remove sessões e a conta.
+    delete req.session.usuarioId;
+    await pool.query("DELETE FROM usuarios WHERE id = ?", [id]);
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao excluir conta:", e.message);
+    res.status(500).json({ error: "Erro ao excluir a conta. Tente novamente." });
   }
 });
 
@@ -2743,6 +2812,14 @@ async function garantirMsgWhatsapp() {
     if (Number(colsCid[0].c) === 0) {
       await pool.query("ALTER TABLE empresas ADD COLUMN cidade VARCHAR(160) NULL");
       console.log("✅ Coluna empresas.cidade adicionada");
+    }
+    // Foto de perfil do usuário/cliente (Cloudinary).
+    const [colsFoto] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'foto_url'"
+    );
+    if (Number(colsFoto[0].c) === 0) {
+      await pool.query("ALTER TABLE usuarios ADD COLUMN foto_url VARCHAR(500) NULL");
+      console.log("✅ Coluna usuarios.foto_url adicionada");
     }
   } catch (e) {
     console.error("🚨 FALHA ao garantir colunas de empresas:", e.message);

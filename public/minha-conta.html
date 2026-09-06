@@ -280,6 +280,102 @@
       .conta-tabbar .tb-novo { color: #0e2b44; }
       html[data-tema="escuro"] .conta-tabbar .tb-novo { color: #e2e8f0; }
     }
+
+    /* ============================================================
+       ABA CONTA (sheet deslizante) — foto, tema, e-mail, excluir
+       ============================================================ */
+    .conta-overlay {
+      position: fixed; inset: 0; z-index: 3000;
+      background: rgba(6,18,30,.58);
+      -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    @media (min-width: 641px) {
+      .conta-overlay { align-items: center; }
+    }
+    .conta-sheet {
+      position: relative; width: 100%; max-width: 480px;
+      max-height: 88dvh; overflow-y: auto;
+      background: var(--card, #fff);
+      border-radius: 24px 24px 0 0;
+      padding: 30px 24px calc(24px + env(safe-area-inset-bottom));
+      box-shadow: 0 -20px 60px rgba(0,10,20,.35);
+      animation: contaSobe .3s cubic-bezier(.22,1,.3,1);
+    }
+    @media (min-width: 641px) {
+      .conta-sheet { border-radius: 20px; animation: contaAbre .25s cubic-bezier(.22,1,.3,1); }
+    }
+    @keyframes contaSobe { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes contaAbre { from { transform: scale(.95); opacity: 0; } to { transform: none; opacity: 1; } }
+    .conta-fechar {
+      position: absolute; top: 14px; right: 14px;
+      width: 32px; height: 32px; border-radius: 999px; border: none;
+      background: rgba(14,43,68,.08); color: var(--text-muted);
+      font-size: 1.2rem; line-height: 1; cursor: pointer; transition: background .15s;
+    }
+    .conta-fechar:hover { background: rgba(14,43,68,.16); }
+    .conta-topo { text-align: center; margin-bottom: 22px; }
+    .conta-foto-wrap { position: relative; display: inline-block; margin-bottom: 12px; }
+    .conta-foto {
+      width: 92px; height: 92px; border-radius: 999px; overflow: hidden;
+      background: linear-gradient(135deg, #0e2b44, #174a6b);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 2.1rem; font-weight: 800;
+      box-shadow: 0 10px 26px rgba(14,43,68,.25);
+    }
+    .conta-foto img { width: 100%; height: 100%; object-fit: cover; }
+    .conta-foto-editar {
+      position: absolute; right: -2px; bottom: -2px;
+      width: 32px; height: 32px; border-radius: 999px; border: 3px solid var(--card, #fff);
+      background: var(--brand, #ff8800); color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(255,136,0,.4); transition: transform .15s;
+    }
+    .conta-foto-editar:hover { transform: scale(1.08); }
+    .conta-foto-editar svg { width: 14px; height: 14px; }
+    .conta-nome { font-weight: 800; font-size: 1.15rem; color: var(--text-primary); }
+    .conta-membro { font-size: .8rem; color: var(--text-muted); margin-top: 2px; }
+    .conta-secao { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 18px; }
+    .conta-secao h4 {
+      margin: 0 0 12px; font-size: .72rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted);
+    }
+    .conta-temas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .conta-tema {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 8px; border-radius: 14px; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--card);
+      font-family: inherit; font-size: .78rem; font-weight: 700; color: var(--text-secondary);
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .conta-tema svg { width: 20px; height: 20px; }
+    .conta-tema:hover { border-color: var(--brand, #ff8800); }
+    .conta-tema.ativo {
+      border-color: var(--brand, #ff8800); color: var(--brand, #ff8800);
+      background: rgba(255,136,0,.07);
+    }
+    .conta-rotulo { display: block; font-size: .8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+    .conta-travado { font-weight: 400; color: var(--text-muted); font-size: .74rem; }
+    .conta-email {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: 12px;
+      background: linear-gradient(180deg, #f2f6fa, #f8fafc);
+      border: 1.5px solid var(--border);
+      font-size: .92rem; font-weight: 600; color: var(--text-secondary);
+      word-break: break-all;
+    }
+    .conta-email svg { width: 16px; height: 16px; flex: none; color: var(--text-muted); }
+    html[data-tema="escuro"] .conta-email { background: #0f2030; }
+    .conta-zona-perigo { border-top-color: rgba(220,38,38,.25); }
+    .conta-zona-perigo p { margin: 0 0 12px; font-size: .84rem; color: var(--text-muted); line-height: 1.5; }
+    .conta-excluir {
+      width: 100%; padding: 13px 16px; border-radius: 12px;
+      border: 1.5px solid rgba(220,38,38,.4); background: rgba(220,38,38,.05);
+      color: #dc2626; font-family: inherit; font-size: .92rem; font-weight: 800;
+      cursor: pointer; transition: background .15s, color .15s, box-shadow .15s;
+    }
+    .conta-excluir:hover { background: #dc2626; color: #fff; box-shadow: 0 6px 18px rgba(220,38,38,.35); }
+    .conta-excluir:disabled { opacity: .55; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -294,7 +390,7 @@
 
   <!-- Barra inferior estilo app (mobile) -->
   <nav class="conta-tabbar" aria-label="Navegação">
-    <a href="/" class="tb-inicio">
+    <a href="/" class="tb-inicio" id="tabInicio">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Início
     </a>
@@ -302,11 +398,71 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       Criar
     </a>
-    <a href="/minha-conta" class="tb-inicio">
+    <a href="#" class="tb-conta" id="tabConta" onclick="abrirConta(event)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Conta
     </a>
   </nav>
+
+  <!-- ===== Aba Conta (painel do perfil) ===== -->
+  <div class="conta-overlay oculto" id="contaOverlay" onclick="fecharConta(event)">
+    <div class="conta-sheet" onclick="event.stopPropagation()">
+      <button class="conta-fechar" onclick="fecharConta()" aria-label="Fechar">&times;</button>
+
+      <!-- Cabeçalho do perfil: foto + nome -->
+      <div class="conta-topo">
+        <div class="conta-foto-wrap">
+          <div class="conta-foto" id="contaFoto">
+            <span id="contaFotoInicial">?</span>
+            <img id="contaFotoImg" src="" alt="Foto de perfil" style="display:none" />
+          </div>
+          <button class="conta-foto-editar" onclick="document.getElementById('contaFotoInput').click()" title="Alterar foto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>
+          <input type="file" id="contaFotoInput" accept="image/png,image/jpeg,image/webp" style="display:none" />
+        </div>
+        <div class="conta-nome" id="contaNome">—</div>
+        <div class="conta-membro" id="contaMembro"></div>
+      </div>
+      <div class="alert" id="alertaConta"></div>
+
+      <!-- Tema -->
+      <div class="conta-secao">
+        <h4>Aparência</h4>
+        <div class="conta-temas">
+          <button type="button" class="conta-tema" data-tema="claro" onclick="definirTema('claro')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Claro
+          </button>
+          <button type="button" class="conta-tema" data-tema="escuro" onclick="definirTema('escuro')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            Escuro
+          </button>
+          <button type="button" class="conta-tema" data-tema="auto" onclick="definirTema('auto')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Automático
+          </button>
+        </div>
+      </div>
+
+      <!-- E-mail (somente leitura) -->
+      <div class="conta-secao">
+        <h4>Dados da conta</h4>
+        <label class="conta-rotulo">E-mail <span class="conta-travado">(não pode ser alterado)</span></label>
+        <div class="conta-email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span id="contaEmail">—</span>
+        </div>
+      </div>
+
+      <!-- Excluir conta -->
+      <div class="conta-secao conta-zona-perigo">
+        <h4>Zona de risco</h4>
+        <p>Excluir sua conta é permanente. Seus currículos deixam de aparecer para recrutadores e o acesso é perdido imediatamente.</p>
+        <button type="button" class="conta-excluir" onclick="excluirConta()">Excluir minha conta</button>
+      </div>
+    </div>
+  </div>
 
   <section class="section container">
     <div class="minha-conta-wrap">
@@ -658,6 +814,116 @@
         var novo = atual === "escuro" ? "claro" : "escuro";
         aplicarTema(novo);
         try { localStorage.setItem(TEMA_KEY, novo); } catch (e) {}
+      });
+
+      // ===== Aba Conta: foto, tema, e-mail, excluir conta =====
+      var usuarioConta = null;
+
+      function marcarTemaAtivo() {
+        var salvoTema = null;
+        try { salvoTema = localStorage.getItem(TEMA_KEY); } catch (e) {}
+        var atual = salvoTema || "auto";
+        var botoes = document.querySelectorAll(".conta-tema");
+        for (var i = 0; i < botoes.length; i++) {
+          botoes[i].classList.toggle("ativo", botoes[i].getAttribute("data-tema") === atual);
+        }
+      }
+
+      window.definirTema = function (tema) {
+        aplicarTema(tema);
+        try { localStorage.setItem(TEMA_KEY, tema); } catch (e) {}
+        marcarTemaAtivo();
+      };
+
+      window.abrirConta = function (ev) {
+        if (ev) ev.preventDefault();
+        var ov = document.getElementById("contaOverlay");
+        ov.classList.remove("oculto");
+        document.body.style.overflow = "hidden";
+        if (usuarioConta) preencherConta(usuarioConta);
+      };
+
+      window.fecharConta = function (ev) {
+        if (ev && ev.target !== document.getElementById("contaOverlay")) return;
+        document.getElementById("contaOverlay").classList.add("oculto");
+        document.body.style.overflow = "";
+      };
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          document.getElementById("contaOverlay").classList.add("oculto");
+          document.body.style.overflow = "";
+        }
+      });
+
+      function preencherConta(u) {
+        document.getElementById("contaNome").textContent = u.nome || "Cliente";
+        document.getElementById("contaEmail").textContent = u.email || "—";
+        document.getElementById("contaMembro").textContent =
+          u.created_at ? "Cliente desde " + new Date(u.created_at).toLocaleDateString("pt-BR", { month: "long", year: "numeric" }) : "";
+        var img = document.getElementById("contaFotoImg");
+        var inicial = document.getElementById("contaFotoInicial");
+        if (u.foto_url) {
+          img.src = u.foto_url;
+          img.style.display = "block";
+          inicial.style.display = "none";
+        } else {
+          img.style.display = "none";
+          inicial.style.display = "block";
+          inicial.textContent = (u.nome || "?").trim().charAt(0).toUpperCase();
+        }
+        marcarTemaAtivo();
+      }
+
+      document.getElementById("contaFotoInput").addEventListener("change", async function () {
+        var input = this;
+        if (!input.files || !input.files[0]) return;
+        var fd = new FormData();
+        fd.append("foto", input.files[0]);
+        mostrarAlertaConta("Enviando foto…", "info");
+        try {
+          var resp = await fetch("/api/auth/me/foto", { method: "POST", body: fd, credentials: "same-origin" });
+          var data = await resp.json();
+          if (resp.ok && data.ok) {
+            document.getElementById("contaFotoImg").src = data.foto_url;
+            document.getElementById("contaFotoImg").style.display = "block";
+            document.getElementById("contaFotoInicial").style.display = "none";
+            mostrarAlertaConta("Foto atualizada!", "success");
+          } else {
+            mostrarAlertaConta(data.error || "Erro ao enviar a foto.", "error");
+          }
+        } catch (e) {
+          mostrarAlertaConta("Erro de conexão ao enviar a foto.", "error");
+        }
+        input.value = "";
+      });
+
+      function mostrarAlertaConta(msg, tipo) {
+        var el = document.getElementById("alertaConta");
+        el.textContent = msg;
+        el.className = "alert show " + (tipo === "success" ? "alert-success" : tipo === "info" ? "alert-info" : "alert-error");
+        clearTimeout(el._timer);
+        el._timer = setTimeout(function () { el.className = "alert"; }, 3200);
+      }
+
+      window.excluirConta = async function () {
+        if (!confirm("Tem certeza que deseja excluir sua conta? Esta ação é permanente e não pode ser desfeita.")) return;
+        if (!confirm("Última confirmação: seus currículos sairão da busca dos recrutadores e o acesso será perdido. Excluir?")) return;
+        var btn = document.querySelector(".conta-excluir");
+        btn.disabled = true;
+        try {
+          var r = await App.api("/api/auth/conta", { method: "DELETE" });
+          if (r.ok) { alert("Conta excluída. Sentiremos sua falta!"); location.href = "/"; }
+          else { mostrarAlertaConta(r.data && r.data.error ? r.data.error : "Erro ao excluir a conta.", "error"); btn.disabled = false; }
+        } catch (e) {
+          mostrarAlertaConta("Erro de conexão.", "error");
+          btn.disabled = false;
+        }
+      };
+
+      // Carrega dados do usuário para a aba Conta (em paralelo com os pedidos)
+      App.authMe().then(function (u) {
+        if (u) { usuarioConta = u; preencherConta(u); }
       });
     })();
   </script>
