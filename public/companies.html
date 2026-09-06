@@ -128,18 +128,24 @@
     /* Formulário (cadastro/login) */
     .form-card { max-width: 520px; margin: 0 auto; }
 
-    /* ==== Login/Cadastro: imagem fullscreen com card de vidro à direita ==== */
+    /* ==== Login/Cadastro: TELA CHEIA dedicada — metade imagem | metade form ====
+       Quando o viewForm está visível, header e footer são escondidos (ver
+       regras body:has abaixo) e esta view ocupa a viewport inteira. */
+    body:has(#viewForm:not(.oculto)) .ch-header,
+    body:has(#viewForm:not(.oculto)) .ch-overlay,
+    body:has(#viewForm:not(.oculto)) .ch-drawer,
+    body:has(#viewForm:not(.oculto)) .footer { display: none !important; }
+    body:has(#viewForm:not(.oculto)) { padding-top: 0 !important; }
+
     .auth-split {
-      position: relative;
-      min-height: calc(100vh - 80px);
-      display: flex; align-items: center; justify-content: flex-end;
+      display: grid; grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
       margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
-      padding: 40px 6vw;
-      isolation: isolate;
+      background: var(--card, #fff);
     }
-    /* A IMAGEM preenche a tela INTEIRA (fundo absoluto) */
+    /* Metade ESQUERDA: imagem em tom azul-profissional */
     .auth-visual {
-      position: absolute; inset: 0; z-index: -2; overflow: hidden;
+      position: relative; overflow: hidden; min-height: 100%;
       background: linear-gradient(150deg, #0a2236 0%, #0e2b44 45%, #174a6b 100%);
     }
     .auth-visual img {
@@ -147,21 +153,19 @@
       object-fit: cover;
       filter: saturate(.92) contrast(1.02);
     }
-    /* Véu azul-profissional sobre a foto inteira + reforço atrás do card */
     .auth-visual-overlay {
       position: absolute; inset: 0;
-      background:
-        linear-gradient(75deg, rgba(8,26,42,.92) 0%, rgba(10,32,52,.72) 34%, rgba(12,40,64,.38) 62%, rgba(10,30,50,.55) 100%);
+      background: linear-gradient(200deg, rgba(10,34,54,.28) 0%, rgba(8,26,42,.66) 70%, rgba(6,20,34,.85) 100%);
     }
     .auth-visual.sem-foto .auth-visual-overlay { background: linear-gradient(150deg, #0a2236 0%, #0e2b44 45%, #174a6b 100%); }
     .auth-visual-conteudo {
-      position: absolute; left: 0; top: 0; bottom: 0; z-index: -1;
-      width: 46%; display: flex; flex-direction: column; justify-content: flex-end;
-      padding: 48px 52px; color: #fff; pointer-events: none;
+      position: relative; z-index: 2; height: 100%;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 48px 52px; color: #fff;
     }
     .auth-logo { height: 40px; width: auto; align-self: flex-start; margin-bottom: auto; filter: brightness(0) invert(1); }
     .auth-visual-conteudo h2 {
-      font-size: clamp(1.5rem, 2.6vw, 2.3rem); font-weight: 800; line-height: 1.2;
+      font-size: clamp(1.5rem, 2.2vw, 2.15rem); font-weight: 800; line-height: 1.2;
       margin: 0 0 12px; max-width: 440px; text-wrap: balance;
     }
     .auth-visual-conteudo > p {
@@ -179,28 +183,28 @@
       font-size: .72rem; font-weight: 900;
       box-shadow: 0 4px 12px rgba(255,136,0,.4);
     }
-    /* O formulário flutua sobre a imagem, à direita, em card de vidro */
+    /* Metade DIREITA: formulário, centralizado verticalmente */
     .auth-form-side {
-      position: relative; z-index: 2;
-      width: min(480px, 100%);
-      margin-left: auto;
-      display: flex; align-items: center;
-      max-height: calc(100vh - 160px); overflow-y: auto;
+      display: flex; align-items: center; justify-content: center;
+      padding: 48px 40px; overflow-y: auto;
+      background: var(--card, #ffffff);
     }
     .auth-form-side .form-card {
-      width: 100%; max-width: none; margin: 0;
+      width: 100%; max-width: 460px; margin: 0 auto;
       padding: 36px 34px;
       border-radius: 20px;
-      background: rgba(255,255,255,.94);
-      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,.55);
-      box-shadow: 0 30px 80px rgba(4,16,28,.45);
+      box-shadow: 0 24px 60px rgba(4,16,28,.10);
+      border: 1px solid var(--border, #e2e8f0);
     }
-    html[data-tema="escuro"] .auth-form-side .form-card {
-      background: rgba(10,30,50,.9);
-      border: 1px solid rgba(120,170,210,.18);
+    .auth-form-side .form-card:hover { transform: none; box-shadow: 0 24px 60px rgba(4,16,28,.10); }
+    /* Botão voltar discreto no topo do card */
+    .auth-voltar {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .82rem; font-weight: 700; color: var(--text-muted);
+      text-decoration: none; margin-bottom: 18px;
+      transition: color .15s ease;
     }
-    .auth-form-side .form-card:hover { transform: none; }
+    .auth-voltar:hover { color: var(--brand, #ff8800); }
     /* Alinhamento dos campos dentro do card */
     .auth-form-side .form-card .campo { margin-bottom: 18px; }
     .auth-form-side .form-card .campo label { display: block; margin-bottom: 8px; font-size: .85rem; font-weight: 600; }
@@ -212,16 +216,13 @@
     .auth-form-side .form-card .campo input[type="file"] { padding: 11px 14px; cursor: pointer; }
     .auth-form-side .form-card .btn-block { margin-top: 6px; }
     .auth-form-side .form-card p { text-align: center; }
-    @media (max-width: 1100px) {
-      .auth-visual-conteudo { width: 56%; padding: 36px 34px; }
-      .auth-form-side { width: min(440px, 100%); }
-    }
-    @media (max-width: 900px) {
-      .auth-split { padding: 32px 18px; min-height: auto; }
-      .auth-visual-conteudo { display: none; }
-      .auth-visual-overlay { background: linear-gradient(180deg, rgba(8,26,42,.78), rgba(10,32,52,.88)); }
-      .auth-form-side { margin: 0 auto; max-height: none; overflow: visible; }
-      .auth-form-side .form-card { padding: 28px 24px; }
+    @media (max-width: 1000px) {
+      .auth-split { grid-template-columns: 1fr; min-height: auto; }
+      .auth-visual { min-height: 280px; }
+      .auth-visual-conteudo { padding: 36px 30px; }
+      .auth-logo { position: absolute; top: 26px; left: 26px; margin-bottom: 0; }
+      .auth-form-side { padding: 34px 20px; }
+      .auth-form-side .form-card { padding: 30px 26px; box-shadow: none; border: none; }
     }
     html[data-tema="escuro"] .auth-form-side { background: var(--bg-1, #001f33); }
     @media (max-width: 900px) {
@@ -779,6 +780,10 @@
           <!-- Metade direita: formulário -->
           <div class="auth-form-side">
             <div class="card form-card">
+              <a href="/companies" class="auth-voltar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                Voltar ao site
+              </a>
               <h2 id="formTitulo" style="margin-bottom:8px;font-weight:800"></h2>
               <p id="formSub" style="color:var(--text-muted);margin-bottom:24px"></p>
               <div class="alert" id="alertC"></div>
