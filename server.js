@@ -418,7 +418,7 @@ async function expirarVagasVencidas() {
   }
 }
 // No boot e a cada 15 minutos.
-expirarVagasVencidas();
+garantirVagas().then(expirarVagasVencidas);
 cron.schedule("*/15 * * * *", expirarVagasVencidas);
 
 // Empresa logada cria uma divulgação de vaga.
@@ -3118,7 +3118,7 @@ async function garantirVagas() {
         banner_url VARCHAR(500) NULL,
         destaque TINYINT(1) NOT NULL DEFAULT 0,
         visualizacoes INT NOT NULL DEFAULT 0,
-        ativa_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ativa_de DATETIME NOT NULL,
         expira_em DATETIME NOT NULL,
         criada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_vagas_ativas (expira_em),
