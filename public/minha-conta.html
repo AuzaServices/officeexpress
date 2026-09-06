@@ -478,7 +478,6 @@
               '<div class="mini"><img src="/imagens/miniaturas/' + encodeURIComponent(p.modelo) + '.png" alt="" loading="lazy" onerror="fallbackMini(this)"><span class="mini-fallback" style="display:none">CV</span></div>' +
               '<div><div class="nome">' + (modeloNome || "Documento") + '</div>' +
               '<div class="tipo">' + tipoLabel(p.modelo, tipo) + ' · Pedido #' + p.id + '</div>' +
-              (p.status === "pago" ? (p.consentimento ? '<div class="selo-banco" title="Seu currículo está visível para empresas parceiras, conforme sua autorização (LGPD)."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Visível para empresas parceiras</div>' : '') : '') +
               (p.status === "pago" && p.talento_id ?
                 '<label class="toggle-recrutadores' + (p.consentimento ? ' on' : '') + '" title="Controla se recrutadores podem encontrar e visualizar este currículo na busca das empresas.">' +
                   '<input type="checkbox" data-talento="' + p.talento_id + '"' + (p.consentimento ? ' checked' : '') + ' />' +
