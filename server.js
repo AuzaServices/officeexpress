@@ -1731,15 +1731,15 @@ app.put("/api/admin/empresas/:id/plano", protegerAdmin, async (req, res) => {
 });
 
 // Exclui uma empresa (admin). Remove primeiro os registros dependentes
-// (pagamentos, currículos vistos, contatos) para não deixar órfãos, e
-// encerra qualquer sessão ativa da empresa.
+// (pagamentos, currículos vistos) para não deixar órfãos.
+// Nota: empresas_contatos não tem empresa_id (guarda o nome em texto livre),
+// então não é vinculada ao ID e permanece intacta.
 app.delete("/api/admin/empresas/:id", protegerAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!id) return res.status(400).json({ error: "Empresa inválida." });
     await pool.query("DELETE FROM empresas_pagamentos WHERE empresa_id = ?", [id]);
     await pool.query("DELETE FROM empresas_curriculos_vistos WHERE empresa_id = ?", [id]);
-    await pool.query("DELETE FROM empresas_contatos WHERE empresa_id = ?", [id]);
     const [r] = await pool.query("DELETE FROM empresas WHERE id = ?", [id]);
     if (!r.affectedRows) return res.status(404).json({ error: "Empresa não encontrada." });
     await registrarAdminLog("empresa_excluida", `Empresa #${id} excluída`);
