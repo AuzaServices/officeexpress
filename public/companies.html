@@ -175,8 +175,23 @@
     .auth-form-side {
       display: flex; align-items: center; justify-content: center;
       padding: 48px 40px; overflow-y: auto;
+      /* Fundo consistente nos dois temas */
+      background: var(--bg-gradient, linear-gradient(135deg, #edf5f8 0%, #d9eef1 52%, #c7e4e8 100%));
     }
-    .auth-form-side .form-card { width: 100%; max-width: 440px; margin: 0; box-shadow: 0 20px 50px rgba(0,10,20,.08); border-radius: 16px; padding: 34px 32px; }
+    .auth-form-side .form-card { width: 100%; max-width: 440px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,10,20,.08); border-radius: 16px; padding: 34px 32px; }
+    .auth-form-side .form-card:hover { transform: none; }
+    /* Alinhamento perfeito dos campos dentro do card de autenticação */
+    .auth-form-side .form-card .campo { margin-bottom: 18px; }
+    .auth-form-side .form-card .campo label { display: block; margin-bottom: 8px; font-size: .85rem; font-weight: 600; }
+    .auth-form-side .form-card .campo input,
+    .auth-form-side .form-card .campo select {
+      width: 100%; box-sizing: border-box; padding: 13px 15px;
+      font-size: .95rem; border-radius: 10px;
+    }
+    .auth-form-side .form-card .campo input[type="file"] { padding: 11px 14px; cursor: pointer; }
+    .auth-form-side .form-card .btn-block { margin-top: 6px; }
+    .auth-form-side .form-card p { text-align: center; }
+    html[data-tema="escuro"] .auth-form-side { background: var(--bg-1, #001f33); }
     @media (max-width: 900px) {
       .auth-split { grid-template-columns: 1fr; min-height: auto; margin-left: 0; margin-right: 0; }
       .auth-visual { min-height: 240px; }
@@ -749,7 +764,7 @@
               </select>            </div>
             <div class="campo">
               <label>Logo da empresa <span style="font-weight:400;color:var(--text-muted)">(opcional — png, jpg ou webp)</span></label>
-              <input type="file" id="cLogo" accept="image/png,image/jpeg,image/webp,image/gif" style="padding:10px;background:var(--bg-card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:10px;width:100%;box-sizing:border-box" />
+              <input type="file" id="cLogo" accept="image/png,image/jpeg,image/webp,image/gif" />
             </div>
             <button type="submit" class="btn btn-primary btn-block">Criar conta e assinar</button>
             <p style="text-align:center;margin-top:16px;font-size:.9rem;color:var(--text-muted)">Já tem conta? <a href="#" onclick="mostrarForm('login');return false;" style="color:var(--brand)">Entrar</a></p>
@@ -764,11 +779,11 @@
               <h3 style="font-weight:800;margin-bottom:6px">Confirme seu e-mail</h3>
               <p style="color:var(--text-muted);font-size:.9rem">Enviamos um código de 4 dígitos para <strong id="confEmailDestino">seu e-mail</strong>.</p>
             </div>
-            <div class="campo">
-              <label style="text-align:center;display:block">Código de confirmação</label>
+            <div class="campo" style="text-align:center">
+              <label style="display:block;margin-bottom:8px">Código de confirmação</label>
               <input type="text" id="confCodigo" inputmode="numeric" maxlength="4" autocomplete="one-time-code"
-                     placeholder="0000" required
-                     style="text-align:center;font-size:2rem;font-weight:800;letter-spacing:14px;padding:14px 0 14px 14px;max-width:220px;margin:0 auto;display:block" />
+                     placeholder="••••" required
+                     style="text-align:center;font-size:1.8rem;font-weight:800;letter-spacing:12px;padding:12px 0 12px 12px;max-width:200px;margin:0 auto;display:block" />
             </div>
             <button type="submit" class="btn btn-primary btn-block">Confirmar e continuar</button>
             <p style="text-align:center;margin-top:16px;font-size:.85rem;color:var(--text-muted)">
