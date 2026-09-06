@@ -46,13 +46,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 28px 16px;
     box-sizing: border-box;
   }
   .auth-form-panel {
     position: relative;
     z-index: 2;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -61,24 +62,24 @@
     background: var(--card, #ffffff);
     border: 1px solid var(--border, #e2e8f0);
     border-radius: 20px;
-    padding: 28px 20px;
+    padding: 26px 20px;
     width: 100%;
     max-width: 430px;
     box-sizing: border-box;
     box-shadow: 0 25px 50px rgba(4, 16, 28, .35);
   }
-  .auth-card h1 { font-size: 1.45rem; font-weight: 800; text-align: center; margin: 0 0 8px; }
-  .auth-card .subtitle { text-align: center; color: var(--text-muted, #64748b); margin: 0 0 24px; font-size: .93rem; }
-  .auth-card .campo { margin-bottom: 16px; }
-  .auth-card .campo label { display: block; margin-bottom: 8px; font-size: .85rem; font-weight: 600; color: var(--text-secondary, #475569); }
+  .auth-card h1 { font-size: 1.35rem; font-weight: 800; text-align: center; margin: 0 0 6px; }
+  .auth-card .subtitle { text-align: center; color: var(--text-muted, #64748b); margin: 0 0 18px; font-size: .9rem; }
+  .auth-card .campo { margin-bottom: 13px; }
+  .auth-card .campo label { display: block; margin-bottom: 6px; font-size: .8rem; font-weight: 600; color: var(--text-secondary, #475569); }
   .auth-card .campo input,
   .auth-card .campo select,
   .auth-card .campo textarea {
     width: 100%;
     box-sizing: border-box;
-    padding: 13px 15px;
-    font-size: 1rem;
-    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: .95rem;
+    border-radius: 10px;
     border: 2px solid var(--border, #e2e8f0);
     background: #ffffff;
     color: var(--text-primary, #0f172a);
@@ -87,8 +88,9 @@
   .auth-card .campo input:focus,
   .auth-card .campo select:focus,
   .auth-card .campo textarea:focus { border-color: var(--brand, #ff8800); box-shadow: 0 0 0 4px rgba(255, 136, 0, .15); }
+  .auth-card .btn-block { margin-top: 4px; padding: 13px 16px; }
   .auth-voltar { color: var(--text-muted, #64748b); }
-  .auth-links { text-align: center; margin-top: 16px; }
+  .auth-links { text-align: center; margin-top: 14px; font-size: .85rem; }
   .auth-links a { color: var(--brand, #ff8800); font-weight: 700; text-decoration: none; }
 }
 
@@ -199,42 +201,53 @@
     display: block;
   }
 
-  /* Metade direita: formulário, centralizado, com scroll próprio */
+  /* Metade direita: formulário com rolagem interna e respiro garantido.
+     Quando o formulário é mais alto que a viewport (cadastro completo), o
+     card rola dentro do painel sem nunca encostar nas bordas: o padding
+     vertical do painel cria o "colchão" acima/abaixo durante o scroll. */
   .auth-form-panel {
     flex: 1 1 50%;
     min-width: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 40px;
+    padding: 40px;
     overflow-y: auto;
     max-height: 100vh;
     box-sizing: border-box;
     background: var(--card, #ffffff);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, .35) transparent;
   }
   .auth-form-panel .auth-card {
     width: 100%;
-    max-width: 460px;
-    margin: 0;
+    max-width: 440px;
+    margin: auto 0;
+    padding: 32px 30px;
     border-radius: 20px;
     box-shadow: 0 24px 60px rgba(4, 16, 28, .10);
     border: 1px solid var(--border, #e2e8f0);
+    box-sizing: border-box;
   }
   .auth-form-panel .auth-card:hover { transform: none; box-shadow: 0 24px 60px rgba(4, 16, 28, .10); }
 
-  /* Alinhamento dos campos no painel desktop */
-  .auth-form-panel .auth-card .campo { margin-bottom: 18px; }
-  .auth-form-panel .auth-card .campo label { display: block; margin-bottom: 8px; font-size: .85rem; font-weight: 600; }
+  /* Campos compactos (cadastro cabe melhor sem perder elegância) */
+  .auth-form-panel .auth-card h1 { font-size: 1.35rem; margin-bottom: 6px; }
+  .auth-form-panel .auth-card .subtitle { margin-bottom: 18px; font-size: .9rem; }
+  .auth-form-panel .auth-card .campo { margin-bottom: 13px; }
+  .auth-form-panel .auth-card .campo label { display: block; margin-bottom: 6px; font-size: .8rem; font-weight: 600; }
   .auth-form-panel .auth-card .campo input,
   .auth-form-panel .auth-card .campo select,
   .auth-form-panel .auth-card .campo textarea {
     width: 100%;
     box-sizing: border-box;
-    padding: 13px 15px;
-    font-size: .95rem;
+    padding: 11px 14px;
+    font-size: .93rem;
     border-radius: 10px;
   }
-  .auth-form-panel .auth-card .btn-block { margin-top: 6px; }
+  .auth-form-panel .auth-card .btn-block { margin-top: 4px; padding: 13px 16px; font-size: .95rem; }
+  .auth-form-panel .auth-card .auth-links { margin-top: 14px; font-size: .85rem; }
 }
 
 /* Link "← Voltar ao site" no topo do card (mesmo padrão do login de empresas) */
@@ -250,7 +263,3 @@
   transition: color .15s ease;
 }
 .auth-voltar:hover { color: var(--brand, #ff8800); }
-
-@media (max-width: 1023px) {
-  .auth-form-panel .auth-card .campo { margin-bottom: 16px; }
-}
