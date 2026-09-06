@@ -551,7 +551,7 @@ app.get("/api/companies/vagas/:id/candidaturas", async (req, res) => {
     if (!dono.length) return res.status(404).json({ error: "Vaga não encontrada." });
     const [cands] = await pool.query(
       `SELECT c.usuario_id, c.criada_em, u.nome, u.email, u.foto_url,
-              t.id AS talento_id, t.area, t.cidade, t.estado
+              t.id AS talento_id, t.cargo AS area, t.cidade, t.estado
        FROM vagas_candidaturas c
        JOIN usuarios u ON u.id = c.usuario_id
        LEFT JOIN talentos t ON t.usuario_id = c.usuario_id
