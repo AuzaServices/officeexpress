@@ -495,7 +495,7 @@
 
       // Checkbox de visibilidade para recrutadores (delegação: as linhas da
       // tabela são recriadas a cada render).
-      document.getElementById("tbodyPedidos").addEventListener("change", async function (e) {
+      document.getElementById("tbody").addEventListener("change", async function (e) {
         var input = e.target.closest('input[data-talento]');
         if (!input) return;
         var label = input.closest(".toggle-recrutadores");
