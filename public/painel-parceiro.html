@@ -291,6 +291,70 @@
       table { min-width: 520px; }
       .novo-filho { grid-template-columns: 1fr; }
     }
+
+    /* ============================================================
+       MOBILE — PAINEL DO PARCEIRO (mesmo modelo dos demais painéis)
+       ============================================================ */
+    @media (max-width: 560px) {
+      .wrap { padding: 16px 14px calc(84px + env(safe-area-inset-bottom)); }
+      .topbar { padding: 0 14px; }
+      /* Métricas 2×2 compactas */
+      .grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+      .metric { padding: 14px; border-radius: 14px; }
+      .m-value { font-size: 1.3rem; }
+      .m-sub { font-size: .72rem; }
+      .m-label { font-size: .72rem; gap: 6px; }
+      .m-icon svg { width: 14px; height: 14px; }
+      /* Banner de comissão empilhado */
+      .comissao-banner { flex-direction: column; align-items: flex-start; gap: 10px; padding: 18px; }
+      /* Tabela → cartões */
+      .table-scroll { overflow-x: visible; }
+      table { min-width: 0 !important; border: none; background: transparent; }
+      table thead { display: none; }
+      table tr {
+        display: block; background: var(--card);
+        border: 1px solid var(--border); border-radius: 12px;
+        margin-bottom: 10px; padding: 4px 0; overflow: hidden;
+      }
+      table td {
+        display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        padding: 8px 14px; border-bottom: 1px dashed var(--border); font-size: .86rem;
+        text-align: right;
+      }
+      table td:last-child { border-bottom: none; }
+      table td::before {
+        content: attr(data-label);
+        font-size: .7rem; font-weight: 800; text-transform: uppercase;
+        letter-spacing: .06em; color: var(--muted, #64748b); flex: none;
+        text-align: left;
+      }
+      table td.empty { display: block; text-align: center; }
+      table td.empty::before { content: none; }
+      /* Gráfico de tendência mais baixo */
+      .trend { height: 110px; }
+      .btn-copy, .btn-share { width: 100%; justify-content: center; }
+    }
+
+    /* Barra inferior estilo app (mobile) */
+    .parc-tabbar { display: none; }
+    @media (max-width: 560px) {
+      .parc-tabbar {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1200;
+        background: rgba(255,255,255,.92);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border);
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+        box-shadow: 0 -8px 30px rgba(0,10,20,.08);
+      }
+      .parc-tabbar a {
+        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+        text-decoration: none; font-size: .62rem; font-weight: 700;
+        color: var(--muted, #64748b); padding: 5px 2px; border-radius: 10px;
+      }
+      .parc-tabbar a svg { width: 20px; height: 20px; }
+      .parc-tabbar a:active { transform: scale(.94); }
+      .parc-tabbar .tb-painel { color: var(--primary, #4f46e5); }
+    }
   </style>
 </head>
 <body>
@@ -476,6 +540,22 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- Barra inferior estilo app (mobile) -->
+  <nav class="parc-tabbar" aria-label="Navegação">
+    <a href="/painel-parceiro" class="tb-painel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Painel
+    </a>
+    <a href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Site
+    </a>
+    <a href="/login-parceiro" onclick="App.api('/api/parceiro/logout',{method:'POST'}).then(function(){location.href='/login-parceiro'});return false;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </a>
+  </nav>
+
   <script src="/assets/app.js"></script>
   <script>
     var PARCEIRO = null;
@@ -560,7 +640,7 @@
         var modelo = p.modelo || "Currículo";
         var valor = App.formatarPreco(p.valor);
         var data = p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "–";
-        return "<tr><td>#" + p.id + '</td><td style="font-weight:600">' + nome + "</td><td>" + modelo + "</td><td>" + valor + "</td><td>" + statusBadge(p.status) + "</td><td>" + data + "</td></tr>";
+        return "<tr><td data-label='Nº'>#" + p.id + '</td><td data-label="Cliente" style="font-weight:600">' + nome + '</td><td data-label="Serviço">' + modelo + '</td><td data-label="Valor">' + valor + '</td><td data-label="Status">' + statusBadge(p.status) + '</td><td data-label="Data">' + data + "</td></tr>";
       }).join("");
     }
 
