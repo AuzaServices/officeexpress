@@ -428,7 +428,7 @@ app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) =>
   try {
     const empresa = await buscarEmpresaPorId(id);
     if (!empresa) return res.status(401).json({ error: "Não autenticado." });
-    if (empresa.assinatura_ativa !== 1 && empresa.status !== "ativa") {
+    if (empresa.assinatura_ativa !== 1 && empresa.status !== "ativo") {
       return res.status(403).json({ error: "Sua assinatura precisa estar ativa para divulgar vagas." });
     }
 
