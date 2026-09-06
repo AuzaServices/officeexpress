@@ -127,6 +127,67 @@
 
     /* Formulário (cadastro/login) */
     .form-card { max-width: 520px; margin: 0 auto; }
+
+    /* ==== Login/Cadastro: split-screen 50% imagem | 50% formulário ==== */
+    .auth-split {
+      display: grid; grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 80px);
+      margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+      background: var(--card, #fff);
+    }
+    .auth-visual {
+      position: relative; overflow: hidden; min-height: 100%;
+      background: linear-gradient(150deg, #0e2b44 0%, #174a6b 60%, #1d5a80 100%);
+    }
+    .auth-visual img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .auth-visual-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(200deg, rgba(14,43,68,.18) 0%, rgba(10,30,48,.72) 78%, rgba(8,24,40,.9) 100%);
+    }
+    .auth-visual.sem-foto .auth-visual-overlay { background: linear-gradient(150deg, #0e2b44 0%, #174a6b 60%, #1d5a80 100%); }
+    .auth-visual-conteudo {
+      position: relative; z-index: 2; height: 100%;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 48px 52px; color: #fff;
+    }
+    .auth-logo { height: 42px; width: auto; align-self: flex-start; margin-bottom: auto; filter: brightness(0) invert(1); }
+    .auth-visual-conteudo h2 {
+      font-size: clamp(1.5rem, 2.4vw, 2.1rem); font-weight: 800; line-height: 1.22;
+      margin: 0 0 12px; max-width: 420px; text-wrap: balance;
+    }
+    .auth-visual-conteudo > p {
+      font-size: 1rem; opacity: .88; margin: 0 0 26px; max-width: 400px; line-height: 1.55;
+    }
+    .auth-provas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .auth-provas li {
+      display: flex; align-items: center; gap: 10px;
+      font-size: .9rem; font-weight: 600; opacity: .95;
+    }
+    .auth-provas li span {
+      width: 22px; height: 22px; border-radius: 999px; flex-shrink: 0;
+      background: rgba(255,136,0,.9); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 900;
+    }
+    .auth-form-side {
+      display: flex; align-items: center; justify-content: center;
+      padding: 48px 40px; overflow-y: auto;
+    }
+    .auth-form-side .form-card { width: 100%; max-width: 440px; margin: 0; box-shadow: 0 20px 50px rgba(0,10,20,.08); border-radius: 16px; padding: 34px 32px; }
+    @media (max-width: 900px) {
+      .auth-split { grid-template-columns: 1fr; min-height: auto; margin-left: 0; margin-right: 0; }
+      .auth-visual { min-height: 240px; }
+      .auth-visual-conteudo { padding: 32px 26px; }
+      .auth-logo { margin-bottom: 0; position: absolute; top: 26px; left: 26px; }
+      .auth-visual-conteudo h2 { font-size: 1.25rem; max-width: none; }
+      .auth-visual-conteudo > p { display: none; }
+      .auth-provas { display: none; }
+      .auth-form-side { padding: 28px 18px; }
+      .auth-form-side .form-card { padding: 26px 22px; box-shadow: none; }
+    }
     .campo select { background: #ffffff; }
     html[data-tema="escuro"] .campo select { background: #0f2030; color: var(--text-primary); border-color: var(--border); }
 
@@ -349,8 +410,9 @@
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
       box-shadow: 4px 0 18px -14px rgba(0,10,20,.25);
     }
-    /* O conteúdo precisa de respiro à esquerda para não ficar sob a sidebar fixa
-       (260px da barra + 24px de folga). */
+    /* Rodapé escondido quando o painel da empresa está visível (usuário logado).
+       :has() é suportado nos navegadores atuais; fallback: JS abaixo também controla. */
+    body:has(#viewPainel:not(.oculto)) .footer { display: none; }
     .portal-wrap-full .portal-conteudo { margin-left: 284px; }
     /* Rodapé em largura total e NA FRENTE da sidebar: como a sidebar é fixed
        com z-index baixo, ao rolar até o fim ela desliza para trás do footer
@@ -470,11 +532,12 @@
     .btn-mini.btn-pdf:hover { background: #dc2626; border-color: #dc2626; color: #fff; box-shadow: 0 4px 14px rgba(220,38,38,.28); }
 
     /* ==== Modal do candidato: duas colunas (dados | currículo) ==== */
+    /* Modal compacto: tudo visível sem scroll */
     .mc-grid {
-      display: grid; grid-template-columns: minmax(300px, 5fr) minmax(340px, 6fr);
-      gap: 24px; align-items: start;
+      display: grid; grid-template-columns: minmax(280px, 4fr) minmax(320px, 5fr);
+      gap: 20px; align-items: stretch;
     }
-    .mc-col-dados { min-width: 0; }
+    .mc-col-dados { min-width: 0; overflow-y: auto; max-height: calc(84vh - 40px); padding-right: 4px; }
     .mc-col-pdf {
       position: sticky; top: 0; align-self: start;
       border: 1px solid var(--border, #e2e8f0); border-radius: 12px; overflow: hidden;
@@ -482,21 +545,26 @@
     }
     .mc-pdf-bar {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      padding: 10px 14px; background: #0e2b44; color: #fff;
+      padding: 8px 12px; background: #0e2b44; color: #fff;
     }
-    .mc-pdf-bar span { font-size: .78rem; font-weight: 700; letter-spacing: .02em; opacity: .95; }
+    .mc-pdf-bar span { font-size: .74rem; font-weight: 700; letter-spacing: .02em; opacity: .95; }
     .mc-pdf-bar a {
       display: inline-flex; align-items: center; gap: 5px;
-      font-size: .76rem; font-weight: 700; color: #fff; text-decoration: none;
-      background: #dc2626; padding: 5px 12px; border-radius: 999px;
+      font-size: .72rem; font-weight: 700; color: #fff; text-decoration: none;
+      background: #dc2626; padding: 4px 11px; border-radius: 999px;
       transition: filter .15s ease;
     }
     .mc-pdf-bar a:hover { filter: brightness(1.12); }
-    .mc-col-pdf iframe { width: 100%; height: 640px; border: 0; display: block; background: #fff; }
+    .mc-col-pdf iframe {
+      width: 100%; border: 0; display: block; background: #fff;
+      /* Altura exata para caber na viewport sem scrollar o modal */
+      height: calc(84vh - 37px);
+    }
     @media (max-width: 1100px) {
       .mc-grid { grid-template-columns: 1fr; }
       .mc-col-pdf { position: static; }
       .mc-col-pdf iframe { height: 520px; }
+      .mc-col-dados { max-height: none; }
     }
   </style>
 </head>
@@ -644,10 +712,29 @@
 
       <!-- ===== FORM (cadastro / login / contato) ===== -->
       <div id="viewForm" class="oculto">
-        <div class="card form-card">
-          <h2 id="formTitulo" style="margin-bottom:8px;font-weight:800"></h2>
-          <p id="formSub" style="color:var(--text-muted);margin-bottom:24px"></p>
-          <div class="alert" id="alertC"></div>
+        <div class="auth-split">
+          <!-- Metade esquerda: imagem de RH (troque por hero-auth.jpg gerado) -->
+          <div class="auth-visual">
+            <img src="/imagens/hero-auth.jpg" alt="Recrutadora analisando candidatos"
+                 onerror="this.style.display='none';this.parentElement.classList.add('sem-foto')" />
+            <div class="auth-visual-overlay"></div>
+            <div class="auth-visual-conteudo">
+              <img src="/imagens/logo.png" class="auth-logo" alt="Office Express" onerror="this.style.display='none'" />
+              <h2>Encontre os talentos que a sua empresa procura.</h2>
+              <p>Banco de currículos profissionais, verificados e prontos para contratar.</p>
+              <ul class="auth-provas">
+                <li><span>✓</span> Centenas de currículos com consentimento</li>
+                <li><span>✓</span> Busca por cargo, cidade e estado</li>
+                <li><span>✓</span> Contato direto via WhatsApp</li>
+              </ul>
+            </div>
+          </div>
+          <!-- Metade direita: formulário -->
+          <div class="auth-form-side">
+            <div class="card form-card">
+              <h2 id="formTitulo" style="margin-bottom:8px;font-weight:800"></h2>
+              <p id="formSub" style="color:var(--text-muted);margin-bottom:24px"></p>
+              <div class="alert" id="alertC"></div>
 
           <form id="formCadastro" class="oculto">
             <div class="campo"><label>Nome da empresa</label><input type="text" id="cNome" required /></div>
@@ -703,7 +790,9 @@
             <div class="campo"><label>Mensagem</label><textarea id="ctMsg" required></textarea></div>
             <button type="submit" class="btn btn-primary btn-block">Enviar</button>
           </form>
-        </div>
+            </div><!-- /form-card -->
+            </div><!-- /auth-form-side -->
+        </div><!-- /auth-split -->
       </div>
 
       <!-- ===== PAINEL (logado) — Portal B2B ===== -->
@@ -1309,6 +1398,8 @@
       window.carregarPainel = carregarPainel;
 
       // ----- Widget de uso: barras diária/semanal (janela deslizante) -----
+      // Estado anterior, para animar as barras somente quando o valor muda.
+      var _usoAnterior = "";
       async function atualizarUso() {
         try {
           var { ok, data } = await App.api("/api/companies/uso");
@@ -1341,39 +1432,29 @@
           else if (ps >= 100) { msg.textContent = "Cota semanal esgotada — faça upgrade para continuar."; msg.classList.add("uso-visivel"); w.classList.add("uso-alerta"); }
           else if (pd >= 75) { msg.textContent = "Restam poucos hoje. Planos maiores têm janelas amplas."; msg.classList.add("uso-visivel"); w.classList.add("uso-alerta"); }
           else { msg.textContent = ""; msg.classList.remove("uso-visivel"); w.classList.remove("uso-alerta"); }
+          // Anima as barras quando o valor muda (tempo real, sem recarregar).
+          var agora = d + "/" + cd + "|" + s + "/" + cs;
+          if (_usoAnterior && agora !== _usoAnterior) {
+            ["usoDiaBar", "usoSemBar"].forEach(function (id) {
+              var bar = document.getElementById(id);
+              bar.style.transition = "none";
+              var largura = bar.style.width;
+              bar.style.width = "0%";
+              void bar.offsetWidth; // força reflow antes de animar
+              bar.style.transition = "";
+              bar.style.width = largura;
+            });
+          }
+          _usoAnterior = agora;
         } catch (err) { /* silencioso */ }
       }
       window.atualizarUso = atualizarUso;
 
-      // Tempo real: reconsulta o uso periodicamente e logo após cada busca,
-      // para que as barras cresçam assim que uma consulta é consumida.
-      // Só atualiza quando o valor muda (evita reflow/animar sem motivo).
-      setInterval(atualizarUso, 20000);
+      // Tempo real: reconsulta o uso periodicamente e logo após cada busca.
+      setInterval(function () { atualizarUso(); }, 20000);
       document.addEventListener("visibilitychange", function () {
         if (!document.hidden) atualizarUso();
       });
-      var _ultimoUso = "";
-      var _atualizarUsoOriginal = atualizarUso;
-      atualizarUso = async function () {
-        await _atualizarUsoOriginal();
-        try {
-          var txt = (document.getElementById("usoDiaTxt").textContent || "") + "|" + (document.getElementById("usoSemTxt").textContent || "");
-          if (txt !== _ultimoUso) {
-            // Reanima as barras para dar feedback visual de crescimento.
-            ["usoDiaBar", "usoSemBar"].forEach(function (id) {
-              var bar = document.getElementById(id);
-              bar.style.transition = "none";
-              var w = bar.style.width;
-              bar.style.width = "0%";
-              void bar.offsetWidth; // força reflow
-              bar.style.transition = "";
-              bar.style.width = w;
-            });
-          }
-          _ultimoUso = txt;
-        } catch (e) { /* silencioso */ }
-      };
-      window.atualizarUso = atualizarUso;
 
       // Navegação entre seções do portal
       var SECOES = {
@@ -1743,23 +1824,24 @@
           '</div>';
 
         // Monta modal em DUAS COLUNAS: dados do candidato | currículo (imagem)
+        // Compacto: altura máx 84vh, sem scroll da página.
         var backdrop = document.createElement("div");
-        backdrop.style.cssText = "position:fixed;inset:0;background:rgba(6,18,30,.62);backdrop-filter:blur(3px);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;overflow-y:auto";
+        backdrop.style.cssText = "position:fixed;inset:0;background:rgba(6,18,30,.62);backdrop-filter:blur(3px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden";
         var box = document.createElement("div");
         box.className = "card";
-        box.style.cssText = "max-width:1240px;width:100%;padding:0;position:relative;overflow:hidden;border-radius:16px";
+        box.style.cssText = "max-width:1100px;width:100%;height:min(84vh,760px);padding:0;position:relative;overflow:hidden;border-radius:16px;display:flex;flex-direction:column";
         box.innerHTML =
-          '<button onclick="fecharModal()" style="position:absolute;top:12px;right:14px;z-index:5;width:34px;height:34px;border-radius:999px;border:none;background:rgba(14,43,68,.08);font-size:1.25rem;line-height:1;cursor:pointer;color:var(--text-muted);transition:background .15s ease" onmouseover="this.style.background=\'rgba(14,43,68,.16)\'" onmouseout="this.style.background=\'rgba(14,43,68,.08)\'" aria-label="Fechar">&times;</button>' +
-          '<div class="mc-grid">' +
-            '<div class="mc-col-dados" style="padding:28px 26px">' + html + '</div>' +
-            '<div class="mc-col-pdf" id="mcColPdf">' +
+          '<button onclick="fecharModal()" style="position:absolute;top:10px;right:12px;z-index:5;width:30px;height:30px;border-radius:999px;border:none;background:rgba(14,43,68,.08);font-size:1.15rem;line-height:1;cursor:pointer;color:var(--text-muted);transition:background .15s ease" onmouseover="this.style.background=\'rgba(14,43,68,.16)\'" onmouseout="this.style.background=\'rgba(14,43,68,.08)\'" aria-label="Fechar">&times;</button>' +
+          '<div class="mc-grid" style="flex:1;min-height:0;padding:0">' +
+            '<div class="mc-col-dados" style="padding:22px 22px">' + html + '</div>' +
+            '<div class="mc-col-pdf" id="mcColPdf" style="border-radius:0;border:none;border-left:1px solid var(--border,#e2e8f0);box-shadow:none;height:100%">' +
               '<div class="mc-pdf-bar">' +
                 '<span>Currículo original — modelo Minimal</span>' +
                 '<a href="/api/companies/talentos/' + c.id + '/pdf" target="_blank" rel="noopener">' +
                   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
                   'Baixar PDF</a>' +
               '</div>' +
-              '<iframe src="/api/companies/talentos/' + c.id + '/visualizar" loading="lazy" title="Currículo do candidato"></iframe>' +
+              '<iframe src="/api/companies/talentos/' + c.id + '/visualizar" loading="lazy" style="height:calc(100% - 37px)" title="Currículo do candidato"></iframe>' +
             '</div>' +
           '</div>';
         backdrop.appendChild(box);
