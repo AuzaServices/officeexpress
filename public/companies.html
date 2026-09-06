@@ -548,22 +548,138 @@
     @keyframes portalFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .portal-sidebar-backdrop { display: none; }
 
+    /* ============================================================
+       MOBILE — PAINEL 100% RESPONSIVO (estilo app nativo)
+       ============================================================ */
     @media (max-width: 900px) {
       .portal-wrap-full { display: block; margin-left: 0; margin-right: 0; padding-right: 0; }
       /* Mobile: sidebar volta a ser drawer — sem posição fixa na tela */
       .portal-sidebar {
         position: fixed; top: 80px; bottom: 0; left: 0; height: auto;
+        width: min(300px, 84vw);
         transform: translateX(-100%);
         transition: transform .28s ease;
+        z-index: 1400;
+        border-radius: 0 18px 18px 0;
+        box-shadow: 24px 0 60px rgba(0,8,16,.35);
+        overflow-y: auto;
       }
       .portal-sidebar.aberta { transform: translateX(0); }
+      .portal-sidebar-backdrop {
+        position: fixed; inset: 0; z-index: 1300;
+        background: rgba(6,18,30,.55); backdrop-filter: blur(2px);
+        opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s linear .25s;
+      }
+      .portal-sidebar-backdrop.aberta { opacity: 1; visibility: visible; transition: opacity .25s ease; }
+
       .portal-wrap-full .portal-conteudo { margin-left: 0; padding-top: 0; }
       #viewPainel { margin-top: 0; }
-      .companies-stats { grid-template-columns: 1fr 1fr; }
+      /* Respiro do conteúdo + espaço para a barra inferior */
+      .portal-conteudo { padding: 16px 14px calc(84px + env(safe-area-inset-bottom)) !important; }
+      .portal-saudacao { margin-bottom: 14px; }
+      .portal-saudacao h2 { font-size: 1.35rem; }
+      .portal-saudacao p { font-size: .88rem; }
+
+      /* Stats: grade 2×2 compacta */
+      .companies-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+      .stat-card { padding: 14px; }
+      .stat-card .stat-icone { width: 34px; height: 34px; margin-bottom: 8px; }
+      .stat-card .stat-icone svg { width: 16px; height: 16px; }
+      .stat-card .stat-value { font-size: 1.35rem; }
+      .stat-card .stat-label { font-size: .72rem; margin-top: 3px; }
+
+      /* Filtros: empilhados, botão Buscar em largura total */
+      .filtros { grid-template-columns: 1fr; gap: 10px; }
+      .filtros .campo[style*="align-items:flex-end"] { display: block !important; }
+      .filtros .campo .btn { width: 100%; padding: 13px 18px !important; font-weight: 800; }
+
+      /* Resultados / cards de candidatos: 1 coluna confortável */
+      .candidatos-grid { grid-template-columns: 1fr; gap: 14px; }
+      .resultados-titulo { flex-direction: column; align-items: stretch; gap: 10px; }
+      .resultados-titulo > div { justify-content: space-between; }
+      #ordenacao { flex: 1; }
+
       /* Cabeçalho Companies no mobile: some o nav, entra o drawer */
       .ch-nav { display: none; }
       .ch-conta { display: none; }
       .ch-hamburguer { display: flex; margin-left: auto; }
+      .ch-bar { height: 64px; padding: 0 16px; gap: 12px; }
+      .ch-logo { height: 42px; }
+      .portal-sidebar { top: 64px; }
+      #viewPainel { margin-top: -80px; }
+
+      /* Tabelas (histórico de pagamentos): cartões legíveis */
+      .tabela-wrap { overflow-x: visible; }
+      .tabela, table.tabela { border: none; background: transparent; }
+      table.tabela thead { display: none; }
+      table.tabela tr {
+        display: block; background: var(--card, #fff);
+        border: 1px solid var(--border); border-radius: 12px;
+        margin-bottom: 10px; padding: 4px 0; overflow: hidden;
+      }
+      table.tabela td {
+        display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        padding: 8px 14px; border-bottom: 1px dashed var(--border); font-size: .86rem;
+      }
+      table.tabela td:last-child { border-bottom: none; }
+      table.tabela td::before {
+        content: attr(data-label);
+        font-size: .7rem; font-weight: 800; text-transform: uppercase;
+        letter-spacing: .06em; color: var(--text-muted);
+      }
+    }
+
+    /* Telefone pequeno */
+    @media (max-width: 380px) {
+      .companies-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat-card { padding: 12px 10px; }
+    }
+
+    /* ===== Barra inferior de navegação (mobile, estilo app) ===== */
+    .portal-tabbar {
+      display: none;
+    }
+    @media (max-width: 900px) {
+      .portal-tabbar {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1200;
+        background: rgba(255,255,255,.92);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border);
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+        box-shadow: 0 -8px 30px rgba(0,10,20,.08);
+      }
+      .portal-tabbar button {
+        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+        background: none; border: none; cursor: pointer;
+        font-family: inherit; font-size: .62rem; font-weight: 700;
+        color: var(--text-muted); padding: 5px 2px; border-radius: 10px;
+        transition: color .15s ease;
+      }
+      .portal-tabbar button svg { width: 20px; height: 20px; }
+      .portal-tabbar button.ativo { color: var(--brand, #ff8800); }
+      .portal-tabbar button:active { transform: scale(.94); }
+      .portal-tabbar .tab-menu { color: #0e2b44; }
+      .portal-tabbar .tab-menu .tab-badge {
+        position: absolute; top: 2px; right: 50%; margin-right: -26px;
+      }
+    }
+
+    /* ===== Modal do currículo: tela cheia no mobile ===== */
+    @media (max-width: 900px) {
+      #modalCurriculo .card,
+      #modalBackdrop .card,
+      #modalBackdrop > div[class*="card"] {
+        height: 100dvh !important; max-height: none !important;
+        width: 100% !important; max-width: none !important;
+        border-radius: 0 !important;
+      }
+      #modalBackdrop { padding: 0 !important; }
+      #modalBackdrop .mc-grid { grid-template-columns: 1fr !important; overflow-y: auto; display: block !important; }
+      #modalBackdrop .mc-col-dados { max-height: none !important; padding: 18px 16px !important; overflow: visible; }
+      #modalBackdrop .mc-col-pdf { height: auto !important; }
+      #modalBackdrop .mc-col-pdf iframe { height: 72vh !important; }
+      .modal-curriculo .mc-nome { font-size: 1.25rem; }
+      .modal-curriculo .mc-contato { gap: 8px; font-size: .84rem; }
     }
 
     /* Responsivo */
@@ -1053,6 +1169,30 @@
             </div>
           </aside>
           <div class="portal-sidebar-backdrop" id="portalSidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+          <!-- Barra inferior de navegação (mobile) -->
+          <nav class="portal-tabbar" id="portalTabbar" aria-label="Navegação do painel">
+            <button type="button" data-tab="busca" class="ativo" onclick="tabIr('busca')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Buscar
+            </button>
+            <button type="button" data-tab="vistos" onclick="tabIr('vistos')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Vistos
+            </button>
+            <button type="button" data-tab="assinatura" onclick="tabIr('assinatura')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              Plano
+            </button>
+            <button type="button" data-tab="dados" onclick="tabIr('dados')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+              Empresa
+            </button>
+            <button type="button" class="tab-menu" onclick="toggleSidebar(true)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              Menu
+            </button>
+          </nav>
 
           <!-- Conteúdo -->
           <div class="portal-conteudo">
@@ -1742,6 +1882,7 @@
         if (nome === "assinatura") carregarPagamentosEmpresa();
         if (nome === "mensagem") carregarMsgWhatsapp();
         toggleSidebar(false);
+        syncTabbar(nome);
         if (!silencioso) window.scrollTo({ top: 0, behavior: "smooth" });
       }
       window.mostrarSecao = mostrarSecao;
@@ -1750,6 +1891,15 @@
         document.getElementById("portalSidebar").classList.toggle("aberta", !!abrir);
         document.getElementById("portalSidebarBackdrop").classList.toggle("aberta", !!abrir);
       };
+
+      // Barra inferior (mobile): sincroniza aba ativa com a seção visível
+      window.tabIr = function (nome) { mostrarSecao(nome); };
+      function syncTabbar(nome) {
+        var tabs = document.querySelectorAll("#portalTabbar button[data-tab]");
+        for (var i = 0; i < tabs.length; i++) {
+          tabs[i].classList.toggle("ativo", tabs[i].getAttribute("data-tab") === nome);
+        }
+      }
 
       // (Sidebar × rodapé) resolvido via CSS: sidebar fixed com z-index 5,
       // footer relative com z-index 20 — ao rolar até o fim, a sidebar
@@ -1829,12 +1979,12 @@
               : '<span class="badge badge-cancelado">' + escapeHtml(pg.status || "—") + '</span>';
           var tr = document.createElement("tr");
           tr.innerHTML =
-            "<td>" + pg.id + "</td>" +
-            "<td>" + escapeHtml(pg.plano || "-") + "</td>" +
-            "<td>" + App.formatarPreco(pg.valor) + "</td>" +
-            "<td>" + badge + "</td>" +
-            "<td>" + escapeHtml(pg.tipo || "-") + "</td>" +
-            "<td>" + (pg.pago_at ? new Date(pg.pago_at).toLocaleDateString("pt-BR") : (pg.created_at ? new Date(pg.created_at).toLocaleDateString("pt-BR") : "-")) + "</td>";
+            '<td data-label="Nº">' + pg.id + '</td>' +
+            '<td data-label="Plano">' + escapeHtml(pg.plano || "-") + '</td>' +
+            '<td data-label="Valor">' + App.formatarPreco(pg.valor) + '</td>' +
+            '<td data-label="Status">' + badge + '</td>' +
+            '<td data-label="Tipo">' + escapeHtml(pg.tipo || "-") + '</td>' +
+            '<td data-label="Data">' + (pg.pago_at ? new Date(pg.pago_at).toLocaleDateString("pt-BR") : (pg.created_at ? new Date(pg.created_at).toLocaleDateString("pt-BR") : "-")) + '</td>';
           tb.appendChild(tr);
         });
       }
