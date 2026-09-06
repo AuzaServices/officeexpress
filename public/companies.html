@@ -853,6 +853,37 @@
       .cad-col-titulo { margin-top: 18px; }
       .cad-col-titulo:first-child { margin-top: 0; }
     }
+
+    /* ===== Vagas do painel ===== */
+    .vaga-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 0; border-bottom: 1px solid var(--border, #e2e8f0);
+    }
+    .vaga-item:last-child { border-bottom: none; }
+    .vaga-thumb {
+      width: 92px; height: 56px; border-radius: 8px; flex: none; overflow: hidden;
+      background: linear-gradient(135deg, #0e2b44, #174a6b);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.55); font-size: .62rem; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .vaga-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .vaga-item-info { flex: 1; min-width: 0; }
+    .vaga-item-titulo { font-weight: 800; font-size: .95rem; margin: 0 0 2px; }
+    .vaga-item-meta { font-size: .78rem; color: var(--text-muted); margin-bottom: 6px; }
+    .vaga-acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .badge-vaga {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 999px; font-size: .7rem; font-weight: 800;
+    }
+    .badge-vaga.ativa { background: rgba(34,197,94,.12); color: #16a34a; }
+    .badge-vaga.agendada { background: rgba(255,136,0,.12); color: var(--brand, #ff8800); }
+    .badge-vaga.encerrar { border: 1px solid rgba(220,38,38,.35); color: #dc2626; background: transparent; cursor: pointer; font-family: inherit; }
+    .badge-vaga.encerrar:hover { background: #dc2626; color: #fff; }
+    @media (max-width: 600px) {
+      .vaga-item { flex-direction: column; }
+      .vaga-thumb { width: 100%; height: 110px; }
+    }
   </style>
 </head>
 <body>
@@ -1145,6 +1176,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
                 Mensagem automática
               </button>
+              <button class="portal-nav-item" id="navSecaoVagas" type="button" onclick="mostrarSecao('vagas')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Vagas
+              </button>
               <button class="portal-nav-item" id="navSecaoDados" type="button" onclick="mostrarSecao('dados')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
                 Dados da empresa
@@ -1324,6 +1359,74 @@
                   <button class="btn btn-primary" onclick="salvarMsgWhatsapp()">Salvar mensagem</button>
                   <button class="btn btn-secondary" onclick="restaurarMsgPadrao()">Restaurar padrão</button>
                 </div>
+              </div>
+            </div>
+
+            <!-- ===== Seção: Vagas (divulgações) ===== -->
+            <div class="portal-secao oculto" id="secaoVagas">
+              <div class="card" style="margin-bottom:20px">
+                <h3 style="font-weight:800;margin-bottom:4px">Divulgar vaga</h3>
+                <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">
+                  Sua vaga aparece na página pública de vagas durante o período escolhido — depois é excluída do sistema automaticamente.
+                </p>
+                <div class="alert" id="alertVagas"></div>
+                <div class="campo">
+                  <label>Título da vaga</label>
+                  <input type="text" id="vgTitulo" maxlength="160" placeholder="Ex.: Vendedor(a) externo — São Paulo" />
+                </div>
+                <div class="cad-grid" style="gap:14px 18px">
+                  <div class="campo">
+                    <label>Área</label>
+                    <input type="text" id="vgArea" maxlength="80" placeholder="Ex.: Vendas, TI, Administrativo" />
+                  </div>
+                  <div class="campo">
+                    <label>Cidade</label>
+                    <input type="text" id="vgCidade" maxlength="120" placeholder="Ex.: São Paulo" />
+                  </div>
+                  <div class="campo">
+                    <label>Estado (UF)</label>
+                    <input type="text" id="vgEstado" maxlength="2" placeholder="SP" style="text-transform:uppercase" />
+                  </div>
+                  <div class="campo">
+                    <label>Duração da divulgação</label>
+                    <select id="vgDuracao">
+                      <option value="6">6 horas</option>
+                      <option value="12">12 horas</option>
+                      <option value="24">24 horas</option>
+                      <option value="72">3 dias</option>
+                      <option value="168">7 dias</option>
+                      <option value="720">30 dias</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="campo">
+                  <label>Descrição da vaga</label>
+                  <textarea id="vgDescricao" rows="5" maxlength="3000" placeholder="Descreva a função, requisitos, salário/benefícios e como entrar em contato…"></textarea>
+                </div>
+                <div class="campo">
+                  <label>Banner <span style="font-weight:400;color:var(--text-muted)">(opcional — 1200×630 recomendado, consome cota do plano)</span></label>
+                  <label class="upload-zone" for="vgBanner" style="margin-bottom:8px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span id="vgBannerTxt"><strong>Enviar banner</strong> — jpg, png ou webp</span>
+                  </label>
+                  <input type="file" id="vgBanner" accept="image/png,image/jpeg,image/webp" />
+                  <div id="vgBannerPreview" style="display:none;position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+                    <img id="vgBannerImg" src="" alt="Prévia do banner" style="width:100%;display:block;max-height:180px;object-fit:cover" />
+                    <button type="button" onclick="limparBanner()" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:999px;border:none;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:1rem;line-height:1">&times;</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+                  <span style="font-size:.8rem;color:var(--text-muted)" id="vgCotaInfo">—</span>
+                  <button class="btn btn-primary" id="btnPublicarVaga" onclick="publicarVaga()">Publicar divulgação</button>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="resultados-titulo">
+                  <h3>Minhas divulgações</h3>
+                  <span class="contagem" id="vgContagem" style="color:var(--text-muted);font-size:.85rem"></span>
+                </div>
+                <div id="vgLista"></div>
               </div>
             </div>
 
@@ -1869,6 +1972,7 @@
         vistos: { nav: "navSecaoVistos", view: "secaoVistos", titulo: "Currículos visualizados" },
         assinatura: { nav: "navSecaoAssinatura", view: "secaoAssinatura", titulo: "Minha assinatura" },
         mensagem: { nav: "navSecaoMensagem", view: "secaoMensagem", titulo: "Mensagem automática" },
+        vagas: { nav: "navSecaoVagas", view: "secaoVagas", titulo: "Vagas" },
         dados: { nav: "navSecaoDados", view: "secaoDados", titulo: "Dados da empresa" }
       };
       function mostrarSecao(nome, silencioso) {
@@ -1882,6 +1986,7 @@
         if (nome === "vistos") carregarVistos();
         if (nome === "assinatura") carregarPagamentosEmpresa();
         if (nome === "mensagem") carregarMsgWhatsapp();
+        if (nome === "vagas") carregarVagasEmpresa();
         toggleSidebar(false);
         syncTabbar(nome);
         if (!silencioso) window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1892,6 +1997,147 @@
         document.getElementById("portalSidebar").classList.toggle("aberta", !!abrir);
         document.getElementById("portalSidebarBackdrop").classList.toggle("aberta", !!abrir);
       };
+
+      // ===== Vagas (divulgações da empresa) =====
+      var VAGAS_PLANOS = { starter: 1, pro: 3, enterprise: 7 };
+      var vagaBannerArquivo = null;
+
+      function alertVagas(msg, tipo) {
+        var el = document.getElementById("alertVagas");
+        el.textContent = msg;
+        el.className = "alert show " + (tipo === "success" ? "alert-success" : tipo === "info" ? "alert-info" : "alert-error");
+        clearTimeout(el._t);
+        el._t = setTimeout(function () { el.className = "alert"; }, 4000);
+      }
+
+      document.getElementById("vgBanner").addEventListener("change", function () {
+        vagaBannerArquivo = this.files && this.files[0] ? this.files[0] : null;
+        var prev = document.getElementById("vgBannerPreview");
+        if (vagaBannerArquivo) {
+          document.getElementById("vgBannerImg").src = URL.createObjectURL(vagaBannerArquivo);
+          document.getElementById("vgBannerTxt").innerHTML = "<strong>" + vagaBannerArquivo.name + "</strong> — toque para trocar";
+          prev.style.display = "block";
+        } else {
+          prev.style.display = "none";
+          document.getElementById("vgBannerTxt").innerHTML = "<strong>Enviar banner</strong> — jpg, png ou webp";
+        }
+      });
+
+      window.limparBanner = function () {
+        vagaBannerArquivo = null;
+        document.getElementById("vgBanner").value = "";
+        document.getElementById("vgBannerPreview").style.display = "none";
+        document.getElementById("vgBannerTxt").innerHTML = "<strong>Enviar banner</strong> — jpg, png ou webp";
+      };
+
+      async function carregarVagasEmpresa() {
+        var { ok, data } = await App.api("/api/companies/vagas");
+        if (!ok) return;
+        // Cota no formulário
+        var limite = data.limites || { banners: 1, duracaoHorasMax: 72 };
+        var restantes = Math.max(0, limite.banners - (data.bannersEmUso || 0));
+        var planoNome = { starter: "Starter", pro: "Pro", enterprise: "Enterprise" }[data.plano] || data.plano;
+        document.getElementById("vgCotaInfo").textContent =
+          "Plano " + planoNome + " · banners ativos: " + (data.bannersEmUso || 0) + "/" + limite.banners + " · duração máx.: " + Math.round(limite.duracaoHorasMax / 24) + " dias";
+        // Ajusta opções de duração maiores que o plano
+        var sel = document.getElementById("vgDuracao");
+        for (var i = 0; i < sel.options.length; i++) {
+          var val = parseInt(sel.options[i].value, 10);
+          sel.options[i].disabled = val > limite.duracaoHorasMax;
+          if (sel.options[i].disabled && sel.selectedIndex === i) sel.selectedIndex = 0;
+        }
+        // Lista
+        var lista = data.vagas || [];
+        document.getElementById("vgContagem").textContent = lista.length + (lista.length === 1 ? " divulgação" : " divulgações");
+        var wrap = document.getElementById("vgLista");
+        if (!lista.length) {
+          wrap.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px 0">Nenhuma divulgação ainda. Publique a primeira vaga acima!</p>';
+          return;
+        }
+        var agora = Date.now();
+        wrap.innerHTML = lista.map(function (v) {
+          var exp = new Date(v.expira_em).getTime();
+          var ini = new Date(v.ativa_de).getTime();
+          var status;
+          if (ini > agora) status = '<span class="badge-vaga agendada">Agendada</span>';
+          else if (exp > agora) status = '<span class="badge-vaga ativa">● Ativa — termina ' + tempoRestante(v.expira_em) + '</span>';
+          else status = '<span class="badge-vaga" style="background:rgba(100,116,139,.12);color:#64748b">Expirada</span>';
+          var thumb = v.banner_url
+            ? '<div class="vaga-thumb"><img src="' + escapar(v.banner_url) + '" alt="" /></div>'
+            : '<div class="vaga-thumb">texto</div>';
+          var meta = [];
+          if (v.cidade) meta.push(escapar(v.cidade) + (v.estado ? "/" + escapar(v.estado) : ""));
+          if (v.area) meta.push(escapar(v.area));
+          meta.push(v.visualizacoes + " visualizações");
+          meta.push(v.candidatos + " candidato" + (v.candidatos === 1 ? "" : "s"));
+          return '<div class="vaga-item">' +
+            thumb +
+            '<div class="vaga-item-info">' +
+              '<p class="vaga-item-titulo">' + escapar(v.titulo) + '</p>' +
+              '<div class="vaga-item-meta">' + meta.join(" · ") + '</div>' +
+              '<div class="vaga-acoes">' + status +
+                (exp > agora ? '<button type="button" class="badge-vaga encerrar" onclick="encerrarVaga(' + v.id + ')">Encerrar</button>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join("");
+      }
+      window.carregarVagasEmpresa = carregarVagasEmpresa;
+
+      function tempoRestante(expiraEm) {
+        var ms = new Date(expiraEm).getTime() - Date.now();
+        if (ms <= 0) return "agora";
+        var h = Math.floor(ms / 3600000);
+        if (h >= 24) return "em " + Math.floor(h / 24) + "d " + (h % 24) + "h";
+        if (h >= 1) return "em " + h + "h " + Math.floor((ms % 3600000) / 60000) + "min";
+        return "em " + Math.max(1, Math.floor(ms / 60000)) + "min";
+      }
+      window.tempoRestante = tempoRestante;
+
+      async function publicarVaga() {
+        var titulo = document.getElementById("vgTitulo").value.trim();
+        var descricao = document.getElementById("vgDescricao").value.trim();
+        if (titulo.length < 3) { alertVagas("Informe o título da vaga.", "error"); return; }
+        if (descricao.length < 10) { alertVagas("Descreva a vaga (mín. 10 caracteres).", "error"); return; }
+        var btn = document.getElementById("btnPublicarVaga");
+        btn.disabled = true; btn.textContent = "Publicando…";
+        try {
+          var fd = new FormData();
+          fd.append("titulo", titulo);
+          fd.append("descricao", descricao);
+          fd.append("area", document.getElementById("vgArea").value.trim());
+          fd.append("cidade", document.getElementById("vgCidade").value.trim());
+          fd.append("estado", document.getElementById("vgEstado").value.trim());
+          fd.append("duracaoHoras", document.getElementById("vgDuracao").value);
+          if (vagaBannerArquivo) fd.append("banner", vagaBannerArquivo);
+          var resp = await fetch("/api/companies/vagas", { method: "POST", body: fd, credentials: "same-origin" });
+          var data = await resp.json();
+          if (resp.ok && data.ok) {
+            alertVagas("Divulgação publicada! Ela já aparece na página de vagas.", "success");
+            document.getElementById("vgTitulo").value = "";
+            document.getElementById("vgDescricao").value = "";
+            document.getElementById("vgArea").value = "";
+            document.getElementById("vgCidade").value = "";
+            document.getElementById("vgEstado").value = "";
+            limparBanner();
+            carregarVagasEmpresa();
+          } else {
+            alertVagas(data.error || "Erro ao publicar.", "error");
+          }
+        } catch (e) {
+          alertVagas("Erro de conexão ao publicar.", "error");
+        }
+        btn.disabled = false; btn.textContent = "Publicar divulgação";
+      }
+      window.publicarVaga = publicarVaga;
+
+      async function encerrarVaga(id) {
+        if (!confirm("Encerrar esta divulgação agora? Ela será excluída do sistema.")) return;
+        var { ok, data } = await App.api("/api/companies/vagas/" + id, { method: "DELETE" });
+        if (ok) carregarVagasEmpresa();
+        else alert(data && data.error ? data.error : "Erro ao encerrar.", "error");
+      }
+      window.encerrarVaga = encerrarVaga;
 
       // Barra inferior (mobile): sincroniza aba ativa com a seção visível
       window.tabIr = function (nome) { mostrarSecao(nome); };

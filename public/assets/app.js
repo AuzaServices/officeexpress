@@ -68,6 +68,7 @@ window.App = (function () {
     const links = [
       { href: "/", label: "Início" },
       { href: "/modelos", label: "Curriculum", dropdown: [{ href: "/modelos", label: "Modelos" }, { href: "/analise", label: "Análise de Currículo (Gratuito)" }] },
+      { href: "/vagas", label: "Vagas" },
       { href: "#", label: "Ferramentas", dropdown: [{ href: "/cartas", label: "Gerar carta de apresentação" }] },
     ];
     return links.map((l) => {

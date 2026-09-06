@@ -38,7 +38,7 @@ const { pool, garantirSchema, getPreco, getPrecoParceiro, garantirPrecoParceiro 
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao, enviarConviteParceiro, enviarCodigoConvite, enviarCodigoEmpresa, enviarReciboEmpresa } = require("./lib/email");
-const { cloudinary, uploadEmpresaLogoMiddleware, uploadUsuarioFotoMiddleware } = require("./lib/cloudinary");
+const { cloudinary, uploadEmpresaLogoMiddleware, uploadUsuarioFotoMiddleware, uploadVagaBannerMiddleware } = require("./lib/cloudinary");
 const cron = require("node-cron");
 
 require("dotenv").config();
@@ -54,6 +54,9 @@ const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 // Middleware
 app.use(express.static("public"));
+
+// Página pública de vagas (job board) em /vagas.
+app.get("/vagas", (req, res) => res.sendFile(path.join(__dirname, "public", "vagas.html")));
 
 // Serve o renderizador de currículo (mesmo código usado no servidor) para
 // que a pré-visualização use EXATAMENTE o mesmo template do PDF (Opção C).
@@ -368,6 +371,280 @@ app.delete("/api/auth/conta", async (req, res) => {
   } catch (e) {
     console.error("Erro ao excluir conta:", e.message);
     res.status(500).json({ error: "Erro ao excluir a conta. Tente novamente." });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// VAGAS — divulgações das empresas assinantes (job board)
+// ---------------------------------------------------------------------------
+
+// Limites de banners simultâneos e duração máxima por plano.
+const LIMITES_VAGAS = {
+  starter:    { banners: 1, duracaoHorasMax: 72,  texto: 3 },
+  pro:        { banners: 3, duracaoHorasMax: 168, texto: 10 },
+  enterprise: { banners: 7, duracaoHorasMax: 720, texto: Infinity }
+};
+
+function planoDaEmpresa(empresa) {
+  const p = String(empresa && empresa.plano || "starter").toLowerCase();
+  return LIMITES_VAGAS[p] ? p : "starter";
+}
+
+// Conta banners ativos (não expirados) da empresa agora mesmo.
+async function bannersAtivosDaEmpresa(empresaId) {
+  const [rows] = await pool.query(
+    "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NOT NULL AND expira_em > NOW()",
+    [empresaId]
+  );
+  return Number(rows[0].c);
+}
+
+// Expira vagas vencidas: remove banners do Cloudinary e apaga do sistema
+// (o prazo escolhido pela empresa é o fim de vida real do registro).
+async function expirarVagasVencidas() {
+  try {
+    const [vencidas] = await pool.query(
+      "SELECT id, empresa_id, banner_url FROM vagas WHERE expira_em <= NOW()"
+    );
+    if (!vencidas.length) return;
+    for (const v of vencidas) {
+      if (v.banner_url) await removerFotoCloudinary(v.banner_url);
+      await pool.query("DELETE FROM vagas_candidaturas WHERE vaga_id = ?", [v.id]);
+      await pool.query("DELETE FROM vagas WHERE id = ?", [v.id]);
+    }
+    if (vencidas.length) console.log("🗓️ Vagas expiradas removidas:", vencidas.length);
+  } catch (e) {
+    console.error("Erro ao expirar vagas:", e.message);
+  }
+}
+// No boot e a cada 15 minutos.
+expirarVagasVencidas();
+cron.schedule("*/15 * * * *", expirarVagasVencidas);
+
+// Empresa logada cria uma divulgação de vaga.
+app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const empresa = await buscarEmpresaPorId(id);
+    if (!empresa) return res.status(401).json({ error: "Não autenticado." });
+    if (empresa.assinatura_ativa !== 1 && empresa.status !== "ativa") {
+      return res.status(403).json({ error: "Sua assinatura precisa estar ativa para divulgar vagas." });
+    }
+
+    const plano = planoDaEmpresa(empresa);
+    const limite = LIMITES_VAGAS[plano];
+    const titulo = String(req.body.titulo || "").trim();
+    const descricao = String(req.body.descricao || "").trim();
+    const area = String(req.body.area || "").trim().slice(0, 80) || null;
+    const cidade = String(req.body.cidade || "").trim().slice(0, 120) || null;
+    const estado = String(req.body.estado || "").trim().toUpperCase().slice(0, 2) || null;
+    const duracaoHoras = parseInt(req.body.duracaoHoras, 10);
+    const comBanner = !!req.file;
+
+    if (!titulo || titulo.length < 3) return res.status(400).json({ error: "Informe o título da vaga (mín. 3 caracteres)." });
+    if (!descricao || descricao.length < 10) return res.status(400).json({ error: "Descreva a vaga (mín. 10 caracteres)." });
+    if (!duracaoHoras || duracaoHoras < 1) return res.status(400).json({ error: "Escolha por quanto tempo a vaga fica ativa." });
+    if (duracaoHoras > limite.duracaoHorasMax) {
+      return res.status(403).json({ error: "Seu plano permite no máximo " + (limite.duracaoHorasMax / 24) + " dias por divulgação. Faça upgrade para períodos maiores." });
+    }
+
+    if (comBanner) {
+      const bannersEmUso = await bannersAtivosDaEmpresa(id);
+      if (bannersEmUso >= limite.banners) {
+        return res.status(403).json({ error: "Seu plano permite " + limite.banners + " banner(s) ativo(s) por vez. Encerre um banner ou faça upgrade." });
+      }
+    } else {
+      const [textos] = await pool.query(
+        "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NULL AND expira_em > NOW()",
+        [id]
+      );
+      if (Number(textos[0].c) >= limite.texto) {
+        return res.status(403).json({ error: "Seu plano permite " + limite.texto + " divulgações de texto ativas por vez." });
+      }
+    }
+
+    // Agendamento: início futuro opcional (ex.: "começa amanhã 8h").
+    let ativaDe = new Date();
+    if (req.body.inicioEm) {
+      const ini = new Date(req.body.inicioEm);
+      if (!isNaN(ini) && ini > new Date()) ativaDe = ini;
+    }
+    const expiraEm = new Date(ativaDe.getTime() + duracaoHoras * 3600 * 1000);
+
+    const [r] = await pool.query(
+      `INSERT INTO vagas (empresa_id, titulo, area, descricao, cidade, estado, banner_url, ativa_de, expira_em)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, titulo, area, descricao, cidade, estado, comBanner ? req.file.path : null, ativaDe, expiraEm]
+    );
+    res.json({ ok: true, id: r.insertId, expira_em: expiraEm });
+  } catch (e) {
+    console.error("Erro ao criar vaga:", e.message);
+    res.status(500).json({ error: "Erro ao criar a divulgação. Tente novamente." });
+  }
+});
+
+// Empresa logada lista suas vagas (ativas, agendadas e contagem de candidatos).
+app.get("/api/companies/vagas", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const empresa = await buscarEmpresaPorId(id);
+    const plano = planoDaEmpresa(empresa);
+    const limite = LIMITES_VAGAS[plano];
+    const [vagas] = await pool.query(
+      `SELECT v.*, (SELECT COUNT(*) FROM vagas_candidaturas c WHERE c.vaga_id = v.id) AS candidatos
+       FROM vagas v WHERE v.empresa_id = ? ORDER BY v.criada_em DESC`,
+      [id]
+    );
+    const bannersEmUso = await bannersAtivosDaEmpresa(id);
+    res.json({
+      ok: true,
+      vagas,
+      plano,
+      limites: limite,
+      bannersEmUso
+    });
+  } catch (e) {
+    console.error("Erro ao listar vagas da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao carregar suas divulgações." });
+  }
+});
+
+// Empresa encerra uma vaga antecipadamente.
+app.delete("/api/companies/vagas/:id", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [rows] = await pool.query("SELECT banner_url FROM vagas WHERE id = ? AND empresa_id = ?", [req.params.id, id]);
+    if (!rows.length) return res.status(404).json({ error: "Vaga não encontrada." });
+    if (rows[0].banner_url) await removerFotoCloudinary(rows[0].banner_url);
+    await pool.query("DELETE FROM vagas_candidaturas WHERE vaga_id = ?", [req.params.id]);
+    await pool.query("DELETE FROM vagas WHERE id = ?", [req.params.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao encerrar vaga:", e.message);
+    res.status(500).json({ error: "Erro ao encerrar a divulgação." });
+  }
+});
+
+// Empresa vê os candidatos interessados em uma vaga.
+app.get("/api/companies/vagas/:id/candidaturas", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [dono] = await pool.query("SELECT id FROM vagas WHERE id = ? AND empresa_id = ?", [req.params.id, id]);
+    if (!dono.length) return res.status(404).json({ error: "Vaga não encontrada." });
+    const [cands] = await pool.query(
+      `SELECT c.usuario_id, c.criada_em, u.nome, u.email, u.foto_url,
+              t.id AS talento_id, t.area, t.cidade, t.estado
+       FROM vagas_candidaturas c
+       JOIN usuarios u ON u.id = c.usuario_id
+       LEFT JOIN talentos t ON t.usuario_id = c.usuario_id
+       WHERE c.vaga_id = ? ORDER BY c.criada_em DESC`,
+      [req.params.id]
+    );
+    res.json({ ok: true, candidaturas: cands });
+  } catch (e) {
+    console.error("Erro ao listar candidaturas:", e.message);
+    res.status(500).json({ error: "Erro ao carregar os candidatos." });
+  }
+});
+
+// ===== Público =====
+
+// Lista vagas ativas (página /vagas).
+app.get("/api/vagas", async (req, res) => {
+  try {
+    const busca = String(req.query.q || "").trim();
+    const area = String(req.query.area || "").trim();
+    let sql = `
+      SELECT v.id, v.titulo, v.area, v.descricao, v.cidade, v.estado, v.banner_url,
+             v.destaque, v.visualizacoes, v.ativa_de, v.expira_em,
+             e.nome AS empresa_nome, e.foto_url AS empresa_foto, e.plano AS empresa_plano
+      FROM vagas v
+      JOIN empresas e ON e.id = v.empresa_id
+      WHERE NOW() BETWEEN v.ativa_de AND v.expira_em AND e.status = 'ativa'
+    `;
+    const params = [];
+    if (busca) {
+      sql += " AND (v.titulo LIKE ? OR v.descricao LIKE ? OR e.nome LIKE ?)";
+      const like = "%" + busca + "%";
+      params.push(like, like, like);
+    }
+    if (area) {
+      sql += " AND v.area = ?";
+      params.push(area);
+    }
+    sql += " ORDER BY v.destaque DESC, v.criada_em DESC LIMIT 100";
+    const [vagas] = await pool.query(sql, params);
+    res.json({ ok: true, vagas });
+  } catch (e) {
+    console.error("Erro ao listar vagas públicas:", e.message);
+    res.status(500).json({ error: "Erro ao carregar as vagas." });
+  }
+});
+
+// Detalhe de uma vaga (incrementa visualizações).
+app.get("/api/vagas/:id", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT v.*, e.nome AS empresa_nome, e.foto_url AS empresa_foto, e.cidade AS empresa_cidade, e.estado AS empresa_estado
+       FROM vagas v JOIN empresas e ON e.id = v.empresa_id
+       WHERE v.id = ? AND NOW() BETWEEN v.ativa_de AND v.expira_em`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "Vaga não encontrada ou expirada." });
+    await pool.query("UPDATE vagas SET visualizacoes = visualizacoes + 1 WHERE id = ?", [req.params.id]);
+    res.json({ ok: true, vaga: rows[0] });
+  } catch (e) {
+    console.error("Erro ao carregar vaga:", e.message);
+    res.status(500).json({ error: "Erro ao carregar a vaga." });
+  }
+});
+
+// Cliente logado se candidata a uma vaga (1 clique).
+app.post("/api/vagas/:id/candidatar", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Entre na sua conta para se candidatar." });
+  try {
+    const [vaga] = await pool.query(
+      "SELECT id FROM vagas WHERE id = ? AND NOW() BETWEEN ativa_de AND expira_em",
+      [req.params.id]
+    );
+    if (!vaga.length) return res.status(404).json({ error: "Vaga não encontrada ou expirada." });
+    try {
+      await pool.query("INSERT INTO vagas_candidaturas (vaga_id, usuario_id) VALUES (?, ?)", [req.params.id, id]);
+    } catch (dup) {
+      if (dup && dup.code === "ER_DUP_ENTRY") {
+        return res.json({ ok: true, ja_candidatado: true });
+      }
+      throw dup;
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao candidatar:", e.message);
+    res.status(500).json({ error: "Erro ao registrar sua candidatura." });
+  }
+});
+
+// Cliente logado: vagas em que se candidatou (para "Minha Conta" futura).
+app.get("/api/minhas-candidaturas", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [rows] = await pool.query(
+      `SELECT c.vaga_id, c.criada_em, v.titulo, v.cidade, v.estado, v.expira_em, e.nome AS empresa_nome
+       FROM vagas_candidaturas c
+       JOIN vagas v ON v.id = c.vaga_id
+       JOIN empresas e ON e.id = v.empresa_id
+       WHERE c.usuario_id = ? ORDER BY c.criada_em DESC`,
+      [id]
+    );
+    res.json({ ok: true, candidaturas: rows });
+  } catch (e) {
+    console.error("Erro ao listar candidaturas do usuário:", e.message);
+    res.status(500).json({ error: "Erro ao carregar suas candidaturas." });
   }
 });
 
@@ -2825,7 +3102,46 @@ async function garantirMsgWhatsapp() {
     console.error("🚨 FALHA ao garantir colunas de empresas:", e.message);
   }
 }
+
+// Migração: sistema de vagas (divulgações das empresas assinantes).
+async function garantirVagas() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS vagas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        empresa_id INT NOT NULL,
+        titulo VARCHAR(160) NOT NULL,
+        area VARCHAR(80) NULL,
+        descricao TEXT NOT NULL,
+        cidade VARCHAR(120) NULL,
+        estado CHAR(2) NULL,
+        banner_url VARCHAR(500) NULL,
+        destaque TINYINT(1) NOT NULL DEFAULT 0,
+        visualizacoes INT NOT NULL DEFAULT 0,
+        ativa_de DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        expira_em DATETIME NOT NULL,
+        criada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_vagas_ativas (expira_em),
+        INDEX idx_vagas_empresa (empresa_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS vagas_candidaturas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        vaga_id INT NOT NULL,
+        usuario_id INT NOT NULL,
+        criada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uc_vaga_usuario (vaga_id, usuario_id),
+        INDEX idx_cand_vaga (vaga_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabelas de vagas verificadas");
+  } catch (e) {
+    console.error("🚨 FALHA ao garantir tabelas de vagas:", e.message);
+  }
+}
 garantirMsgWhatsapp();
+garantirVagas();
 
 // Mensagem automática de WhatsApp da empresa logada.
 // Header no-cache: evita que CDN/proxy devolva resposta 401 cacheada de outro visitante.

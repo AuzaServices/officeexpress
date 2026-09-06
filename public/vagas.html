@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vagas — Office Express</title>
+  <meta name="description" content="Vagas de emprego publicadas por empresas assinantes da Office Express. Candidate-se com um clique." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
+  <link rel="stylesheet" href="/assets/movimento.css" />
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    /* ===== Hero ===== */
+    .vagas-hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #0e2b44 0%, #174a6b 55%, #1f5d82 100%);
+      color: #fff; padding: 76px 20px 60px; text-align: center;
+    }
+    .vagas-hero::after {
+      content: ""; position: absolute; width: 420px; height: 420px; border-radius: 999px;
+      background: radial-gradient(circle, rgba(255,136,0,.18) 0%, transparent 70%);
+      top: -140px; right: -120px;
+    }
+    .vagas-hero h1 { font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 900; margin: 0 0 8px; }
+    .vagas-hero p { color: rgba(255,255,255,.8); margin: 0 0 26px; font-size: 1.02rem; }
+    .vagas-busca {
+      display: flex; gap: 10px; max-width: 640px; margin: 0 auto; position: relative; z-index: 1;
+    }
+    .vagas-busca input {
+      flex: 1; padding: 14px 18px; border-radius: 14px; border: none;
+      font-size: 1rem; font-family: inherit; outline: none;
+      box-shadow: 0 10px 30px rgba(0,10,20,.3);
+    }
+    .vagas-busca button {
+      padding: 14px 24px; border-radius: 14px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--brand, #ff8800), var(--brand-dark, #b45309));
+      color: #001f33; font-weight: 800; font-size: .95rem; font-family: inherit;
+      box-shadow: 0 10px 30px rgba(255,136,0,.35); transition: transform .15s;
+    }
+    .vagas-busca button:active { transform: scale(.96); }
+
+    /* ===== Áreas ===== */
+    .vagas-areas {
+      display: flex; gap: 8px; overflow-x: auto; padding: 18px 20px 4px;
+      max-width: 1080px; margin: 0 auto; scrollbar-width: none;
+    }
+    .vagas-areas::-webkit-scrollbar { display: none; }
+    .area-chip {
+      flex: none; padding: 8px 18px; border-radius: 999px;
+      border: 1.5px solid var(--border, #e2e8f0); background: var(--card, #fff);
+      font-family: inherit; font-size: .82rem; font-weight: 700; color: var(--text-secondary, #475569);
+      cursor: pointer; transition: all .15s ease; white-space: nowrap;
+    }
+    .area-chip.ativo {
+      background: linear-gradient(135deg, var(--brand, #ff8800), var(--brand-dark, #b45309));
+      color: #001f33; border-color: transparent;
+    }
+
+    /* ===== Grid de vagas ===== */
+    .vagas-wrap { max-width: 1080px; margin: 0 auto; padding: 22px 20px 80px; }
+    .vagas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 18px; }
+    .vaga-card {
+      background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0);
+      border-radius: 18px; overflow: hidden; cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      display: flex; flex-direction: column; position: relative;
+    }
+    .vaga-card:hover { transform: translateY(-4px); border-color: rgba(255,136,0,.45); box-shadow: 0 16px 40px rgba(0,10,20,.14); }
+    .vaga-card.destaque { border: 2px solid rgba(255,136,0,.6); }
+    .vaga-banner { aspect-ratio: 1200/500; background: #f1f5f9; position: relative; overflow: hidden; }
+    .vaga-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .vaga-banner.vazio {
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #0e2b44, #174a6b); aspect-ratio: auto; height: 0;
+    }
+    .vaga-card.sem-banner .vaga-banner { display: none; }
+    .vaga-card-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .vaga-empresa-linha { display: flex; align-items: center; gap: 8px; }
+    .vaga-empresa-foto {
+      width: 26px; height: 26px; border-radius: 999px; flex: none; overflow: hidden;
+      background: linear-gradient(135deg, var(--brand, #ff8800), var(--brand-dark, #b45309));
+      color: #001f33; font-size: .62rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .vaga-empresa-foto img { width: 100%; height: 100%; object-fit: cover; }
+    .vaga-empresa-nome { font-size: .78rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vaga-titulo { font-size: 1.08rem; font-weight: 800; color: var(--text-primary, #0f172a); margin: 0; line-height: 1.3; }
+    .vaga-desc { font-size: .86rem; color: var(--text-secondary, #475569); margin: 0; line-height: 1.45;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .vaga-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; }
+    .vaga-local { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--text-muted); font-weight: 600; }
+    .vaga-local svg { width: 13px; height: 13px; }
+    .badge-tempo {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 11px; border-radius: 999px; font-size: .7rem; font-weight: 800;
+      background: rgba(34,197,94,.12); color: #16a34a; white-space: nowrap;
+    }
+    .badge-tempo.urgente { background: rgba(220,38,38,.1); color: #dc2626; animation: pulseUrgente 1.6s ease-in-out infinite; }
+    @keyframes pulseUrgente { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+    .badge-destaque-selo {
+      position: absolute; top: 12px; left: 12px; z-index: 2;
+      background: linear-gradient(135deg, var(--brand, #ff8800), var(--brand-dark, #b45309));
+      color: #001f33; font-size: .64rem; font-weight: 900; letter-spacing: .08em;
+      text-transform: uppercase; padding: 5px 12px; border-radius: 999px;
+      box-shadow: 0 4px 14px rgba(255,136,0,.4);
+    }
+
+    /* ===== Estados vazios ===== */
+    .vagas-vazio { text-align: center; padding: 70px 20px; color: var(--text-muted); }
+    .vagas-vazio svg { width: 52px; height: 52px; margin-bottom: 14px; opacity: .5; }
+    .vagas-vazio h3 { font-weight: 800; color: var(--text-primary, #0f172a); margin: 0 0 6px; }
+
+    /* ===== Modal de detalhe ===== */
+    .vaga-modal-overlay {
+      position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center;
+      background: rgba(6,18,30,.62); backdrop-filter: blur(3px); padding: 20px;
+    }
+    .vaga-modal {
+      background: var(--card, #fff); border-radius: 20px; max-width: 620px; width: 100%;
+      max-height: 88dvh; overflow-y: auto; position: relative;
+      box-shadow: 0 30px 80px rgba(0,10,20,.4); animation: vagaModal .25s cubic-bezier(.22,1,.3,1);
+    }
+    @keyframes vagaModal { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .vaga-modal-fechar {
+      position: absolute; top: 14px; right: 14px; z-index: 3;
+      width: 34px; height: 34px; border-radius: 999px; border: none; cursor: pointer;
+      background: rgba(14,43,68,.1); color: var(--text-muted); font-size: 1.25rem; line-height: 1;
+      transition: background .15s;
+    }
+    .vaga-modal-fechar:hover { background: rgba(14,43,68,.2); }
+    .vaga-modal-banner { width: 100%; aspect-ratio: 1200/500; object-fit: cover; display: block; background: #f1f5f9; }
+    .vaga-modal-body { padding: 22px 24px 26px; }
+    .vaga-modal h2 { font-size: 1.35rem; font-weight: 900; margin: 8px 0 4px; color: var(--text-primary, #0f172a); }
+    .vaga-modal-empresa { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .vaga-modal-empresa .vaga-empresa-foto { width: 38px; height: 38px; font-size: .8rem; }
+    .vaga-modal-empresa span { font-weight: 700; color: var(--text-secondary); font-size: .92rem; }
+    .vaga-meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .vaga-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 13px; border-radius: 999px; font-size: .76rem; font-weight: 700;
+      background: rgba(59,130,246,.08); color: var(--text-secondary, #475569);
+      border: 1px solid var(--border, #e2e8f0);
+    }
+    .vaga-chip svg { width: 12px; height: 12px; }
+    .vaga-descricao-completa { font-size: .94rem; line-height: 1.65; color: var(--text-secondary, #475569); white-space: pre-wrap; margin: 0 0 20px; }
+    .vaga-candidatar {
+      width: 100%; padding: 15px 18px; border-radius: 14px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--brand, #ff8800), var(--brand-dark, #b45309));
+      color: #001f33; font-family: inherit; font-size: 1rem; font-weight: 800;
+      box-shadow: 0 8px 24px rgba(255,136,0,.32); transition: transform .15s, box-shadow .15s;
+    }
+    .vaga-candidatar:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(255,136,0,.4); }
+    .vaga-candidatar:disabled { opacity: .75; cursor: default; transform: none; }
+    .vaga-compartilhar {
+      width: 100%; margin-top: 10px; padding: 12px 18px; border-radius: 14px; cursor: pointer;
+      border: 1.5px solid var(--border, #e2e8f0); background: transparent;
+      font-family: inherit; font-size: .9rem; font-weight: 700; color: var(--text-secondary, #475569);
+      transition: border-color .15s, color .15s;
+    }
+    .vaga-compartilhar:hover { border-color: #25d366; color: #25d366; }
+
+    /* ===== responsivo ===== */
+    @media (max-width: 640px) {
+      .vagas-hero { padding: 60px 16px 44px; }
+      .vagas-busca { flex-direction: column; }
+      .vagas-grid { grid-template-columns: 1fr; }
+      .vagas-wrap { padding: 16px 14px 90px; }
+      .vaga-modal { border-radius: 18px 18px 0 0; max-width: none; width: 100%; margin: 0; align-self: flex-end; max-height: 92dvh; }
+      .vaga-modal-overlay { align-items: flex-end; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="container wrap">
+      <a href="/"><img src="/imagens/logo.png" class="logo" alt="Office Express" onerror="this.style.display='none'" /></a>
+      <nav class="menu" id="navMenu"></nav>
+      <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+  <div id="mobileMenu"></div>
+
+  <section class="vagas-hero">
+    <h1>Vagas abertas agora</h1>
+    <p>Oportunidades publicadas por empresas assinantes da Office Express.</p>
+    <div class="vagas-busca">
+      <input type="text" id="buscaVaga" placeholder="Buscar por cargo, empresa ou palavra-chave…" autocomplete="off" />
+      <button onclick="carregarVagas()">Buscar</button>
+    </div>
+  </section>
+
+  <div class="vagas-areas" id="areasRow"></div>
+
+  <div class="vagas-wrap">
+    <div class="vagas-grid" id="vagasGrid"></div>
+    <div class="vagas-vazio oculto" id="vagasVazio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <h3>Nenhuma vaga encontrada</h3>
+      <p id="vagasVazioMsg">Não há divulgações ativas neste momento. Volte em breve — novas vagas chegam todos os dias.</p>
+    </div>
+  </div>
+
+  <script src="/assets/app.js"></script>
+  <script>
+    (function () {
+      var AREAS_SUGERIDAS = ["Vendas", "Administrativo", "TI", "Marketing", "Logística", "Atendimento", "Financeiro", "RH"];
+      var areaAtiva = "";
+      var timerBusca = null;
+
+      function escapar(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+
+      function tempoRestanteStr(expiraEm) {
+        var ms = new Date(expiraEm).getTime() - Date.now();
+        if (ms <= 0) return null;
+        var h = Math.floor(ms / 3600000);
+        var m = Math.floor((ms % 3600000) / 60000);
+        if (h >= 24) return Math.floor(h / 24) + "d " + (h % 24) + "h";
+        if (h >= 1) return h + "h " + m + "min";
+        return m + "min";
+      }
+
+      // ---- Áreas (derivadas das vagas + sugestões) ----
+      function renderAreas(vagas) {
+        var areas = [];
+        vagas.forEach(function (v) { if (v.area && areas.indexOf(v.area) < 0) areas.push(v.area); });
+        AREAS_SUGERIDAS.forEach(function (a) { if (areas.indexOf(a) < 0 && areas.length < 8) areas.push(a); });
+        var row = document.getElementById("areasRow");
+        var html = '<button type="button" class="area-chip' + (!areaAtiva ? ' ativo' : '') + '" onclick="filtrarArea(\'\')">Todas</button>';
+        areas.slice(0, 10).forEach(function (a) {
+          html += '<button type="button" class="area-chip' + (areaAtiva === a ? ' ativo' : '') + '" onclick="filtrarArea(\'' + escapar(a).replace(/'/g, "\\'") + '\')">' + escapar(a) + '</button>';
+        });
+        row.innerHTML = html;
+      }
+
+      window.filtrarArea = function (a) { areaAtiva = a; carregarVagas(); };
+
+      function cardVaga(v) {
+        var rest = tempoRestanteStr(v.expira_em);
+        var urgente = rest && (new Date(v.expira_em).getTime() - Date.now()) < 12 * 3600000;
+        var iniciais = (v.empresa_nome || "E").trim().charAt(0).toUpperCase();
+        var fotoEmpresa = v.empresa_foto
+          ? '<img src="' + escapar(v.empresa_foto) + '" alt="" onerror="this.remove()" />'
+          : iniciais;
+        var local = [v.cidade, v.estado].filter(Boolean).join("/") || "Brasil";
+        var banner = v.banner_url ? '<div class="vaga-banner"><img src="' + escapar(v.banner_url) + '" alt="" loading="lazy" /></div>' : '';
+        var destaque = v.destaque ? '<span class="badge-destaque-selo">★ Destaque</span>' : '';
+        return '<article class="vaga-card' + (v.banner_url ? '' : ' sem-banner') + (v.destaque ? ' destaque' : '') + '" onclick="abrirVaga(' + v.id + ')">' +
+          destaque + banner +
+          '<div class="vaga-card-body">' +
+            '<div class="vaga-empresa-linha"><span class="vaga-empresa-foto">' + fotoEmpresa + '</span><span class="vaga-empresa-nome">' + escapar(v.empresa_nome) + '</span></div>' +
+            '<h3 class="vaga-titulo">' + escapar(v.titulo) + '</h3>' +
+            '<p class="vaga-desc">' + escapar(v.descricao) + '</p>' +
+            '<div class="vaga-footer">' +
+              '<span class="vaga-local"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escapar(local) + '</span>' +
+              (rest ? '<span class="badge-tempo' + (urgente ? ' urgente' : '') + '">⏱ ' + rest + '</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</article>';
+      }
+
+      async function carregarVagas() {
+        var q = document.getElementById("buscaVaga").value.trim();
+        var params = [];
+        if (q) params.push("q=" + encodeURIComponent(q));
+        if (areaAtiva) params.push("area=" + encodeURIComponent(areaAtiva));
+        var url = "/api/vagas" + (params.length ? "?" + params.join("&") : "");
+        try {
+          var r = await App.api(url);
+          var vagas = (r.ok && r.data && r.data.vagas) ? r.data.vagas : [];
+          renderAreas(r.ok && r.data && r.data.vagas ? r.data.vagas.concat(vagas) : []);
+          renderAreas(vagas);
+          var grid = document.getElementById("vagasGrid");
+          var vazio = document.getElementById("vagasVazio");
+          if (!vagas.length) {
+            grid.innerHTML = "";
+            document.getElementById("vagasVazioMsg").textContent = q || areaAtiva
+              ? "Nenhuma vaga encontrada com esses filtros. Tente outra busca."
+              : "Não há divulgações ativas neste momento. Volte em breve — novas vagas chegam todos os dias.";
+            vazio.classList.remove("oculto");
+          } else {
+            vazio.classList.add("oculto");
+            grid.innerHTML = vagas.map(cardVaga).join("");
+          }
+        } catch (e) { /* silencioso */ }
+      }
+      window.carregarVagas = carregarVagas;
+
+      // Busca com debounce
+      document.getElementById("buscaVaga").addEventListener("input", function () {
+        clearTimeout(timerBusca);
+        timerBusca = setTimeout(carregarVagas, 350);
+      });
+
+      // ---- Modal de detalhe ----
+      var vagaAtual = null;
+
+      window.abrirVaga = async function (id) {
+        var { ok, data } = await App.api("/api/vagas/" + id);
+        if (!ok || !data.vaga) { alert(data && data.error ? data.error : "Vaga não encontrada."); return; }
+        var v = data.vaga;
+        vagaAtual = v;
+        var local = [v.cidade, v.estado].filter(Boolean).join("/");
+        var iniciais = (v.empresa_nome || "E").trim().charAt(0).toUpperCase();
+        var overlay = document.createElement("div");
+        overlay.className = "vaga-modal-overlay";
+        overlay.id = "vagaModalOverlay";
+        overlay.addEventListener("click", function (e) { if (e.target === overlay) fecharVagaModal(); });
+        overlay.innerHTML =
+          '<div class="vaga-modal">' +
+            '<button class="vaga-modal-fechar" onclick="fecharVagaModal()" aria-label="Fechar">&times;</button>' +
+            (v.banner_url ? '<img class="vaga-modal-banner" src="' + escapar(v.banner_url) + '" alt="" />' : '') +
+            '<div class="vaga-modal-body">' +
+              '<div class="vaga-empresa-linha" style="margin-bottom:0"><span class="vaga-empresa-foto" style="width:38px;height:38px;font-size:.8rem">' +
+                (v.empresa_foto ? '<img src="' + escapar(v.empresa_foto) + '" alt="" onerror="this.remove()" />' : iniciais) +
+              '</span><span class="vaga-empresa-nome" style="font-size:.92rem">' + escapar(v.empresa_nome) + '</span></div>' +
+              '<h2>' + escapar(v.titulo) + '</h2>' +
+              '<div class="vaga-meta-chips">' +
+                (local ? '<span class="vaga-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escapar(local) + '</span>' : '') +
+                (v.area ? '<span class="vaga-chip">' + escapar(v.area) + '</span>' : '') +
+                '<span class="vaga-chip">⏱ Termina ' + tempoRestanteStr(v.expira_em) + '</span>' +
+                '<span class="vaga-chip">' + v.visualizacoes + ' visualizações</span>' +
+              '</div>' +
+              '<p class="vaga-descricao-completa">' + escapar(v.descricao) + '</p>' +
+              '<button class="vaga-candidatar" id="btnCandidatar" onclick="candidatar(' + v.id + ')">Quero esta vaga</button>' +
+              '<button class="vaga-compartilhar" onclick="compartilharVaga()">Compartilhar no WhatsApp</button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        document.body.style.overflow = "hidden";
+      };
+
+      window.fecharVagaModal = function () {
+        var ov = document.getElementById("vagaModalOverlay");
+        if (ov) ov.remove();
+        document.body.style.overflow = "";
+      };
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") fecharVagaModal();
+      });
+
+      window.candidatar = async function (id) {
+        var btn = document.getElementById("btnCandidatar");
+        btn.disabled = true; btn.textContent = "Enviando…";
+        try {
+          var resp = await fetch("/api/vagas/" + id + "/candidatar", { method: "POST", credentials: "same-origin" });
+          var data = await resp.json();
+          if (resp.status === 401) {
+            // deslogado: leva para login com retorno
+            sessionStorage.setItem("posLoginVaga", id);
+            location.href = "/login?retorno=/vagas";
+            return;
+          }
+          if (resp.ok && data.ok) {
+            btn.textContent = data.ja_candidatado ? "✓ Você já se candidatou" : "✓ Candidatura enviada!";
+            setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
+          } else {
+            btn.textContent = data.error || "Erro ao candidatar.";
+            setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
+          }
+        } catch (e) {
+          btn.textContent = "Erro de conexão.";
+          setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
+        }
+      };
+
+      window.compartilharVaga = function () {
+        if (!vagaAtual) return;
+        var url = location.origin + "/vagas?v=" + vagaAtual.id;
+        var texto = "Vaga: " + vagaAtual.titulo + " — " + (vagaAtual.empresa_nome || "") + ". Confira: ";
+        window.open("https://wa.me/?text=" + encodeURIComponent(texto + url), "_blank", "noopener");
+      };
+
+      // Retorno pós-login: abre a vaga automaticamente
+      var vagaPosLogin = sessionStorage.getItem("posLoginVaga");
+      if (vagaPosLogin) {
+        sessionStorage.removeItem("posLoginVaga");
+        setTimeout(function () { abrirVaga(vagaPosLogin); }, 400);
+      } else if (new URLSearchParams(location.search).get("v")) {
+        var vid = new URLSearchParams(location.search).get("v");
+        setTimeout(function () { abrirVaga(vid); }, 400);
+      }
+
+      // Início + tempo real (vagas expiradas somem sem F5)
+      carregarVagas();
+      setInterval(carregarVagas, 60000);
+    })();
+  </script>
+</body>
+</html>
