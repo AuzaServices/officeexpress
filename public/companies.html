@@ -338,11 +338,12 @@
     .portal-sidebar {
       width: 260px; flex-shrink: 0;
       /* FIXA de verdade: nenhum scroll move a sidebar no desktop.
-         Colada no header (top: 80px) e estendida até o rodapé
-         (bottom: 0) — os "pés" dela encontram o footer. */
+         Colada no header (top: 80px) e estendida até o fim da viewport.
+         z-index BAIXO: quando o rodapé entra na tela, a sidebar desliza
+         para TRÁS dele e fica escondida (o footer tem z-index maior). */
       position: fixed; top: 80px; bottom: 0; left: 0;
       height: auto;
-      z-index: 40;
+      z-index: 5;
       background: var(--card, #ffffff);
       border: 1px solid var(--border); border-left: none; border-top: none; border-radius: 0;
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
@@ -351,9 +352,10 @@
     /* O conteúdo precisa de respiro à esquerda para não ficar sob a sidebar fixa
        (260px da barra + 24px de folga). */
     .portal-wrap-full .portal-conteudo { margin-left: 284px; }
-    /* Rodapé em largura total: o JS recua a sidebar (bottom dinâmico) quando
-       ele entra na viewport, então ela nunca o corta nem o sobrepõe. */
-    .footer { margin-left: 0; }
+    /* Rodapé em largura total e NA FRENTE da sidebar: como a sidebar é fixed
+       com z-index baixo, ao rolar até o fim ela desliza para trás do footer
+       e fica escondida por ele. */
+    .footer { margin-left: 0; position: relative; z-index: 20; }
     .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
     .pse-avatar {
       width: 42px; height: 42px; border-radius: 6px; flex-shrink: 0;
@@ -1402,23 +1404,9 @@
         document.getElementById("portalSidebarBackdrop").classList.toggle("aberta", !!abrir);
       };
 
-      // Rodapé nunca cortado: quando ele entra na viewport, a sidebar fixa
-      // "senta" sobre o topo do rodapé (bottom dinâmico). Quando o rodapé
-      // sai, ela volta a ocupar até o pé da tela. Roda só no desktop.
-      (function () {
-        var sidebar = document.getElementById("portalSidebar");
-        var footer = document.querySelector(".footer");
-        if (!sidebar || !footer || !("IntersectionObserver" in window)) return;
-        var mm = window.matchMedia("(max-width: 900px)");
-        function aplicar(entrando) {
-          if (mm.matches) { sidebar.style.bottom = ""; return; } // mobile: drawer
-          sidebar.style.bottom = entrando ? footer.offsetHeight + "px" : "";
-        }
-        new IntersectionObserver(function (entries) {
-          aplicar(entries[0].isIntersecting);
-        }, { threshold: 0 }).observe(footer);
-        mm.addEventListener ? mm.addEventListener("change", function (e) { if (e.matches) aplicar(false); }) : null;
-      })();
+      // (Sidebar × rodapé) resolvido via CSS: sidebar fixed com z-index 5,
+      // footer relative com z-index 20 — ao rolar até o fim, a sidebar
+      // desliza para trás do rodapé naturalmente. Nenhum JS necessário.
 
       async function atualizarStats() {
         var { ok, data } = await App.api("/api/companies/curriculos");
