@@ -336,13 +336,27 @@
     .portal-wrap-full { display: flex; align-items: stretch; gap: 24px; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding-left: 0; padding-right: 24px; }
     .portal-wrap-full .portal-conteudo { flex: 1 1 auto; min-width: 0; padding-top: 80px; } /* o conteúdo respira; a sidebar não */
     .portal-sidebar {
-      width: 260px; flex-shrink: 0; position: sticky; top: 80px;
-      align-self: flex-start;
-      height: calc(100vh - 80px);
+      width: 260px; flex-shrink: 0;
+      /* FIXA de verdade: nenhum scroll move a sidebar no desktop.
+         Colada no header (top: 80px) e estendida até o rodapé
+         (bottom: 0) — os "pés" dela encontram o footer. */
+      position: fixed; top: 80px; bottom: 0; left: 0;
+      height: auto;
+      z-index: 40;
       background: var(--card, #ffffff);
       border: 1px solid var(--border); border-left: none; border-top: none; border-radius: 0;
       padding: 18px 14px; display: flex; flex-direction: column; gap: 16px;
       box-shadow: 4px 0 18px -14px rgba(0,10,20,.25);
+    }
+    /* O conteúdo precisa de respiro à esquerda para não ficar sob a sidebar fixa
+       (260px da barra + 24px de folga). */
+    .portal-wrap-full .portal-conteudo { margin-left: 284px; }
+    /* Rodapé colado aos pés da sidebar: acompanha o recuo do conteúdo e a
+       sidebar fixed termina (bottom:0) exatamente no topo dele. */
+    #viewPainel ~ .footer,
+    .footer { margin-left: 284px; }
+    @media (max-width: 900px) {
+      .footer { margin-left: 0 !important; }
     }
     .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
     .pse-avatar {
@@ -411,9 +425,15 @@
 
     @media (max-width: 900px) {
       .portal-wrap-full { display: block; margin-left: 0; margin-right: 0; padding-right: 0; }
-      .portal-sidebar { height: auto; }
+      /* Mobile: sidebar volta a ser drawer — sem posição fixa na tela */
+      .portal-sidebar {
+        position: fixed; top: 80px; bottom: 0; left: 0; height: auto;
+        transform: translateX(-100%);
+        transition: transform .28s ease;
+      }
+      .portal-sidebar.aberta { transform: translateX(0); }
+      .portal-wrap-full .portal-conteudo { margin-left: 0; padding-top: 0; }
       #viewPainel { margin-top: 0; }
-      .portal-wrap-full .portal-conteudo { padding-top: 0; }
       .companies-stats { grid-template-columns: 1fr 1fr; }
       /* Cabeçalho Companies no mobile: some o nav, entra o drawer */
       .ch-nav { display: none; }
@@ -432,6 +452,54 @@
     .companies-wrap .btn-mini { border-radius: 6px !important; }
     .companies-wrap input, .companies-wrap select, .companies-wrap textarea { border-radius: 6px !important; }
     .companies-wrap .modal-curriculo { border-radius: 8px !important; }
+
+    /* ==== Botões de ação do candidato: minimalistas ==== */
+    .cand-acoes { display: flex; gap: 8px; align-items: center; }
+    .btn-mini {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; font-size: .8rem; font-weight: 700;
+      border: 1px solid var(--border, #e2e8f0); border-radius: 999px !important;
+      background: transparent; color: var(--text, #0e2b44);
+      cursor: pointer; letter-spacing: .01em;
+      transition: border-color .18s ease, background .18s ease, color .18s ease, transform .12s ease;
+    }
+    .btn-mini:hover { border-color: var(--brand, #ff8800); color: var(--brand, #ff8800); background: rgba(255,136,0,.06); }
+    .btn-mini:active { transform: scale(.97); }
+    /* Botão PDF: vermelho, identidade de arquivo PDF */
+    .btn-mini.btn-pdf {
+      border-color: rgba(220,38,38,.35); color: #dc2626; background: rgba(220,38,38,.05);
+    }
+    .btn-mini.btn-pdf:hover { background: #dc2626; border-color: #dc2626; color: #fff; box-shadow: 0 4px 14px rgba(220,38,38,.28); }
+
+    /* ==== Modal do candidato: duas colunas (dados | currículo) ==== */
+    .mc-grid {
+      display: grid; grid-template-columns: minmax(300px, 5fr) minmax(340px, 6fr);
+      gap: 24px; align-items: start;
+    }
+    .mc-col-dados { min-width: 0; }
+    .mc-col-pdf {
+      position: sticky; top: 0; align-self: start;
+      border: 1px solid var(--border, #e2e8f0); border-radius: 12px; overflow: hidden;
+      background: #f8fafc; box-shadow: 0 10px 30px rgba(0,10,20,.08);
+    }
+    .mc-pdf-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 14px; background: #0e2b44; color: #fff;
+    }
+    .mc-pdf-bar span { font-size: .78rem; font-weight: 700; letter-spacing: .02em; opacity: .95; }
+    .mc-pdf-bar a {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: .76rem; font-weight: 700; color: #fff; text-decoration: none;
+      background: #dc2626; padding: 5px 12px; border-radius: 999px;
+      transition: filter .15s ease;
+    }
+    .mc-pdf-bar a:hover { filter: brightness(1.12); }
+    .mc-col-pdf iframe { width: 100%; height: 640px; border: 0; display: block; background: #fff; }
+    @media (max-width: 1100px) {
+      .mc-grid { grid-template-columns: 1fr; }
+      .mc-col-pdf { position: static; }
+      .mc-col-pdf iframe { height: 520px; }
+    }
   </style>
 </head>
 <body>
@@ -466,8 +534,10 @@
   <section class="section container">
     <div class="companies-wrap">
 
-      <!-- ===== LANDING (não logado) ===== -->
-      <div id="viewLanding">
+      <!-- ===== LANDING (não logado) =====
+           Começa oculta: o JS decide em ~100ms se mostra landing (deslogado)
+           ou painel (logado). Isso evita o "flash" da landing ao dar F5 no painel. -->
+      <div id="viewLanding" class="oculto">
         <div class="hero-c">
           <div class="hero-c-texto">
             <span class="hero-c-badge">
@@ -1562,11 +1632,11 @@
               (exp ? '<span class="cand-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="vertical-align:-1px;margin-right:3px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + escapeHtml(exp) + '</span>' : '') +
             '</div>' +
             '<div class="cand-acoes">' +
-              '<button class="btn-mini btn-download" title="Ver o currículo profissional criado pelo candidato (modelo Minimal)" onclick="abrirCurriculoReal(' + c.id + ')">' +
+              '<button class="btn-mini" title="Ver o currículo profissional criado pelo candidato (modelo Minimal)" onclick="abrirCurriculoReal(' + c.id + ')">' +
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Ver currículo' +
               '</button>' +
-              '<button class="btn-mini btn-conta" title="Baixar este currículo em PDF" onclick="baixarCurriculoReal(' + c.id + ', event)">' +
-                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF' +
+              '<button class="btn-mini btn-pdf" title="Baixar este currículo em PDF" onclick="baixarCurriculoReal(' + c.id + ', event)">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF' +
               '</button>' +
               (c.telefone ? '<button class="btn-mini btn-conta" onclick="contatarCandidato(' + c.id + ')">Contatar</button>' : '') +
             '</div>';
@@ -1670,13 +1740,26 @@
             secao("Idiomas", lista(c.idiomas)) +
           '</div>';
 
-        // Monta modal simples
+        // Monta modal em DUAS COLUNAS: dados do candidato | currículo (imagem)
         var backdrop = document.createElement("div");
-        backdrop.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto";
+        backdrop.style.cssText = "position:fixed;inset:0;background:rgba(6,18,30,.62);backdrop-filter:blur(3px);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;overflow-y:auto";
         var box = document.createElement("div");
         box.className = "card";
-        box.style.cssText = "max-width:640px;width:100%;padding:32px;position:relative";
-        box.innerHTML = '<button onclick="fecharModal()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted)" aria-label="Fechar">&times;</button>' + html;
+        box.style.cssText = "max-width:1240px;width:100%;padding:0;position:relative;overflow:hidden;border-radius:16px";
+        box.innerHTML =
+          '<button onclick="fecharModal()" style="position:absolute;top:12px;right:14px;z-index:5;width:34px;height:34px;border-radius:999px;border:none;background:rgba(14,43,68,.08);font-size:1.25rem;line-height:1;cursor:pointer;color:var(--text-muted);transition:background .15s ease" onmouseover="this.style.background=\'rgba(14,43,68,.16)\'" onmouseout="this.style.background=\'rgba(14,43,68,.08)\'" aria-label="Fechar">&times;</button>' +
+          '<div class="mc-grid">' +
+            '<div class="mc-col-dados" style="padding:28px 26px">' + html + '</div>' +
+            '<div class="mc-col-pdf" id="mcColPdf">' +
+              '<div class="mc-pdf-bar">' +
+                '<span>Currículo original — modelo Minimal</span>' +
+                '<a href="/api/companies/talentos/' + c.id + '/pdf" target="_blank" rel="noopener">' +
+                  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+                  'Baixar PDF</a>' +
+              '</div>' +
+              '<iframe src="/api/companies/talentos/' + c.id + '/visualizar" loading="lazy" title="Currículo do candidato"></iframe>' +
+            '</div>' +
+          '</div>';
         backdrop.appendChild(box);
         backdrop.id = "modalBackdrop";
         document.getElementById("modalCurriculo").appendChild(backdrop);
@@ -1687,24 +1770,10 @@
 
       // Abre o CURRÍCULO REAL do candidato (modelo Minimal, igual ao que ele criou)
       // num modal com iframe — além do resumo textual já existente.
+      // "Ver currículo" agora abre o modal de duas colunas (dados + currículo
+      // real renderizado à direita). O PDF fica no topo da coluna direita.
       function abrirCurriculoReal(id) {
         verCurriculo(id);
-        // Aguarda o modal base montar e injeta o iframe com o currículo real
-        setTimeout(function () {
-          var box = document.querySelector("#modalBackdrop .card");
-          if (!box) return;
-          var frame = document.createElement("div");
-          frame.style.cssText = "margin-top:22px;border:1px solid var(--border);border-radius:6px;overflow:hidden";
-          frame.innerHTML =
-            '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(255,136,0,.08);border-bottom:1px solid var(--border)">' +
-              '<span style="font-size:.8rem;font-weight:700;color:var(--brand)">Currículo original do candidato — modelo Minimal</span>' +
-              '<a href="/api/companies/talentos/' + id + '/pdf" target="_blank" rel="noopener" style="font-size:.78rem;font-weight:700;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:5px">' +
-                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar PDF' +
-              '</a>' +
-            '</div>' +
-            '<iframe src="/api/companies/talentos/' + id + '/visualizar" style="width:100%;height:520px;border:0;display:block;background:#fff" title="Currículo do candidato"></iframe>';
-          box.appendChild(frame);
-        }, 350);
       }
       window.abrirCurriculoReal = abrirCurriculoReal;
 
@@ -1841,11 +1910,13 @@
         root.setAttribute("data-tema", tema);
       })();
 
-      // Inicializa: verifica se já está logado
+      // Inicializa: verifica se já está logado.
+      // A landing começa oculta no HTML, então o F5 no painel não mostra
+      // a página inicial "piscando" antes de voltar ao painel.
       App.api("/api/companies/me").then(function (r) {
         if (r.ok) carregarPainel();
         else mostrarView("landing");
-      });
+      }).catch(function () { mostrarView("landing"); });
     })();
   </script>
 </body>
