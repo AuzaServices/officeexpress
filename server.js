@@ -426,6 +426,42 @@ app.get("/api/pedidos/meus", async (req, res) => {
     const { dados_json, ...resto } = p;
     return { ...resto, consentimento };
   });
+
+  // Currículos PERMANENTES: todo pedido pago é arquivado na tabela 'talentos'
+  // no momento da confirmação do pagamento. Se o pedido for apagado do painel
+  // do admin, o currículo pago continua vivo aqui — a listagem junta os dois
+  // universos (pedidos + talentos), sem duplicar o que ainda existe em ambos.
+  try {
+    const [usuario] = await pool.query("SELECT email FROM usuarios WHERE id = ?", [id]);
+    const email = usuario.length ? String(usuario[0].email || "").toLowerCase() : "";
+    const [talentos] = await pool.query(
+      `SELECT id, pedido_id, nome, modelo, dados_json, consentimento, created_at, updated_at
+         FROM talentos
+        WHERE (usuario_id = ? OR (usuario_id IS NULL AND email = ? AND pedido_id IS NOT NULL))
+        ORDER BY id DESC`,
+      [id, email]
+    );
+    const pedidosIds = new Set(pedidos.filter((p) => p.status === "pago").map((p) => p.id));
+    talentos.forEach((t) => {
+      // Se o pedido correspondente ainda existe na listagem, não duplica.
+      if (t.pedido_id && pedidosIds.has(t.pedido_id)) return;
+      pedidos.push({
+        id: t.pedido_id || null,
+        talento_id: t.id,
+        modelo: t.modelo || "curriculo",
+        valor: null,
+        status: "pago",
+        created_at: t.created_at,
+        pago_at: t.updated_at,
+        download_token: null,
+        consentimento: !!t.consentimento,
+        via_talentos: true, // o download busca da tabela talentos
+      });
+    });
+  } catch (e) {
+    console.error("Erro ao enriquecer pedidos com talentos:", e.message);
+  }
+
   res.json({ pedidos });
 });
 
@@ -778,11 +814,42 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
 // ---------------------------------------------------------------------------
 // Download (só após pagamento; gera o PDF na hora)
 // ---------------------------------------------------------------------------
+// Confere se o talento arquivado pertence ao usuário logado comparando o
+// e-mail da sessão com o e-mail gravado no talento (caso pedido_id antigo
+// sem usuario_id preenchido).
+async function mesmoEmailDoTalento(pedidoLike, usuarioId) {
+  try {
+    const [u] = await pool.query("SELECT email FROM usuarios WHERE id = ?", [usuarioId]);
+    if (!u.length) return false;
+    const emailU = String(u[0].email || "").toLowerCase();
+    const [t] = await pool.query("SELECT email FROM talentos WHERE pedido_id = ?", [pedidoLike.id]);
+    return t.length && String(t[0].email || "").toLowerCase() === emailU && !!emailU;
+  } catch (e) { return false; }
+}
+
 app.get("/api/pedidos/:id/download", async (req, res) => {
   const { id } = req.params;
-  const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
-  if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
-  const pedido = rows[0];
+  let [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
+
+  // Fallback PERMANENTE: se o pedido foi apagado do painel do admin, o
+  // currículo pago continua na tabela 'talentos' (arquivado no pagamento).
+  // Nesse caso o download é gerado a partir dos dados arquivados lá.
+  let viaTalentos = false;
+  let talento = null;
+  if (!rows.length) {
+    const [tal] = await pool.query("SELECT * FROM talentos WHERE pedido_id = ?", [id]);
+    if (!tal.length) return res.status(404).json({ error: "Pedido não encontrado." });
+    talento = tal[0];
+    viaTalentos = true;
+  }
+  const pedido = rows[0] || {
+    id: Number(id),
+    usuario_id: talento.usuario_id,
+    status: "pago",
+    modelo: talento.modelo,
+    dados_json: talento.dados_json,
+    download_token: null,
+  };
 
   // O download fica disponível enquanto a conta do cliente estiver ativa:
   // exige sessão autenticada e que o pedido pertença ao usuário logado.
@@ -794,12 +861,20 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
   const token = String(req.query.token || "");
   if (!usuarioId && !token) return res.status(401).json({ error: "Faça login para baixar." });
   if (!usuarioId) {
+    if (viaTalentos) {
+      // Sem sessão não há como confirmar a titularidade via talentos de
+      // forma confiável (o token vive no pedido, que foi apagado).
+      return res.status(403).json({ error: "Faça login para baixar este currículo." });
+    }
     if (pedido.status !== "pago" || !pedido.download_token || token !== pedido.download_token) {
       return res.status(403).json({ error: "Link de download inválido ou expirado. Faça login para baixar." });
     }
   } else {
-    if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
-    if (pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
+    const dono = viaTalentos
+      ? (pedido.usuario_id === usuarioId || (pedido.usuario_id == null && await mesmoEmailDoTalento(pedido, usuarioId)))
+      : pedido.usuario_id === usuarioId;
+    if (!dono) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
+    if (!viaTalentos && pedido.status !== "pago") return res.status(403).json({ error: "Pagamento não confirmado." });
   }
 
   let dados;
