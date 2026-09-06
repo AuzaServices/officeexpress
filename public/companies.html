@@ -632,14 +632,14 @@
       .mc-col-dados { max-height: none; }
     }
 
-    /* ===== Cadastro em 2 colunas (desktop) — premium ===== */
+    /* ===== Cadastro — coluna única ===== */
     .cad-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 28px 36px; align-items: start;
+      display: grid; grid-template-columns: 1fr;
+      gap: 0; max-width: 460px; margin: 0 auto;
     }
     .cad-col-titulo {
       display: flex; align-items: center; gap: 10px;
-      margin: 0 0 18px; font-size: .7rem; font-weight: 800;
+      margin: 22px 0 16px; font-size: .7rem; font-weight: 800;
       letter-spacing: .14em; text-transform: uppercase;
       color: var(--brand, #ff8800);
     }
@@ -648,6 +648,7 @@
       content: ""; flex: 1; height: 1px;
       background: linear-gradient(90deg, var(--border, #e2e8f0), transparent);
     }
+    .cad-col-titulo:first-child { margin-top: 0; }
     /* Campos com acabamento premium */
     #formCadastro .campo { margin-bottom: 16px; }
     #formCadastro .campo > label {
@@ -732,8 +733,8 @@
     #formCadastro .btn-block:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(255, 136, 0, .34); }
     #formCadastro .btn-block:active { transform: translateY(0); }
     @media (max-width: 720px) {
-      .cad-grid { grid-template-columns: 1fr; gap: 20px; }
-      .cad-col-titulo { margin-top: 4px; }
+      .cad-col-titulo { margin-top: 18px; }
+      .cad-col-titulo:first-child { margin-top: 0; }
     }
   </style>
 </head>
