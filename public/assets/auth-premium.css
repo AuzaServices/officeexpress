@@ -10,6 +10,9 @@
    ========================================================================== */
 
 /* ---------- Mobile-first: imagem como fundo imersivo ---------- */
+/* No mobile a imagem fica NÍTIDA (sem blur), cobrindo 100% da tela; o
+   efeito de vidro fosco fica no CARD (backdrop-filter), que "reflete"
+   levemente a imagem atrás. */
 .auth-side {
   position: fixed;
   inset: 0;
@@ -24,15 +27,14 @@
   height: 100%;
   object-fit: cover;
   object-position: center 30%;
-  transform: scale(1.12);
-  filter: blur(22px) saturate(1.15) brightness(.65);
+  filter: saturate(1.08) contrast(1.02) brightness(.9);
 }
 .auth-side .auth-side-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(0, 26, 44, .55) 0%, rgba(0, 31, 51, .68) 50%, rgba(0, 18, 30, .82) 100%),
-    radial-gradient(500px 320px at 85% 8%, rgba(255, 136, 0, .16) 0%, transparent 60%);
+    linear-gradient(180deg, rgba(0, 26, 44, .38) 0%, rgba(0, 31, 51, .48) 50%, rgba(0, 18, 30, .62) 100%),
+    radial-gradient(500px 320px at 85% 8%, rgba(255, 136, 0, .14) 0%, transparent 60%);
 }
 .auth-side .auth-side-content { display: none; }
 
@@ -59,19 +61,27 @@
     width: 100%;
   }
   .auth-card {
-    background: var(--card, #ffffff);
-    border: 1px solid var(--border, #e2e8f0);
-    border-radius: 20px;
+    /* Vidro fosco luxuoso (glassmorphism): translúcido, com blur só no vidro,
+       borda iluminada e reflexo sutil da imagem atrás. */
+    background: linear-gradient(155deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .08) 100%);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    backdrop-filter: blur(18px) saturate(1.3);
+    border: 1px solid rgba(255, 255, 255, .22);
+    box-shadow:
+      0 25px 60px rgba(2, 12, 22, .45),
+      inset 0 1px 0 rgba(255, 255, 255, .28);
+    border-radius: 22px;
     padding: 26px 20px;
     width: 100%;
     max-width: 430px;
     box-sizing: border-box;
-    box-shadow: 0 25px 50px rgba(4, 16, 28, .35);
+    color: #ffffff;
   }
-  .auth-card h1 { font-size: 1.35rem; font-weight: 800; text-align: center; margin: 0 0 6px; }
-  .auth-card .subtitle { text-align: center; color: var(--text-muted, #64748b); margin: 0 0 18px; font-size: .9rem; }
+  /* Textos sobre vidro: branco com contraste suave */
+  .auth-card h1 { font-size: 1.35rem; font-weight: 800; text-align: center; margin: 0 0 6px; color: #fff; text-shadow: 0 1px 12px rgba(0,0,0,.35); }
+  .auth-card .subtitle { text-align: center; color: rgba(255, 255, 255, .82); margin: 0 0 18px; font-size: .9rem; }
   .auth-card .campo { margin-bottom: 13px; }
-  .auth-card .campo label { display: block; margin-bottom: 6px; font-size: .8rem; font-weight: 600; color: var(--text-secondary, #475569); }
+  .auth-card .campo label { display: block; margin-bottom: 6px; font-size: .8rem; font-weight: 600; color: rgba(255, 255, 255, .88); }
   .auth-card .campo input,
   .auth-card .campo select,
   .auth-card .campo textarea {
@@ -80,17 +90,36 @@
     padding: 11px 14px;
     font-size: .95rem;
     border-radius: 10px;
-    border: 2px solid var(--border, #e2e8f0);
-    background: #ffffff;
-    color: var(--text-primary, #0f172a);
+    border: 1px solid rgba(255, 255, 255, .28);
+    background: rgba(255, 255, 255, .10);
+    color: #ffffff;
     outline: none;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition: border-color .15s ease, background .15s ease;
   }
+  .auth-card .campo input::placeholder { color: rgba(255, 255, 255, .45); }
+  /* Dropdown e date picker legíveis dentro do vidro */
+  .auth-card .campo select option { color: #0f172a; background: #ffffff; }
   .auth-card .campo input:focus,
   .auth-card .campo select:focus,
-  .auth-card .campo textarea:focus { border-color: var(--brand, #ff8800); box-shadow: 0 0 0 4px rgba(255, 136, 0, .15); }
+  .auth-card .campo textarea:focus {
+    border-color: var(--brand, #ff8800);
+    background: rgba(255, 255, 255, .16);
+    box-shadow: 0 0 0 4px rgba(255, 136, 0, .22);
+  }
+  /* Campos somente-leitura (preenchidos pela Receita) com tom de vidro mais fosco */
+  .auth-card .campo input[readonly] { background: rgba(255, 255, 255, .07); color: rgba(255, 255, 255, .85); }
+  /* Autocomplete amarelo do Chrome sobre vidro */
+  .auth-card .campo input:-webkit-autofill {
+    -webkit-text-fill-color: #fff;
+    -webkit-box-shadow: 0 0 0 1000px rgba(14, 43, 68, .85) inset;
+  }
   .auth-card .btn-block { margin-top: 4px; padding: 13px 16px; }
-  .auth-voltar { color: var(--text-muted, #64748b); }
-  .auth-links { text-align: center; margin-top: 14px; font-size: .85rem; }
+  .auth-card .alert { color: #fff; }
+  .auth-voltar { color: rgba(255, 255, 255, .78); }
+  .auth-voltar:hover { color: var(--brand, #ff8800); }
+  .auth-links { text-align: center; margin-top: 14px; font-size: .85rem; color: rgba(255, 255, 255, .85); }
   .auth-links a { color: var(--brand, #ff8800); font-weight: 700; text-decoration: none; }
 }
 
