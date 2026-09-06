@@ -3497,7 +3497,9 @@ app.get("/api/companies/talentos/:id/visualizar", async (req, res) => {
 
     const r = await carregarTalentoParaEmpresa(req, res, req.params.id);
     if (!r) return;
-    registrarVisualizacao(idSessao, r.talento);
+    // Cota não conta aqui: o registro já foi feito por /detalhe (ou /contatar).
+    // Registrar de novo faria o uso pular 2 por clique (a cota soma linhas).
+    // registrarVisualizacao(idSessao, r.talento);
     const { gerarHTML } = require("./lib/renderHTML");
     // Origem decide o modelo: página talentos.html → Minimal fixo;
     // fluxo normal (pedido pago) → o modelo escolhido pelo cliente no editor.

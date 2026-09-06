@@ -351,13 +351,9 @@
     /* O conteúdo precisa de respiro à esquerda para não ficar sob a sidebar fixa
        (260px da barra + 24px de folga). */
     .portal-wrap-full .portal-conteudo { margin-left: 284px; }
-    /* Rodapé colado aos pés da sidebar: acompanha o recuo do conteúdo e a
-       sidebar fixed termina (bottom:0) exatamente no topo dele. */
-    #viewPainel ~ .footer,
-    .footer { margin-left: 284px; }
-    @media (max-width: 900px) {
-      .footer { margin-left: 0 !important; }
-    }
+    /* Rodapé em largura total: o JS recua a sidebar (bottom dinâmico) quando
+       ele entra na viewport, então ela nunca o corta nem o sobrepõe. */
+    .footer { margin-left: 0; }
     .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
     .pse-avatar {
       width: 42px; height: 42px; border-radius: 6px; flex-shrink: 0;
@@ -1405,6 +1401,24 @@
         document.getElementById("portalSidebar").classList.toggle("aberta", !!abrir);
         document.getElementById("portalSidebarBackdrop").classList.toggle("aberta", !!abrir);
       };
+
+      // Rodapé nunca cortado: quando ele entra na viewport, a sidebar fixa
+      // "senta" sobre o topo do rodapé (bottom dinâmico). Quando o rodapé
+      // sai, ela volta a ocupar até o pé da tela. Roda só no desktop.
+      (function () {
+        var sidebar = document.getElementById("portalSidebar");
+        var footer = document.querySelector(".footer");
+        if (!sidebar || !footer || !("IntersectionObserver" in window)) return;
+        var mm = window.matchMedia("(max-width: 900px)");
+        function aplicar(entrando) {
+          if (mm.matches) { sidebar.style.bottom = ""; return; } // mobile: drawer
+          sidebar.style.bottom = entrando ? footer.offsetHeight + "px" : "";
+        }
+        new IntersectionObserver(function (entries) {
+          aplicar(entries[0].isIntersecting);
+        }, { threshold: 0 }).observe(footer);
+        mm.addEventListener ? mm.addEventListener("change", function (e) { if (e.matches) aplicar(false); }) : null;
+      })();
 
       async function atualizarStats() {
         var { ok, data } = await App.api("/api/companies/curriculos");
