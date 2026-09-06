@@ -592,6 +592,10 @@
                 <option value="pro">Pro — R$ 249/mês</option>
                 <option value="enterprise">Enterprise — Sob consulta</option>
               </select>            </div>
+            <div class="campo">
+              <label>Logo da empresa <span style="font-weight:400;color:var(--text-muted)">(opcional — png, jpg ou webp)</span></label>
+              <input type="file" id="cLogo" accept="image/png,image/jpeg,image/webp,image/gif" style="padding:10px;background:var(--bg-card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:10px;width:100%;box-sizing:border-box" />
+            </div>
             <button type="submit" class="btn btn-primary btn-block">Criar conta e assinar</button>
             <p style="text-align:center;margin-top:16px;font-size:.9rem;color:var(--text-muted)">Já tem conta? <a href="#" onclick="mostrarForm('login');return false;" style="color:var(--brand)">Entrar</a></p>
           </form>
@@ -825,6 +829,27 @@
             <div class="portal-secao oculto" id="secaoDados">
               <div class="card" style="max-width:560px">
                 <h3 style="font-weight:800;margin-bottom:16px">Dados da empresa</h3>
+
+                <!-- Logo / foto da empresa -->
+                <div style="display:flex;align-items:center;gap:20px;padding:18px;border:1px solid var(--border,#e2e8f0);border-radius:16px;background:linear-gradient(135deg,rgba(14,43,68,.03),rgba(255,136,0,.04));margin-bottom:22px;flex-wrap:wrap">
+                  <div style="position:relative;flex-shrink:0">
+                    <div id="dFotoWrap" style="width:88px;height:88px;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,#0e2b44,#174a6b);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(14,43,68,.18)">
+                      <span id="dFotoInicial" style="color:#fff;font-size:2rem;font-weight:800">E</span>
+                      <img id="dFotoImg" src="" alt="Logo da empresa" style="display:none;width:100%;height:100%;object-fit:cover" />
+                    </div>
+                  </div>
+                  <div style="flex:1;min-width:180px">
+                    <div style="font-weight:800;font-size:1.02rem;margin-bottom:2px">Logo da empresa</div>
+                    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:10px">Aparece para os candidatos e no painel. PNG, JPG ou WEBP até 5MB.</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                      <button type="button" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem" onclick="document.getElementById('dFotoInput').click()">Alterar foto</button>
+                      <button type="button" id="dFotoRemover" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;color:var(--danger,#dc2626);display:none" onclick="removerFotoEmpresa()">Remover</button>
+                    </div>
+                    <input type="file" id="dFotoInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" />
+                    <div class="alert" id="alertFoto" style="margin-top:10px"></div>
+                  </div>
+                </div>
+
                 <div class="campo"><label>Nome da empresa</label><input type="text" id="dNome" /></div>
                 <div class="campo"><label>CNPJ</label><input type="text" id="dCnpj" placeholder="00.000.000/0000-00" /></div>
                 <div class="campo"><label>E-mail de acesso</label><input type="email" id="dEmail" disabled style="opacity:.6;cursor:not-allowed" /></div>
@@ -1096,17 +1121,33 @@
       // Cadastro
       document.getElementById("formCadastro").addEventListener("submit", async function (e) {
         e.preventDefault();
-        var body = {
-          nome: document.getElementById("cNome").value.trim(),
-          cnpj: document.getElementById("cCnpj").value.trim(),
-          email: document.getElementById("cEmail").value.trim(),
-          senha: document.getElementById("cSenha").value,
-          plano: document.getElementById("cPlano").value
-        };
-        var { ok, data } = await App.api("/api/companies/cadastro", { method: "POST", body: JSON.stringify(body) });
-        if (!ok) return mostrarAlerta(data.error || "Erro ao criar conta.", false);
+        var arquivoLogo = document.getElementById("cLogo") && document.getElementById("cLogo").files.length
+          ? document.getElementById("cLogo").files[0] : null;
+        var resp;
+        if (arquivoLogo) {
+          // Com logo: envia multipart para o servidor hospedar no Cloudinary.
+          var fd = new FormData();
+          fd.append("nome", document.getElementById("cNome").value.trim());
+          fd.append("cnpj", document.getElementById("cCnpj").value.trim());
+          fd.append("email", document.getElementById("cEmail").value.trim());
+          fd.append("senha", document.getElementById("cSenha").value);
+          fd.append("plano", document.getElementById("cPlano").value);
+          fd.append("logo", arquivoLogo);
+          resp = await fetch("/api/companies/cadastro", { method: "POST", body: fd, credentials: "same-origin" });
+          resp = { ok: resp.ok, data: resp.ok ? await resp.json() : await resp.json().catch(function () { return {}; }) };
+        } else {
+          var body = {
+            nome: document.getElementById("cNome").value.trim(),
+            cnpj: document.getElementById("cCnpj").value.trim(),
+            email: document.getElementById("cEmail").value.trim(),
+            senha: document.getElementById("cSenha").value,
+            plano: document.getElementById("cPlano").value
+          };
+          resp = await App.api("/api/companies/cadastro", { method: "POST", body: JSON.stringify(body) });
+        }
+        if (!resp.ok) return mostrarAlerta((resp.data && resp.data.error) || "Erro ao criar conta.", false);
         // Fluxo novo: confirma o e-mail com código de 4 dígitos antes de pagar.
-        mostrarConfirmaEmail(data.email || body.email);
+        mostrarConfirmaEmail(resp.data.email || document.getElementById("cEmail").value.trim());
       });
 
       // Confirmação do código de 4 dígitos
@@ -1182,6 +1223,7 @@
         document.getElementById("dNome").value = e.nome || "";
         document.getElementById("dCnpj").value = e.cnpj || "";
         document.getElementById("dEmail").value = e.email || "";
+        renderFotoEmpresa(e);
         mostrarView("painel");
         atualizarStats();
         atualizarUso();
@@ -1341,6 +1383,66 @@
       }
 
       // Salvar dados da empresa
+            // ===== Foto / logo da empresa =====
+      function renderFotoEmpresa(e) {
+        var img = document.getElementById("dFotoImg");
+        var inicial = document.getElementById("dFotoInicial");
+        var btnRemover = document.getElementById("dFotoRemover");
+        if (!img || !inicial) return;
+        if (e.foto_url) {
+          img.src = e.foto_url;
+          img.style.display = "block";
+          inicial.style.display = "none";
+          if (btnRemover) btnRemover.style.display = "inline-block";
+        } else {
+          img.style.display = "none";
+          img.removeAttribute("src");
+          inicial.textContent = (e.nome || "E").trim().charAt(0).toUpperCase();
+          inicial.style.display = "block";
+          if (btnRemover) btnRemover.style.display = "none";
+        }
+      }
+
+      function alertaFoto(msg, ok) {
+        var a = document.getElementById("alertFoto");
+        if (!a) return;
+        a.textContent = msg;
+        a.className = "alert show " + (ok ? "alert-success" : "alert-error");
+        if (ok) setTimeout(function () { a.className = "alert"; }, 3000);
+      }
+
+      document.getElementById("dFotoInput").addEventListener("change", async function () {
+        var file = this.files.length ? this.files[0] : null;
+        this.value = "";
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) return alertaFoto("Imagem muito grande (máx. 5MB).", false);
+        var fd = new FormData();
+        fd.append("logo", file);
+        alertaFoto("Enviando foto...", true);
+        try {
+          var r = await fetch("/api/companies/me/foto", { method: "POST", body: fd, credentials: "same-origin" });
+          var d = await r.json().catch(function () { return {}; });
+          if (!r.ok) return alertaFoto(d.error || "Erro ao enviar a foto.", false);
+          if (empresaLogada) { empresaLogada.foto_url = d.foto_url; renderFotoEmpresa(empresaLogada); }
+          alertaFoto("Foto atualizada com sucesso!", true);
+        } catch (err) {
+          alertaFoto("Erro de conexão ao enviar a foto.", false);
+        }
+      });
+
+      window.removerFotoEmpresa = async function () {
+        if (!confirm("Remover a logo da empresa?")) return;
+        try {
+          var r = await fetch("/api/companies/me/foto", { method: "DELETE", credentials: "same-origin" });
+          var d = await r.json().catch(function () { return {}; });
+          if (!r.ok) return alertaFoto(d.error || "Erro ao remover a foto.", false);
+          if (empresaLogada) { empresaLogada.foto_url = null; renderFotoEmpresa(empresaLogada); }
+          alertaFoto("Foto removida.", true);
+        } catch (err) {
+          alertaFoto("Erro de conexão ao remover a foto.", false);
+        }
+      };
+
       window.salvarDadosEmpresa = async function () {
         var alert = document.getElementById("alertDados");
         alert.className = "alert";

@@ -949,6 +949,7 @@
           '<td><div class="acoes-linha">' +
             '<button class="btn-acao azul" onclick="abrirModalEmpresa(' + e.id + ')">Detalhes</button>' +
             '<button class="btn-acao amarelo" onclick="alterarPlanoEmpresa(' + e.id + ')">Plano</button>' +
+            '<button class="btn-acao verde" onclick="alterarFotoEmpresa(' + e.id + ')">Foto</button>' +
             botaoStatus +
             '<button class="btn-acao vermelho" onclick="excluirEmpresa(' + e.id + ', \'' + String(e.nome || "").replace(/\\/g, "").replace(/'/g, "") + '\')">Excluir</button>' +
           "</div></td>";
@@ -986,6 +987,38 @@
       var { ok, data } = await App.api("/api/admin/empresas/" + id, { method: "DELETE" });
       if (!ok) { alert(data.error || "Erro ao excluir empresa."); return; }
       carregarEmpresas();
+    };
+
+    // Foto da empresa: input de arquivo oculto compartilhado.
+    var empresaFotoId = null;
+    var inputFotoAdmin = document.createElement("input");
+    inputFotoAdmin.type = "file";
+    inputFotoAdmin.accept = "image/png,image/jpeg,image/webp,image/gif";
+    inputFotoAdmin.style.display = "none";
+    inputFotoAdmin.addEventListener("change", async function () {
+      var file = this.files.length ? this.files[0] : null;
+      this.value = "";
+      if (!file || !empresaFotoId) return;
+      if (file.size > 5 * 1024 * 1024) { alert("Imagem muito grande (máx. 5MB)."); return; }
+      var fd = new FormData();
+      fd.append("logo", file);
+      var r = await fetch("/api/admin/empresas/" + empresaFotoId + "/foto", { method: "POST", body: fd, credentials: "same-origin" });
+      var d = await r.json().catch(function () { return {}; });
+      if (!r.ok) { alert(d.error || "Erro ao enviar a foto."); return; }
+      setMsg("Foto da empresa #" + empresaFotoId + " atualizada.", true);
+    });
+    document.body.appendChild(inputFotoAdmin);
+
+    window.alterarFotoEmpresa = function (id) {
+      empresaFotoId = id;
+      inputFotoAdmin.click();
+    };
+
+    window.removerFotoAdmin = async function (id) {
+      if (!confirm("Remover a logo da empresa #" + id + "?")) return;
+      var { ok, data } = await App.api("/api/admin/empresas/" + id + "/foto", { method: "DELETE" });
+      if (!ok) { alert(data.error || "Erro ao remover a foto."); return; }
+      setMsg("Foto da empresa #" + id + " removida.", true);
     };
 
     var empresaAtual = null;

@@ -38,6 +38,7 @@ const { pool, garantirSchema, getPreco, getPrecoParceiro, garantirPrecoParceiro 
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
 const { enviarConfirmacao, enviarRecuperacao, enviarConviteParceiro, enviarCodigoConvite, enviarCodigoEmpresa, enviarReciboEmpresa } = require("./lib/email");
+const { cloudinary, uploadEmpresaLogoMiddleware } = require("./lib/cloudinary");
 const cron = require("node-cron");
 
 require("dotenv").config();
@@ -2594,7 +2595,7 @@ async function registrarVisualizacao(empresaId, talentoRow) {
 
 async function buscarEmpresaPorId(id) {
   const [rows] = await pool.query(
-    "SELECT id, nome, cnpj, email, plano, assinatura_ativa, status, msg_whatsapp FROM empresas WHERE id = ?",
+    "SELECT id, nome, cnpj, email, plano, assinatura_ativa, status, msg_whatsapp, foto_url FROM empresas WHERE id = ?",
     [id]
   );
   return rows[0] || null;
@@ -2750,6 +2751,13 @@ async function garantirEmpresasSchema() {
       const [cols3] = await pool.query("SHOW COLUMNS FROM empresas LIKE 'email_cod_expira'");
       if (!cols3.length) await pool.query("ALTER TABLE empresas ADD COLUMN email_cod_expira DATETIME NULL");
     }
+    // Foto/logo da empresa (hospedada no Cloudinary).
+    try {
+      await pool.query("ALTER TABLE empresas ADD COLUMN IF NOT EXISTS foto_url VARCHAR(500) NULL");
+    } catch (errFoto) {
+      const [colsFoto] = await pool.query("SHOW COLUMNS FROM empresas LIKE 'foto_url'");
+      if (!colsFoto.length) await pool.query("ALTER TABLE empresas ADD COLUMN foto_url VARCHAR(500) NULL");
+    }
 
     // ---------------------------------------------------------------------
     // Banco permanente de talentos (Office Express | Companies).
@@ -2862,8 +2870,9 @@ async function arquivarTalento(pedidoId) {
   }
 })();
 
-// Cadastro de empresa
-app.post("/api/companies/cadastro", async (req, res) => {
+// Cadastro de empresa (aceita logo opcional via multipart/form-data,
+// hospedada no Cloudinary).
+app.post("/api/companies/cadastro", uploadEmpresaLogoMiddleware, async (req, res) => {
   try {
     const { nome, cnpj, email, senha, plano = "starter" } = req.body || {};
     if (!nome || !email || !senha) return res.status(400).json({ error: "Nome, e-mail e senha são obrigatórios." });
@@ -2871,9 +2880,10 @@ app.post("/api/companies/cadastro", async (req, res) => {
     if (!validarSenha(senha)) return res.status(400).json({ error: "A senha deve ter no mínimo 8 caracteres, com letra e número." });
     if (!["starter", "pro", "enterprise"].includes(plano)) return res.status(400).json({ error: "Plano inválido." });
     const senhaHash = await bcrypt.hash(senha, 10);
+    const fotoUrl = req.file && req.file.path ? req.file.path : null;
     const [result] = await pool.query(
-      "INSERT INTO empresas (nome, cnpj, email, senha_hash, plano) VALUES (?, ?, ?, ?, ?)",
-      [String(nome).trim(), String(cnpj || "").trim(), String(email).trim().toLowerCase(), senhaHash, plano]
+      "INSERT INTO empresas (nome, cnpj, email, senha_hash, plano, foto_url) VALUES (?, ?, ?, ?, ?, ?)",
+      [String(nome).trim(), String(cnpj || "").trim(), String(email).trim().toLowerCase(), senhaHash, plano, fotoUrl]
     );
     const empresaId = result.insertId;
 
@@ -3014,6 +3024,84 @@ app.put("/api/companies/me/dados", async (req, res) => {
   } catch (e) {
     console.error("Erro ao atualizar dados da empresa:", e.message);
     res.status(500).json({ error: "Erro ao atualizar dados." });
+  }
+});
+
+// Helper: apaga a imagem antiga da empresa no Cloudinary (best-effort).
+async function removerFotoCloudinary(fotoUrl) {
+  if (!fotoUrl || !fotoUrl.includes("res.cloudinary.com")) return;
+  try {
+    // Extrai o public_id a partir da URL: .../upload/vXXXX/officeexpress/empresas/abc123.jpg
+    const m = fotoUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/);
+    if (m && m[1]) await cloudinary.uploader.destroy(m[1]);
+  } catch (e) {
+    console.error("Aviso: não foi possível remover a imagem antiga do Cloudinary:", e.message);
+  }
+}
+
+// Empresa logada envia/atualiza sua foto/logo (multipart, campo 'logo').
+app.post("/api/companies/me/foto", uploadEmpresaLogoMiddleware, async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  if (!req.file || !req.file.path) return res.status(400).json({ error: "Envie uma imagem válida (jpg, png, webp ou gif, até 5MB)." });
+  try {
+    const [rows] = await pool.query("SELECT foto_url FROM empresas WHERE id = ?", [id]);
+    if (rows.length && rows[0].foto_url) await removerFotoCloudinary(rows[0].foto_url);
+    await pool.query("UPDATE empresas SET foto_url = ? WHERE id = ?", [req.file.path, id]);
+    res.json({ ok: true, foto_url: req.file.path });
+  } catch (e) {
+    console.error("Erro ao salvar foto da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao salvar a foto." });
+  }
+});
+
+// Empresa logada remove sua foto/logo.
+app.delete("/api/companies/me/foto", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const [rows] = await pool.query("SELECT foto_url FROM empresas WHERE id = ?", [id]);
+    if (rows.length && rows[0].foto_url) await removerFotoCloudinary(rows[0].foto_url);
+    await pool.query("UPDATE empresas SET foto_url = NULL WHERE id = ?", [id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao remover foto da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao remover a foto." });
+  }
+});
+
+// Admin envia/atualiza a foto de uma empresa.
+app.post("/api/admin/empresas/:id/foto", protegerAdmin, uploadEmpresaLogoMiddleware, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: "Empresa inválida." });
+  if (!req.file || !req.file.path) return res.status(400).json({ error: "Envie uma imagem válida (jpg, png, webp ou gif, até 5MB)." });
+  try {
+    const [rows] = await pool.query("SELECT foto_url FROM empresas WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Empresa não encontrada." });
+    if (rows[0].foto_url) await removerFotoCloudinary(rows[0].foto_url);
+    await pool.query("UPDATE empresas SET foto_url = ? WHERE id = ?", [req.file.path, id]);
+    await registrarAdminLog("empresa_foto", `Foto da empresa #${id} atualizada`);
+    res.json({ ok: true, foto_url: req.file.path });
+  } catch (e) {
+    console.error("Erro ao salvar foto (admin):", e.message);
+    res.status(500).json({ error: "Erro ao salvar a foto." });
+  }
+});
+
+// Admin remove a foto de uma empresa.
+app.delete("/api/admin/empresas/:id/foto", protegerAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: "Empresa inválida." });
+  try {
+    const [rows] = await pool.query("SELECT foto_url FROM empresas WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Empresa não encontrada." });
+    if (rows[0].foto_url) await removerFotoCloudinary(rows[0].foto_url);
+    await pool.query("UPDATE empresas SET foto_url = NULL WHERE id = ?", [id]);
+    await registrarAdminLog("empresa_foto", `Foto da empresa #${id} removida`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao remover foto (admin):", e.message);
+    res.status(500).json({ error: "Erro ao remover a foto." });
   }
 });
 
