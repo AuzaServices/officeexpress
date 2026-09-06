@@ -393,7 +393,7 @@ function planoDaEmpresa(empresa) {
 // Conta banners ativos (não expirados) da empresa agora mesmo.
 async function bannersAtivosDaEmpresa(empresaId) {
   const [rows] = await pool.query(
-    "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NOT NULL AND expira_em > NOW()",
+    "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NOT NULL AND expira_em > UTC_TIMESTAMP()",
     [empresaId]
   );
   return Number(rows[0].c);
@@ -404,7 +404,7 @@ async function bannersAtivosDaEmpresa(empresaId) {
 async function expirarVagasVencidas() {
   try {
     const [vencidas] = await pool.query(
-      "SELECT id, empresa_id, banner_url FROM vagas WHERE expira_em <= NOW()"
+      "SELECT id, empresa_id, banner_url FROM vagas WHERE expira_em <= UTC_TIMESTAMP()"
     );
     if (!vencidas.length) return;
     for (const v of vencidas) {
@@ -458,7 +458,7 @@ app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) =>
       }
     } else {
       const [textos] = await pool.query(
-        "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NULL AND expira_em > NOW()",
+        "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NULL AND expira_em > UTC_TIMESTAMP()",
         [id]
       );
       if (Number(textos[0].c) >= limite.texto) {
@@ -578,7 +578,7 @@ app.get("/api/vagas", async (req, res) => {
              e.nome AS empresa_nome, e.foto_url AS empresa_foto, e.plano AS empresa_plano
       FROM vagas v
       JOIN empresas e ON e.id = v.empresa_id
-      WHERE NOW() BETWEEN v.ativa_de AND v.expira_em AND e.status = 'ativo'
+      WHERE UTC_TIMESTAMP() BETWEEN v.ativa_de AND v.expira_em AND e.status = 'ativo'
     `;
     const params = [];
     if (busca) {
@@ -605,7 +605,7 @@ app.get("/api/vagas/:id", async (req, res) => {
     const [rows] = await pool.query(
       `SELECT v.*, e.nome AS empresa_nome, e.foto_url AS empresa_foto, e.cidade AS empresa_cidade, e.estado AS empresa_estado
        FROM vagas v JOIN empresas e ON e.id = v.empresa_id
-       WHERE v.id = ? AND NOW() BETWEEN v.ativa_de AND v.expira_em`,
+       WHERE v.id = ? AND UTC_TIMESTAMP() BETWEEN v.ativa_de AND v.expira_em`,
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: "Vaga não encontrada ou expirada." });
@@ -623,7 +623,7 @@ app.post("/api/vagas/:id/candidatar", async (req, res) => {
   if (!id) return res.status(401).json({ error: "Entre na sua conta para se candidatar." });
   try {
     const [vaga] = await pool.query(
-      "SELECT id FROM vagas WHERE id = ? AND NOW() BETWEEN ativa_de AND expira_em",
+      "SELECT id FROM vagas WHERE id = ? AND UTC_TIMESTAMP() BETWEEN ativa_de AND expira_em",
       [req.params.id]
     );
     if (!vaga.length) return res.status(404).json({ error: "Vaga não encontrada ou expirada." });
