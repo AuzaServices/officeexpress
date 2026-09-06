@@ -1730,6 +1730,26 @@ app.put("/api/admin/empresas/:id/plano", protegerAdmin, async (req, res) => {
   }
 });
 
+// Exclui uma empresa (admin). Remove primeiro os registros dependentes
+// (pagamentos, currículos vistos, contatos) para não deixar órfãos, e
+// encerra qualquer sessão ativa da empresa.
+app.delete("/api/admin/empresas/:id", protegerAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ error: "Empresa inválida." });
+    await pool.query("DELETE FROM empresas_pagamentos WHERE empresa_id = ?", [id]);
+    await pool.query("DELETE FROM empresas_curriculos_vistos WHERE empresa_id = ?", [id]);
+    await pool.query("DELETE FROM empresas_contatos WHERE empresa_id = ?", [id]);
+    const [r] = await pool.query("DELETE FROM empresas WHERE id = ?", [id]);
+    if (!r.affectedRows) return res.status(404).json({ error: "Empresa não encontrada." });
+    await registrarAdminLog("empresa_excluida", `Empresa #${id} excluída`);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao excluir empresa:", e.message);
+    res.status(500).json({ error: "Erro ao excluir empresa." });
+  }
+});
+
 // Preços configuráveis das assinaturas (leitura para o admin).
 app.get("/api/admin/empresas/planos/precos", protegerAdmin, async (req, res) => {
   try {

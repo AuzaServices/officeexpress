@@ -950,6 +950,7 @@
             '<button class="btn-acao azul" onclick="abrirModalEmpresa(' + e.id + ')">Detalhes</button>' +
             '<button class="btn-acao amarelo" onclick="alterarPlanoEmpresa(' + e.id + ')">Plano</button>' +
             botaoStatus +
+            '<button class="btn-acao vermelho" onclick="excluirEmpresa(' + e.id + ', \'' + String(e.nome || "").replace(/\\/g, "").replace(/'/g, "") + '\')">Excluir</button>' +
           "</div></td>";
         tb.appendChild(tr);
       });
@@ -976,6 +977,14 @@
         body: JSON.stringify({ plano: plano, assinatura_ativa: ativar ? 1 : 0 })
       });
       if (!ok) { alert(data.error || "Erro ao alterar plano."); return; }
+      carregarEmpresas();
+    };
+
+    window.excluirEmpresa = async function (id, nome) {
+      if (!confirm('Excluir a empresa "' + (nome || ("#" + id)) + '"? Os pagamentos, currículos vistos e contatos dela também serão apagados. Esta ação não pode ser desfeita.')) return;
+      if (!confirm("Confirma definitivamente a exclusão? Esta ação é permanente.")) return;
+      var { ok, data } = await App.api("/api/admin/empresas/" + id, { method: "DELETE" });
+      if (!ok) { alert(data.error || "Erro ao excluir empresa."); return; }
       carregarEmpresas();
     };
 
