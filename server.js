@@ -3518,11 +3518,14 @@ app.get("/api/companies/curriculos/:id/detalhe", async (req, res) => {
   try {
     // Lê do banco PERMANENTE de talentos. O id recebido é o id do talento;
     // se o pedido original já foi apagado, o talento continua acessível.
+    // A autorização vigente é talentos.consentimento (controlada pelo toggle
+    // do cliente em Minha Conta) — o aceite antigo gravado dentro de
+    // dados_json NÃO é mais consultado aqui, pois ficava dessincronizado
+    // quando o cliente não aceitou no pagamento mas habilitou depois.
     const [rows] = await pool.query("SELECT id, pedido_id, dados_json FROM talentos WHERE id = ? AND consentimento = 1", [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: "Currículo não encontrado." });
     let d = {};
     try { d = JSON.parse(rows[0].dados_json || "{}"); } catch (e) { d = {}; }
-    if (!d.consentimento) return res.status(403).json({ error: "Currículo sem autorização para consulta." });
 
     await pool.query("INSERT IGNORE INTO empresas_curriculos_vistos (empresa_id, pedido_id) VALUES (?, ?)", [id, rows[0].pedido_id || rows[0].id]);
 
@@ -3594,7 +3597,9 @@ async function carregarTalentoParaEmpresa(req, res, talentoId) {
   if (!rows.length) return res.status(404).json({ error: "Currículo não encontrado." });
   let d = {};
   try { d = JSON.parse(rows[0].dados_json || "{}"); } catch (e) { d = {}; }
-  if (!d.consentimento) return res.status(403).json({ error: "Currículo sem autorização para consulta." });
+  // A autorização vigente é talentos.consentimento (já filtrada no WHERE).
+  // O aceite antigo dentro de dados_json não é consultado: ficava
+  // dessincronizado com o toggle de visibilidade do cliente.
   return { talento: rows[0], dados: d };
 }
 
