@@ -564,7 +564,7 @@ app.get("/api/vagas", async (req, res) => {
              e.nome AS empresa_nome, e.foto_url AS empresa_foto, e.plano AS empresa_plano
       FROM vagas v
       JOIN empresas e ON e.id = v.empresa_id
-      WHERE NOW() BETWEEN v.ativa_de AND v.expira_em AND e.status = 'ativa'
+      WHERE NOW() BETWEEN v.ativa_de AND v.expira_em AND e.status = 'ativo'
     `;
     const params = [];
     if (busca) {
