@@ -96,6 +96,30 @@
     }
     .selo-banco svg { width: 11px; height: 11px; flex-shrink: 0; }
 
+    /* Checkbox minimalista: habilitar currículo para recrutadores */
+    .toggle-recrutadores {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin-top: 6px; width: fit-content; cursor: pointer;
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      user-select: none;
+    }
+    .toggle-recrutadores input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .toggle-recrutadores .trilha {
+      width: 30px; height: 17px; border-radius: 999px; flex-shrink: 0;
+      background: var(--border, #cbd5e1); position: relative;
+      transition: background .18s ease;
+    }
+    .toggle-recrutadores .trilha::after {
+      content: ""; position: absolute; top: 2px; left: 2px;
+      width: 13px; height: 13px; border-radius: 50%; background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.25);
+      transition: transform .18s ease;
+    }
+    .toggle-recrutadores input:checked + .trilha { background: var(--brand, #ff8800); }
+    .toggle-recrutadores input:checked + .trilha::after { transform: translateX(13px); }
+    .toggle-recrutadores input:disabled + .trilha { opacity: .5; cursor: wait; }
+    .toggle-recrutadores.on { color: var(--brand, #ff8800); }
+
     /* Ações */
     .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
     .btn-mini {
@@ -455,6 +479,11 @@
               '<div><div class="nome">' + (modeloNome || "Documento") + '</div>' +
               '<div class="tipo">' + tipoLabel(p.modelo, tipo) + ' · Pedido #' + p.id + '</div>' +
               (p.status === "pago" ? (p.consentimento ? '<div class="selo-banco" title="Seu currículo está visível para empresas parceiras, conforme sua autorização (LGPD)."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Visível para empresas parceiras</div>' : '') : '') +
+              (p.status === "pago" && p.talento_id ?
+                '<label class="toggle-recrutadores' + (p.consentimento ? ' on' : '') + '" title="Controla se recrutadores podem encontrar e visualizar este currículo na busca das empresas.">' +
+                  '<input type="checkbox" data-talento="' + p.talento_id + '"' + (p.consentimento ? ' checked' : '') + ' />' +
+                  '<span class="trilha"></span>' + (p.consentimento ? 'Visível para recrutadores' : 'Oculto para recrutadores') +
+                '</label>' : '') +
             '</div></td>' +
             '<td>' + App.formatarPreco(p.valor) + '</td>' +
             '<td><span class="badge ' + statusCls + '">' + statusTxt + '</span></td>' +
@@ -463,6 +492,31 @@
           IDS.tbody.appendChild(tr);
         });
       }
+
+      // Checkbox de visibilidade para recrutadores (delegação: as linhas da
+      // tabela são recriadas a cada render).
+      document.getElementById("tbodyPedidos").addEventListener("change", async function (e) {
+        var input = e.target.closest('input[data-talento]');
+        if (!input) return;
+        var label = input.closest(".toggle-recrutadores");
+        var talentoId = input.getAttribute("data-talento");
+        input.disabled = true;
+        try {
+          var r = await App.api("/api/curriculos/" + encodeURIComponent(talentoId) + "/visibilidade", {
+            method: "POST",
+            body: JSON.stringify({ visivel: input.checked })
+          });
+          if (r.ok) {
+            label.classList.toggle("on", input.checked);
+            label.lastChild.textContent = input.checked ? "Visível para recrutadores" : "Oculto para recrutadores";
+          } else {
+            input.checked = !input.checked; // reverte visual em caso de erro
+          }
+        } catch (err) {
+          input.checked = !input.checked;
+        }
+        input.disabled = false;
+      });
 
       function carregarPedidos() {
         IDS.erro.classList.add("oculto");

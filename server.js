@@ -412,6 +412,45 @@ app.post("/api/pedidos", async (req, res) => {
   res.json({ pedido: { id: result.insertId, modelo, tipo, valor, parceiro_id: parceiroId } });
 });
 
+// Alterna a visibilidade do currículo pago para recrutadores/empresas
+// (checkbox no painel do cliente). Espelha em talentos.consentimento (fonte
+// da verdade para a busca das empresas) e em pedidos.dados_json.consentimento.
+app.post("/api/curriculos/:talentoId/visibilidade", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const talentoId = parseInt(req.params.talentoId, 10);
+  if (!talentoId) return res.status(400).json({ error: "Currículo inválido." });
+  const visivel = !!(req.body && req.body.visivel);
+
+  try {
+    // Só o dono pode alterar: por usuario_id ou pelo e-mail da conta.
+    const [u] = await pool.query("SELECT email FROM usuarios WHERE id = ?", [id]);
+    const emailU = u.length ? String(u[0].email || "").toLowerCase() : "";
+    const [t] = await pool.query(
+      "SELECT id, pedido_id, email FROM talentos WHERE id = ? AND (usuario_id = ? OR (usuario_id IS NULL AND email = ?))",
+      [talentoId, id, emailU]
+    );
+    if (!t.length) return res.status(404).json({ error: "Currículo não encontrado." });
+
+    await pool.query("UPDATE talentos SET consentimento = ?, updated_at = NOW() WHERE id = ?", [visivel ? 1 : 0, talentoId]);
+
+    // Espelha no pedido original, se ainda existir (mantém o selo coerente).
+    if (t[0].pedido_id) {
+      const [p] = await pool.query("SELECT dados_json FROM pedidos WHERE id = ?", [t[0].pedido_id]);
+      if (p.length) {
+        let d = {};
+        try { d = JSON.parse(p[0].dados_json || "{}"); } catch (e) { d = {}; }
+        d.consentimento = visivel;
+        await pool.query("UPDATE pedidos SET dados_json = ? WHERE id = ?", [JSON.stringify(d), t[0].pedido_id]);
+      }
+    }
+    res.json({ ok: true, visivel });
+  } catch (e) {
+    console.error("Erro ao alternar visibilidade:", e.message);
+    res.status(500).json({ error: "Erro ao atualizar visibilidade." });
+  }
+});
+
 app.get("/api/pedidos/meus", async (req, res) => {
   const id = usuarioDaSessao(req);
   if (!id) return res.status(401).json({ error: "Não autenticado." });
@@ -457,6 +496,14 @@ app.get("/api/pedidos/meus", async (req, res) => {
         consentimento: !!t.consentimento,
         via_talentos: true, // o download busca da tabela talentos
       });
+    });
+    // Espelha o consentimento REAL (tabela talentos) nos pedidos ainda vivos:
+    // o checkbox do cliente altera talento.consentimento, então a exibição do
+    // selo/checkbox no pedido antigo precisa refletir esse valor atualizado.
+    const talPorPedido = new Map(talentos.filter((t) => t.pedido_id).map((t) => [t.pedido_id, t]));
+    pedidos.forEach((p) => {
+      const t = talPorPedido.get(p.id);
+      if (t) p.consentimento = !!t.consentimento;
     });
   } catch (e) {
     console.error("Erro ao enriquecer pedidos com talentos:", e.message);
