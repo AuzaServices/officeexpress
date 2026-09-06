@@ -424,11 +424,13 @@ cron.schedule("*/15 * * * *", expirarVagasVencidas);
 // Empresa logada cria uma divulgação de vaga.
 app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) => {
   const id = empresaDaSessao(req);
-  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  if (!id) { console.log("⚠️ POST /vagas sem sessão de empresa"); return res.status(401).json({ error: "Não autenticado." }); }
+  console.log("📩 POST /vagas empresa", id, "| corpo:", { titulo: req.body.titulo, duracao: req.body.duracaoHoras, banner: !!req.file });
   try {
     const empresa = await buscarEmpresaPorId(id);
-    if (!empresa) return res.status(401).json({ error: "Não autenticado." });
+    if (!empresa) { console.log("⚠️ empresa não encontrada:", id); return res.status(401).json({ error: "Não autenticado." }); }
     if (empresa.assinatura_ativa !== 1 && empresa.status !== "ativo") {
+      console.log("⚠️ assinatura inativa:", { assinatura_ativa: empresa.assinatura_ativa, status: empresa.status });
       return res.status(403).json({ error: "Sua assinatura precisa estar ativa para divulgar vagas." });
     }
 
@@ -477,11 +479,23 @@ app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) =>
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, titulo, area, descricao, cidade, estado, comBanner ? req.file.path : null, ativaDe, expiraEm]
     );
+    console.log("✅ Vaga criada:", r.insertId, "| empresa:", id, "| expira:", expiraEm.toISOString());
     res.json({ ok: true, id: r.insertId, expira_em: expiraEm });
   } catch (e) {
-    console.error("Erro ao criar vaga:", e.message);
+    console.error("❌ Erro ao criar vaga:", e.message, "| stack:", e.stack ? e.stack.split("\n")[1] : "");
     res.status(500).json({ error: "Erro ao criar a divulgação. Tente novamente." });
   }
+});
+
+// Erros de upload (multer/Cloudinary) NÃO passam pelo try/catch da rota —
+// sem este handler, falham silenciosamente e o painel mostra erro genérico.
+app.use((err, req, res, next) => {
+  if (err) {
+    console.error("❌ Erro de upload/middleware:", err.message || err);
+    if (res.headersSent) return next(err);
+    return res.status(500).json({ error: "Erro ao processar o envio (imagem muito grande ou formato inválido?)." });
+  }
+  next();
 });
 
 // Empresa logada lista suas vagas (ativas, agendadas e contagem de candidatos).
