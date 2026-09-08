@@ -222,6 +222,41 @@
       .selo-mp { width: 100%; justify-content: center; text-align: center; }
       .resumo-pedido .rp-item.expira { text-align: left; }
     }
+
+    /* ===== Escolha: assinar plano x pagar avulso (mobile-first) ===== */
+    .escolha-plano { padding: 20px 26px 8px; }
+    .ep-titulo { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin-bottom: 14px; text-align: center; }
+    .ep-opcoes { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .ep-card {
+      position: relative; text-align: left; cursor: pointer;
+      border: 2px solid var(--border); border-radius: 14px;
+      background: var(--card-hover); padding: 16px 16px 14px;
+      font-family: inherit; transition: border-color .15s, transform .15s, box-shadow .15s;
+      width: 100%;
+    }
+    .ep-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px var(--shadow-lg); }
+    .ep-card.ep-destaque { border-color: var(--brand); background: rgba(37,99,235,.05); }
+    .ep-badge {
+      position: absolute; top: -10px; right: 12px;
+      background: var(--brand); color: #fff; font-size: .62rem; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px;
+    }
+    .ep-card-titulo { font-size: .98rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+    .ep-preco { font-size: 1.5rem; font-weight: 800; color: var(--brand-dark); margin-bottom: 10px; }
+    .ep-preco span { font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+    .ep-lista { list-style: none; padding: 0; margin: 0 0 12px; }
+    .ep-lista li { font-size: .82rem; color: var(--text-secondary); line-height: 1.7; display: flex; align-items: center; gap: 7px; }
+    .ep-lista li::before { content: "✓"; color: var(--brand); font-weight: 800; flex-shrink: 0; }
+    .ep-cta {
+      display: block; text-align: center; font-size: .86rem; font-weight: 800;
+      background: var(--brand); color: #fff; padding: 11px 10px; border-radius: 10px;
+    }
+    .ep-cta-sec { background: transparent; color: var(--text-primary); border: 2px solid var(--border); }
+    .ep-trocar { text-align: center; margin-top: 10px; }
+    .ep-trocar a { font-size: .82rem; color: var(--brand); font-weight: 700; text-decoration: none; }
+    @media (min-width: 700px) {
+      .ep-opcoes { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -289,6 +324,39 @@
 
         <div id="alert" class="alert" style="margin:20px 26px 0"></div>
 
+        <!-- ESCOLHA: assinar plano (leva o currículo junto) ou pagar só este currículo -->
+        <div id="escolhaPlano" class="escolha-plano" style="display:none">
+          <div class="ep-titulo">Como você quer continuar?</div>
+          <div class="ep-opcoes">
+            <button type="button" class="ep-card ep-destaque" id="epAssinar" onclick="escolherAssinar()">
+              <div class="ep-badge">Recomendado</div>
+              <div class="ep-card-titulo">Assinar e economizar</div>
+              <div class="ep-preco" id="epPrecoAssin">R$ 14,90<span>/mês</span></div>
+              <ul class="ep-lista">
+                <li>Currículos ilimitados</li>
+                <li>Este currículo liberado agora</li>
+                <li>Sem marca d'água no PDF</li>
+              </ul>
+              <div class="ep-cta">Assinar plano</div>
+            </button>
+            <button type="button" class="ep-card" id="epAvulso" onclick="escolherAvulso()">
+              <div class="ep-card-titulo">Só este currículo</div>
+              <div class="ep-preco" id="epPrecoAvulso">—</div>
+              <ul class="ep-lista">
+                <li>Pagamento único</li>
+                <li>1 PDF com marca d'água</li>
+                <li>Sem benefícios extras</li>
+              </ul>
+              <div class="ep-cta ep-cta-sec">Pagar este currículo</div>
+            </button>
+          </div>
+          <div class="ep-trocar" id="epTrocar" style="display:none">
+            <a href="javascript:trocarEscolha()">Trocar forma de pagamento</a>
+          </div>
+        </div>
+
+        <!-- Área de pagamento efetivo (avulso OU plano) -->
+        <div id="areaPagamento" style="display:none">
         <div class="tabs">
           <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
           <button class="tab" id="tabCard" onclick="ativarAba('card')">Cartão de crédito</button>
@@ -347,6 +415,7 @@
           </div>
           <div class="status-pag" id="statusCard"></div>
         </div>
+        </div><!-- /areaPagamento -->
       </div>
 
       <!-- Prévia do currículo (somente desktop) -->
@@ -423,6 +492,9 @@
     var mp = null;
     var pollTimer = null;
     var pagamentoAtual = null;
+    var planosDisponiveis = [];
+    var modoEscolhido = null; // 'plano' | 'avulso' | null
+    var ehPedidoPlano = pedidoId && pedidoId.indexOf("plano-") === 0;
 
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("pagamento");
@@ -461,12 +533,14 @@
     if (pedidoId) {
       App.api("/api/pedidos/" + encodeURIComponent(pedidoId) + "/dados").then(function (r) {
         if (r.ok && r.data) {
+          planosDisponiveis = r.data.planos || [];
           // Assinatura de plano: sem prévia de currículo — só ajusta rótulo/valor.
           if (r.data.tipo === "plano") {
             var rot = document.getElementById("resumoRotulo");
             if (rot) rot.textContent = "Plano " + (r.data.dados && r.data.dados.nome ? r.data.dados.nome : "Premium") + " (mensal)";
             var tInfo = document.getElementById("tempoInfo");
             if (tInfo) tInfo.innerHTML = "Liberação automática<small>Currículos ilimitados após o pagamento</small>";
+            modoEscolhido = "plano"; // veio de "Assinar" na Conta: vai direto ao pagamento
           }
           if (r.data.modelo) {
           modeloPrev = r.data.modelo;
@@ -483,6 +557,9 @@
             preco = Number(r.data.valor);
             document.getElementById("resumo").textContent = App.formatarPreco(preco);
           }
+          // Currículo pendente (não é plano): mostra a escolha assinar x avulso.
+          if (r.data.tipo !== "plano") configurarEscolha();
+          else mostrarAreaPagamento();
         }
       }).catch(function (e) { console.error("Erro ao carregar dados do pedido para prévia:", e); });
     } else {
@@ -578,6 +655,69 @@
     window.ativarAba = ativarAba;
 
     // ---------- PIX (gerado automaticamente) ----------
+    // Quando a escolha é "assinar plano", o pedidoId passado ao PIX é o ID do
+    // pagamento do plano (plano-<uid>-<plano>-...); o servidor reconhece e cobra
+    // o valor do plano. Quando é avulso, usa o próprio pedido do currículo.
+    var idParaPagamento = function () {
+      return modoEscolhido === "plano" && pagamentoPlanoId ? pagamentoPlanoId : pedidoId;
+    };
+    var pagamentoPlanoId = null;
+
+    async function escolherAssinar() {
+      try {
+        var { ok, data } = await App.api("/api/auth/assinatura/assinar", { method: "POST", body: JSON.stringify({ plano: (planosDisponiveis[0] && planosDisponiveis[0].id) || "premium", pedidoPendenteId: pedidoId }) });
+        if (!ok) { App.mostrarAlerta("alert", (data && data.error) || "Erro ao iniciar assinatura.", "error"); return; }
+        pagamentoPlanoId = data.pagamentoId;
+        modoEscolhido = "plano";
+        preco = Number(data.valor);
+        document.getElementById("resumoRotulo").textContent = "Plano " + ((planosDisponiveis[0] && planosDisponiveis[0].nome) || "Premium") + " (mensal)";
+        document.getElementById("resumo").textContent = App.formatarPreco(preco);
+        var tInfo = document.getElementById("tempoInfo");
+        if (tInfo) tInfo.innerHTML = "Liberação automática<small>Currículos ilimitados após o pagamento</small>";
+        mostrarAreaPagamento();
+        gerarPix();
+      } catch (e) { App.mostrarAlerta("alert", "Erro ao iniciar assinatura.", "error"); }
+    }
+    window.escolherAssinar = escolherAssinar;
+
+    function escolherAvulso() {
+      modoEscolhido = "avulso";
+      mostrarAreaPagamento();
+      gerarPix();
+    }
+    window.escolherAvulso = escolherAvulso;
+
+    function trocarEscolha() {
+      modoEscolhido = null;
+      if (pollTimer) clearInterval(pollTimer);
+      document.getElementById("escolhaPlano").style.display = "block";
+      document.getElementById("areaPagamento").style.display = "none";
+      // restaura rótulo avulso
+      document.getElementById("resumoRotulo").textContent = "Valor a pagar (PDF)";
+      document.getElementById("resumo").textContent = App.formatarPreco(precoAvulso);
+      var tInfo = document.getElementById("tempoInfo");
+      if (tInfo) tInfo.innerHTML = "Liberação automática<small>Currículo liberado na hora</small>";
+    }
+    window.trocarEscolha = trocarEscolha;
+
+    function configurarEscolha() {
+      var p0 = planosDisponiveis[0];
+      if (p0) {
+        document.getElementById("epPrecoAssin").innerHTML = p0.precoStr.replace("/mês", "<span>/mês</span>");
+        document.getElementById("epPrecoAvulso").textContent = App.formatarPreco(preco);
+      }
+      precoAvulso = preco;
+      document.getElementById("escolhaPlano").style.display = "block";
+      document.getElementById("areaPagamento").style.display = "none";
+    }
+    var precoAvulso = 0;
+
+    function mostrarAreaPagamento() {
+      document.getElementById("escolhaPlano").style.display = "none";
+      document.getElementById("areaPagamento").style.display = "block";
+      document.getElementById("epTrocar").style.display = "block";
+    }
+
     async function gerarPix() {
       App.limparAlerta("alert");
       document.getElementById("qrCarregando").style.display = "block";
@@ -588,7 +728,7 @@
 
       var { ok, data } = await App.api("/api/pagamento/pix", {
         method: "POST",
-        body: JSON.stringify({ pedidoId: pedidoId }),
+        body: JSON.stringify({ pedidoId: idParaPagamento() }),
       });
       if (!ok) {
         document.getElementById("qrCarregando").textContent = "Não foi possível gerar o Pix.";
@@ -641,8 +781,9 @@
         var { ok, data } = await App.api("/api/pagamento/status/" + pagamentoId);
         if (ok && data.status === "approved") {
           clearInterval(pollTimer);
-          await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(pagamentoId), tipo: "pix" }) });
-          window.location.href = "/sucesso?pedido=" + pedidoId;
+          var idFinal = idParaPagamento();
+          await App.api("/api/pedidos/" + encodeURIComponent(idFinal) + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(pagamentoId), tipo: "pix" }) });
+          window.location.href = "/sucesso?pedido=" + encodeURIComponent(pedidoId);
         } else if (data.status === "rejected" || data.status === "cancelled") {
           clearInterval(pollTimer);
           var st = document.getElementById("statusPix");
@@ -674,13 +815,14 @@
 
       try {
         var token = await mp.fields.createCardToken(formData);
+        var idFinal = idParaPagamento();
         var { ok, data } = await App.api("/api/pagamento/cartao", {
           method: "POST",
-          body: JSON.stringify({ pedidoId: pedidoId, card_token: token.id, email: "" }),
+          body: JSON.stringify({ pedidoId: idFinal, card_token: token.id, email: "" }),
         });
         if (ok && data.status === "approved") {
-          await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(data.id), tipo: "card" }) });
-          window.location.href = "/sucesso?pedido=" + pedidoId;
+          await App.api("/api/pedidos/" + encodeURIComponent(idFinal) + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(data.id), tipo: "card" }) });
+          window.location.href = "/sucesso?pedido=" + encodeURIComponent(pedidoId);
         } else {
           statusCard.textContent = "";
           statusCard.style.display = "none";

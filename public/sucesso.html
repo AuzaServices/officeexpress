@@ -113,6 +113,17 @@
         }
         dadosPedido = r.data;
         tipoPedido = r.data.tipo || "curriculo";
+        // Assinatura de plano: sem prévia/download de currículo aqui — mostra
+        // mensagem de plano ativo. O currículo vinculado tem o próprio pedido.
+        if (tipoPedido === "plano") {
+          var h = document.querySelector(".sucesso-conteudo h1, .card h2, h2, h1");
+          if (h) h.textContent = "Assinatura ativada! 🎉";
+          var sub = document.querySelector(".sucesso-conteudo p, .card p");
+          if (sub) sub.textContent = "Seu plano está ativo: currículos ilimitados e sem marca d'água. O currículo que você acabou de criar já está liberado em Meus currículos.";
+          var btn = document.getElementById("btnBaixar") || document.querySelector(".btn-primary");
+          if (btn) btn.style.display = "none";
+          return;
+        }
         renderizarPreview();
       });
     }

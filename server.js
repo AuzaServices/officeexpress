@@ -125,6 +125,66 @@ async function ativarAssinaturaUsuario(usuarioId, planoId, mpAssinaturaId, dias)
   );
 }
 
+// Ativa o plano E libera o currículo pendente que o usuário acabou de criar
+// (escolha feita na página de pagamento: assinar plano em vez de pagar avulso).
+// O currículo é registrado como pago pelo mesmo pagamento da assinatura, sem
+// cobrança extra — e o parceiro (se houver) recebe comissão normalmente.
+async function ativarPlanoELiberarPedido(usuarioId, planoId, pagamentoId, tipo) {
+  await ativarAssinaturaUsuario(usuarioId, planoId, pagamentoId, 30);
+  // Busca pagamento de plano pendente para achar currículo vinculado.
+  const [up] = await pool.query(
+    `SELECT id, pedido_pendente_id FROM usuarios_pagamentos
+     WHERE usuario_id = ? AND status = 'pendente' AND pagamento_id LIKE ?
+     ORDER BY id DESC LIMIT 1`,
+    [usuarioId, `plano-${usuarioId}-${planoId}-%`]
+  );
+  const upRow = up[0];
+  const pedidoId = upRow ? upRow.pedido_pendente_id : null;
+  // Marca o pagamento do plano como pago.
+  if (upRow) {
+    await pool.query(
+      "UPDATE usuarios_pagamentos SET status = 'pago', pago_at = NOW(), tipo = ? WHERE id = ?",
+      [tipo || "pix", upRow.id]
+    );
+  }
+  // Libera o currículo pendente vinculado (sem nova cobrança para o cliente).
+  if (pedidoId) {
+    const [pv] = await pool.query("SELECT id, usuario_id, status FROM pedidos WHERE id = ?", [pedidoId]);
+    if (pv.length && pv[0].usuario_id === usuarioId && pv[0].status === "pendente") {
+      await registrarPedidoPago(pedidoId, String(pagamentoId) + "-cur", tipo || "pix");
+      console.log("✅ Currículo pendente liberado pela assinatura: pedido", pedidoId);
+    }
+  }
+  // Comissão do PARCEIRO sobre a assinatura: se o usuário veio do link de um
+  // parceiro, o parceiro recebe a % dele sobre o valor do plano. Registrada
+  // como transação do tipo 'assinatura' (pedido_id NULL — não é um pedido).
+  try {
+    const [uu] = await pool.query("SELECT parceiro_id FROM usuarios WHERE id = ? AND parceiro_id IS NOT NULL", [usuarioId]);
+    const parceiroId = uu.length ? uu[0].parceiro_id : null;
+    if (parceiroId) {
+      const [pc] = await pool.query("SELECT comissao, tipo, pai_id FROM parceiros WHERE id = ? AND ativo = 1", [parceiroId]);
+      const par = pc[0];
+      if (par) {
+        let bonusPaiId = null, bonusPct = null;
+        if (par.tipo === "filho" && par.pai_id) {
+          const cfg = await getConfigRede();
+          const [paiRow] = await pool.query("SELECT id, ativo FROM parceiros WHERE id = ?", [par.pai_id]);
+          if (paiRow.length && paiRow[0].ativo) { bonusPaiId = par.pai_id; bonusPct = cfg.bonus_pai_pct; }
+        }
+        const plano = PLANOS_CLIENTE[planoId];
+        await pool.query(
+          `INSERT INTO transacoes (pedido_id, usuario_id, parceiro_id, modelo, valor, comissao_pct, bonus_pai_id, bonus_pct, tipo, pagamento_tipo)
+           VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 'assinatura', ?)`,
+          [usuarioId, parceiroId, plano ? plano.nome : planoId, plano ? plano.preco : 0, par.comissao, bonusPaiId, bonusPct, tipo || "pix"]
+        );
+        await acumularComissaoMes(parceiroId);
+        if (bonusPaiId) await acumularComissaoMes(bonusPaiId);
+        console.log("💰 Comissão de assinatura registrada para parceiro:", parceiroId);
+      }
+    }
+  } catch (e) { console.error("Erro ao registrar comissão de assinatura:", e.message); }
+}
+
 // Desativa assinaturas vencidas (cron diário). UTC consistente com a ativação.
 async function expirarAssinaturasUsuario() {
   try {
@@ -944,19 +1004,9 @@ app.post("/api/pedidos", async (req, res) => {
   const catalogo = tipo === "carta" ? CARTAS : MODELOS;
   if (!modelo || !catalogo.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
   if (!dados || !dados.nome) return res.status(400).json({ error: "Dados do currículo incompletos." });
-  // ---- Paywall dos planos do cliente (currículos) ----
-  // Assinantes (premium/premium_plus) criam ilimitado; gratuito tem 1/mês.
-  // Cartas de apresentação não contam para o limite.
-  const uidSessao = usuarioDaSessao(req);
-  if (tipo === "curriculo" && uidSessao) {
-    const checagem = await podeCriarCurriculo(uidSessao);
-    if (!checagem.ok) {
-      return res.status(402).json({
-        error: "Você já usou seu currículo gratuito deste mês. Assine um plano para criar ilimitado — ou pague avulso.",
-        paywall: checagem,
-      });
-    }
-  }
+  // ---- Nova lógica: NÃO existe currículo gratuito. Todo currículo criado
+  // gera um pedido pendente; a escolha (pagar avulso ou assinar plano) é
+  // feita pelo usuário na página de pagamento. Cartas seguem avulsas. ----
   // Garante que a foto (base64) nunca seja persistida no banco — além de
   // não ser mais usada no currículo, ela inchava a tabela pedidos.
   const dadosLimpos = { ...(dados || {}) };
@@ -1284,19 +1334,19 @@ async function acumularComissaoMes(parceiroId) {
   try {
     const hoje = new Date();
     const mesRef = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
-    // Comissão própria do mês...
+    // Comissão própria do mês (vendas + assinaturas)...
     const [prop] = await pool.query(
       `SELECT COALESCE(SUM(valor * comissao_pct / 100), 0) AS total
        FROM transacoes
-       WHERE tipo='venda' AND parceiro_id = ? AND comissao_pct IS NOT NULL
+       WHERE tipo IN ('venda','assinatura') AND parceiro_id = ? AND comissao_pct IS NOT NULL
          AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
       [parceiroId, mesRef]
     );
-    // ...mais bônus recebido como pai naquele mês.
+    // ...mais bônus recebido como pai naquele mês (vendas + assinaturas).
     const [bonus] = await pool.query(
       `SELECT COALESCE(SUM(valor * bonus_pct / 100), 0) AS total
        FROM transacoes
-       WHERE tipo='venda' AND bonus_pai_id = ? AND bonus_pct IS NOT NULL
+       WHERE tipo IN ('venda','assinatura') AND bonus_pai_id = ? AND bonus_pct IS NOT NULL
          AND DATE_FORMAT(created_at, '%Y-%m') = ?`,
       [parceiroId, mesRef]
     );
@@ -1511,13 +1561,9 @@ app.post("/api/webhook/mp", async (req, res) => {
         const usuarioId = parseInt(mM[1], 10);
         const planoId = mM[2];
         if (PLANOS_CLIENTE[planoId]) {
-          // Pagamento do ciclo atual: ativa por 30 dias.
-          await ativarAssinaturaUsuario(usuarioId, planoId, String(data.id), 30);
-          await pool.query(
-            `UPDATE usuarios_pagamentos SET status = 'pago', pago_at = NOW(), tipo = ?,
-               pagamento_id = ? WHERE pagamento_id LIKE ? AND usuario_id = ? AND status = 'pendente'`,
-            [pago.payment_method_id === "account_money" ? "pix" : (pago.payment_method_id || "pix"), String(data.id), `plano-${usuarioId}-${planoId}-%`, usuarioId]
-          );
+          // Pagamento do ciclo atual: ativa plano por 30 dias e libera o
+          // currículo pendente vinculado (escolha feita na tela de pagamento).
+          await ativarPlanoELiberarPedido(usuarioId, planoId, String(data.id), pago.payment_method_id === "account_money" ? "pix" : (pago.payment_method_id || "pix"));
           console.log("✅ Plano de cliente ativado:", usuarioId, planoId, "| pagamento:", data.id);
           return;
         }
@@ -1552,11 +1598,8 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
       try {
         const pago = await paymentMP.get({ id: pagamentoId });
         if (pago.status === "approved") {
-          await ativarAssinaturaUsuario(uid, up[0].plano, String(pagamentoId), 30);
-          await pool.query(
-            "UPDATE usuarios_pagamentos SET status = 'pago', pago_at = NOW(), tipo = ? WHERE id = ?",
-            [tipo || "pix", up[0].id]
-          );
+          // Ativa plano + libera o currículo pendente vinculado.
+          await ativarPlanoELiberarPedido(uid, up[0].plano, String(pagamentoId), tipo || "pix");
           return res.json({ success: true });
         }
       } catch (err) {
@@ -1611,16 +1654,29 @@ app.get("/api/auth/assinatura", async (req, res) => {
 app.post("/api/auth/assinatura/assinar", async (req, res) => {
   const id = usuarioDaSessao(req);
   if (!id) return res.status(401).json({ error: "Faça login para assinar." });
-  const { plano: planoId } = req.body || {};
+  const { plano: planoId, pedidoPendenteId } = req.body || {};
   const plano = PLANOS_CLIENTE[planoId];
   if (!plano) return res.status(400).json({ error: "Plano inválido." });
   const [u] = await pool.query("SELECT email, nome FROM usuarios WHERE id = ?", [id]);
   if (!u.length) return res.status(401).json({ error: "Não autenticado." });
+  // Se o usuário veio da página de pagamento de um currículo, valida que o
+  // pedido existe, é dele e está pendente — ele será liberado junto com a
+  // assinatura (o currículo que ele acabou de fazer entra no plano).
+  let pedidoPendente = null;
+  if (pedidoPendenteId) {
+    const [pp] = await pool.query(
+      "SELECT id, usuario_id, status FROM pedidos WHERE id = ?",
+      [parseInt(pedidoPendenteId, 10)]
+    );
+    if (pp.length && pp[0].usuario_id === id && pp[0].status === "pendente") {
+      pedidoPendente = pp[0];
+    }
+  }
   // Ciclo do plano = mês corrente. Se já existe pagamento pendente do mesmo
   // plano neste mês, reusa (evita cobranças duplicadas ao reabrir o modal).
   const periodo = periodoAtual();
   const [pend] = await pool.query(
-    `SELECT id, pagamento_id FROM usuarios_pagamentos
+    `SELECT id, pagamento_id, pedido_pendente_id FROM usuarios_pagamentos
      WHERE usuario_id = ? AND plano = ? AND periodo_ref = ? AND status = 'pendente'
      ORDER BY id DESC LIMIT 1`,
     [id, planoId, periodo]
@@ -1628,12 +1684,16 @@ app.post("/api/auth/assinatura/assinar", async (req, res) => {
   let assinaturaPagamentoId;
   if (pend.length) {
     assinaturaPagamentoId = pend[0].pagamento_id;
+    // Atualiza o vínculo com o currículo pendente mais recente.
+    if (pedidoPendente && !pend[0].pedido_pendente_id) {
+      await pool.query("UPDATE usuarios_pagamentos SET pedido_pendente_id = ? WHERE id = ?", [pedidoPendente.id, pend[0].id]);
+    }
   } else {
     assinaturaPagamentoId = "plano-" + id + "-" + planoId + "-" + periodo + "-" + Date.now().toString(36);
     await pool.query(
-      `INSERT INTO usuarios_pagamentos (usuario_id, pagamento_id, plano, valor, status, tipo, periodo_ref)
-       VALUES (?, ?, ?, ?, 'pendente', NULL, ?)`,
-      [id, assinaturaPagamentoId, planoId, plano.preco, periodo]
+      `INSERT INTO usuarios_pagamentos (usuario_id, pagamento_id, plano, valor, status, tipo, periodo_ref, pedido_pendente_id)
+       VALUES (?, ?, ?, ?, 'pendente', NULL, ?, ?)`,
+      [id, assinaturaPagamentoId, planoId, plano.preco, periodo, pedidoPendente ? pedidoPendente.id : null]
     );
   }
   // A tela de pagamento é a TRADICIONAL do site (PIX/cartão no próprio site),
@@ -1767,6 +1827,10 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   const { id } = req.params;
   const usuarioId = usuarioDaSessao(req);
   if (!usuarioId) return res.status(401).json({ error: "Faça login para ver este pedido." });
+  // Planos disponíveis para a escolha na página de pagamento (assinar x avulso).
+  const planos = Object.values(PLANOS_CLIENTE).map((x) => ({
+    id: x.id, nome: x.nome, preco: x.preco, precoStr: x.precoStr,
+  }));
   // ---- Prévia de PLANO (id formato plano-<uid>-<plano>-<periodo>-<rand>) ----
   if (id.indexOf("plano-") === 0) {
     const [up] = await pool.query(
@@ -1779,6 +1843,7 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
       modelo: null,
       tipo: "plano",
       valor: up[0].valor,
+      planos,
       dados: { nome: plano ? plano.nome : "Premium", descricao: plano ? plano.precoStr : "" },
     });
   }
@@ -1788,7 +1853,7 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
-  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, dados });
+  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, planos, dados });
 });
 
 // ---------------------------------------------------------------------------
@@ -2978,7 +3043,7 @@ app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
       [pid]
     );
     const [comissaoCalc] = await pool.query(
-      "SELECT COALESCE(SUM(valor * comissao_pct / 100),0) AS total FROM transacoes WHERE parceiro_id = ? AND tipo='venda' AND comissao_pct IS NOT NULL",
+      "SELECT COALESCE(SUM(valor * comissao_pct / 100),0) AS total FROM transacoes WHERE parceiro_id = ? AND tipo IN ('venda','assinatura') AND comissao_pct IS NOT NULL",
       [pid]
     );
     // Total de comissões fechadas (pagamentos mensais) ainda não pagas.
@@ -2998,7 +3063,7 @@ app.get("/api/parceiro/dashboard", protegerParceiro, async (req, res) => {
     }
     // Bônus recebido como pai (vendas dos filhos vinculados).
     const [bonusRecebido] = await pool.query(
-      "SELECT COALESCE(SUM(valor * bonus_pct / 100),0) AS total FROM transacoes WHERE bonus_pai_id = ? AND tipo='venda' AND bonus_pct IS NOT NULL",
+      "SELECT COALESCE(SUM(valor * bonus_pct / 100),0) AS total FROM transacoes WHERE bonus_pai_id = ? AND tipo IN ('venda','assinatura') AND bonus_pct IS NOT NULL",
       [pid]
     );
 
@@ -3071,7 +3136,7 @@ app.get("/api/parceiro/rede", protegerParceiro, async (req, res) => {
       `SELECT pf.id, pf.nome, pf.email, pf.whatsapp, pf.codigo, pf.tipo, pf.ativo, pf.created_at,
               (SELECT COUNT(*) FROM transacoes t WHERE t.parceiro_id = pf.id AND t.tipo='venda') AS vendas,
               (SELECT COALESCE(SUM(t.valor * t.bonus_pct / 100), 0) FROM transacoes t
-                WHERE t.bonus_pai_id = ? AND t.parceiro_id = pf.id AND t.tipo='venda' AND t.bonus_pct IS NOT NULL) AS bonus_gerado
+                WHERE t.bonus_pai_id = ? AND t.parceiro_id = pf.id AND t.tipo IN ('venda','assinatura') AND t.bonus_pct IS NOT NULL) AS bonus_gerado
        FROM parceiros pf
        WHERE pf.pai_id = ?
        ORDER BY pf.id ASC`,
@@ -3080,7 +3145,7 @@ app.get("/api/parceiro/rede", protegerParceiro, async (req, res) => {
 
     // Bônus total ganho como pai (todas as vendas de todos os filhos).
     const [bonusTotal] = await pool.query(
-      "SELECT COALESCE(SUM(valor * bonus_pct / 100),0) AS total FROM transacoes WHERE bonus_pai_id = ? AND tipo='venda' AND bonus_pct IS NOT NULL",
+      "SELECT COALESCE(SUM(valor * bonus_pct / 100),0) AS total FROM transacoes WHERE bonus_pai_id = ? AND tipo IN ('venda','assinatura') AND bonus_pct IS NOT NULL",
       [pid]
     );
 
@@ -4830,11 +4895,11 @@ console.log("🗓️ Limpeza semanal agendada: todo domingo às 00h00 (Brasília
 // apenas registra o valor mensal de forma imutável.
 // ---------------------------------------------------------------------------
 async function fecharComissoesMes(mesRef) {
-  // Comissão das vendas próprias de cada parceiro.
+  // Comissão das vendas próprias + assinaturas de cada parceiro.
   const [rows] = await pool.query(
     `SELECT parceiro_id, SUM(valor * comissao_pct / 100) AS total
      FROM transacoes
-     WHERE tipo='venda' AND parceiro_id IS NOT NULL AND comissao_pct IS NOT NULL
+     WHERE tipo IN ('venda','assinatura') AND parceiro_id IS NOT NULL AND comissao_pct IS NOT NULL
        AND DATE_FORMAT(created_at, '%Y-%m') = ?
      GROUP BY parceiro_id`,
     [mesRef]
@@ -4844,7 +4909,7 @@ async function fecharComissoesMes(mesRef) {
   const [bonus] = await pool.query(
     `SELECT bonus_pai_id AS parceiro_id, SUM(valor * bonus_pct / 100) AS total
      FROM transacoes
-     WHERE tipo='venda' AND bonus_pai_id IS NOT NULL AND bonus_pct IS NOT NULL
+     WHERE tipo IN ('venda','assinatura') AND bonus_pai_id IS NOT NULL AND bonus_pct IS NOT NULL
        AND DATE_FORMAT(created_at, '%Y-%m') = ?
      GROUP BY bonus_pai_id`,
     [mesRef]
