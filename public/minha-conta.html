@@ -376,6 +376,28 @@
     }
     .conta-excluir:hover { background: #dc2626; color: #fff; box-shadow: 0 6px 18px rgba(220,38,38,.35); }
     .conta-excluir:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ===== Seu plano (assinatura) ===== */
+    .conta-plano-box {
+      padding: 16px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(14,43,68,.04), rgba(255,136,0,.06));
+      border: 1.5px solid var(--border);
+    }
+    .conta-plano-linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .conta-plano-nome { font-weight: 800; font-size: 1.05rem; }
+    .conta-plano-status {
+      padding: 3px 12px; border-radius: 999px; font-size: .72rem; font-weight: 800;
+      background: rgba(100,116,139,.12); color: #64748b;
+    }
+    .conta-plano-status.ativo { background: rgba(34,197,94,.14); color: #16a34a; }
+    .conta-plano-uso { margin: 8px 0 0; font-size: .82rem; color: var(--text-muted); }
+    .conta-plano-acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .conta-plano-acoes .btn { padding: 9px 16px; font-size: .84rem; }
+    .conta-plano-cancelar {
+      background: transparent; border: 1px solid rgba(220,38,38,.4); color: #dc2626;
+      padding: 9px 16px; font-size: .84rem; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 700;
+    }
+    .conta-plano-cancelar:hover { background: #dc2626; color: #fff; }
   </style>
 </head>
 <body>
@@ -456,6 +478,19 @@
         <div class="conta-email">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <span id="contaEmail">—</span>
+        </div>
+      </div>
+
+      <!-- Seu plano (assinatura) -->
+      <div class="conta-secao">
+        <h4>Seu plano</h4>
+        <div class="conta-plano-box" id="planoBox">
+          <div class="conta-plano-linha">
+            <span class="conta-plano-nome" id="planoNome">Gratuito</span>
+            <span class="conta-plano-status" id="planoStatus">—</span>
+          </div>
+          <p class="conta-plano-uso" id="planoUso">—</p>
+          <div class="conta-plano-acoes" id="planoAcoes"></div>
         </div>
       </div>
 
@@ -851,6 +886,69 @@
         if (ev && ev.target !== document.getElementById("contaOverlay")) return;
         document.getElementById("contaOverlay").classList.add("oculto");
         document.body.style.overflow = "";
+      };
+
+      /* ===== Seu plano (assinatura) ===== */
+      var planosDisponiveis = [];
+      async function carregarPlanoConta() {
+        try {
+          var { ok, data } = await App.api("/api/auth/assinatura");
+          if (!ok) return;
+          var a = data.assinatura || {};
+          planosDisponiveis = data.planos || [];
+          var nomeEl = document.getElementById("planoNome");
+          var statusEl = document.getElementById("planoStatus");
+          var usoEl = document.getElementById("planoUso");
+          var acoesEl = document.getElementById("planoAcoes");
+          var nomes = { gratuito: "Gratuito", premium: "Premium", premium_plus: "Premium+" };
+          nomeEl.textContent = nomes[a.plano] || "Gratuito";
+          if (a.ativo) {
+            statusEl.textContent = "Ativo" + (a.expiraEm ? " até " + new Date(a.expiraEm).toLocaleDateString("pt-BR") : "");
+            statusEl.className = "conta-plano-status ativo";
+          } else {
+            statusEl.textContent = "Inativo";
+            statusEl.className = "conta-plano-status";
+          }
+          var usoTxt = "Currículos este mês: " + ((a.uso && a.uso.curriculos) || 0);
+          if (a.plano !== "gratuito" && a.ativo) usoTxt += " · ilimitado";
+          else usoTxt += " / " + (a.limiteGratuito || 1);
+          usoEl.textContent = usoTxt;
+          // Ações
+          var html = "";
+          if (!a.ativo || a.plano === "gratuito") {
+            (planosDisponiveis || []).forEach(function (p) {
+              html += '<button type="button" class="btn btn-primary" onclick="assinarPlano(\'' + p.id + '\')">Assinar ' + p.nome + ' — ' + p.precoStr + '</button>';
+            });
+            html += '<a class="btn btn-secondary" href="/modelos">Criar currículo</a>';
+          } else {
+            html += '<button type="button" class="conta-plano-cancelar" onclick="cancelarPlano()">Cancelar assinatura</button>';
+          }
+          acoesEl.innerHTML = html;
+        } catch (e) { /* silencioso */ }
+      }
+      window.assinarPlano = async function (planoId) {
+        var { ok, data } = await App.api("/api/auth/assinatura/assinar", { method: "POST", body: JSON.stringify({ plano: planoId }) });
+        // Vai para a página de pagamento TRADICIONAL do site (Pix/cartão),
+        // levando o ID do plano como "pedido" — mesmo fluxo do currículo.
+        if (ok && data.pagamentoId) {
+          window.location.href = "/pagamento?pedido=" + encodeURIComponent(data.pagamentoId);
+          return;
+        }
+        alert((data && data.error) || "Não foi possível iniciar a assinatura.");
+      };
+      window.cancelarPlano = async function () {
+        if (!confirm("Cancelar sua assinatura? Você mantém o acesso até o fim do período já pago.")) return;
+        if (!confirm("Confirma o cancelamento definitivo da renovação?")) return;
+        var { ok, data } = await App.api("/api/auth/assinatura/cancelar", { method: "POST", body: "{}" });
+        if (ok) { alert("Assinatura cancelada." + (data.validoAte ? " Acesso válido até " + new Date(data.validoAte).toLocaleDateString("pt-BR") + "." : "")); carregarPlanoConta(); }
+        else alert((data && data.error) || "Erro ao cancelar.");
+      };
+
+      // Recarrega o status do plano sempre que a aba Conta abre.
+      var _abrirContaOriginal = window.abrirConta;
+      window.abrirConta = function (ev) {
+        if (_abrirContaOriginal) _abrirContaOriginal(ev);
+        carregarPlanoConta();
       };
 
       document.addEventListener("keydown", function (e) {

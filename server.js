@@ -33,7 +33,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
-const { MercadoPagoConfig, Payment } = require("mercadopago");
+const { MercadoPagoConfig, Payment, PreApproval } = require("mercadopago");
 const { pool, garantirSchema, getPreco, getPrecoParceiro, garantirPrecoParceiro } = require("./lib/db");
 const { MODELOS, gerarPDF } = require("./lib/modelos");
 const { CARTAS, gerarCartaPDF, montarCartaHTML } = require("./lib/cartas");
@@ -49,6 +49,118 @@ const PORT = process.env.PORT || 3000;
 // Mercado Pago
 const clientMP = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
 const paymentMP = new Payment(clientMP);
+const preapprovalMP = new PreApproval(clientMP);
+
+// ===========================================================================
+// PLANOS DO CLIENTE — funções centrais (assinatura + uso mensal)
+// ===========================================================================
+
+// Período atual ("2026-09") — chave do contador de uso.
+function periodoAtual() {
+  const d = new Date();
+  return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0");
+}
+
+// Plano EFETIVO do usuário: assinatura ativa e não expirada (UTC). O campo
+// plano grava a intenção; assinatura_ativa + expiração dizem o que vale agora.
+async function planoDoUsuario(usuarioId) {
+  const [rows] = await pool.query(
+    `SELECT plano, assinatura_ativa, assinatura_expira_em FROM usuarios WHERE id = ?`,
+    [usuarioId]
+  );
+  if (!rows.length) return { plano: "gratuito", ativo: false, expiraEm: null };
+  const u = rows[0];
+  const ativo = u.assinatura_ativa === 1 && u.assinatura_expira_em &&
+    new Date(u.assinatura_expira_em).getTime() > Date.now();
+  return { plano: ativo ? u.plano : "gratuito", ativo: !!ativo, expiraEm: u.assinatura_expira_em };
+}
+
+// Currículos já criados no mês corrente (pedidos pagos ou criados por assinatura).
+async function usoMensalUsuario(usuarioId) {
+  const periodo = periodoAtual();
+  const [rows] = await pool.query(
+    "SELECT curriculos_criados AS n FROM usuarios_uso WHERE usuario_id = ? AND periodo_ref = ?",
+    [usuarioId, periodo]
+  );
+  return { periodo, curriculos: rows.length ? Number(rows[0].n) : 0 };
+}
+
+// Incrementa o contador mensal (idempotente via PRIMARY KEY (usuario, periodo)).
+async function incrementarUsoUsuario(usuarioId) {
+  const periodo = periodoAtual();
+  await pool.query(
+    `INSERT INTO usuarios_uso (usuario_id, periodo_ref, curriculos_criados) VALUES (?, ?, 1)
+     ON DUPLICATE KEY UPDATE curriculos_criados = curriculos_criados + 1`,
+    [usuarioId, periodo]
+  );
+}
+
+// Checagem do paywall: pode criar currículo agora?
+// Retorna { ok } ou { ok:false, motivo:'limite', ...dados para o front decidir }.
+async function podeCriarCurriculo(usuarioId) {
+  const p = await planoDoUsuario(usuarioId);
+  if (p.ativo) return { ok: true, plano: p.plano, uso: null };
+  const uso = await usoMensalUsuario(usuarioId);
+  if (uso.curriculos < LIMITE_GRATIS_MES) return { ok: true, plano: "gratuito", uso };
+  return {
+    ok: false,
+    motivo: "limite",
+    plano: "gratuito",
+    uso,
+    limite: LIMITE_GRATIS_MES,
+    planos: Object.values(PLANOS_CLIENTE).map((x) => ({ id: x.id, nome: x.nome, precoStr: x.precoStr })),
+    precoAvulso: await getPreco(),
+  };
+}
+
+// Ativa/renova a assinatura do usuário (webhook ou confirmação manual).
+async function ativarAssinaturaUsuario(usuarioId, planoId, mpAssinaturaId, dias) {
+  const diasValidos = dias || 30;
+  await pool.query(
+    `UPDATE usuarios SET plano = ?, assinatura_ativa = 1,
+       assinatura_expira_em = UTC_TIMESTAMP() + INTERVAL ? DAY,
+       mp_assinatura_id = COALESCE(?, mp_assinatura_id)
+     WHERE id = ?`,
+    [planoId, diasValidos, mpAssinaturaId || null, usuarioId]
+  );
+}
+
+// Desativa assinaturas vencidas (cron diário). UTC consistente com a ativação.
+async function expirarAssinaturasUsuario() {
+  try {
+    const [r] = await pool.query(
+      `UPDATE usuarios SET assinatura_ativa = 0
+       WHERE assinatura_ativa = 1 AND assinatura_expira_em IS NOT NULL
+         AND assinatura_expira_em <= UTC_TIMESTAMP()`
+    );
+    if (r.affectedRows) console.log("⏳ Assinaturas de cliente expiradas:", r.affectedRows);
+  } catch (e) {
+    console.error("❌ Erro ao expirar assinaturas de clientes:", e.message);
+  }
+}
+// Planos do cliente — cobrança via LINKS DE PAGAMENTO do Mercado Pago
+// (mpago.la), mas a TELA continua a tradicional do site: o backend cria um
+// pagamento PIX/cartão do próprio plano via API e o front mostra o QR Code
+// / formulário de cartão como já faz com o currículo avulso de R$ 7,99.
+const PLANOS_CLIENTE = {
+  premium: {
+    id: "premium",
+    nome: "Premium",
+    preco: 14.9,
+    precoStr: "R$ 14,90/mês",
+    curriculosMes: Infinity,
+    linkPagamento: process.env.MP_LINK_PREMIUM || "https://mpago.la/1ADuSuz",
+  },
+  premium_plus: {
+    id: "premium_plus",
+    nome: "Premium+",
+    preco: 24.9,
+    precoStr: "R$ 24,90/mês",
+    curriculosMes: Infinity,
+    linkPagamento: process.env.MP_LINK_PREMIUM_PLUS || "https://mpago.la/1YU8SJP",
+  },
+};
+const LIMITE_GRATIS_MES = 1; // currículos/mês no plano gratuito
 
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
@@ -832,6 +944,19 @@ app.post("/api/pedidos", async (req, res) => {
   const catalogo = tipo === "carta" ? CARTAS : MODELOS;
   if (!modelo || !catalogo.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
   if (!dados || !dados.nome) return res.status(400).json({ error: "Dados do currículo incompletos." });
+  // ---- Paywall dos planos do cliente (currículos) ----
+  // Assinantes (premium/premium_plus) criam ilimitado; gratuito tem 1/mês.
+  // Cartas de apresentação não contam para o limite.
+  const uidSessao = usuarioDaSessao(req);
+  if (tipo === "curriculo" && uidSessao) {
+    const checagem = await podeCriarCurriculo(uidSessao);
+    if (!checagem.ok) {
+      return res.status(402).json({
+        error: "Você já usou seu currículo gratuito deste mês. Assine um plano para criar ilimitado — ou pague avulso.",
+        paywall: checagem,
+      });
+    }
+  }
   // Garante que a foto (base64) nunca seja persistida no banco — além de
   // não ser mais usada no currículo, ela inchava a tabela pedidos.
   const dadosLimpos = { ...(dados || {}) };
@@ -1068,6 +1193,15 @@ async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
   // Arquiva o talento no banco permanente (Companies), se houver consentimento.
   try { await arquivarTalento(pedidoId); } catch (e) {}
 
+  // Contabiliza o uso mensal do plano do cliente (limite do gratuito).
+  try {
+    const [pd] = await pool.query("SELECT usuario_id, dados_json FROM pedidos WHERE id = ?", [pedidoId]);
+    if (pd.length && pd[0].usuario_id) {
+      const dj = (() => { try { return JSON.parse(pd[0].dados_json || "{}"); } catch (e) { return {}; } })();
+      if ((dj._tipo || "curriculo") === "curriculo") await incrementarUsoUsuario(pd[0].usuario_id);
+    }
+  } catch (e) { console.error("Erro ao contabilizar uso:", e.message); }
+
   try {
     const [p] = await pool.query(
       "SELECT id, usuario_id, valor, parceiro_id, modelo FROM pedidos WHERE id = ?",
@@ -1211,6 +1345,38 @@ async function acumularComissaoMes(parceiroId) {
 app.post("/api/pagamento/pix", async (req, res) => {
   const { pedidoId } = req.body || {};
   if (!pedidoId) return res.status(400).json({ error: "Pedido inválido." });
+  // Pagamento de PLANO (ID no formato plano-<uid>-<plano>-<periodo>-<rand>)?
+  if (String(pedidoId).indexOf("plano-") === 0) {
+    const uid = usuarioDaSessao(req);
+    if (!uid) return res.status(401).json({ error: "Faça login para assinar." });
+    const [up] = await pool.query(
+      "SELECT * FROM usuarios_pagamentos WHERE pagamento_id = ? AND usuario_id = ?",
+      [pedidoId, uid]
+    );
+    if (!up.length) return res.status(404).json({ error: "Assinatura não encontrada." });
+    const plano = PLANOS_CLIENTE[up[0].plano];
+    try {
+      const [usr] = await pool.query("SELECT email, nome FROM usuarios WHERE id = ?", [uid]);
+      const body = {
+        transaction_amount: Number(up[0].valor),
+        description: `Office Express ${plano ? plano.nome : "Premium"} — plano mensal`,
+        payment_method_id: "pix",
+        external_reference: pedidoId,
+        payer: { email: req.body.email || (usr[0] && usr[0].email) || "cliente@officeexpress.com.br", first_name: ((usr[0] && usr[0].nome) || "Cliente").split(" ")[0], last_name: ((usr[0] && usr[0].nome) || "Cliente").split(" ").slice(1).join(" ") || "Office" },
+        notification_url: `${BASE_URL}/api/webhook/mp`,
+      };
+      const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `pix-${pedidoId}-${Date.now()}` } });
+      return res.json({
+        id: pago.id,
+        status: pago.status,
+        qr_code: pago.point_of_interaction?.transaction_data?.qr_code,
+        qr_code_base64: pago.point_of_interaction?.transaction_data?.qr_code_base64,
+      });
+    } catch (err) {
+      console.error("❌ Erro ao criar PIX do plano:", err.message);
+      return res.status(500).json({ error: "Erro ao criar pagamento PIX.", detalhe: err.cause?.message || err.message });
+    }
+  }
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [pedidoId]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
@@ -1239,6 +1405,34 @@ app.post("/api/pagamento/pix", async (req, res) => {
 app.post("/api/pagamento/cartao", async (req, res) => {
   const { pedidoId, card_token, email } = req.body || {};
   if (!pedidoId || !card_token) return res.status(400).json({ error: "Dados de pagamento incompletos." });
+  // Pagamento de PLANO (ID formato plano-<uid>-<plano>-<periodo>-<rand>)?
+  if (String(pedidoId).indexOf("plano-") === 0) {
+    const uid = usuarioDaSessao(req);
+    if (!uid) return res.status(401).json({ error: "Faça login para assinar." });
+    const [up] = await pool.query(
+      "SELECT * FROM usuarios_pagamentos WHERE pagamento_id = ? AND usuario_id = ?",
+      [pedidoId, uid]
+    );
+    if (!up.length) return res.status(404).json({ error: "Assinatura não encontrada." });
+    const plano = PLANOS_CLIENTE[up[0].plano];
+    try {
+      const body = {
+        transaction_amount: Number(up[0].valor),
+        description: `Office Express ${plano ? plano.nome : "Premium"} — plano mensal`,
+        payment_method_id: "card",
+        token: card_token,
+        installments: Number(req.body.installments || 1),
+        payer: { email: email || "cliente@officeexpress.com.br" },
+        external_reference: pedidoId,
+        notification_url: `${BASE_URL}/api/webhook/mp`,
+      };
+      const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `card-${pedidoId}-${Date.now()}` } });
+      return res.json({ id: pago.id, status: pago.status, status_detail: pago.status_detail });
+    } catch (err) {
+      console.error("❌ Erro no cartão do plano:", err.message);
+      return res.status(500).json({ error: "Erro ao processar o pagamento com cartão.", detalhe: err.cause?.message || err.message });
+    }
+  }
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [pedidoId]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
@@ -1275,11 +1469,59 @@ app.get("/api/pagamento/status/:id", async (req, res) => {
 app.post("/api/webhook/mp", async (req, res) => {
   res.status(200).send("OK");
   const { type, data } = req.body || {};
+  // ---- Assinaturas de clientes (preapproval) ----
+  if ((type === "subscription_preapproval" || type === "preapproval") && data?.id) {
+    try {
+      const pre = await preapprovalMP.get({ id: data.id });
+      const ref = pre.external_reference || "";
+      const m = ref.match(/usuario-(\d+)-(premium_plus?|premium_plus)/i);
+      const mm = ref.match(/usuario-(\d+)-([a-z_]+)/i);
+      if (!mm) return;
+      const usuarioId = parseInt(mm[1], 10);
+      const planoId = mm[2];
+      if (!PLANOS_CLIENTE[planoId]) return;
+      if (pre.status === "authorized") {
+        await ativarAssinaturaUsuario(usuarioId, planoId, String(pre.id), 30);
+        await pool.query(
+          `INSERT INTO usuarios_pagamentos (usuario_id, pagamento_id, plano, valor, status, tipo, periodo_ref, pago_at)
+           VALUES (?, ?, ?, ?, 'pago', 'assinatura', ?, NOW())
+           ON DUPLICATE KEY UPDATE status = 'pago'`,
+          [usuarioId, String(pre.id), planoId, PLANOS_CLIENTE[planoId].preco, periodoAtual()]
+        );
+        console.log("✅ Assinatura de cliente ativa:", usuarioId, planoId);
+      } else if (["cancelled", "paused", "suspended"].includes(pre.status)) {
+        await pool.query("UPDATE usuarios SET assinatura_ativa = 0 WHERE id = ?", [usuarioId]);
+        console.log("⛔ Assinatura de cliente", pre.status + ":", usuarioId);
+      }
+    } catch (err) {
+      console.error("❌ Erro no webhook de assinatura:", err.message);
+    }
+    return;
+  }
   if (type !== "payment" || !data?.id) return;
   try {
     const pago = await paymentMP.get({ id: data.id });
     if (pago.status === "approved") {
       const ref = pago.external_reference || "";
+      // ---- Pagamento de PLANO do cliente (external_reference: plano-<uid>-<planoId>-...) ----
+      const mPlano = ref.match(/^plano-(\d+)-(premium_plus?_plus|premium_plus|premium)-/i);
+      const mPlano2 = ref.match(/^plano-(\d+)-([a-z_]+)-/i);
+      const mM = mPlano || mPlano2;
+      if (mM) {
+        const usuarioId = parseInt(mM[1], 10);
+        const planoId = mM[2];
+        if (PLANOS_CLIENTE[planoId]) {
+          // Pagamento do ciclo atual: ativa por 30 dias.
+          await ativarAssinaturaUsuario(usuarioId, planoId, String(data.id), 30);
+          await pool.query(
+            `UPDATE usuarios_pagamentos SET status = 'pago', pago_at = NOW(), tipo = ?,
+               pagamento_id = ? WHERE pagamento_id LIKE ? AND usuario_id = ? AND status = 'pendente'`,
+            [pago.payment_method_id === "account_money" ? "pix" : (pago.payment_method_id || "pix"), String(data.id), `plano-${usuarioId}-${planoId}-%`, usuarioId]
+          );
+          console.log("✅ Plano de cliente ativado:", usuarioId, planoId, "| pagamento:", data.id);
+          return;
+        }
+      }
       const pedidoId = parseInt(ref.replace("pedido-", ""), 10);
       if (!isNaN(pedidoId) && pedidoId > 0) {
         await registrarPedidoPago(pedidoId, String(data.id), pago.payment_method_id || "pix");
@@ -1295,6 +1537,34 @@ app.post("/api/webhook/mp", async (req, res) => {
 app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
   const { id } = req.params;
   const { pagamentoId, tipo } = req.body || {};
+  // ---- Confirmação de PLANO (id formato plano-<uid>-<plano>-<periodo>-<rand>) ----
+  if (id.indexOf("plano-") === 0) {
+    const uid = usuarioDaSessao(req);
+    if (!uid) return res.status(401).json({ error: "Não autenticado." });
+    const [up] = await pool.query(
+      "SELECT * FROM usuarios_pagamentos WHERE pagamento_id = ? AND usuario_id = ?",
+      [id, uid]
+    );
+    if (!up.length) return res.status(404).json({ error: "Assinatura não encontrada." });
+    if (up[0].status === "pago") return res.json({ success: true });
+    // Consulta o pagamento MP mais recente associado a este plano.
+    if (pagamentoId) {
+      try {
+        const pago = await paymentMP.get({ id: pagamentoId });
+        if (pago.status === "approved") {
+          await ativarAssinaturaUsuario(uid, up[0].plano, String(pagamentoId), 30);
+          await pool.query(
+            "UPDATE usuarios_pagamentos SET status = 'pago', pago_at = NOW(), tipo = ? WHERE id = ?",
+            [tipo || "pix", up[0].id]
+          );
+          return res.json({ success: true });
+        }
+      } catch (err) {
+        console.error("❌ Erro ao confirmar plano:", err.message);
+      }
+    }
+    return res.status(402).json({ error: "Pagamento ainda não aprovado." });
+  }
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   if (rows[0].status === "pago") {
@@ -1311,6 +1581,83 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
   }
   await registrarPedidoPago(id, pagamentoId || null, tipo || "pix");
   res.json({ success: true });
+});
+
+// ===========================================================================
+// ASSINATURAS DO CLIENTE (planos Premium / Premium+)
+// ===========================================================================
+
+// Status do plano do usuário logado (para a aba Conta e o paywall do editor).
+app.get("/api/auth/assinatura", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const p = await planoDoUsuario(id);
+  const uso = await usoMensalUsuario(id);
+  res.json({
+    ok: true,
+    assinatura: {
+      plano: p.plano,
+      ativo: p.ativo,
+      expiraEm: p.expiraEm,
+      uso: uso,
+      limiteGratuito: LIMITE_GRATIS_MES,
+    },
+    planos: Object.values(PLANOS_CLIENTE).map((x) => ({ id: x.id, nome: x.nome, precoStr: x.precoStr, disponivel: !!x.mpPlanId })),
+  });
+});
+
+// Assinar um plano: cria a adesão (preapproval) no Mercado Pago e devolve a URL
+// de checkout. O webhook confirma a autorização e ativa o plano.
+app.post("/api/auth/assinatura/assinar", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Faça login para assinar." });
+  const { plano: planoId } = req.body || {};
+  const plano = PLANOS_CLIENTE[planoId];
+  if (!plano) return res.status(400).json({ error: "Plano inválido." });
+  const [u] = await pool.query("SELECT email, nome FROM usuarios WHERE id = ?", [id]);
+  if (!u.length) return res.status(401).json({ error: "Não autenticado." });
+  // Ciclo do plano = mês corrente. Se já existe pagamento pendente do mesmo
+  // plano neste mês, reusa (evita cobranças duplicadas ao reabrir o modal).
+  const periodo = periodoAtual();
+  const [pend] = await pool.query(
+    `SELECT id, pagamento_id FROM usuarios_pagamentos
+     WHERE usuario_id = ? AND plano = ? AND periodo_ref = ? AND status = 'pendente'
+     ORDER BY id DESC LIMIT 1`,
+    [id, planoId, periodo]
+  );
+  let assinaturaPagamentoId;
+  if (pend.length) {
+    assinaturaPagamentoId = pend[0].pagamento_id;
+  } else {
+    assinaturaPagamentoId = "plano-" + id + "-" + planoId + "-" + periodo + "-" + Date.now().toString(36);
+    await pool.query(
+      `INSERT INTO usuarios_pagamentos (usuario_id, pagamento_id, plano, valor, status, tipo, periodo_ref)
+       VALUES (?, ?, ?, ?, 'pendente', NULL, ?)`,
+      [id, assinaturaPagamentoId, planoId, plano.preco, periodo]
+    );
+  }
+  // A tela de pagamento é a TRADICIONAL do site (PIX/cartão no próprio site),
+  // igual ao fluxo de R$ 7,99. O front usa o pagamentoId para criar o PIX ou
+  // o cartão; o webhook identifica 'plano-...' e ativa o plano ao aprovar.
+  res.json({ ok: true, pagamentoId: assinaturaPagamentoId, valor: plano.preco, descricao: `Office Express ${plano.nome}` });
+});
+
+// Cancelar a assinatura: cancela no Mercado Pago e mantém o acesso até a data
+// de expiração já paga (sem corte imediato — evita atrito e reclamação).
+app.post("/api/auth/assinatura/cancelar", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const [rows] = await pool.query("SELECT mp_assinatura_id, assinatura_expira_em FROM usuarios WHERE id = ?", [id]);
+  if (!rows.length) return res.status(404).json({ error: "Conta não encontrada." });
+  const mpId = rows[0].mp_assinatura_id;
+  try {
+    if (mpId) await preapprovalMP.update({ id: mpId, body: { status: "cancelled" } });
+  } catch (err) {
+    console.error("⚠️ Erro ao cancelar no MP (seguindo com o cancelamento local):", err.message);
+  }
+  // O acesso continua até assinatura_expira_em; o cron desativa depois.
+  await pool.query("UPDATE usuarios SET mp_assinatura_id = NULL WHERE id = ?", [id]);
+  res.json({ ok: true, validoAte: rows[0].assinatura_expira_em });
 });
 
 // ---------------------------------------------------------------------------
@@ -1386,7 +1733,13 @@ app.get("/api/pedidos/:id/download", async (req, res) => {
 
   try {
     const tipoPedido = dados._tipo || "curriculo";
-    const buffer = tipoPedido === "carta" ? await gerarCartaPDF(pedido.modelo, dados) : await gerarPDF(pedido.modelo, dados);
+    // Assinantes premium/premium_plus recebem o PDF SEM marca d'água.
+    let semMarca = false;
+    if (pedido.usuario_id) {
+      const p = await planoDoUsuario(pedido.usuario_id);
+      semMarca = p.ativo && p.plano !== "gratuito";
+    }
+    const buffer = tipoPedido === "carta" ? await gerarCartaPDF(pedido.modelo, dados) : await gerarPDF(pedido.modelo, dados, { marca: !semMarca });
     res.setHeader("Content-Type", "application/pdf");
     // No iOS/Safari, "attachment" abre pelo Quick Look, que renderiza o PDF de
     // forma errada. Para iOS usamos "inline", fazendo o Safari abrir no
@@ -1414,6 +1767,21 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   const { id } = req.params;
   const usuarioId = usuarioDaSessao(req);
   if (!usuarioId) return res.status(401).json({ error: "Faça login para ver este pedido." });
+  // ---- Prévia de PLANO (id formato plano-<uid>-<plano>-<periodo>-<rand>) ----
+  if (id.indexOf("plano-") === 0) {
+    const [up] = await pool.query(
+      "SELECT * FROM usuarios_pagamentos WHERE pagamento_id = ? AND usuario_id = ?",
+      [id, usuarioId]
+    );
+    if (!up.length) return res.status(404).json({ error: "Assinatura não encontrada." });
+    const plano = PLANOS_CLIENTE[up[0].plano];
+    return res.json({
+      modelo: null,
+      tipo: "plano",
+      valor: up[0].valor,
+      dados: { nome: plano ? plano.nome : "Premium", descricao: plano ? plano.precoStr : "" },
+    });
+  }
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
@@ -4577,11 +4945,13 @@ async function expirarPedidosPendentes() {
 
 // Roda na inicialização (garante a regra mesmo que o servidor fique offline).
 expirarPedidosPendentes();
+expirarAssinaturasUsuario();
 // Roda a cada hora (minuto 7 para não coincidir com outras rotinas).
 cron.schedule(
   "0 7 * * * *",
   async () => {
     await expirarPedidosPendentes();
+    await expirarAssinaturasUsuario();
   },
   { timezone: "America/Sao_Paulo" }
 );

@@ -249,7 +249,7 @@
       <div class="pagamento-card card">
         <div class="resumo-pedido">
           <div class="rp-item">
-            <div class="rotulo">Valor a pagar (PDF)</div>
+            <div class="rotulo" id="resumoRotulo">Valor a pagar (PDF)</div>
             <div class="rp-valor" id="resumo">—</div>
           </div>
           <div class="rp-item expira">
@@ -460,20 +460,29 @@
     // prévia (independente de estar pago ou não) e para o fluxo de pagamento.
     if (pedidoId) {
       App.api("/api/pedidos/" + encodeURIComponent(pedidoId) + "/dados").then(function (r) {
-        if (r.ok && r.data && r.data.modelo) {
+        if (r.ok && r.data) {
+          // Assinatura de plano: sem prévia de currículo — só ajusta rótulo/valor.
+          if (r.data.tipo === "plano") {
+            var rot = document.getElementById("resumoRotulo");
+            if (rot) rot.textContent = "Plano " + (r.data.dados && r.data.dados.nome ? r.data.dados.nome : "Premium") + " (mensal)";
+            var tInfo = document.getElementById("tempoInfo");
+            if (tInfo) tInfo.innerHTML = "Liberação automática<small>Currículos ilimitados após o pagamento</small>";
+          }
+          if (r.data.modelo) {
           modeloPrev = r.data.modelo;
           dadosPrev = r.data.dados || {};
           // Aviso do banco de talentos: exibe somente se o titular autorizou
           // o compartilhamento (consentimento LGPD) nos dados do pedido.
           var aviso = document.getElementById("avisoBancoTalentos");
           if (aviso) aviso.style.display = dadosPrev.consentimento ? "flex" : "none";
+          renderPrevia();
+          }
           // Usa o valor específico do pedido (pode ter sido ajustado no admin),
           // e não o preço global, no resumo exibido na página.
           if (r.data.valor != null) {
             preco = Number(r.data.valor);
             document.getElementById("resumo").textContent = App.formatarPreco(preco);
           }
-          renderPrevia();
         }
       }).catch(function (e) { console.error("Erro ao carregar dados do pedido para prévia:", e); });
     } else {
@@ -579,7 +588,7 @@
 
       var { ok, data } = await App.api("/api/pagamento/pix", {
         method: "POST",
-        body: JSON.stringify({ pedidoId: Number(pedidoId) }),
+        body: JSON.stringify({ pedidoId: pedidoId }),
       });
       if (!ok) {
         document.getElementById("qrCarregando").textContent = "Não foi possível gerar o Pix.";
@@ -667,7 +676,7 @@
         var token = await mp.fields.createCardToken(formData);
         var { ok, data } = await App.api("/api/pagamento/cartao", {
           method: "POST",
-          body: JSON.stringify({ pedidoId: Number(pedidoId), card_token: token.id, email: "" }),
+          body: JSON.stringify({ pedidoId: pedidoId, card_token: token.id, email: "" }),
         });
         if (ok && data.status === "approved") {
           await App.api("/api/pedidos/" + pedidoId + "/confirmar-pago", { method: "POST", body: JSON.stringify({ pagamentoId: String(data.id), tipo: "card" }) });
