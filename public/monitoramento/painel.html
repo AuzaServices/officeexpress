@@ -132,7 +132,8 @@
         var html = "";
         for (var i = 0; i < d.registros.length; i++) {
           var g = d.registros[i];
-          var dt = g.criado_em ? new Date(g.criado_em.replace(" ", "T") + "Z").toLocaleString("pt-BR") : "—";
+          var dtRaw = g.criado_at || g.criado_em || null;
+          var dt = dtRaw ? new Date(String(dtRaw).replace(" ", "T") + "Z").toLocaleString("pt-BR") : "—";
           var gpsTag = g.gps_lat != null
             ? '<span class="tag-gps ok">CAPTURADO</span><br/><span class="coords"><a href="' + linkMaps(g.gps_lat, g.gps_lon) + '" target="_blank" rel="noopener">' + g.gps_lat.toFixed(5) + ", " + g.gps_lon.toFixed(5) + "</a> (±" + Math.round(g.gps_acc) + 'm)</span><a class="mapa-link" href="' + linkMaps(g.gps_lat, g.gps_lon) + '" target="_blank" rel="noopener">📍 abrir no mapa</a>'
             : '<span class="tag-gps negado">' + (g.gps_erro === "negado" ? "NEGADO" : "INDISPONÍVEL") + "</span>";
