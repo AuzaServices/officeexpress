@@ -264,9 +264,8 @@
           erroGps: erroGps
         })
       }).then(function (r) { return r.json(); }).then(function (r) {
-        // Atualiza o painel silenciosamente (IP/cidade/UF já registrados no 1º acesso).
-        if (typeof atualizarDadosTela === "function" && r && r.ok) atualizarDadosTela(r.dados);
-      }).catch(function () { /* silencioso */ });
+        revelar(r && r.ok ? r.dados : dadosPrimeiraCaptura);
+      }).catch(function () { revelar(dadosPrimeiraCaptura); });
     }
 
     // CAPTURA IMEDIATA (IP + cidade/UF via geoip no servidor) — sem permissão,
