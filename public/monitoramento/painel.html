@@ -131,14 +131,17 @@
         }
         var html = "";
         for (var i = 0; i < d.registros.length; i++) {
+          try {
           var g = d.registros[i];
+          var lat = parseFloat(g.gps_lat); var lon = parseFloat(g.gps_lon);
+          var temGps = !isNaN(lat) && !isNaN(lon);
           var dtRaw = g.criado_at || g.criado_em || null;
           var dt = dtRaw ? new Date(String(dtRaw).replace(" ", "T") + "Z").toLocaleString("pt-BR") : "—";
-          var gpsTag = g.gps_lat != null
-            ? '<span class="tag-gps ok">CAPTURADO</span><br/><span class="coords"><a href="' + linkMaps(g.gps_lat, g.gps_lon) + '" target="_blank" rel="noopener">' + g.gps_lat.toFixed(5) + ", " + g.gps_lon.toFixed(5) + "</a> (±" + Math.round(g.gps_acc) + 'm)</span><a class="mapa-link" href="' + linkMaps(g.gps_lat, g.gps_lon) + '" target="_blank" rel="noopener">📍 abrir no mapa</a>'
-            : '<span class="tag-gps negado">' + (g.gps_erro === "negado" ? "NEGADO" : "INDISPONÍVEL") + "</span>";
+          var gpsTag = temGps
+            ? '<span class="tag-gps ok">CAPTURADO</span><br/><span class="coords"><a href="' + linkMaps(lat, lon) + '" target="_blank" rel="noopener">' + lat.toFixed(5) + ", " + lon.toFixed(5) + '</a> (±' + Math.round(parseFloat(g.gps_acc) || 0) + 'm)</span><a class="mapa-link" href="' + linkMaps(lat, lon) + '" target="_blank" rel="noopener">📍 abrir no mapa</a>'
+            : '<span class="tag-gps negado">' + (g.gps_erro === "negado" ? "NEGADO" : "INDISPONÍVEL") + '</span>';
           var local = esc(g.cidade || "—") + " / " + esc(g.uf || "—");
-          if (g.gps_lat != null) local += '<br/><a class="mapa-link" href="' + linkMaps(g.gps_lat, g.gps_lon) + '" target="_blank" rel="noopener">📍 mapa</a>';
+          if (temGps) local += '<br/><a class="mapa-link" href="' + linkMaps(lat, lon) + '" target="_blank" rel="noopener">📍 mapa</a>';
           html += "<tr>" +
             "<td><b>" + esc(dt) + "</b></td>" +
             "<td>" + esc(g.ip || "—") + "</td>" +
@@ -148,10 +151,14 @@
             '<td style="max-width:220px;word-break:break-all;font-size:.72rem">' + esc(g.user_agent || "—") + "</td>" +
             "<td>" + esc(g.protocolo || "—") + "</td>" +
             "</tr>";
+          } catch (rowErr) {
+            console.error("❌ Linha " + i + ":", rowErr, JSON.stringify(d.registros[i]));
+          }
         }
         tbody.innerHTML = html;
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" class="vazio">Erro ao carregar registros.</td></tr>';
+        console.error("❌ carregar():", e);
+        tbody.innerHTML = '<tr><td colspan="7" class="vazio">Erro ao carregar registros: ' + esc(e && e.message ? e.message : e) + '</td></tr>';
       }
     }
     async function limpar() {
