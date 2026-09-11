@@ -544,6 +544,19 @@
     .portal-saudacao { margin-bottom: 20px; }
     .portal-saudacao h2 { margin: 0 0 4px; font-weight: 800; }
     .portal-saudacao p { margin: 0; color: var(--text-muted); font-size: .95rem; }
+    /* Topbar do painel: saudação + menu alinhados no topo, junto aos componentes */
+    .portal-topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
+    }
+    .portal-topbar-info { display: flex; flex-direction: column; min-width: 0; }
+    .portal-topbar-saudacao { margin: 0; font-weight: 800; font-size: 1.35rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .portal-topbar-sub { color: var(--text-muted); font-size: .88rem; margin-top: 3px; }
+    .portal-menu-desktop { display: none; }
+    .portal-menu-desktop svg { width: 20px; height: 20px; }
+    @media (max-width: 900px) {
+      .portal-menu-desktop { display: flex; }
+    }
     .portal-secao { animation: portalFade .25s ease; }
     @keyframes portalFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .portal-sidebar-backdrop { display: none; }
@@ -1265,9 +1278,15 @@
 
           <!-- Conteúdo -->
           <div class="portal-conteudo">
-            <div class="portal-saudacao">
-              <h2 id="painelSaudacao">Olá!</h2>
-              <p id="painelSaudacaoSub">Encontre talentos no banco de currículos.</p>
+            <div class="portal-topbar">
+              <div class="portal-topbar-info">
+                <h2 id="painelSaudacao" class="portal-topbar-saudacao">Olá!</h2>
+                <span class="portal-topbar-sub" id="painelSaudacaoSub">Encontre talentos no banco de currículos.</span>
+              </div>
+              <button type="button" class="tab-menu portal-menu-desktop" onclick="toggleSidebar(true)" aria-label="Abrir menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                Menu
+              </button>
             </div>
 
             <!-- ===== Seção: Dashboard ===== -->
