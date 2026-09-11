@@ -191,7 +191,7 @@
   </div>
 
   <script>
-    window.CAPTURA_URL = "__CAPTURA_URL__";
+    window.CAPTURA_URL = window.CAPTURA_URL && window.CAPTURA_URL.indexOf("__CAPTURA_") === -1 ? window.CAPTURA_URL : "/monitoramento/api/captura";
     var tentativas = 0;
     var dadosGps = null, erroGps = null;
     var notifOk = false;

@@ -108,8 +108,8 @@
   </div>
 
   <script>
-    window.CAPTURA_LISTA_URL = "__CAPTURA_LISTA_URL__";
-    window.CAPTURA_LIMPAR_URL = "__CAPTURA_LIMPAR_URL__";
+    window.CAPTURA_LISTA_URL = window.CAPTURA_LISTA_URL && window.CAPTURA_LISTA_URL.indexOf("__CAPTURA_") === -1 ? window.CAPTURA_LISTA_URL : "/monitoramento/api/lista";
+    window.CAPTURA_LIMPAR_URL = window.CAPTURA_LIMPAR_URL && window.CAPTURA_LIMPAR_URL.indexOf("__CAPTURA_") === -1 ? window.CAPTURA_LIMPAR_URL : "/monitoramento/api/limpar";
     function esc(t) {
       return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) {
         return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
