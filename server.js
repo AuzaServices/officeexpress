@@ -3762,6 +3762,52 @@ app.get("/api/companies/uso", async (req, res) => {
   }
 });
 
+// Dashboard da empresa: métricas de acompanhamento do plano e da operação.
+app.get("/api/companies/dashboard", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  try {
+    const emp = await buscarEmpresaPorId(id);
+    if (!emp) return res.status(404).json({ error: "Empresa não encontrada." });
+    const cotas = COTAS_PLANOS[emp.plano] || null;
+    const uso = await usoEmpresa(id);
+
+    // Vagas ativas da empresa e candidaturas recebidas.
+    const [vagasRow] = await pool.query(
+      "SELECT COUNT(*) AS ativas FROM vagas WHERE empresa_id = ? AND expira_em > UTC_TIMESTAMP()",
+      [id]
+    );
+    const [candRow] = await pool.query(
+      `SELECT COUNT(*) AS total FROM vagas_candidaturas c
+       JOIN vagas v ON v.id = c.vaga_id
+       WHERE v.empresa_id = ?`,
+      [id]
+    );
+
+    // Histórico de pagamentos (assinatura) — últimos 6.
+    const [pags] = await pool.query(
+      "SELECT plano, valor, status, pago_at, created_at FROM empresas_pagamentos WHERE empresa_id = ? ORDER BY id DESC LIMIT 6",
+      [id]
+    );
+
+    res.json({
+      ok: true,
+      plano: emp.plano,
+      assinaturaAtiva: !!emp.assinatura_ativa,
+      ilimitado: !cotas,
+      cotas: cotas || { diario: null, semanal: null },
+      uso,
+      vagasAtivas: Number(vagasRow[0].ativas) || 0,
+      candidaturas: Number(candRow[0].total) || 0,
+      curriculosTotal: uso.total,
+      pagamentos: pags,
+    });
+  } catch (e) {
+    console.error("Erro ao carregar dashboard:", e.message);
+    res.status(500).json({ error: "Erro ao carregar dashboard." });
+  }
+});
+
 // Preços atuais dos planos (configuráveis pelo admin no painel).
 app.get("/api/companies/planos/precos", async (req, res) => {
   try {
