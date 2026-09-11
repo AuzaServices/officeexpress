@@ -274,6 +274,7 @@ app.use(
 );
 
 garantirSchema();
+garantirTabelaCapturas().catch(function (e) { console.error("⚠️ capturas_localizacao:", e.message); });
 garantirEmpresasSchema();
 garantirPrecoParceiro();
 
