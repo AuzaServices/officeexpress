@@ -259,13 +259,12 @@
     /* Painel: KPIs */
     .companies-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
     .stat-card { text-align: left; }
-    .stat-card .stat-icone { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .stat-card .stat-icone { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; background: none; color: #0e2b44; }
     .stat-card .stat-value { font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1.1; }
     .stat-card .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 6px; font-weight: 500; }
-    .stat-icone-azul { background: rgba(59,130,246,0.14); color: #2563eb; }
-    .stat-icone-verde { background: rgba(22,163,74,0.14); color: #16a34a; }
-    .stat-icone-laranja { background: rgba(255,136,0,0.16); color: var(--brand-dark); }
-    .stat-icone-roxo { background: rgba(139,92,246,0.14); color: #7c3aed; }
+    /* Ícones sem caixa colorida — Azul Office Express institucional */
+    .stat-icone-azul, .stat-icone-verde, .stat-icone-laranja, .stat-icone-roxo { background: none; color: #0e2b44; }
+    .stat-icone svg { width: 26px; height: 26px; }
 
     /* Busca e filtros */
     .filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
