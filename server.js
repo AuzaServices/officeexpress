@@ -95,23 +95,9 @@ async function incrementarUsoUsuario(usuarioId) {
   );
 }
 
-// Checagem do paywall: pode criar currículo agora?
-// Retorna { ok } ou { ok:false, motivo:'limite', ...dados para o front decidir }.
-async function podeCriarCurriculo(usuarioId) {
-  const p = await planoDoUsuario(usuarioId);
-  if (p.ativo) return { ok: true, plano: p.plano, uso: null };
-  const uso = await usoMensalUsuario(usuarioId);
-  if (uso.curriculos < LIMITE_GRATIS_MES) return { ok: true, plano: "gratuito", uso };
-  return {
-    ok: false,
-    motivo: "limite",
-    plano: "gratuito",
-    uso,
-    limite: LIMITE_GRATIS_MES,
-    planos: Object.values(PLANOS_CLIENTE).map((x) => ({ id: x.id, nome: x.nome, precoStr: x.precoStr })),
-    precoAvulso: await getPreco(),
-  };
-}
+// Paywall gratuito REMOVIDO: não existe currículo gratuito. Todo currículo
+// criado gera um pedido pendente; a escolha (avulso 7,99 ou Premium 14,90)
+// é feita pelo usuário na página de pagamento.
 
 // Ativa/renova a assinatura do usuário (webhook ou confirmação manual).
 async function ativarAssinaturaUsuario(usuarioId, planoId, mpAssinaturaId, dias) {
@@ -214,7 +200,8 @@ const PLANOS_CLIENTE = {
   // premium_plus REMOVIDO: agora existe apenas a assinatura Premium (14,90)
   // e o currículo avulso (7,99, preço já padrão em getPreco()).
 };
-const LIMITE_GRATIS_MES = 1; // currículos/mês no plano gratuito
+// Currículo avulso: R$ 7,99 (preço gerenciado por getPreco(), configurável
+// pelo admin). Paywall gratuito removido — não há plano gratuito.
 
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
@@ -1638,7 +1625,6 @@ app.get("/api/auth/assinatura", async (req, res) => {
       ativo: p.ativo,
       expiraEm: p.expiraEm,
       uso: uso,
-      limiteGratuito: LIMITE_GRATIS_MES,
     },
     planos: Object.values(PLANOS_CLIENTE).map((x) => ({ id: x.id, nome: x.nome, precoStr: x.precoStr, disponivel: !!x.mpPlanId })),
   });

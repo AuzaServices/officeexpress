@@ -911,7 +911,6 @@
           }
           var usoTxt = "Currículos este mês: " + ((a.uso && a.uso.curriculos) || 0);
           if (a.plano !== "gratuito" && a.ativo) usoTxt += " · ilimitado";
-          else usoTxt += " / " + (a.limiteGratuito || 1);
           usoEl.textContent = usoTxt;
           // Ações
           var html = "";
