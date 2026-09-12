@@ -211,14 +211,8 @@ const PLANOS_CLIENTE = {
     curriculosMes: Infinity,
     linkPagamento: process.env.MP_LINK_PREMIUM || "https://mpago.la/1ADuSuz",
   },
-  premium_plus: {
-    id: "premium_plus",
-    nome: "Premium+",
-    preco: 24.9,
-    precoStr: "R$ 24,90/mês",
-    curriculosMes: Infinity,
-    linkPagamento: process.env.MP_LINK_PREMIUM_PLUS || "https://mpago.la/1YU8SJP",
-  },
+  // premium_plus REMOVIDO: agora existe apenas a assinatura Premium (14,90)
+  // e o currículo avulso (7,99, preço já padrão em getPreco()).
 };
 const LIMITE_GRATIS_MES = 1; // currículos/mês no plano gratuito
 
