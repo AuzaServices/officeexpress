@@ -2072,8 +2072,16 @@ app.post("/api/track", async (req, res) => {
 
     if (!sessao) return res.status(400).json({ error: "Sessão ausente." });
 
+    // Painéis/áreas internas (admin, parceiro, empresa, logins, pagamento da
+    // empresa e /documento) NÃO contam em nenhuma métrica: nem visitas, nem
+    // "online agora", nem páginas mais acessadas. Defesa no servidor — mesmo
+    // que algum painel escape do filtro do frontend, aqui é descartado.
+    var PAGINAS_IGNORADAS = /(^|\/)(painel|painel-parceiro|login-parceiro|companies|login-admin|companies-pagar|documento)(?:\.html)?(?:$|\/|\?)/i;
+    var paginaEhPainel = PAGINAS_IGNORADAS.test(pagina) || PAGINAS_IGNORADAS.test(path);
+
     // Heartbeat: mantém a sessão como "online agora" (sem gravar no banco).
     if (tipo === "heartbeat") {
+      if (paginaEhPainel) return res.json({ ok: true, online: sessoesOnline.size, ignorado: "painel" });
       sessoesOnline.set(sessao, Date.now());
       return res.json({ ok: true, online: sessoesOnline.size });
     }
@@ -2085,13 +2093,19 @@ app.post("/api/track", async (req, res) => {
     }
 
     // Qualquer outro tipo (pageview, eventos de conversão) também marca a
-    // sessão como ativa, indicando entrada imediata do visitante.
-    sessoesOnline.set(sessao, Date.now());
+    // sessão como ativa, indicando entrada imediata do visitante — exceto em
+    // páginas de painel, que não contam como visita nem como presença online.
+    if (!paginaEhPainel) sessoesOnline.set(sessao, Date.now());
 
     // Descarta acessos de bots de pré-visualização/crawlers (não são visitas
     // humanas e não devem contar como acesso do parceiro).
     if (ehBotNaoHumano(ua)) {
       return res.json({ ok: true, online: sessoesOnline.size, ignorado: "bot" });
+    }
+
+    if (paginaEhPainel) {
+      // Painel não gera pageview nem evento — não infla visitas/funil.
+      return res.json({ ok: true, online: sessoesOnline.size, ignorado: "painel" });
     }
 
     if (tipo === "pageview") {
@@ -2137,10 +2151,14 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
 
     // Páginas mais visitadas nas últimas 24h (número de visualizações de página,
     // métrica de engajamento por pageview, não infla a contagem de visitas).
+    // Somente páginas públicas do site: exclui painéis, logins, áreas internas
+    // e ferramentas temporárias (defesa extra no SELECT).
     const [paginas] = await pool.query(
       `SELECT COALESCE(NULLIF(pagina,''), path) AS pagina, COUNT(*) AS c
        FROM visitas
        WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
+         AND LOWER(COALESCE(NULLIF(pagina,''), path)) REGEXP
+           '^(inicio|modelos|editor|pagamento|cadastro|login|contato|sobre|termos|politica|vagas|sucesso|indicacao|recuperar-senha|esqueci-senha|confirmar-email|minha-conta|preview)(\\?|$|/)'
        GROUP BY pagina ORDER BY c DESC LIMIT 8`
     );
 
@@ -5173,13 +5191,125 @@ async function expirarPedidosPendentes() {
 // Roda na inicialização (garante a regra mesmo que o servidor fique offline).
 expirarPedidosPendentes();
 expirarAssinaturasUsuario();
+
+// ---------------------------------------------------------------------------
+// RECUPERAÇÃO DE VAGANZES: usuários confirmados com currículo pendente que
+// pararam no meio (não pagaram / não concluíram) recebem, ~2h depois do
+// abandono, um e-mail atraente para voltar e concluir. Enviado no máximo
+// UMA vez por pedido (marcado em usuarios_pagamentos.pedido_pendente_id
+// não é confiável para isso — usamos um campo próprio no próprio pedido:
+// lembrete_enviado_at DATETIME NULL).
+// ---------------------------------------------------------------------------
+async function garantirColunaLembretePedido() {
+  try {
+    const [cols] = await pool.query(
+      `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pedidos' AND COLUMN_NAME = 'lembrete_enviado_at'`
+    );
+    if (!cols[0].n) {
+      await pool.query("ALTER TABLE pedidos ADD COLUMN lembrete_enviado_at DATETIME NULL");
+      console.log("🔧 pedidos: coluna lembrete_enviado_at adicionada.");
+    }
+  } catch (e) { /* coluna já existe */ }
+}
+
+async function enviarLembretesAbandono() {
+  try {
+    await garantirColunaLembretePedido();
+    // Currículos pendentes criados há pelo menos 2h (mas menos de 24h, antes
+    // da expiração) cujo usuário JÁ confirmou o e-mail e ainda não recebeu
+    // o lembrete deste pedido.
+    const [rows] = await pool.query(
+      `SELECT p.id AS pedido_id, p.created_at, p.lembrete_enviado_at,
+              u.id AS usuario_id, u.nome, u.email
+       FROM pedidos p
+       JOIN usuarios u ON u.id = p.usuario_id
+       WHERE p.status = 'pendente'
+         AND p.created_at >= (NOW() - INTERVAL 24 HOUR)
+         AND p.created_at <  (NOW() - INTERVAL 2 HOUR)
+         AND p.lembrete_enviado_at IS NULL
+         AND u.email_confirmado = 1`
+    );
+    if (!rows.length) return 0;
+    const { enviarEmail } = require("./lib/email");
+    let enviados = 0;
+    for (const r of rows) {
+      const primeiroNome = String(r.nome || "").trim().split(/\s+/)[0] || "tudo bem";
+      const html = `
+        <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#001f33,#00324a);padding:24px 32px">
+            <div style="color:#ff8800;font-size:22px;font-weight:bold">Office Express</div>
+            <div style="color:#e0e6eb;font-size:13px">Currículos profissionais</div>
+          </div>
+          <div style="padding:32px">
+            <h2 style="color:#001f33;margin:0 0 16px;font-size:20px">Olá ${primeiroNome}, seu currículo está esperando! ⏳</h2>
+            <p style="color:#333;line-height:1.6">Você deu o passo mais difícil — <strong>montar um currículo profissional</strong> — e parou a poucos cliques do acabamento.</p>
+            <p style="color:#333;line-height:1.6">Enquanto isso, <strong>milhares de pessoas estão se candidatando às mesas vagas que você quer</strong>. A diferença entre elas e você? Elas já têm o currículo pronto na mão do recrutador.</p>
+            <div style="text-align:center;margin:24px 0">
+              <a href="${BASE_URL}/pagamento" style="display:inline-block;background:#ff8800;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 34px;border-radius:8px">Finalizar meu currículo agora</a>
+            </div>
+            <p style="color:#333;line-height:1.6">Leva menos de 2 minutos. <strong>Não deixe o emprego dos seus sonhos passar por um botão não clicado.</strong> 😉</p>
+            <p style="color:#999;font-size:12px;margin-top:24px">Se você não criou um currículo no Office Express recentemente, ignore este e-mail.</p>
+          </div>
+          <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;color:#94a3b8;font-size:12px;text-align:center">© ${new Date().getFullYear()} Office Express</div>
+        </div>`;
+      const resp = await enviarEmail({
+        to: r.email,
+        subject: `${primeiroNome}, seu currículo quase pronto está te esperando 🚀`,
+        html,
+        text: `${primeiroNome}, seu currículo está a poucos cliques de ficar pronto. Finalize agora em ${BASE_URL}/pagamento e não deixe o emprego dos seus sonhos passar.`
+      });
+      if (resp && resp.ok) {
+        enviados++;
+        await pool.query("UPDATE pedidos SET lembrete_enviado_at = NOW() WHERE id = ?", [r.pedido_id]);
+      }
+    }
+    if (enviados > 0) console.log(`📧 Lembretes de abandono enviados: ${enviados}.`);
+    return enviados;
+  } catch (e) {
+    console.error("❌ Erro ao enviar lembretes de abandono:", e.message);
+    return 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// LIMPEZA LGPD: contas com e-mail NÃO confirmado são apagadas após 24h.
+// Um e-mail não verificado não dá acesso a nada (não paga, não entra no
+// painel) e vira lixo — e abre brecha para cadastros falsos ocupando o
+// e-mail de alguém. Remove a conta e os tokens dela.
+// ---------------------------------------------------------------------------
+async function apagarNaoConfirmados() {
+  try {
+    const [tokens] = await pool.query(
+      `DELETE FROM email_tokens WHERE usuario_id IN (
+         SELECT id FROM usuarios WHERE email_confirmado = 0 AND created_at < (NOW() - INTERVAL 24 HOUR)
+       )`
+    );
+    const [r] = await pool.query(
+      "DELETE FROM usuarios WHERE email_confirmado = 0 AND created_at < (NOW() - INTERVAL 24 HOUR)"
+    );
+    if (r.affectedRows > 0) {
+      console.log(`🧹 Contas não confirmadas apagadas (24h): ${r.affectedRows} usuário(s), ${tokens.affectedRows} token(s).`);
+    }
+    return r.affectedRows;
+  } catch (e) {
+    console.error("❌ Erro ao apagar não confirmados:", e.message);
+    return 0;
+  }
+}
+
+enviarLembretesAbandono();
+apagarNaoConfirmados();
 // Roda a cada hora (minuto 7 para não coincidir com outras rotinas).
 cron.schedule(
   "0 7 * * * *",
   async () => {
     await expirarPedidosPendentes();
     await expirarAssinaturasUsuario();
+    await enviarLembretesAbandono();
+    await apagarNaoConfirmados();
   },
   { timezone: "America/Sao_Paulo" }
 );
 console.log("🗓️ Expiração de pedidos pendentes agendada: a cada hora (24h de tolerância).");
+console.log("🗓️ Lembretes de abandono (2h) e limpeza de não confirmados (24h) agendados: a cada hora.");

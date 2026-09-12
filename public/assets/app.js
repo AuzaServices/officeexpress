@@ -364,7 +364,10 @@ window.App = (function () {
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
-  const paginaPainel = /(^|\/)(painel|painel-parceiro|login-parceiro)(?:\.html)?(?:$|\?)/i.test(window.location.pathname + window.location.search);
+  // Painéis/áreas internas NÃO contam nas métricas (online agora, visitas,
+  // páginas mais acessadas): admin, parceiro, empresa, logins e pagamento da
+  // empresa. /documento (ferramenta temporária) também fica de fora.
+  const paginaPainel = /(^|\/)(painel|painel-parceiro|login-parceiro|companies|login-admin|companies-pagar|documento)(?:\.html)?(?:$|\/|\?)/i.test(window.location.pathname + window.location.search);
   if (!paginaPainel) {
     // Captura e persiste o código do parceiro (ref) vindo do ?ref= da URL.
     // Isso guarda o vínculo no navegador para uso no cadastro e na criação
