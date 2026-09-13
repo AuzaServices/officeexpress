@@ -576,9 +576,18 @@
       (ped.pedidos || []).forEach(function (p) {
         var cls = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
         var txt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
+        var ehAssin = p.origem === "assinatura";
+        var acaoId = ehAssin ? JSON.stringify(p.rowKey) : p.id; // assinatura usa rowKey "s-<id>"
         var botaoStatus = p.status === "pago"
-          ? '<button class="btn-acao amarelo" onclick="mudarStatus(' + p.id + ",'cancelado'" + ')">Cancelar</button>'
-          : '<button class="btn-acao verde" onclick="mudarStatus(' + p.id + ",'pago'" + ')">Marcar pago</button>';
+          ? '<button class="btn-acao amarelo" onclick="mudarStatus(' + acaoId + ",'cancelado'" + ')">Cancelar</button>'
+          : '<button class="btn-acao verde" onclick="mudarStatus(' + acaoId + ",'pago'" + ')">Marcar pago</button>';
+        var acoes = '<button class="btn-acao" onclick="verDetalhes(' + acaoId + ')">Ver</button>';
+        if (!ehAssin) acoes += ' <a class="btn-acao" href="/api/admin/pedidos/' + p.id + '/download">PDF</a>';
+        acoes += " " + botaoStatus;
+        if (!ehAssin) acoes += ' <button class="btn-acao amarelo" onclick="editarValor(' + p.id + "," + (p.valor || 0) + ')">Valor</button>';
+        var badgeOrigem = ehAssin
+          ? '<span class="badge" style="background:rgba(14,43,68,.08);color:var(--brand,#ff8800)">Plano ' + (nomesModelo[p.modelo] ? "" : "") + (p.modelo === "premium" ? "Premium" : p.modelo) + '</span>'
+          : '<span class="badge" style="background:rgba(14,43,68,.08);color:var(--text-muted)">Currículo</span>';
         var tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + p.id + "</td>" +
@@ -586,17 +595,13 @@
           "<td>" + (nomesModelo[p.modelo] || p.modelo) + "</td>" +
           "<td>" + App.formatarPreco(p.valor) + "</td>" +
           '<td><span class="badge ' + cls + '">' + txt + "</span></td>" +
+          "<td>" + badgeOrigem + "</td>" +
           "<td>" + (p.pagamento_tipo || "-") + "</td>" +
           "<td>" + (p.created_at ? new Date(p.created_at).toLocaleString("pt-BR") : "-") + "</td>" +
-          '<td><div class="acoes-linha">' +
-            '<button class="btn-acao" onclick="verDetalhes(' + p.id + ')">Ver</button>' +
-            '<a class="btn-acao" href="/api/admin/pedidos/' + p.id + '/download">PDF</a>' +
-            botaoStatus +
-            '<button class="btn-acao amarelo" onclick="editarValor(' + p.id + "," + (p.valor || 0) + ')">Valor</button>' +
-          "</div></td>";
+          '<td><div class="acoes-linha">' + acoes + "</div></td>";
         tbp.appendChild(tr);
       });
-      if (!ped.pedidos || !ped.pedidos.length) tbp.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Nenhum pedido encontrado.</td></tr>';
+      if (!ped.pedidos || !ped.pedidos.length) tbp.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted)">Nenhum pedido encontrado.</td></tr>';
       document.getElementById("pedidosInfo").textContent = "Total: " + pedidosTotal + " · Página " + (ped.pagina || 1) + " de " + (ped.paginas || 1);
 
       // Usuários

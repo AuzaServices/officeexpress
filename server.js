@@ -1663,18 +1663,27 @@ app.post("/api/auth/assinatura/assinar", async (req, res) => {
     [id, planoId, periodo]
   );
   let assinaturaPagamentoId;
+  // Parceiro indicador da conta (o mesmo vínculo usado na comissão de
+  // currículo avulso): quem veio pelo link do parceiro e assina o plano gera
+  // pagamento visível no admin E comissão para o parceiro.
+  const [upar] = await pool.query("SELECT parceiro_id FROM usuarios WHERE id = ? AND parceiro_id IS NOT NULL", [id]);
+  const parceiroAssinatura = upar.length ? upar[0].parceiro_id : null;
   if (pend.length) {
     assinaturaPagamentoId = pend[0].pagamento_id;
-    // Atualiza o vínculo com o currículo pendente mais recente.
+    // Atualiza o vínculo com o currículo pendente mais recente e (re)grava o
+    // parceiro caso o vínculo tenha sido criado depois da 1ª tentativa.
     if (pedidoPendente && !pend[0].pedido_pendente_id) {
       await pool.query("UPDATE usuarios_pagamentos SET pedido_pendente_id = ? WHERE id = ?", [pedidoPendente.id, pend[0].id]);
+    }
+    if (parceiroAssinatura) {
+      await pool.query("UPDATE usuarios_pagamentos SET parceiro_id = COALESCE(parceiro_id, ?) WHERE id = ?", [parceiroAssinatura, pend[0].id]);
     }
   } else {
     assinaturaPagamentoId = "plano-" + id + "-" + planoId + "-" + periodo + "-" + Date.now().toString(36);
     await pool.query(
-      `INSERT INTO usuarios_pagamentos (usuario_id, pagamento_id, plano, valor, status, tipo, periodo_ref, pedido_pendente_id)
-       VALUES (?, ?, ?, ?, 'pendente', NULL, ?, ?)`,
-      [id, assinaturaPagamentoId, planoId, plano.preco, periodo, pedidoPendente ? pedidoPendente.id : null]
+      `INSERT INTO usuarios_pagamentos (usuario_id, pagamento_id, plano, valor, status, tipo, periodo_ref, pedido_pendente_id, parceiro_id)
+       VALUES (?, ?, ?, ?, 'pendente', NULL, ?, ?, ?)`,
+      [id, assinaturaPagamentoId, planoId, plano.preco, periodo, pedidoPendente ? pedidoPendente.id : null, parceiroAssinatura]
     );
   }
   // A tela de pagamento é a TRADICIONAL do site (PIX/cartão no próprio site),
@@ -1879,26 +1888,69 @@ app.get("/api/admin/estatisticas", protegerAdmin, async (req, res) => {
 
 app.get("/api/admin/pedidos", protegerAdmin, async (req, res) => {
   try {
-    const { status, q, modelo, page = 1, limit = 50 } = req.query;
+    const { status, q, modelo, origem, page = 1, limit = 50 } = req.query;
     const pagina = Math.max(1, parseInt(page, 10) || 1);
     const tamanho = Math.min(200, Math.max(1, parseInt(limit, 10) || 50));
-    const params = [];
-    let where = " WHERE 1=1";
-    if (status) { where += " AND p.status = ?"; params.push(status); }
-    if (modelo) { where += " AND p.modelo = ?"; params.push(modelo); }
+    // ==========================================================================
+    // LISTA UNIFICADA: currículos avulsos (pedidos) + assinaturas Premium
+    // (usuarios_pagamentos) no mesmo feed, com coluna `origem` para o admin
+    // distinguir. Assinatura de cliente vindo de link de parceiro aparece
+    // com o parceiro (parceiro_id) e o valor 14,90 pendente/pago normalmente.
+    // ==========================================================================
+    // Ids sequenciais podem colidir entre as duas tabelas: o painel usa o
+    // campo `rowKey` (ex.: "c-12" / "s-5") para ações específicas; o campo
+    // `id` mantém o id real da tabela de origem.
+    const paramsC = [];
+    let whereC = " WHERE 1=1";
+    if (status) { whereC += " AND p.status = ?"; paramsC.push(status); }
+    if (modelo) { whereC += " AND p.modelo = ?"; paramsC.push(modelo); }
     if (q) {
-      where += " AND (u.nome LIKE ? OR u.email LIKE ? OR p.modelo LIKE ? OR CAST(p.id AS CHAR) = ?)";
-      params.push(`%${q}%`, `%${q}%`, `%${q}%`, q);
+      whereC += " AND (u.nome LIKE ? OR u.email LIKE ? OR p.modelo LIKE ? OR CAST(p.id AS CHAR) = ?)";
+      paramsC.push(`%${q}%`, `%${q}%`, `%${q}%`, q);
     }
+    // Assinaturas: sem `modelo` — o filtro vira "plano"; q casa nome/email/id.
+    const paramsS = [];
+    let whereS = " WHERE 1=1";
+    if (status) { whereS += " AND p.status = ?"; paramsS.push(status); }
+    if (q) {
+      whereS += " AND (u.nome LIKE ? OR u.email LIKE ? OR p.plano LIKE ? OR CAST(p.id AS CHAR) = ?)";
+      paramsS.push(`%${q}%`, `%${q}%`, `%${q}%`, q);
+    }
+    if (origem === "curriculo") { whereS += " AND 1=0"; }
+    if (origem === "assinatura") { whereC += " AND 1=0"; }
+
+    // Assinaturas mapeadas para o MESMO formato de pedido do painel:
+    // modelo = nome do plano, valor, status, datas e parceiro.
+    const unionSql = `
+      SELECT
+        CONCAT('c-', p.id) AS rowKey,
+        p.id, p.modelo, p.valor, p.status, p.parceiro_id,
+        p.created_at, p.pago_at,
+        p.pagamento_id, p.pagamento_tipo,
+        u.nome AS usuario_nome, u.email AS usuario_email,
+        'curriculo' AS origem
+      FROM pedidos p
+      LEFT JOIN usuarios u ON u.id = p.usuario_id
+      ${whereC}
+      UNION ALL
+      SELECT
+        CONCAT('s-', p.id) AS rowKey,
+        p.id, p.plano AS modelo, p.valor, p.status, p.parceiro_id,
+        p.created_at, p.pago_at,
+        p.pagamento_id, p.tipo AS pagamento_tipo,
+        u.nome AS usuario_nome, u.email AS usuario_email,
+        'assinatura' AS origem
+      FROM usuarios_pagamentos p
+      LEFT JOIN usuarios u ON u.id = p.usuario_id
+      ${whereS}
+    `;
     const [[{ total }]] = await pool.query(
-      `SELECT COUNT(*) AS total FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id ${where}`,
-      params
+      `SELECT COUNT(*) AS total FROM (${unionSql}) t`,
+      [...paramsC, ...paramsS]
     );
     const [rows] = await pool.query(
-      `SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email FROM pedidos p
-       LEFT JOIN usuarios u ON u.id = p.usuario_id ${where}
-       ORDER BY p.id DESC LIMIT ? OFFSET ?`,
-      [...params, tamanho, (pagina - 1) * tamanho]
+      `SELECT * FROM (${unionSql}) t ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`,
+      [...paramsC, ...paramsS, tamanho, (pagina - 1) * tamanho]
     );
     res.json({ pedidos: rows, total: total || 0, pagina, limit: tamanho, paginas: Math.ceil((total || 0) / tamanho) });
   } catch (e) {
@@ -2239,8 +2291,30 @@ app.get("/api/admin/pedidos/:id", protegerAdmin, async (req, res) => {
 // Altera o status de um pedido (pago / pendente / cancelado) manualmente.
 app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const idBruto = String(req.params.id || "");
     const { status } = req.body || {};
+    // Assinatura (rowKey "s-<id>" em usuarios_pagamentos): ao marcar pago
+    // manualmente, ativa o plano + libera currículo vinculado + registra a
+    // comissão de assinatura (mesma regra do webhook do Mercado Pago).
+    if (idBruto.indexOf("s-") === 0) {
+      const upId = parseInt(idBruto.slice(2), 10);
+      if (!upId) return res.status(400).json({ error: "Assinatura inválida." });
+      if (!["pago", "pendente", "cancelado"].includes(status)) return res.status(400).json({ error: "Status inválido." });
+      const [ups] = await pool.query("SELECT * FROM usuarios_pagamentos WHERE id = ?", [upId]);
+      if (!ups.length) return res.status(404).json({ error: "Assinatura não encontrada." });
+      const upRow = ups[0];
+      if (upRow.status !== status) {
+        if (status === "pago") {
+          await pool.query("UPDATE usuarios_pagamentos SET status = 'pago', pago_at = NOW() WHERE id = ?", [upId]);
+          await ativarPlanoELiberarPedido(upRow.usuario_id, upRow.plano, upRow.pagamento_id, upRow.tipo || "pix");
+        } else {
+          await pool.query("UPDATE usuarios_pagamentos SET status = ? WHERE id = ?", [status, upId]);
+        }
+        await registrarAdminLog("assinatura_status", "Assinatura " + upId + " -> " + status);
+      }
+      return res.json({ success: true });
+    }
+    const id = parseInt(idBruto, 10);
     if (!id) return res.status(400).json({ error: "Pedido inválido." });
     if (!["pago", "pendente", "cancelado"].includes(status)) return res.status(400).json({ error: "Status inválido." });
     const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
@@ -2316,10 +2390,19 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
 // Edita o valor de um pedido.
 app.put("/api/admin/pedidos/:id/valor", protegerAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const idBruto = String(req.params.id || "");
     const v = parseFloat((req.body || {}).valor);
-    if (!id) return res.status(400).json({ error: "Pedido inválido." });
     if (isNaN(v) || v < 0) return res.status(400).json({ error: "Valor inválido." });
+    // Assinatura (rowKey "s-<id>"): atualiza o valor em usuarios_pagamentos.
+    if (idBruto.indexOf("s-") === 0) {
+      const upId = parseInt(idBruto.slice(2), 10);
+      if (!upId) return res.status(400).json({ error: "Assinatura inválida." });
+      await pool.query("UPDATE usuarios_pagamentos SET valor = ? WHERE id = ?", [v, upId]);
+      await registrarAdminLog("assinatura_valor", "Assinatura " + upId + " -> " + v);
+      return res.json({ success: true });
+    }
+    const id = parseInt(idBruto, 10);
+    if (!id) return res.status(400).json({ error: "Pedido inválido." });
     await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [v, id]);
     await registrarAdminLog("pedido_valor", `Pedido ${id} -> ${v}`);
     res.json({ success: true });
