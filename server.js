@@ -5196,7 +5196,7 @@ async function garantirColunaLembretePedido() {
 async function enviarLembretesAbandono() {
   try {
     await garantirColunaLembretePedido();
-    // Currículos pendentes criados há pelo menos 2h (mas menos de 24h, antes
+    // Currículos pendentes criados há pelo menos 1h (mas menos de 24h, antes
     // da expiração) cujo usuário JÁ confirmou o e-mail e ainda não recebeu
     // o lembrete deste pedido.
     const [rows] = await pool.query(
@@ -5206,7 +5206,7 @@ async function enviarLembretesAbandono() {
        JOIN usuarios u ON u.id = p.usuario_id
        WHERE p.status = 'pendente'
          AND p.created_at >= (NOW() - INTERVAL 24 HOUR)
-         AND p.created_at <  (NOW() - INTERVAL 2 HOUR)
+         AND p.created_at <  (NOW() - INTERVAL 1 HOUR)
          AND p.lembrete_enviado_at IS NULL
          AND u.email_confirmado = 1`
     );
@@ -5280,16 +5280,25 @@ async function apagarNaoConfirmados() {
 
 enviarLembretesAbandono();
 apagarNaoConfirmados();
-// Roda a cada hora (minuto 7 para não coincidir com outras rotinas).
+// Lembretes de abandono: a cada 15 minutos (minuto 3/18/33/48, fora do minuto
+// 7 das rotinas antigas) — um currículo abandonado recebe o lembrete entre
+// 1h00 e 1h15 depois do abandono.
+cron.schedule(
+  "3/15 * * * *",
+  async () => {
+    await enviarLembretesAbandono();
+  },
+  { timezone: "America/Sao_Paulo" }
+);
+// Rotinas de limpeza: continuam a cada hora (minuto 7).
 cron.schedule(
   "0 7 * * * *",
   async () => {
     await expirarPedidosPendentes();
     await expirarAssinaturasUsuario();
-    await enviarLembretesAbandono();
     await apagarNaoConfirmados();
   },
   { timezone: "America/Sao_Paulo" }
 );
 console.log("🗓️ Expiração de pedidos pendentes agendada: a cada hora (24h de tolerância).");
-console.log("🗓️ Lembretes de abandono (2h) e limpeza de não confirmados (24h) agendados: a cada hora.");
+console.log("🗓️ Lembretes de abandono (1h): a cada 15 minutos. Limpeza de não confirmados (24h): a cada hora.");
