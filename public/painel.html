@@ -141,7 +141,7 @@
         </div>
         <div class="tabela-wrap">
           <table class="tabela">
-            <thead><tr><th>#</th><th>Usuário</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Pago via</th><th>Data</th><th>Ações</th></tr></thead>
+            <thead><tr><th>#</th><th>Usuário</th><th>Modelo</th><th>Valor</th><th>Status</th><th>Origem</th><th>Pago via</th><th>Data</th><th>Ações</th></tr></thead>
             <tbody id="tbodyPedidos"></tbody>
           </table>
         </div>
@@ -585,14 +585,15 @@
         if (!ehAssin) acoes += ' <a class="btn-acao" href="/api/admin/pedidos/' + p.id + '/download">PDF</a>';
         acoes += " " + botaoStatus;
         if (!ehAssin) acoes += ' <button class="btn-acao amarelo" onclick="editarValor(' + p.id + "," + (p.valor || 0) + ')">Valor</button>';
+        var nomePlano = { premium: 'Premium', premium_plus: 'Premium+' }[p.modelo] || p.modelo;
         var badgeOrigem = ehAssin
-          ? '<span class="badge" style="background:rgba(14,43,68,.08);color:var(--brand,#ff8800)">Plano ' + (nomesModelo[p.modelo] ? "" : "") + (p.modelo === "premium" ? "Premium" : p.modelo) + '</span>'
+          ? '<span class="badge" style="background:rgba(14,43,68,.08);color:var(--brand,#ff8800)">Plano ' + nomePlano + '</span>'
           : '<span class="badge" style="background:rgba(14,43,68,.08);color:var(--text-muted)">Currículo</span>';
         var tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + p.id + "</td>" +
           "<td>" + (p.usuario_nome || "-") + "<br><small style='color:var(--text-muted)'>" + (p.usuario_email || "") + "</small></td>" +
-          "<td>" + (nomesModelo[p.modelo] || p.modelo) + "</td>" +
+          "<td>" + (ehAssin ? nomePlano : (nomesModelo[p.modelo] || p.modelo)) + "</td>" +
           "<td>" + App.formatarPreco(p.valor) + "</td>" +
           '<td><span class="badge ' + cls + '">' + txt + "</span></td>" +
           "<td>" + badgeOrigem + "</td>" +
