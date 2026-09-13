@@ -2184,14 +2184,20 @@ app.get("/api/admin/metricas", protegerAdmin, async (req, res) => {
     // Páginas mais visitadas nas últimas 24h (número de visualizações de página,
     // métrica de engajamento por pageview, não infla a contagem de visitas).
     // Somente páginas públicas do site: exclui painéis, logins, áreas internas
-    // e ferramentas temporárias (defesa extra no SELECT).
+    // e ferramentas temporárias. Usa lista branca por prefixo (compatível com
+    // qualquer versão do MySQL — evita REGEXP com quantificador inválido).
+    const PAGINAS_PUBLICAS = ["inicio", "modelos", "editor", "pagamento", "cadastro", "login", "contato", "sobre", "termos", "politica", "vagas", "sucesso", "indicacao", "recuperar-senha", "esqueci-senha", "confirmar-email", "minha-conta", "preview"];
+    const condPaginas = PAGINAS_PUBLICAS
+      .map(() => "LOWER(COALESCE(NULLIF(pagina,''), path)) = ? OR LOWER(COALESCE(NULLIF(pagina,''), path)) LIKE CONCAT(?, '/%') OR LOWER(COALESCE(NULLIF(pagina,''), path)) LIKE CONCAT(?, '?%')")
+      .join(" OR ");
+    const condParams = PAGINAS_PUBLICAS.flatMap((pg) => [pg, pg, pg]);
     const [paginas] = await pool.query(
       `SELECT COALESCE(NULLIF(pagina,''), path) AS pagina, COUNT(*) AS c
        FROM visitas
        WHERE created_at >= (NOW() - INTERVAL 24 HOUR)
-         AND LOWER(COALESCE(NULLIF(pagina,''), path)) REGEXP
-           '^(inicio|modelos|editor|pagamento|cadastro|login|contato|sobre|termos|politica|vagas|sucesso|indicacao|recuperar-senha|esqueci-senha|confirmar-email|minha-conta|preview)(\\?|$|/)'
-       GROUP BY pagina ORDER BY c DESC LIMIT 8`
+         AND (${condPaginas})
+       GROUP BY pagina ORDER BY c DESC LIMIT 8`,
+      condParams
     );
 
     // Origens de tráfego nas últimas 24h (1 por usuário, por origem).
@@ -5363,11 +5369,11 @@ async function apagarNaoConfirmados() {
 
 enviarLembretesAbandono();
 apagarNaoConfirmados();
-// Lembretes de abandono: a cada 15 minutos (minuto 3/18/33/48, fora do minuto
-// 7 das rotinas antigas) — um currículo abandonado recebe o lembrete entre
-// 1h00 e 1h15 depois do abandono.
+// Lembretes de abandono: a cada 15 minutos — um currículo abandonado recebe
+// o lembrete entre 1h00 e 1h15 depois do abandono. (node-cron usa step "*/15";
+// a sintaxe "3/15" não é suportada.)
 cron.schedule(
-  "3/15 * * * *",
+  "*/15 * * * *",
   async () => {
     await enviarLembretesAbandono();
   },
