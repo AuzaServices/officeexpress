@@ -333,6 +333,27 @@ window.App = (function () {
     });
     function escapeHtml(s) { return String(s || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     atualizar();
+    // Tempo real: SSE recebe o empurrão do servidor na hora em que a
+    // notificação é criada (EventSource reconecta sozinho se cair).
+    // O polling de 60s fica como rede de segurança (aba em segundo plano,
+    // proxies que buffers SSE, etc.).
+    let evtSource = null;
+    try {
+      evtSource = new EventSource("/api/notificacoes/stream");
+      evtSource.onmessage = function (ev) {
+        try {
+          const d = JSON.parse(ev.data);
+          if (d && typeof d.naoLidas === "number") aplicarEstado(d.naoLidas);
+          else atualizar();
+        } catch (e) { atualizar(); }
+      };
+      evtSource.onerror = function () { /* EventSource reconecta sozinho */ };
+    } catch (e) { /* navegador sem SSE: o polling cobre */ }
+    // Pausa o polling/SSE quando a aba está oculta (economiza bateria/dados)
+    // e reativa ao voltar, com atualização imediata.
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") atualizar();
+    });
     setInterval(atualizar, 60000);
   }
 

@@ -5519,6 +5519,9 @@ async function notificarNovaVaga(vaga) {
       `INSERT INTO notificacoes (usuario_id, tipo, titulo, texto, link, cidade, estado) VALUES ?`,
       [valores]
     );
+    // Tempo real: empurra o novo contador para os canais SSE abertos de cada
+    // cliente atingido — o sino vibra na hora, sem F5 nem polling.
+    clientes.forEach(function (c) { sseEnviar(c.id, { naoLidas: "+1" }); });
     console.log(`🔔 Notificações de vaga enviadas para ${clientes.length} cliente(s) em ${vaga.cidade}/${vaga.estado}.`);
   } catch (e) {
     console.error("Erro ao notificar nova vaga:", e.message);
@@ -5556,6 +5559,57 @@ app.post("/api/notificacoes/lidas", async (req, res) => {
     console.error("Erro ao marcar notificações:", e.message);
     res.status(500).json({ error: "Erro ao atualizar notificações." });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Tempo real do sino: Server-Sent Events (SSE). Cada cliente logado abre um
+// canal; quando notificarNovaVaga() insere notificações, o contador é
+// empurrado para todos os canais do usuário na hora — sem esperar o polling
+// de 60s nem um F5.
+// ---------------------------------------------------------------------------
+const sseClientes = new Map(); // usuarioId -> Set(res)
+
+function sseEnviar(usuarioId, payload) {
+  const canais = sseClientes.get(usuarioId);
+  if (!canais) return;
+  const dados = "data: " + JSON.stringify(payload) + "\n\n";
+  canais.forEach(function (res) {
+    try { res.write(dados); } catch (e) { /* canal morto: o 'close' limpa */ }
+  });
+}
+
+app.get("/api/notificacoes/stream", async (req, res) => {
+  const usuarioId = usuarioDaSessao(req);
+  if (!usuarioId) return res.status(401).json({ error: "Faça login." });
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  if (res.flushHeaders) res.flushHeaders();
+  // Estado inicial imediato: o cliente já pinta o sino ao abrir o canal.
+  try {
+    const [[{ c }]] = await pool.query(
+      "SELECT COUNT(*) AS c FROM notificacoes WHERE usuario_id = ? AND lida = 0",
+      [usuarioId]
+    );
+    res.write("data: " + JSON.stringify({ naoLidas: c || 0 }) + "\n\n");
+  } catch (e) { /* o polling cobre */ }
+  if (!sseClientes.has(usuarioId)) sseClientes.set(usuarioId, new Set());
+  sseClientes.get(usuarioId).add(res);
+  // Keepalive a cada 25s para manter proxies vivos e detectar conexão morta.
+  const ka = setInterval(function () {
+    try { res.write(": ka\n\n"); } catch (e) { /* 'close' limpa */ }
+  }, 25000);
+  req.on("close", function () {
+    clearInterval(ka);
+    const canais = sseClientes.get(usuarioId);
+    if (canais) {
+      canais.delete(res);
+      if (!canais.size) sseClientes.delete(usuarioId);
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
