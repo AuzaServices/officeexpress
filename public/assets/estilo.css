@@ -287,7 +287,7 @@ nav.menu a.ativo::after { width: 100%; }
 .notific-wrap.is-mobile { margin-left: 0; }
 .notific-btn {
   position: relative; display: flex; align-items: center; justify-content: center;
-  width: 42px; height: 42px; padding: 0; left: 25px;
+  width: 42px; height: 42px; padding: 0; left: 100px; top: 1px;
   background: transparent; border: none; outline: none;
   color: #ffffff; cursor: pointer; transition: color .25s ease, transform .25s ease;
   -webkit-tap-highlight-color: transparent;
