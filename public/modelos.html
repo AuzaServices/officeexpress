@@ -13,6 +13,28 @@
     .hero-modelos h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; }
     .hero-modelos p { color: var(--text-muted); max-width: 620px; margin: 12px auto 0; }
     .preco-badge { display: inline-block; margin-top: 16px; background: rgba(255,136,0,0.15); border: 1px solid rgba(255,136,0,0.4); color: var(--brand-light); padding: 8px 20px; border-radius: 50px; font-weight: 700; }
+
+    /* ---- Motor de busca de modelos ---- */
+    .busca-wrap { max-width: 680px; margin: 26px auto 0; }
+    .busca-caixa { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--border); border-radius: 50px; padding: 12px 20px; transition: border-color .2s, box-shadow .2s; }
+    .busca-caixa:focus-within { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(255,136,0,.15); }
+    .busca-caixa svg { flex-shrink: 0; color: var(--text-muted); }
+    .busca-caixa input { flex: 1; border: none; outline: none; font-size: 1rem; font-family: inherit; color: var(--text-primary); background: transparent; min-width: 0; }
+    .busca-caixa input::placeholder { color: var(--text-muted); }
+    .busca-limpar { display: none; background: transparent; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; line-height: 0; }
+    .busca-limpar:hover { color: var(--text-primary); }
+    .busca-limpar.visivel { display: block; }
+
+    /* Dicas em cápsulas */
+    .capsulas { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+    .capsula { background: #fff; border: 1.5px solid var(--border); border-radius: 50px; padding: 7px 16px; font-size: .84rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all .2s; }
+    .capsula:hover { border-color: var(--brand); color: var(--brand); background: rgba(255,136,0,.08); transform: translateY(-1px); }
+    .capsula.ativa { background: var(--brand); border-color: var(--brand); color: #001f33; }
+
+    .busca-vazio { display: none; text-align: center; color: var(--text-muted); padding: 40px 0 10px; font-size: .95rem; }
+    .busca-vazio.show { display: block; }
+    .busca-vazio strong { color: var(--brand); }
+    .modelos-contagem { text-align: center; color: var(--text-muted); font-size: .85rem; margin: 18px 0 -10px; }
   </style>
 </head>
 <body>
@@ -28,10 +50,37 @@
   <div class="hero-modelos container">
     <h1>Escolha o modelo do seu currículo</h1>
     <p>Todos os modelos são <strong>formais e minimalistas</strong>, otimizados para serem lidos 100% por sistemas de IA de contratação (ATS). Seu currículo é gerado em <strong>PDF</strong>.</p>
+
+    <div class="busca-wrap">
+      <div class="busca-caixa">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="buscaInput" placeholder="Buscar modelo… (ex.: tecnologia, vendas, executivo)" autocomplete="off" aria-label="Buscar modelo de currículo" />
+        <button type="button" class="busca-limpar" id="buscaLimpar" aria-label="Limpar busca">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="capsulas" id="capsulas">
+        <button type="button" class="capsula" data-termo="tecnologia">💻 Tecnologia</button>
+        <button type="button" class="capsula" data-termo="vendas">📈 Vendas</button>
+        <button type="button" class="capsula" data-termo="executivo">👔 Executivo</button>
+        <button type="button" class="capsula" data-termo="criativo">🎨 Criativo</button>
+        <button type="button" class="capsula" data-termo="saúde">🏥 Saúde</button>
+        <button type="button" class="capsula" data-termo="primeiro emprego">🎓 Primeiro emprego</button>
+        <button type="button" class="capsula" data-termo="jurídico">⚖️ Jurídico</button>
+        <button type="button" class="capsula" data-termo="harvard">🎓 Harvard</button>
+        <button type="button" class="capsula" data-termo="simples">✨ Simples</button>
+        <button type="button" class="capsula" data-termo="">🧹 Todos</button>
+      </div>
+    </div>
   </div>
 
   <section class="section container">
+    <div class="modelos-contagem" id="contagem"></div>
     <div class="modelos-grid" id="grid"></div>
+    <div class="busca-vazio" id="buscaVazio">
+      Nenhum modelo encontrado para <strong id="buscaVazioTermo"></strong>.<br/>
+      Tente outra palavra — ou clique em <strong>Todos</strong> para ver os 35 modelos.
+    </div>
   </section>
 
   <footer class="footer">
@@ -83,23 +132,126 @@
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("modelos");
 
+    // ---------------------------------------------------------------------
+    // Motor de busca de modelos: filtra por nome, descrição e palavras-chave
+    // associadas a cada modelo (área, estilo, perfil). As cápsulas preenchem
+    // a busca com um clique; a lista e a contagem reagem em tempo real.
+    // ---------------------------------------------------------------------
+    var PALAVRAS = {
+      classico: "simples tradicional formal ats geral",
+      moderno: "simples lateral colorido geral",
+      minimal: "simples minimalista clean espaço branco geral",
+      profissional: "corporativo formal sóbrio geral",
+      executivo: "executivo liderança gestão direção sênior",
+      cronologico: "experiência tempo simples geral",
+      funcional: "habilidades competências pouca experiência",
+      compacto: "muita experiência espaço simples",
+      soberio: "serifado clássico elegante tradicional",
+      tecnico: "tecnologia engenharia certificações projetos técnico",
+      elegante: "refinado sofisticado moderno simples",
+      criativo: "criativo design comunicação arte lateral colorido",
+      limpo: "simples clean objetivo",
+      tradicional: "conservador serifado formal clássico",
+      contemporaneo: "moderno banner equilibrado",
+      harvard: "harvard acadêmico bullet points internacional recrutadores simples",
+      impacto: "impacto realizações destaque comercial",
+      "executivo-escuro": "executivo escuro direção alta gestão liderança sênior",
+      diplomatico: "equilibrado formal moderno sóbrio",
+      academico: "acadêmico pesquisa mestrado doutorado formação científico",
+      consultor: "consultoria resumo resultados estratégia negócios",
+      vendas: "vendas comercial metas números resultados",
+      saude: "saúde saúde enfermagem médico hospital clínica",
+      industrial: "industrial fábrica produção operacional segurança",
+      logistica: "logística estoque estoques transporte operação supply chain",
+      marketing: "marketing publicidade campanhas redes sociais criativo comunicação",
+      financeiro: "financeiro contabilidade fiscal controladoria auditoria",
+      rh: "recursos humanos rh recrutamento treinamento pessoas",
+      ti: "tecnologia ti programador desenvolvedor software dados dev",
+      juridico: "jurídico advogado direito advocacia oab",
+      educador: "professor educador ensino pedagogia escola",
+      design: "design criativo portfólio arte ux ui gráfico",
+      estudante: "estudante primeiro emprego primeiro emprego estágio jovem aprendiz iniciante",
+      transicao: "transição mudança de área carreira habilidades transferíveis",
+      "executivo-internacional": "internacional inglês global exterior multinacional linkedin",
+    };
+
+    var todosModelos = [];
+    var grid = document.getElementById("grid");
+    var contagem = document.getElementById("contagem");
+    var buscaInput = document.getElementById("buscaInput");
+    var buscaLimpar = document.getElementById("buscaLimpar");
+    var buscaVazio = document.getElementById("buscaVazio");
+    var buscaVazioTermo = document.getElementById("buscaVazioTermo");
+    var capsulas = document.querySelectorAll(".capsula");
+
+    function normalizar(s) {
+      return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function termoDoModelo(m) {
+      return normalizar(m.nome + " " + m.descricao + " " + (PALAVRAS[m.id] || ""));
+    }
+
+    function montarCard(m) {
+      var div = document.createElement("div");
+      div.className = "card modelo-card";
+      div.innerHTML =
+        '<div class="preview-box mini"><img class="mini-img" src="/imagens/miniaturas/' + m.id + '.png" alt="Modelo ' + m.nome + '" loading="lazy"></div>' +
+        '<div class="modelo-nome">' + m.nome + '</div>' +
+        '<div class="modelo-desc">' + m.descricao + '</div>' +
+        '<button class="btn btn-primary btn-block">Usar este modelo</button>';
+      div.addEventListener("click", function () {
+        localStorage.setItem("modeloSelecionado", m.id);
+        window.location.href = "/editor";
+      });
+      return div;
+    }
+
+    function aplicarFiltro() {
+      var q = normalizar(buscaInput.value.trim());
+      buscaLimpar.classList.toggle("visivel", q.length > 0);
+      capsulas.forEach(function (c) {
+        c.classList.toggle("ativa", normalizar(c.getAttribute("data-termo")) === q && q !== "");
+      });
+      var visiveis = 0;
+      todosModelos.forEach(function (m) {
+        var mostrar = !q || termoDoModelo(m).indexOf(q) !== -1;
+        m._el.style.display = mostrar ? "" : "none";
+        if (mostrar) visiveis++;
+      });
+      contagem.textContent = visiveis === todosModelos.length
+        ? todosModelos.length + " modelos disponíveis"
+        : visiveis + " modelo(s) encontrado(s)";
+      if (q && !visiveis) {
+        buscaVazioTermo.textContent = '"' + buscaInput.value.trim() + '"';
+        buscaVazio.classList.add("show");
+      } else {
+        buscaVazio.classList.remove("show");
+      }
+    }
+
+    buscaInput.addEventListener("input", aplicarFiltro);
+    buscaLimpar.addEventListener("click", function () {
+      buscaInput.value = "";
+      aplicarFiltro();
+      buscaInput.focus();
+    });
+    capsulas.forEach(function (c) {
+      c.addEventListener("click", function () {
+        buscaInput.value = c.getAttribute("data-termo");
+        aplicarFiltro();
+        document.getElementById("grid").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
     App.api("/api/modelos").then(function (r) {
       if (!r.ok) return;
-      var grid = document.getElementById("grid");
-      r.data.modelos.forEach(function (m) {
-        var div = document.createElement("div");
-        div.className = "card modelo-card";
-        div.innerHTML =
-          '<div class="preview-box mini"><img class="mini-img" src="/imagens/miniaturas/' + m.id + '.png" alt="Modelo ' + m.nome + '"></div>' +
-          '<div class="modelo-nome">' + m.nome + '</div>' +
-          '<div class="modelo-desc">' + m.descricao + '</div>' +
-          '<button class="btn btn-primary btn-block">Usar este modelo</button>';
-        div.addEventListener("click", function () {
-          localStorage.setItem("modeloSelecionado", m.id);
-          window.location.href = "/editor";
-        });
-        grid.appendChild(div);
+      todosModelos = r.data.modelos.map(function (m) {
+        m._el = montarCard(m);
+        grid.appendChild(m._el);
+        return m;
       });
+      aplicarFiltro();
     });
   </script>
 </body>
