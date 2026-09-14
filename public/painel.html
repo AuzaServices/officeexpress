@@ -624,7 +624,11 @@
         var cls = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
         var txt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
         var ehAssin = p.origem === "assinatura";
-        var acaoId = ehAssin ? JSON.stringify(p.rowKey) : p.id; // assinatura usa rowKey "s-<id>"
+        // Assinaturas usam rowKey "s-<id>" como STRING no onclick (com aspas
+        // escapadas para o atributo HTML). Antes, JSON.stringify inline gerava
+        // atributos quebrados em alguns navegadores e o botão Excluir/Ver não
+        // agia (ou chamava a rota errada), então o registro "não apagava".
+        var acaoId = ehAssin ? "&#39;s-" + p.id + "&#39;" : p.id;
         var botaoStatus = p.status === "pago"
           ? '<button class="btn-acao amarelo" onclick="mudarStatus(' + acaoId + ",'cancelado'" + ')">Cancelar</button>'
           : '<button class="btn-acao verde" onclick="mudarStatus(' + acaoId + ",'pago'" + ')">Marcar pago</button>';
@@ -633,7 +637,7 @@
         acoes += " " + botaoStatus;
         if (!ehAssin) acoes += ' <button class="btn-acao amarelo" onclick="editarValor(' + p.id + "," + (p.valor || 0) + ')">Valor</button>';
         // Excluir: funciona para currículos (id numérico) e planos (rowKey "s-N").
-        var idExclusao = ehAssin ? JSON.stringify(p.rowKey) : p.id;
+        var idExclusao = acaoId;
         acoes += ' <button class="btn-acao vermelho" onclick="excluirPedido(' + idExclusao + ')">Excluir</button>';
         var nomePlano = { premium: 'Premium', premium_plus: 'Premium+' }[p.modelo] || p.modelo;
         var badgeOrigem = ehAssin

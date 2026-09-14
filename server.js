@@ -2339,9 +2339,22 @@ async function registrarAdminLog(acao, detalhe) {
 }
 
 // Detalhes completos de um pedido (inclui dados_json do currículo).
+// Aceita id numérico (currículo, tabela pedidos) e rowKey "s-N" (assinatura,
+// tabela usuarios_pagamentos) — mesmo formato da lista unificada do painel.
 app.get("/api/admin/pedidos/:id", protegerAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const raw = String(req.params.id || "").trim();
+    const mS = raw.match(/^s-(\d+)$/);
+    if (mS) {
+      const alvoId = parseInt(mS[1], 10);
+      const [rowsS] = await pool.query(
+        "SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email FROM usuarios_pagamentos p LEFT JOIN usuarios u ON u.id = p.usuario_id WHERE p.id = ?",
+        [alvoId]
+      );
+      if (!rowsS.length) return res.status(404).json({ error: "Pedido não encontrado." });
+      return res.json({ pedido: rowsS[0] });
+    }
+    const id = parseInt(raw, 10);
     if (!id) return res.status(400).json({ error: "Pedido inválido." });
     const [rows] = await pool.query(
       "SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email FROM pedidos p LEFT JOIN usuarios u ON u.id = p.usuario_id WHERE p.id = ?",
