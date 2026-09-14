@@ -102,7 +102,7 @@
   .destaque-cta { padding: 16px 28px; font-size: .98rem; text-align: center; }
 }
 
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 html, body { height: 100%; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -727,5 +727,9 @@ table.tabela tr:hover td { background: #f4f9ff; }
 html, body {
   width: auto !important;
   min-height: 100vh !important;
+  /* Elementos posicionados fora da borda direita (ex.: dropdown do sino com
+     right negativo) criavam rolagem horizontal e faixa branca no mobile.
+     Isso corta o overflow em ambos os níveis de rolagem. */
+  overflow-x: hidden !important;
 }
 
