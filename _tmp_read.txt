@@ -1,0 +1,15 @@
+4666|});
+4667|
+4668|// Helper: apaga a imagem antiga da empresa no Cloudinary (best-effort).
+4669|async function removerFotoCloudinary(fotoUrl) {
+4670|  if (!fotoUrl || !fotoUrl.includes("res.cloudinary.com")) return;
+4671|  try {
+4672|    // Extrai o public_id a partir da URL: .../upload/vXXXX/officeexpress/empresas/abc123.jpg
+4673|    const m = fotoUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/);
+4674|    if (m && m[1]) await cloudinary.uploader.destroy(m[1]);
+4675|  } catch (e) {
+4676|    console.error("Aviso: não foi possível remover a imagem antiga do Cloudinary:", e.message);
+4677|  }
+4678|}
+4679|
+4680|// Empresa logada envia/atualiza sua foto/logo (multipart, campo 'logo').

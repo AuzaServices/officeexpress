@@ -1219,9 +1219,16 @@
             </div>
             <div class="campo" style="text-align:center">
               <label style="display:block;margin-bottom:8px">Código de confirmação</label>
-              <input type="text" id="confCodigo" inputmode="numeric" maxlength="4" autocomplete="one-time-code"
-                     placeholder="••••" required
-                     style="text-align:center;font-size:1.8rem;font-weight:800;letter-spacing:12px;padding:12px 0 12px 12px;max-width:200px;margin:0 auto;display:block" />
+              <div id="confOtp" style="display:flex;gap:10px;justify-content:center">
+                <input type="text" id="confOtp0" inputmode="numeric" maxlength="1" autocomplete="one-time-code"
+                       style="width:54px;height:62px;text-align:center;font-size:1.6rem;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+                <input type="text" id="confOtp1" inputmode="numeric" maxlength="1"
+                       style="width:54px;height:62px;text-align:center;font-size:1.6rem;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+                <input type="text" id="confOtp2" inputmode="numeric" maxlength="1"
+                       style="width:54px;height:62px;text-align:center;font-size:1.6rem;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+                <input type="text" id="confOtp3" inputmode="numeric" maxlength="1"
+                       style="width:54px;height:62px;text-align:center;font-size:1.6rem;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+              </div>
             </div>
             <button type="submit" class="btn btn-primary btn-block">Confirmar e continuar</button>
             <p style="text-align:center;margin-top:16px;font-size:.85rem;color:var(--text-muted)">
@@ -1640,6 +1647,19 @@
                 <div class="campo"><label>CNPJ <span style="font-weight:400;color:var(--text-muted)">(da Receita Federal — não pode ser alterado)</span></label><input type="text" id="dCnpj" placeholder="00.000.000/0000-00" disabled style="opacity:.6;cursor:not-allowed" /></div>
                 <div class="campo"><label>E-mail de acesso <span style="font-weight:400;color:var(--text-muted)">(não pode ser alterado)</span></label><input type="email" id="dEmail" disabled style="opacity:.6;cursor:not-allowed" /></div>
                 <div class="alert" id="alertDados" style="display:none"></div>
+
+                <!-- Alterar senha -->
+                <div style="border-top:1px solid var(--border,#e2e8f0);margin:22px 0 18px;padding-top:20px">
+                  <h4 style="font-weight:800;margin-bottom:4px">Alterar senha</h4>
+                  <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:14px">Use no mínimo 8 caracteres, com letras e números.</p>
+                  <form id="formSenhaEmpresa">
+                    <div class="campo"><label>Senha atual</label><input type="password" id="dSenhaAtual" autocomplete="current-password" required /></div>
+                    <div class="campo"><label>Nova senha</label><input type="password" id="dNovaSenha" autocomplete="new-password" minlength="8" required /></div>
+                    <div class="campo"><label>Confirmar nova senha</label><input type="password" id="dNovaSenha2" autocomplete="new-password" minlength="8" required /></div>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarSenha" style="margin-top:6px">Salvar nova senha</button>
+                  </form>
+                  <div class="alert" id="alertSenha" style="display:none;margin-top:12px"></div>
+                </div>
               </div>
             </div>
 
@@ -1871,6 +1891,67 @@
 
       // Passo de confirmação de e-mail (após cadastro da empresa)
       var emailPendenteConfirmacao = null;
+      var CONF_IDS = ["confOtp0", "confOtp1", "confOtp2", "confOtp3"];
+      function confCodigoValor() {
+        return CONF_IDS.map(function (id) { return document.getElementById(id).value; }).join("");
+      }
+      function confPintar(estado) {
+        // estado: "" (neutro) | "verde" (preenchido — confirmação automática)
+        CONF_IDS.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (estado === "verde") {
+            el.style.borderColor = "#16a34a";
+            el.style.background = "rgba(34,197,94,.10)";
+            el.style.boxShadow = "0 0 0 3px rgba(34,197,94,.18)";
+          } else {
+            el.style.borderColor = "";
+            el.style.background = "";
+            el.style.boxShadow = "";
+          }
+        });
+      }
+      function confLimpar() {
+        CONF_IDS.forEach(function (id) { document.getElementById(id).value = ""; });
+        confPintar("");
+        document.getElementById("confOtp0").focus();
+      }
+      (function () {
+        CONF_IDS.forEach(function (id, idx) {
+          var el = document.getElementById(id);
+          el.addEventListener("input", function () {
+            // Suporta colar no meio dos campos: junta tudo que há nos 4.
+            var tudo = CONF_IDS.map(function (i2) { return document.getElementById(i2).value; }).join("").replace(/\D/g, "").slice(0, 4);
+            if (tudo.length > 1) {
+              CONF_IDS.forEach(function (i2, j) { document.getElementById(i2).value = tudo[j] || ""; });
+            } else {
+              el.value = el.value.replace(/\D/g, "").slice(0, 1);
+            }
+            confPintar("");
+            var preenchido = confCodigoValor();
+            if (preenchido.length === 4) {
+              // Preencheu tudo (digitando ou colando) → verde e confirma sozinho.
+              confPintar("verde");
+              setTimeout(function () { document.getElementById("formConfirmaEmail").requestSubmit(); }, 350);
+            } else if (el.value && idx < 3) {
+              document.getElementById(CONF_IDS[idx + 1]).focus();
+            }
+          });
+          el.addEventListener("keydown", function (e) {
+            if (e.key === "Backspace" && !el.value && idx > 0) document.getElementById(CONF_IDS[idx - 1]).focus();
+          });
+          el.addEventListener("paste", function (e) {
+            e.preventDefault();
+            var txt = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, 4);
+            CONF_IDS.forEach(function (i2, j) { document.getElementById(i2).value = txt[j] || ""; });
+            if (txt.length === 4) {
+              confPintar("verde");
+              setTimeout(function () { document.getElementById("formConfirmaEmail").requestSubmit(); }, 350);
+            } else {
+              document.getElementById(CONF_IDS[Math.min(txt.length, 3)]).focus();
+            }
+          });
+        });
+      })();
       function mostrarConfirmaEmail(email) {
         emailPendenteConfirmacao = email;
         document.getElementById("confEmailDestino").textContent = email;
@@ -1878,8 +1959,8 @@
         document.getElementById("formLogin").classList.add("oculto");
         document.getElementById("formContato").classList.add("oculto");
         document.getElementById("formConfirmaEmail").classList.remove("oculto");
-        document.getElementById("confCodigo").value = "";
-        setTimeout(function () { document.getElementById("confCodigo").focus(); }, 100);
+        confLimpar();
+        setTimeout(function () { document.getElementById("confOtp0").focus(); }, 100);
       }
 
       function mostrarForm(tipo) {
@@ -2003,7 +2084,7 @@
       // Confirmação do código de 4 dígitos
       document.getElementById("formConfirmaEmail").addEventListener("submit", async function (e) {
         e.preventDefault();
-        var codigo = document.getElementById("confCodigo").value.trim();
+        var codigo = confCodigoValor();
         if (!/^\d{4}$/.test(codigo)) return mostrarAlerta("Digite o código de 4 dígitos enviado ao seu e-mail.", false);
         var { ok, data } = await App.api("/api/companies/confirmar-email", {
           method: "POST",
@@ -2028,6 +2109,43 @@
           body: JSON.stringify({ email: emailPendenteConfirmacao })
         });
         mostrarAlerta(ok ? "Novo código enviado! Verifique a caixa de entrada." : (data.error || "Erro ao reenviar."), ok);
+      });
+
+      // ===== Alterar senha (Dados da empresa) =====
+      function alertaSenha(msg, ok) {
+        var el = document.getElementById("alertSenha");
+        el.textContent = msg;
+        el.className = "alert show " + (ok ? "alert-success" : "alert-error");
+        el.style.display = "block";
+        clearTimeout(el._timer);
+        el._timer = setTimeout(function () { el.style.display = "none"; }, 4000);
+      }
+      document.getElementById("formSenhaEmpresa").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var atual = document.getElementById("dSenhaAtual").value;
+        var nova = document.getElementById("dNovaSenha").value;
+        var conf = document.getElementById("dNovaSenha2").value;
+        if (nova !== conf) return alertaSenha("As novas senhas não coincidem.", false);
+        if (nova.length < 8 || !/[a-zA-Z]/.test(nova) || !/\d/.test(nova)) {
+          return alertaSenha("A nova senha deve ter no mínimo 8 caracteres, com letras e números.", false);
+        }
+        var btn = document.getElementById("btnSalvarSenha");
+        btn.disabled = true; btn.textContent = "Salvando…";
+        try {
+          var { ok, data } = await App.api("/api/companies/me/senha", {
+            method: "PUT",
+            body: JSON.stringify({ senhaAtual: atual, novaSenha: nova })
+          });
+          if (ok) {
+            alertaSenha(data.message || "Senha alterada com sucesso!", true);
+            document.getElementById("formSenhaEmpresa").reset();
+          } else {
+            alertaSenha((data && data.error) || "Erro ao alterar a senha.", false);
+          }
+        } catch (err) {
+          alertaSenha("Erro de conexão. Tente novamente.", false);
+        }
+        btn.disabled = false; btn.textContent = "Salvar nova senha";
       });
 
       // Login
@@ -2241,9 +2359,11 @@
         wrap.innerHTML = lista.map(function (v) {
           var exp = new Date(v.expira_em).getTime();
           var ini = new Date(v.ativa_de).getTime();
+          var encerrada = v.status === "encerrada";
           var status;
-          if (ini > agora) status = '<span class="badge-vaga agendada">Agendada</span>';
-          else if (exp > agora) status = '<span class="badge-vaga ativa">● Ativa — termina ' + tempoRestante(v.expira_em) + '</span>';
+          if (encerrada) status = '<span class="badge-vaga" style="background:rgba(100,116,139,.12);color:#64748b">Encerrada</span>';
+          else if (ini > agora) status = '<span class="badge-vaga agendada">Agendada</span>';
+          else if (exp > agora && v.status !== "expirada") status = '<span class="badge-vaga ativa">● Ativa — termina ' + tempoRestante(v.expira_em) + '</span>';
           else status = '<span class="badge-vaga" style="background:rgba(100,116,139,.12);color:#64748b">Expirada</span>';
           var thumb = v.banner_url
             ? '<div class="vaga-thumb"><img src="' + escapar(v.banner_url) + '" alt="" /></div>'

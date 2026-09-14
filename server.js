@@ -557,20 +557,36 @@ async function bannersAtivosDaEmpresa(empresaId) {
 // (o prazo escolhido pela empresa é o fim de vida real do registro).
 async function expirarVagasVencidas() {
   try {
-    const [vencidas] = await pool.query(
-      "SELECT id, empresa_id, banner_url FROM vagas WHERE expira_em <= UTC_TIMESTAMP()"
+    // Marca como expirada (preserva histórico no painel e candidaturas) —
+    // a listagem pública /api/vagas já filtra por data, então nada muda lá.
+    const [r] = await pool.query(
+      "UPDATE vagas SET status = 'expirada' WHERE expira_em <= UTC_TIMESTAMP() AND status = 'ativa'"
     );
-    if (!vencidas.length) return;
-    for (const v of vencidas) {
-      if (v.banner_url) await removerFotoCloudinary(v.banner_url);
-      await pool.query("DELETE FROM vagas_candidaturas WHERE vaga_id = ?", [v.id]);
-      await pool.query("DELETE FROM vagas WHERE id = ?", [v.id]);
-    }
-    if (vencidas.length) console.log("🗓️ Vagas expiradas removidas:", vencidas.length);
+    if (r.affectedRows) console.log("🗓️ Vagas marcadas como expiradas:", r.affectedRows);
   } catch (e) {
     console.error("Erro ao expirar vagas:", e.message);
   }
 }
+// Garante a coluna de status das vagas (ativa | expirada). Vagas vencidas
+// NÃO são mais apagadas: apenas marcadas como expiradas, preservando o
+// histórico no painel da empresa e as candidaturas recebidas.
+async function garantirVagasStatus() {
+  try {
+    const [cols] = await pool.query(
+      "SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'vagas' AND COLUMN_NAME = 'status'"
+    );
+    if (Number(cols[0].c) === 0) {
+      await pool.query("ALTER TABLE vagas ADD COLUMN status VARCHAR(12) NOT NULL DEFAULT 'ativa'");
+      // Vagas já vencidas antes da migração entram como expiradas.
+      await pool.query("UPDATE vagas SET status = 'expirada' WHERE expira_em <= UTC_TIMESTAMP()");
+      console.log("✅ Coluna vagas.status adicionada (garantirVagasStatus)");
+    }
+  } catch (e) {
+    console.error("⚠️ Migração vagas.status:", e.message);
+  }
+}
+garantirVagasStatus();
+
 // No boot e a cada 15 minutos.
 garantirVagas().then(expirarVagasVencidas);
 cron.schedule("*/15 * * * *", expirarVagasVencidas);
@@ -632,8 +648,8 @@ app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) =>
     const expiraEm = new Date(ativaDe.getTime() + duracaoHoras * 3600 * 1000);
 
     const [r] = await pool.query(
-      `INSERT INTO vagas (empresa_id, titulo, area, descricao, cidade, estado, banner_url, ativa_de, expira_em)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO vagas (empresa_id, titulo, area, descricao, cidade, estado, banner_url, ativa_de, expira_em, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativa')`,
       [id, titulo, area, descricao, cidade, estado, comBanner ? req.file.path : null, ativaDe, expiraEm]
     );
     console.log("✅ Vaga criada:", r.insertId, "| empresa:", id, "| expira:", expiraEm.toISOString());
@@ -673,9 +689,13 @@ app.get("/api/companies/vagas", async (req, res) => {
     const empresa = await buscarEmpresaPorId(id);
     const plano = planoDaEmpresa(empresa);
     const limite = LIMITES_VAGAS[plano];
+    // Painel lista TODAS as vagas (ativas, agendadas e expiradas) —
+    // antes, vagas vencidas eram apagadas pelo cron e "sumiam" da lista
+    // até a empresa publicar outra (que reordenava por criada_em).
     const [vagas] = await pool.query(
       `SELECT v.*, (SELECT COUNT(*) FROM vagas_candidaturas c WHERE c.vaga_id = v.id) AS candidatos
-       FROM vagas v WHERE v.empresa_id = ? ORDER BY v.criada_em DESC`,
+       FROM vagas v WHERE v.empresa_id = ?
+       ORDER BY (v.expira_em > UTC_TIMESTAMP() AND v.status = 'ativa') DESC, v.criada_em DESC`,
       [id]
     );
     const bannersEmUso = await bannersAtivosDaEmpresa(id);
@@ -700,8 +720,7 @@ app.delete("/api/companies/vagas/:id", async (req, res) => {
     const [rows] = await pool.query("SELECT banner_url FROM vagas WHERE id = ? AND empresa_id = ?", [req.params.id, id]);
     if (!rows.length) return res.status(404).json({ error: "Vaga não encontrada." });
     if (rows[0].banner_url) await removerFotoCloudinary(rows[0].banner_url);
-    await pool.query("DELETE FROM vagas_candidaturas WHERE vaga_id = ?", [req.params.id]);
-    await pool.query("DELETE FROM vagas WHERE id = ?", [req.params.id]);
+    await pool.query("UPDATE vagas SET status = 'encerrada', banner_url = NULL WHERE id = ?", [req.params.id]);
     res.json({ ok: true });
   } catch (e) {
     console.error("Erro ao encerrar vaga:", e.message);
@@ -4665,6 +4684,29 @@ app.put("/api/companies/me/dados", async (req, res) => {
   }
 });
 
+// Empresa logada altera a própria senha (exigindo a senha atual).
+app.put("/api/companies/me/senha", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const { senhaAtual, novaSenha } = req.body || {};
+  if (!senhaAtual || !novaSenha) return res.status(400).json({ error: "Informe a senha atual e a nova senha." });
+  if (!validarSenha(novaSenha)) return res.status(400).json({ error: "A nova senha deve ter no mínimo 8 caracteres, com letras e números." });
+  if (String(novaSenha) === String(senhaAtual)) return res.status(400).json({ error: "A nova senha deve ser diferente da atual." });
+  try {
+    const [rows] = await pool.query("SELECT senha_hash FROM empresas WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Empresa não encontrada." });
+    const okAtual = await bcrypt.compare(String(senhaAtual), rows[0].senha_hash);
+    if (!okAtual) return res.status(401).json({ error: "A senha atual está incorreta." });
+    const hash = await bcrypt.hash(String(novaSenha), 10);
+    await pool.query("UPDATE empresas SET senha_hash = ? WHERE id = ?", [hash, id]);
+    res.json({ ok: true, message: "Senha alterada com sucesso!" });
+  } catch (e) {
+    console.error("Erro ao alterar senha da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao alterar a senha. Tente novamente." });
+  }
+});
+
+// Helper: apaga a imagem antiga da empresa no Cloudinary (best-effort).
 // Helper: apaga a imagem antiga da empresa no Cloudinary (best-effort).
 async function removerFotoCloudinary(fotoUrl) {
   if (!fotoUrl || !fotoUrl.includes("res.cloudinary.com")) return;

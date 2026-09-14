@@ -1,0 +1,23 @@
+// Empresa logada altera a própria senha (exigindo a senha atual).
+app.put("/api/companies/me/senha", async (req, res) => {
+  const id = empresaDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const { senhaAtual, novaSenha } = req.body || {};
+  if (!senhaAtual || !novaSenha) return res.status(400).json({ error: "Informe a senha atual e a nova senha." });
+  if (!validarSenha(novaSenha)) return res.status(400).json({ error: "A nova senha deve ter no mínimo 8 caracteres, com letras e números." });
+  if (String(novaSenha) === String(senhaAtual)) return res.status(400).json({ error: "A nova senha deve ser diferente da atual." });
+  try {
+    const [rows] = await pool.query("SELECT senha_hash FROM empresas WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Empresa não encontrada." });
+    const okAtual = await bcrypt.compare(String(senhaAtual), rows[0].senha_hash);
+    if (!okAtual) return res.status(401).json({ error: "A senha atual está incorreta." });
+    const hash = await bcrypt.hash(String(novaSenha), 10);
+    await pool.query("UPDATE empresas SET senha_hash = ? WHERE id = ?", [hash, id]);
+    res.json({ ok: true, message: "Senha alterada com sucesso!" });
+  } catch (e) {
+    console.error("Erro ao alterar senha da empresa:", e.message);
+    res.status(500).json({ error: "Erro ao alterar a senha. Tente novamente." });
+  }
+});
+
+// Helper: apaga a imagem antiga da empresa no Cloudinary (best-effort).

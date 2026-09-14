@@ -66,8 +66,17 @@
           <p class="subtitle" style="margin:0 0 14px">Enviamos um <strong>código de 4 dígitos</strong> para o seu e-mail. Digite abaixo para continuar.</p>
         </div>
         <div class="campo">
-          <label for="codigo">Código de confirmação</label>
-          <input type="text" id="codigo" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;font-size:28px;letter-spacing:12px;font-weight:800" autocomplete="one-time-code" />
+          <label for="otp0">Código de confirmação</label>
+          <div id="otpCaixas" style="display:flex;gap:10px;justify-content:center">
+            <input type="text" id="otp0" inputmode="numeric" maxlength="1" autocomplete="one-time-code"
+                   style="width:54px;height:62px;text-align:center;font-size:28px;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+            <input type="text" id="otp1" inputmode="numeric" maxlength="1"
+                   style="width:54px;height:62px;text-align:center;font-size:28px;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+            <input type="text" id="otp2" inputmode="numeric" maxlength="1"
+                   style="width:54px;height:62px;text-align:center;font-size:28px;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+            <input type="text" id="otp3" inputmode="numeric" maxlength="1"
+                   style="width:54px;height:62px;text-align:center;font-size:28px;font-weight:800;border:1.5px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff);color:var(--text-primary);transition:border-color .15s ease, box-shadow .15s ease, background .15s ease" />
+          </div>
         </div>
         <button type="button" class="btn btn-primary btn-block" id="btnConfirmar">Confirmar e-mail</button>
         <p style="text-align:center;font-size:13px;color:var(--text-muted,#64748b);margin-top:12px">Não recebeu? <a href="#" id="reenviar" style="color:var(--brand,#ff8800)">Reenviar código</a></p>
@@ -113,15 +122,68 @@
         // continua no site, mantendo sessão e vínculo do parceiro).
         document.getElementById("cadForm").style.display = "none";
         document.getElementById("codigoBloco").style.display = "block";
-        document.getElementById("codigo").focus();
+        document.getElementById("otp0").focus();
       } else {
         App.mostrarAlerta("alert", data.error || "Erro ao criar conta.", "error");
       }
     });
 
+    // ===== Código de 4 dígitos: 4 caixas com colar/colar-verde/auto-confirmação =====
+    var OTP_IDS = ["otp0", "otp1", "otp2", "otp3"];
+    function otpValor() {
+      return OTP_IDS.map(function (id) { return document.getElementById(id).value; }).join("");
+    }
+    function otpPintar(estado) {
+      OTP_IDS.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (estado === "verde") {
+          el.style.borderColor = "#16a34a";
+          el.style.background = "rgba(34,197,94,.10)";
+          el.style.boxShadow = "0 0 0 3px rgba(34,197,94,.18)";
+        } else {
+          el.style.borderColor = "";
+          el.style.background = "";
+          el.style.boxShadow = "";
+        }
+      });
+    }
+    function otpAutoEnviar() {
+      if (otpValor().length === 4) {
+        otpPintar("verde");
+        setTimeout(confirmarCodigo, 350);
+      }
+    }
+    (function () {
+      OTP_IDS.forEach(function (id, idx) {
+        var el = document.getElementById(id);
+        el.addEventListener("input", function () {
+          // Suporta colar no meio dos campos: junta tudo que há nos 4.
+          var tudo = OTP_IDS.map(function (i2) { return document.getElementById(i2).value; }).join("").replace(/\D/g, "").slice(0, 4);
+          if (tudo.length > 1) {
+            OTP_IDS.forEach(function (i2, j) { document.getElementById(i2).value = tudo[j] || ""; });
+          } else {
+            el.value = el.value.replace(/\D/g, "").slice(0, 1);
+          }
+          if (otpValor().length < 4) otpPintar("");
+          if (el.value && idx < 3) document.getElementById(OTP_IDS[idx + 1]).focus();
+          otpAutoEnviar();
+        });
+        el.addEventListener("keydown", function (e) {
+          if (e.key === "Backspace" && !el.value && idx > 0) document.getElementById(OTP_IDS[idx - 1]).focus();
+        });
+        el.addEventListener("paste", function (e) {
+          e.preventDefault();
+          var txt = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, 4);
+          OTP_IDS.forEach(function (i2, j) { document.getElementById(i2).value = txt[j] || ""; });
+          if (txt.length < 4) document.getElementById(OTP_IDS[Math.min(txt.length, 3)]).focus();
+          otpAutoEnviar();
+        });
+      });
+    })();
+
     // Confirma o e-mail com o código de 4 dígitos digitado na tela.
     function confirmarCodigo() {
-      var codigo = document.getElementById("codigo").value.trim();
+      var codigo = otpValor();
       if (!/^\d{4}$/.test(codigo)) {
         App.mostrarAlerta("alert", "Digite o código de 4 dígitos enviado por e-mail.", "error");
         return;
@@ -145,9 +207,6 @@
       });
     }
     document.getElementById("btnConfirmar").addEventListener("click", confirmarCodigo);
-    document.getElementById("codigo").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") confirmarCodigo();
-    });
     // Reenvia um novo código de confirmação.
     document.getElementById("reenviar").addEventListener("click", function (e) {
       e.preventDefault();
