@@ -341,14 +341,16 @@ nav.menu a.ativo::after { width: 100%; }
 .notific-item-data { font-size: .72rem; color: var(--text-muted); margin-top: 6px; }
 .notific-vazio { padding: 26px 16px; text-align: center; color: var(--text-muted); font-size: .86rem; line-height: 1.5; }
 /* Mobile: sino colado ao hambúrguer, centralizado verticalmente nele.
-   O header (.cabecalho .wrap) é flex align-items:center, então basta o
-   sino ter exatamente a MESMA altura do hambúrguer (34px) para os dois
-   ficarem no mesmo nível — nem acima nem abaixo. margin mínimo: só o
-   suficiente para os ícones não se tocarem. */
-.notific-sino-mobile { display: none; position: relative; margin-right: 2px; flex-shrink: 0; }
+   O header (.cabecalho .wrap) usa justify-content:space-between — com 3
+   itens visíveis (logo, sino, hambúrguer) o navegador distribui o espaço
+   entre eles e a posição do sino variava por largura de tela (às vezes
+   longe, às vezes sobre o hambúrguer). A âncora consistente é
+   margin-left:auto: empurra o par sino+hambúrguer para a direita, sempre
+   juntos e a 2px um do outro, em QUALQUER dispositivo. */
+.notific-sino-mobile { display: none; position: relative; flex-shrink: 0; }
 @media (max-width: 920px) {
   .notific-wrap:not(.is-mobile) { display: none; } /* no mobile usa o clone do header */
-  .notific-sino-mobile { display: block; left: 100px; top: 1px; }
+  .notific-sino-mobile { display: block; margin-left: auto; margin-right: 2px; top: 1px; }
   .notific-sino-mobile .notific-btn { width: 34px; height: 34px; align-items: center; justify-content: center; padding: 0; }
   .notific-sino-mobile .notific-icone { display: block; margin: 0 auto; }
   .notific-sino-mobile .notific-dropdown { right: -120px; }
