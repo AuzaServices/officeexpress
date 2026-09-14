@@ -245,9 +245,21 @@ window.App = (function () {
     // Desktop: insere à direita do dropdown do avatar (fim da nav).
     // Idempotente: carregarHeader pode rodar mais de uma vez na mesma página
     // (a página chama App.carregarHeader() e o app.js chama de novo no
-    // DOMContentLoaded). Sem esta guarda, o sino mobile era duplicado —
+    // DOMContentLoaded). Além disso, carregarHeader reescreve o innerHTML da
+    // nav (o que apaga o sino desktop), mas o clone mobile — fora da nav —
+    // persiste. Sem limpar os clones antigos, o sino mobile era duplicado:
     // por isso apareciam DOIS sinos no painel do cliente.
-    if (document.getElementById("notificWrap")) return;
+    // Os listeners globais (clique fora / atualização periódica) são
+    // registrados apenas UMA vez.
+    if (iniciarSinoNotificacoes._init) {
+      // Reinsere o sino desktop se a nav foi reescrita desde a última vez.
+      if (nav && !document.getElementById("notificWrap")) nav.insertAdjacentHTML("beforeend", sinoHtml);
+      return;
+    }
+    iniciarSinoNotificacoes._init = true;
+    // Remove qualquer clone mobile órfão de uma execução anterior.
+    const wrapAntigo = document.getElementById("notificWrapMobile");
+    if (wrapAntigo && wrapAntigo.parentElement) wrapAntigo.parentElement.removeChild(wrapAntigo);
 
     if (hamburger && hamburger.parentNode) {
       const mobileWrap = document.createElement("div");
@@ -315,9 +327,9 @@ window.App = (function () {
     document.addEventListener("click", function (e) {
       const wraps = [document.getElementById("notificWrap"), document.getElementById("notificWrapMobile")];
       const dentro = wraps.some(function (w) { return w && w.contains(e.target); });
-      if (dentro) { e.stopPropagation(); abrir(); }
-      else dropdowns.forEach(function (d) { if (d) d.classList.remove("open"); });
-      function dropdownsRef() {}
+      const dds = [document.getElementById("notificDropdown"), document.getElementById("notificDropdownMobile")];
+      if (dentro) { abrir(); }
+      else dds.forEach(function (d) { if (d) d.classList.remove("open"); });
     });
     function escapeHtml(s) { return String(s || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
     atualizar();

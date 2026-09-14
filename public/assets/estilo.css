@@ -284,6 +284,7 @@ nav.menu a.ativo::after { width: 100%; }
    Com notificação: fica laranja Office Express e vibra.
    ============================================================ */
 .notific-wrap { position: relative; margin-left: 18px; }
+.notific-wrap.is-mobile { margin-left: 0; }
 .notific-btn {
   position: relative; display: flex; align-items: center; justify-content: center;
   width: 42px; height: 42px; padding: 0;
@@ -342,8 +343,9 @@ nav.menu a.ativo::after { width: 100%; }
 /* Mobile: sino colado ao hambúrguer, centralizado verticalmente nele.
    O header (.cabecalho .wrap) é flex align-items:center, então basta o
    sino ter exatamente a MESMA altura do hambúrguer (34px) para os dois
-   ficarem no mesmo nível — nem acima nem abaixo. */
-.notific-sino-mobile { display: none; position: relative; margin-right: 4px; flex-shrink: 0; }
+   ficarem no mesmo nível — nem acima nem abaixo. margin mínimo: só o
+   suficiente para os ícones não se tocarem. */
+.notific-sino-mobile { display: none; position: relative; margin-right: 2px; flex-shrink: 0; }
 @media (max-width: 920px) {
   .notific-wrap:not(.is-mobile) { display: none; } /* no mobile usa o clone do header */
   .notific-sino-mobile { display: block; }
