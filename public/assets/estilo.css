@@ -339,12 +339,16 @@ nav.menu a.ativo::after { width: 100%; }
 .notific-item-texto { font-size: .82rem; color: var(--text-secondary); line-height: 1.5; }
 .notific-item-data { font-size: .72rem; color: var(--text-muted); margin-top: 6px; }
 .notific-vazio { padding: 26px 16px; text-align: center; color: var(--text-muted); font-size: .86rem; line-height: 1.5; }
-/* Mobile: sino à esquerda do hambúrguer */
-.notific-sino-mobile { display: none; position: relative; margin-right: 8px; flex-shrink: 0; }
+/* Mobile: sino colado ao hambúrguer, centralizado verticalmente nele.
+   O header (.cabecalho .wrap) é flex align-items:center, então basta o
+   sino ter exatamente a MESMA altura do hambúrguer (34px) para os dois
+   ficarem no mesmo nível — nem acima nem abaixo. */
+.notific-sino-mobile { display: none; position: relative; margin-right: 4px; flex-shrink: 0; }
 @media (max-width: 920px) {
   .notific-wrap:not(.is-mobile) { display: none; } /* no mobile usa o clone do header */
   .notific-sino-mobile { display: block; }
-  .notific-sino-mobile .notific-btn { width: 38px; height: 38px; }
+  .notific-sino-mobile .notific-btn { width: 34px; height: 34px; align-items: center; justify-content: center; padding: 0; }
+  .notific-sino-mobile .notific-icone { display: block; margin: 0 auto; }
   .notific-sino-mobile .notific-dropdown { right: -120px; }
 }
 @media (min-width: 921px) {

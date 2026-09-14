@@ -243,6 +243,12 @@ window.App = (function () {
 
     // Mobile: insere à esquerda do hambúrguer (dentro do wrap do header).
     // Desktop: insere à direita do dropdown do avatar (fim da nav).
+    // Idempotente: carregarHeader pode rodar mais de uma vez na mesma página
+    // (a página chama App.carregarHeader() e o app.js chama de novo no
+    // DOMContentLoaded). Sem esta guarda, o sino mobile era duplicado —
+    // por isso apareciam DOIS sinos no painel do cliente.
+    if (document.getElementById("notificWrap")) return;
+
     if (hamburger && hamburger.parentNode) {
       const mobileWrap = document.createElement("div");
       mobileWrap.className = "notific-sino-mobile";
