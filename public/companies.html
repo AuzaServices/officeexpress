@@ -147,6 +147,28 @@
       margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
       background: var(--card, #fff);
     }
+    /* Mobile: imagem vira um BANNER COMPACTO no topo e o formulário segue
+       logo abaixo — sem empilhar 100vh de imagem antes do form. */
+    @media (max-width: 900px) {
+      .auth-split {
+        grid-template-columns: 1fr;
+        height: auto; min-height: 100vh;
+      }
+      .auth-visual {
+        position: relative; top: auto; height: 210px; max-height: 210px;
+        min-height: 0;
+      }
+      .auth-visual-conteudo { padding: 20px 22px; justify-content: flex-end; }
+      .auth-visual-conteudo h2 { font-size: 1.05rem; max-width: none; margin-bottom: 4px; }
+      .auth-logo { height: 30px; position: absolute; top: 18px; left: 22px; margin-bottom: 0; }
+      .auth-visual-conteudo > p, .auth-provas { display: none; }
+      .auth-form-side {
+        height: auto; min-height: 0; overflow: visible;
+        padding: 20px 18px 40px;
+      }
+      .auth-form-side .form-card { margin: 0 auto; box-shadow: none; border: none; padding: 6px 4px 0; }
+      .auth-voltar { margin-bottom: 12px; }
+    }
     /* Metade ESQUERDA: imagem em tom azul-profissional.
        height fixa (100vh) + sticky: a coluna nunca cresce junto com o
        formulário do cadastro, então a imagem nunca estica — o scroll
@@ -234,28 +256,19 @@
     .auth-form-side .form-card .btn-block { margin-top: 6px; }
     .auth-form-side .form-card p { text-align: center; }
     @media (max-width: 1000px) {
-      .auth-split { grid-template-columns: 1fr; min-height: auto; }
-      .auth-visual { min-height: 280px; }
-      .auth-visual-conteudo { padding: 36px 30px; }
-      .auth-logo { position: absolute; top: 26px; left: 26px; margin-bottom: 0; }
-      .auth-form-side { padding: 34px 20px; }
-      .auth-form-side .form-card { padding: 30px 26px; box-shadow: none; border: none; }
+      .auth-split { grid-template-columns: 1fr; min-height: auto; margin-left: 0; margin-right: 0; }
+      .auth-visual { position: relative; top: auto; height: 210px; max-height: 210px; min-height: 0; }
+      .auth-visual-conteudo { padding: 20px 22px; justify-content: flex-end; }
+      .auth-visual-conteudo h2 { font-size: 1.05rem; max-width: none; margin-bottom: 4px; }
+      .auth-logo { height: 30px; position: absolute; top: 18px; left: 22px; margin-bottom: 0; }
+      .auth-visual-conteudo > p, .auth-provas { display: none; }
+      .auth-form-side { height: auto; min-height: 0; overflow: visible; padding: 20px 18px 40px; }
+      .auth-form-side .form-card { margin: 0 auto; padding: 6px 4px 0; box-shadow: none; border: none; }
+      .auth-voltar { margin-bottom: 12px; }
     }
     html[data-tema="escuro"] .auth-form-side { background: var(--bg-1, #001f33); }
-    @media (max-width: 900px) {
-      .auth-split { grid-template-columns: 1fr; min-height: auto; margin-left: 0; margin-right: 0; }
-      .auth-visual { min-height: 240px; }
-      .auth-visual-conteudo { padding: 32px 26px; }
-      .auth-logo { margin-bottom: 0; position: absolute; top: 26px; left: 26px; }
-      .auth-visual-conteudo h2 { font-size: 1.25rem; max-width: none; }
-      .auth-visual-conteudo > p { display: none; }
-      .auth-provas { display: none; }
-      .auth-form-side { padding: 28px 18px; }
-      .auth-form-side .form-card { padding: 26px 22px; box-shadow: none; }
-    }
     .campo select { background: #ffffff; }
     html[data-tema="escuro"] .campo select { background: #0f2030; color: var(--text-primary); border-color: var(--border); }
-
     /* Painel: KPIs */
     .companies-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
     .stat-card { text-align: left; }
@@ -415,43 +428,60 @@
     }
     .ch-entrar-btn:hover { filter: brightness(1.08); }
 
-    /* Hamburguer (só mobile) */
+    /* Hamburguer (mobile) — mesmo estilo do hamburguer do index (3 traços puros) */
     .ch-hamburguer {
-      display: none; flex-direction: column; justify-content: center; gap: 5px;
-      width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2);
-      background: rgba(255,255,255,.08); cursor: pointer; padding: 0 9px;
+      display: none; position: relative; width: 34px; height: 34px;
+      background: transparent; border: none; cursor: pointer; flex-shrink: 0;
     }
-    .ch-hamburguer span { display: block; height: 2px; width: 100%; background: #fff; border-radius: 2px; transition: transform .25s, opacity .25s; }
-    .ch-hamburguer.aberto span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .ch-hamburguer span {
+      position: absolute; left: 6px; right: 6px; height: 2px; background: #ffffff;
+      border-radius: 2px; transition: transform .25s ease, opacity .25s ease, top .25s ease;
+    }
+    .ch-hamburguer span:nth-child(1) { top: 10px; }
+    .ch-hamburguer span:nth-child(2) { top: 17px; }
+    .ch-hamburguer span:nth-child(3) { top: 24px; }
+    .ch-hamburguer.aberto span:nth-child(1) { top: 17px; transform: rotate(45deg); }
     .ch-hamburguer.aberto span:nth-child(2) { opacity: 0; }
-    .ch-hamburguer.aberto span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .ch-hamburguer.aberto span:nth-child(3) { top: 17px; transform: rotate(-45deg); }
 
-    /* Drawer mobile */
+    /* Drawer mobile — mesmo padrão do drawer do index (drawer de vidro à direita) */
     .ch-overlay {
       position: fixed; inset: 0; z-index: 1900; background: rgba(0,12,22,.45);
-      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .3s, visibility 0s linear .3s;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease, visibility 0s linear .4s;
     }
-    .ch-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .3s; }
+    .ch-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .4s ease; }
     .ch-drawer {
-      position: fixed; top: 0; right: 0; z-index: 2000; height: 100dvh;
+      position: fixed; top: 0; right: 0; z-index: 2000; height: 100vh; height: 100dvh;
       width: min(320px, 86vw); display: flex; flex-direction: column; gap: 6px;
-      padding: 80px 20px 24px;
-      background: linear-gradient(160deg, #0e2b44, #174a6b);
-      box-shadow: -30px 0 80px rgba(0,8,16,.5);
+      padding: 24px 22px calc(24px + env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(160deg, rgba(8, 44, 70, .38), rgba(2, 18, 32, .52));
+      -webkit-backdrop-filter: blur(40px) saturate(1.7);
+      backdrop-filter: blur(40px) saturate(1.7);
+      border-left: 1px solid rgba(140, 190, 255, .18);
+      box-shadow: -30px 0 80px rgba(0, 8, 16, .55);
       transform: translateX(100%); visibility: hidden;
-      transition: transform .35s cubic-bezier(.22,1,.3,1), visibility 0s linear .35s;
-      overflow-y: auto;
+      transition: transform .45s cubic-bezier(.22, 1, .3, 1), visibility 0s linear .45s;
+      overflow-y: auto; scrollbar-width: none;
     }
-    .ch-drawer.open { transform: translateX(0); visibility: visible; transition: transform .35s cubic-bezier(.22,1,.3,1); }
-    .ch-drawer a.ch-link { color: #fff; padding: 13px 16px; border-radius: 12px; font-size: .98rem; }
-    .ch-drawer a.ch-link.ativo { color: #001f33; }
-    .ch-drawer-user { display: flex; align-items: center; gap: 10px; color: #fff; padding: 8px 10px 16px; border-bottom: 1px solid rgba(255,255,255,.14); margin-bottom: 8px; }
+    .ch-drawer::-webkit-scrollbar { display: none; }
+    .ch-drawer.open { transform: translateX(0); visibility: visible; transition: transform .45s cubic-bezier(.22, 1, .3, 1); }
+    .ch-drawer a.ch-link {
+      color: #eaf4ff; padding: 14px 16px; border-radius: 14px; font-size: 1rem;
+      border: 1px solid transparent; transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .ch-drawer a.ch-link:hover, .ch-drawer a.ch-link.ativo {
+      background: rgba(255, 136, 0, .12); border-color: rgba(255, 168, 76, .25); color: var(--brand);
+    }
+    .ch-drawer-user { display: flex; align-items: center; gap: 10px; color: #fff; padding: 8px 10px 16px; border-bottom: 1px solid rgba(140,190,255,.15); margin-bottom: 8px; }
     .ch-drawer-sair {
-      display: flex; align-items: center; gap: 10px; width: 100%;
-      background: rgba(220,38,38,.12); color: #fca5a5; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+      background: rgba(220,38,38,.1); color: #fca5a5; border: 1px solid rgba(248,113,113,.25); cursor: pointer;
       font-family: inherit; font-weight: 700; font-size: .92rem;
-      padding: 12px 16px; border-radius: 12px; margin-top: 12px;
+      padding: 12px 16px; border-radius: 14px; margin-top: 12px;
+      transition: background .2s ease, border-color .2s ease, color .2s ease;
     }
+    .ch-drawer-sair:hover { background: rgba(220,38,38,.2); border-color: rgba(248,113,113,.5); color: #fecaca; }
 
     /* Compensação da altura do header fixo (80px, igual ao fluxo principal) */
     body { padding-top: 80px; }
@@ -611,12 +641,12 @@
       .resultados-titulo > div { justify-content: space-between; }
       #ordenacao { flex: 1; }
 
-      /* Cabeçalho Companies no mobile: some o nav, entra o drawer */
+      /* Cabeçalho Companies no mobile: some o nav, entra o hamburguer (mesmo padrão do index) */
       .ch-nav { display: none; }
       .ch-conta { display: none; }
-      .ch-hamburguer { display: flex; margin-left: auto; }
-      .ch-bar { height: 64px; padding: 0 16px; gap: 12px; }
-      .ch-logo { height: 42px; }
+      .ch-hamburguer { display: block; margin-left: auto; }
+      .ch-bar { height: 64px; padding: 0 24px; gap: 12px; justify-content: space-between; }
+      .ch-logo { height: 44px; }
       .portal-sidebar { top: 64px; }
       #viewPainel { margin-top: -80px; }
 

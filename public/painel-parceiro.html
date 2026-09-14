@@ -335,6 +335,54 @@
       .btn-copy, .btn-share { width: 100%; justify-content: center; }
     }
 
+    /* ============================================================
+       DESKTOP — mesmo formato de painel do Companies: sidebar fixa à
+       esquerda (colada no topo) + conteúdo deslocado à direita.
+       ============================================================ */
+    .conta-sidebar { display: none; }
+    @media (min-width: 901px) {
+      .conta-sidebar {
+        display: flex; flex-direction: column; gap: 16px;
+        position: fixed; top: 0; bottom: 0; left: 0; width: 260px; z-index: 30;
+        background: var(--card);
+        border: 1px solid var(--border); border-left: none; border-radius: 0;
+        padding: 18px 14px;
+        box-shadow: 4px 0 18px -14px rgba(0,10,20,.25);
+      }
+      .topbar { padding-left: 284px; }
+      .wrap { margin-left: 284px; max-width: 1000px; }
+    }
+    /* Componentes da sidebar — idênticos aos do painel de empresas */
+    .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
+    .pse-avatar {
+      width: 42px; height: 42px; border-radius: 6px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff; font-weight: 800; font-size: 1.05rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pse-info { min-width: 0; }
+    .pse-nome { font-weight: 700; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pse-plano { font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+    .portal-nav { display: flex; flex-direction: column; gap: 4px; }
+    .portal-nav-item {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      background: transparent; border: none; cursor: pointer; text-align: left;
+      font-family: inherit; font-size: .9rem; font-weight: 600; color: var(--muted);
+      padding: 11px 12px; border-radius: 6px; transition: background .15s, color .15s;
+    }
+    .portal-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .portal-nav-item:hover { background: rgba(79,70,229,.08); color: var(--ink); }
+    .portal-nav-item.ativo { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #fff; }
+    .pse-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+    .pse-sair {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      background: transparent; border: 1px solid rgba(220,38,38,.35); color: var(--red);
+      cursor: pointer; text-align: left; font-family: inherit; font-size: .88rem; font-weight: 700;
+      padding: 11px 12px; border-radius: 6px; transition: background .15s, color .15s;
+    }
+    .pse-sair svg { width: 18px; height: 18px; }
+    .pse-sair:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
     /* Barra inferior estilo app (mobile) */
     .parc-tabbar { display: none; }
     @media (max-width: 560px) {
@@ -358,6 +406,33 @@
   </style>
 </head>
 <body>
+  <!-- ===== Sidebar do painel (desktop, mesmo formato do painel de empresas) ===== -->
+  <aside class="conta-sidebar" id="contaSidebar">
+    <div class="portal-sidebar-empresa">
+      <div class="pse-avatar" id="pseAvatar">?</div>
+      <div class="pse-info">
+        <div class="pse-nome" id="pseNome">—</div>
+        <div class="pse-plano">Parceiro</div>
+      </div>
+    </div>
+    <nav class="portal-nav">
+      <a class="portal-nav-item ativo" href="/painel-parceiro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Painel
+      </a>
+      <a class="portal-nav-item" href="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Site
+      </a>
+    </nav>
+    <div class="pse-footer">
+      <button class="pse-sair" type="button" onclick="App.api('/api/parceiro/logout',{method:'POST'}).then(()=>location.href='/login-parceiro')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair da conta
+      </button>
+    </div>
+  </aside>
+
   <div class="topbar">
     <div class="brand"><img src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" /></div>
     <div class="actions">
@@ -792,6 +867,11 @@
         PARCEIRO = r.data.parceiro;
         document.getElementById("nomeParceiro").textContent = PARCEIRO.nome || "Parceiro";
         document.getElementById("avatar").textContent = iniciais(PARCEIRO.nome);
+        // Sidebar desktop (mesmo formato do painel de empresas)
+        var pseNome = document.getElementById("pseNome");
+        var pseAvatar = document.getElementById("pseAvatar");
+        if (pseNome) pseNome.textContent = PARCEIRO.nome || "Parceiro";
+        if (pseAvatar) pseAvatar.textContent = iniciais(PARCEIRO.nome);
 
         // Selo de preço customizado (definido pelo admin); se não houver, oculta.
         if (PARCEIRO.preco_custom != null) {

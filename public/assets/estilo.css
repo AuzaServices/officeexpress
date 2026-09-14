@@ -280,23 +280,46 @@ nav.menu a.ativo::after { width: 100%; }
 
 /* ============================================================
    Sino de notificações do cliente (desktop + mobile)
+   Sem contorno: ícone puro, discreto, sempre visível.
+   Com notificação: fica laranja Office Express e vibra.
    ============================================================ */
-.notific-wrap { position: relative; margin-left: 16px; }
+.notific-wrap { position: relative; margin-left: 18px; }
 .notific-btn {
   position: relative; display: flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
-  color: #ffffff; cursor: pointer; transition: var(--transition);
+  width: 42px; height: 42px; padding: 0;
+  background: transparent; border: none; outline: none;
+  color: #ffffff; cursor: pointer; transition: color .25s ease, transform .25s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.notific-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.28); color: var(--brand-light); }
+.notific-btn:hover { color: var(--brand-light); transform: translateY(-1px); }
+.notific-btn:focus, .notific-btn:focus-visible { outline: none; }
+.notific-icone { display: block; transition: color .25s ease; }
+/* Com notificação pendente: laranja Office Express */
+.notific-btn.tem-notificacao { color: var(--brand); }
+.notific-btn.tem-notificacao .notific-icone { color: var(--brand); filter: drop-shadow(0 0 8px rgba(255,136,0,.45)); }
+/* Vibração rápida e moderna quando chega notificação nova */
+@keyframes notificVibra {
+  0%   { transform: rotate(0deg); }
+  10%  { transform: rotate(14deg) scale(1.08); }
+  20%  { transform: rotate(-12deg); }
+  30%  { transform: rotate(10deg) scale(1.05); }
+  40%  { transform: rotate(-8deg); }
+  55%  { transform: rotate(6deg); }
+  70%  { transform: rotate(-4deg); }
+  85%  { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
+}
+.notific-btn.vibrando { animation: notificVibra .7s cubic-bezier(.36,.07,.19,.97) 2; transform-origin: 50% 20%; }
 .notific-badge {
-  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+  position: absolute; top: 2px; right: 0; min-width: 17px; height: 17px;
   align-items: center; justify-content: center; padding: 0 5px;
-  background: var(--brand); color: #001f33; font-size: .68rem; font-weight: 800;
-  border-radius: 999px; border: 2px solid rgba(0,31,51,.9);
+  background: var(--brand); color: #001f33; font-size: .66rem; font-weight: 800;
+  border-radius: 999px; box-shadow: 0 0 0 2px rgba(0,31,51,.9), 0 2px 8px rgba(255,136,0,.5);
+  animation: notificPop .35s cubic-bezier(.34,1.56,.64,1);
 }
+@keyframes notificPop { from { transform: scale(0); } to { transform: scale(1); } }
 .notific-dropdown {
-  position: absolute; top: calc(100% + 10px); right: 0; width: min(340px, 92vw);
+  position: absolute; top: calc(100% + 10px); right: -40px; width: min(340px, 92vw);
   max-height: 420px; overflow: hidden auto;
   background: var(--card); border: 1px solid var(--border); border-radius: 14px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.25); z-index: 1100;
@@ -317,11 +340,12 @@ nav.menu a.ativo::after { width: 100%; }
 .notific-item-data { font-size: .72rem; color: var(--text-muted); margin-top: 6px; }
 .notific-vazio { padding: 26px 16px; text-align: center; color: var(--text-muted); font-size: .86rem; line-height: 1.5; }
 /* Mobile: sino à esquerda do hambúrguer */
-.notific-sino-mobile { display: none; margin-right: 10px; position: relative; }
+.notific-sino-mobile { display: none; position: relative; margin-right: 8px; flex-shrink: 0; }
 @media (max-width: 920px) {
-  .notific-wrap { display: none; } /* no mobile usa o clone do header */
+  .notific-wrap:not(.is-mobile) { display: none; } /* no mobile usa o clone do header */
   .notific-sino-mobile { display: block; }
-  .notific-sino-mobile .notific-dropdown { right: -60px; }
+  .notific-sino-mobile .notific-btn { width: 38px; height: 38px; }
+  .notific-sino-mobile .notific-dropdown { right: -120px; }
 }
 @media (min-width: 921px) {
   .notific-sino-mobile { display: none; }

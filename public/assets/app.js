@@ -232,7 +232,7 @@ window.App = (function () {
     const sinoHtml =
       '<div class="notific-wrap" id="notificWrap">' +
         '<button type="button" class="notific-btn" id="notificBtn" aria-label="Notificações">' +
-          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
+          '<svg class="notific-icone" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
           '<span class="notific-badge" id="notificBadge" style="display:none">0</span>' +
         '</button>' +
         '<div class="notific-dropdown" id="notificDropdown">' +
@@ -241,29 +241,43 @@ window.App = (function () {
         '</div>' +
       '</div>';
 
+    // Mobile: insere à esquerda do hambúrguer (dentro do wrap do header).
     // Desktop: insere à direita do dropdown do avatar (fim da nav).
-    if (nav) nav.insertAdjacentHTML("beforeend", sinoHtml);
-    // Mobile: clona à esquerda do hambúrguer.
-    if (hamburger && window.innerWidth <= 920) {
+    if (hamburger && hamburger.parentNode) {
       const mobileWrap = document.createElement("div");
       mobileWrap.className = "notific-sino-mobile";
-      mobileWrap.innerHTML = sinoHtml.replace('id="notificWrap"', 'id="notificWrapMobile"').replace('id="notificBtn"', 'id="notificBtnMobile"').replace('id="notificBadge"', 'id="notificBadgeMobile"').replace('id="notificDropdown"', 'id="notificDropdownMobile"').replace('id="notificLista"', 'id="notificListaMobile"');
+      mobileWrap.innerHTML = sinoHtml.replace(/notific-wrap/, "notific-wrap is-mobile").replace('id="notificWrap"', 'id="notificWrapMobile"').replace('id="notificBtn"', 'id="notificBtnMobile"').replace('id="notificBadge"', 'id="notificBadgeMobile"').replace('id="notificDropdown"', 'id="notificDropdownMobile"').replace('id="notificLista"', 'id="notificListaMobile"');
       hamburger.parentNode.insertBefore(mobileWrap, hamburger);
     }
+    if (nav) nav.insertAdjacentHTML("beforeend", sinoHtml);
 
-    let ultimaContagem = -1;
+    let naoLidasAntes = 0;
+    function aplicarEstado(naoLidas) {
+      const btns = [document.getElementById("notificBtn"), document.getElementById("notificBtnMobile")];
+      const badges = [document.getElementById("notificBadge"), document.getElementById("notificBadgeMobile")];
+      const temNova = naoLidas > 0;
+      btns.forEach(function (b) {
+        if (!b) return;
+        b.classList.toggle("tem-notificacao", temNova);
+        // Reanima a vibração quando chega UMA notificação nova (contagem subiu).
+        if (temNova && naoLidas > naoLidasAntes) {
+          b.classList.remove("vibrando");
+          void b.offsetWidth; // reinicia a animação
+          b.classList.add("vibrando");
+        }
+      });
+      badges.forEach(function (b) {
+        if (!b) return;
+        if (temNova) { b.textContent = naoLidas > 9 ? "9+" : naoLidas; b.style.display = "flex"; }
+        else b.style.display = "none";
+      });
+      naoLidasAntes = naoLidas;
+    }
     async function atualizar() {
       try {
         const { ok, data } = await api("/api/notificacoes");
         if (!ok || !data) return;
-        const badge = document.getElementById("notificBadge");
-        const badgeM = document.getElementById("notificBadgeMobile");
-        [badge, badgeM].forEach(function (b) {
-          if (!b) return;
-          if (data.naoLidas > 0) { b.textContent = data.naoLidas > 9 ? "9+" : data.naoLidas; b.style.display = "flex"; }
-          else b.style.display = "none";
-        });
-        ultimaContagem = data.naoLidas;
+        aplicarEstado(data.naoLidas || 0);
       } catch (e) { /* silencioso */ }
     }
     async function abrir() {
