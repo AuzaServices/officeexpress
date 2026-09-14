@@ -25,6 +25,83 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ============================================================
+   DESTAQUE — empresas veem seu currículo + alerta de vagas
+   ============================================================ */
+.destaque-section {
+  position: relative;
+  padding: 88px 0;
+  background: linear-gradient(160deg, #0e2b44 0%, #10395c 55%, #174a6b 100%);
+  color: #fff;
+  overflow: hidden;
+}
+.destaque-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(600px 300px at 15% 10%, rgba(255,136,0,.22), transparent 60%),
+    radial-gradient(700px 380px at 85% 90%, rgba(56,160,255,.18), transparent 60%);
+}
+.destaque-inner { position: relative; text-align: center; }
+.destaque-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,136,0,.15); border: 1px solid rgba(255,136,0,.45);
+  color: var(--brand-light); font-weight: 700; font-size: .82rem;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: 8px 18px; border-radius: 999px; margin-bottom: 22px;
+}
+.destaque-section h2 {
+  font-size: clamp(1.7rem, 4.6vw, 3rem); font-weight: 800; line-height: 1.15;
+  max-width: 820px; margin: 0 auto 18px; letter-spacing: -.02em;
+}
+.destaque-grad {
+  background: linear-gradient(90deg, #ffaa33, #ff8800);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.destaque-lead {
+  color: rgba(255,255,255,.82); font-size: clamp(1rem, 2vw, 1.15rem);
+  max-width: 680px; margin: 0 auto 40px; line-height: 1.6;
+}
+.destaque-lead strong { color: #fff; }
+.destaque-cards {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  max-width: 1020px; margin: 0 auto 44px;
+}
+.destaque-card {
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 18px; padding: 28px 24px; text-align: left;
+  transition: var(--transition);
+}
+.destaque-card:hover { transform: translateY(-4px); background: rgba(255,255,255,.1); border-color: rgba(255,136,0,.5); }
+.destaque-card-icon {
+  width: 52px; height: 52px; border-radius: 14px; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #001f33;
+  box-shadow: 0 8px 24px rgba(255,136,0,.35);
+}
+.destaque-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+.destaque-card p { color: rgba(255,255,255,.72); font-size: .92rem; line-height: 1.55; }
+.destaque-card-destaque { border-color: rgba(255,136,0,.55); background: rgba(255,136,0,.08); }
+.destaque-cta-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.destaque-cta {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  color: #001f33; text-decoration: none;
+  font-weight: 800; font-size: clamp(1rem, 2vw, 1.2rem);
+  padding: 18px 38px; border-radius: 999px;
+  box-shadow: 0 12px 40px rgba(255,136,0,.45);
+  transition: var(--transition);
+}
+.destaque-cta:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 18px 52px rgba(255,136,0,.6); }
+.destaque-cta svg { transition: transform .2s; }
+.destaque-cta:hover svg { transform: translateX(4px); }
+.destaque-cta-note { color: rgba(255,255,255,.6); font-size: .85rem; }
+@media (max-width: 860px) {
+  .destaque-section { padding: 64px 0; }
+  .destaque-cards { grid-template-columns: 1fr; max-width: 480px; }
+  .destaque-cta { padding: 16px 28px; font-size: .98rem; text-align: center; }
+}
+
 html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
 html, body { height: 100%; }
 body {
@@ -200,6 +277,58 @@ nav.menu a.ativo::after { width: 100%; }
   display: none; position: relative; width: 34px; height: 34px;
   background: transparent; border: none; cursor: pointer; flex-shrink: 0;
 }
+
+/* ============================================================
+   Sino de notificações do cliente (desktop + mobile)
+   ============================================================ */
+.notific-wrap { position: relative; margin-left: 16px; }
+.notific-btn {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+  color: #ffffff; cursor: pointer; transition: var(--transition);
+}
+.notific-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.28); color: var(--brand-light); }
+.notific-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+  align-items: center; justify-content: center; padding: 0 5px;
+  background: var(--brand); color: #001f33; font-size: .68rem; font-weight: 800;
+  border-radius: 999px; border: 2px solid rgba(0,31,51,.9);
+}
+.notific-dropdown {
+  position: absolute; top: calc(100% + 10px); right: 0; width: min(340px, 92vw);
+  max-height: 420px; overflow: hidden auto;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25); z-index: 1100;
+  opacity: 0; visibility: hidden; transform: translateY(-8px);
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+}
+.notific-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+.notific-head {
+  padding: 14px 16px 10px; font-weight: 800; font-size: .95rem; color: var(--text-primary);
+  border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card);
+}
+.notific-lista { padding: 8px; }
+.notific-item { padding: 12px 12px; border-radius: 10px; transition: background .15s; }
+.notific-item:hover { background: var(--card-hover); }
+.notific-item.nao-lida { background: rgba(255,136,0,.07); border-left: 3px solid var(--brand); }
+.notific-item-titulo { font-weight: 700; font-size: .88rem; color: var(--text-primary); margin-bottom: 3px; }
+.notific-item-texto { font-size: .82rem; color: var(--text-secondary); line-height: 1.5; }
+.notific-item-data { font-size: .72rem; color: var(--text-muted); margin-top: 6px; }
+.notific-vazio { padding: 26px 16px; text-align: center; color: var(--text-muted); font-size: .86rem; line-height: 1.5; }
+/* Mobile: sino à esquerda do hambúrguer */
+.notific-sino-mobile { display: none; margin-right: 10px; position: relative; }
+@media (max-width: 920px) {
+  .notific-wrap { display: none; } /* no mobile usa o clone do header */
+  .notific-sino-mobile { display: block; }
+  .notific-sino-mobile .notific-dropdown { right: -60px; }
+}
+@media (min-width: 921px) {
+  .notific-sino-mobile { display: none; }
+}
+
+/* Botão "Minha Conta" no desktop: sempre legível, sem depender do hover */
+.user-nome { color: #ffffff; }
 .hamburguer span {
   position: absolute; left: 6px; right: 6px; height: 2px; background: #ffffff;
   border-radius: 2px; transition: transform 0.25s ease, opacity 0.25s ease, top 0.25s ease;

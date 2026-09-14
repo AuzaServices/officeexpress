@@ -558,7 +558,14 @@
             document.getElementById("resumo").textContent = App.formatarPreco(preco);
           }
           // Currículo pendente (não é plano): mostra a escolha assinar x avulso.
-          if (r.data.tipo !== "plano") configurarEscolha();
+          // Se veio do botão "Pagar agora" do painel do cliente, pula a oferta
+          // de plano e vai direto para o pagamento avulso.
+          if (r.data.tipo !== "plano") {
+            if (new URLSearchParams(window.location.search).get("origem") === "pagaragora") {
+              if (typeof escolherAvulso === "function") escolherAvulso();
+              else mostrarAreaPagamento();
+            } else configurarEscolha();
+          }
           else mostrarAreaPagamento();
         }
       }).catch(function (e) { console.error("Erro ao carregar dados do pedido para prévia:", e); });

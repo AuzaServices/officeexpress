@@ -197,6 +197,7 @@ window.App = (function () {
 
       setupUserDropdown();
       ativarAcordeaoSubmenus(mobile);
+      iniciarSinoNotificacoes(usuario);
     });
   }
 
@@ -214,6 +215,93 @@ window.App = (function () {
       menu.classList.remove("open");
       btn.setAttribute("aria-expanded", "false");
     });
+  }
+
+  // ---------------------------------------------------------------------
+  // Sino de notificações do cliente: mostra novas vagas divulgadas na
+  // cidade dele (backend: tabela notificacoes + GET /api/notificacoes).
+  // Desktop: à direita do dropdown do avatar. Mobile: à esquerda do
+  // menu hambúrguer (via .notific-sino-mobile dentro do header).
+  // ---------------------------------------------------------------------
+  function iniciarSinoNotificacoes(usuario) {
+    if (!usuario) return;
+    const nav = document.getElementById("navMenu");
+    const hamburger = document.getElementById("hamburguer");
+    if (!nav && !hamburger) return;
+
+    const sinoHtml =
+      '<div class="notific-wrap" id="notificWrap">' +
+        '<button type="button" class="notific-btn" id="notificBtn" aria-label="Notificações">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
+          '<span class="notific-badge" id="notificBadge" style="display:none">0</span>' +
+        '</button>' +
+        '<div class="notific-dropdown" id="notificDropdown">' +
+          '<div class="notific-head">Notificações</div>' +
+          '<div class="notific-lista" id="notificLista"><div class="notific-vazio">Carregando…</div></div>' +
+        '</div>' +
+      '</div>';
+
+    // Desktop: insere à direita do dropdown do avatar (fim da nav).
+    if (nav) nav.insertAdjacentHTML("beforeend", sinoHtml);
+    // Mobile: clona à esquerda do hambúrguer.
+    if (hamburger && window.innerWidth <= 920) {
+      const mobileWrap = document.createElement("div");
+      mobileWrap.className = "notific-sino-mobile";
+      mobileWrap.innerHTML = sinoHtml.replace('id="notificWrap"', 'id="notificWrapMobile"').replace('id="notificBtn"', 'id="notificBtnMobile"').replace('id="notificBadge"', 'id="notificBadgeMobile"').replace('id="notificDropdown"', 'id="notificDropdownMobile"').replace('id="notificLista"', 'id="notificListaMobile"');
+      hamburger.parentNode.insertBefore(mobileWrap, hamburger);
+    }
+
+    let ultimaContagem = -1;
+    async function atualizar() {
+      try {
+        const { ok, data } = await api("/api/notificacoes");
+        if (!ok || !data) return;
+        const badge = document.getElementById("notificBadge");
+        const badgeM = document.getElementById("notificBadgeMobile");
+        [badge, badgeM].forEach(function (b) {
+          if (!b) return;
+          if (data.naoLidas > 0) { b.textContent = data.naoLidas > 9 ? "9+" : data.naoLidas; b.style.display = "flex"; }
+          else b.style.display = "none";
+        });
+        ultimaContagem = data.naoLidas;
+      } catch (e) { /* silencioso */ }
+    }
+    async function abrir() {
+      const dropdowns = [document.getElementById("notificDropdown"), document.getElementById("notificDropdownMobile")];
+      const algumAberto = dropdowns.some(function (d) { return d && d.classList.contains("open"); });
+      dropdowns.forEach(function (d) { if (d) d.classList.toggle("open", !algumAberto); });
+      if (algumAberto) return;
+      try {
+        const { ok, data } = await api("/api/notificacoes");
+        const listas = [document.getElementById("notificLista"), document.getElementById("notificListaMobile")];
+        if (!ok || !data || !data.notificacoes || !data.notificacoes.length) {
+          listas.forEach(function (l) { if (l) l.innerHTML = '<div class="notific-vazio">Nenhuma notificação ainda. Avisaremos quando surgir uma vaga na sua cidade!</div>'; });
+        } else {
+          const html = data.notificacoes.map(function (n) {
+            return '<div class="notific-item' + (n.lida ? '' : ' nao-lida') + '">' +
+              '<div class="notific-item-titulo">' + escapeHtml(n.titulo) + '</div>' +
+              (n.texto ? '<div class="notific-item-texto">' + escapeHtml(n.texto) + '</div>' : '') +
+              '<div class="notific-item-data">' + new Date(n.criada_em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + '</div>' +
+            '</div>';
+          }).join("");
+          listas.forEach(function (l) { if (l) l.innerHTML = html; });
+        }
+        if (data && data.naoLidas > 0) {
+          await api("/api/notificacoes/lidas", { method: "POST" });
+          atualizar();
+        }
+      } catch (e) { /* silencioso */ }
+    }
+    document.addEventListener("click", function (e) {
+      const wraps = [document.getElementById("notificWrap"), document.getElementById("notificWrapMobile")];
+      const dentro = wraps.some(function (w) { return w && w.contains(e.target); });
+      if (dentro) { e.stopPropagation(); abrir(); }
+      else dropdowns.forEach(function (d) { if (d) d.classList.remove("open"); });
+      function dropdownsRef() {}
+    });
+    function escapeHtml(s) { return String(s || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+    atualizar();
+    setInterval(atualizar, 60000);
   }
 
   // ---------------------------------------------------------------------

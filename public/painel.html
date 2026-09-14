@@ -26,6 +26,7 @@
         <div class="admin-tabs" role="tablist">
           <button class="admin-tab ativo" id="tabPrincipal" type="button" onclick="mostrarAba('principal')">Painel</button>
           <button class="admin-tab" id="tabEmpresas" type="button" onclick="mostrarAba('empresas')">Empresas</button>
+          <button class="admin-tab" id="tabEmails" type="button" onclick="mostrarAba('emails')">Base de e-mails</button>
         </div>
         <button class="tema-toggle" id="temaToggle" type="button" aria-label="Alternar tema" title="Alternar tema claro/escuro">
           <svg id="temaIcone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -119,6 +120,16 @@
             <ul class="metrica-lista" id="listaFunilReceita"></ul>
           </div>
         </div>
+      </div>
+
+      <!-- Abandono: onde o cliente mais desiste -->
+      <div class="card" style="margin-bottom:32px">
+        <h3 style="margin-bottom:16px">Abandono (30 dias)</h3>
+        <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">Onde está acontecendo a maior parte do abandono no funil de compra. A etapa com maior perda fica destacada.</p>
+        <div class="stats-grid" id="abandonoStats"></div>
+        <h4 style="margin:18px 0 12px;color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px">Perdas por etapa</h4>
+        <ul class="metrica-lista" id="listaAbandono"></ul>
+        <div id="abandonoDestaque" style="display:none;margin-top:16px;padding:14px 18px;border-radius:12px;background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.3);color:var(--text-primary);font-size:.9rem"></div>
       </div>
 
       <!-- Pedidos -->
@@ -296,6 +307,42 @@
             </table>
           </div>
           <span id="empresasInfo" style="color:var(--text-muted);font-size:.85rem"></span>
+        </div>
+      </div>
+
+      <!-- ===== Aba Base de E-mails ===== -->
+      <div id="viewEmails" class="oculto">
+        <!-- Composição da campanha -->
+        <div class="card" style="margin-bottom:24px">
+          <h3 style="margin-bottom:4px">Enviar campanha</h3>
+          <p style="color:var(--text-muted);font-size:.88rem;margin:0 0 16px">Controle total do que enviar para os e-mails dos seus clientes: mensagens periódicas de CTA, dicas e ofertas — manual ou (pelo cron de lembretes) automática.</p>
+          <div class="campo"><label>Assunto</label><input type="text" id="emAssunto" maxlength="150" placeholder="Ex.: Seu currículo novo pode render a vaga desta semana" /></div>
+          <div class="campo"><label>Mensagem</label><textarea id="emMensagem" rows="5" maxlength="2000" placeholder="Escreva a mensagem que o cliente receberá. Dica: comece pelo nome dele — o sistema já personaliza com o primeiro nome."></textarea></div>
+          <div class="campo"><label>Link do botão CTA <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label><input type="url" id="emLink" placeholder="https://www.officeexpress.com.br/modelos" /></div>
+          <div class="campo">
+            <label>Público</label>
+            <select id="emPublico">
+              <option value="todos">Todos os clientes</option>
+              <option value="assinante">Somente assinantes</option>
+              <option value="pagante">Somente pagantes (currículo pago)</option>
+              <option value="nunca_pagou">Nunca pagaram</option>
+              <option value="inativo">Inativos (sem pagamento e pendentes)</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="enviarCampanha()">Enviar campanha</button>
+          <span id="emInfo" style="margin-left:12px;color:var(--text-muted);font-size:.85rem"></span>
+        </div>
+
+        <!-- Base segmentada -->
+        <div class="card">
+          <h3 style="margin-bottom:16px">Base de clientes</h3>
+          <div class="stats-grid" id="emContagem" style="margin-bottom:20px"></div>
+          <div class="tabela-wrap">
+            <table class="tabela">
+              <thead><tr><th>#</th><th>Nome</th><th>E-mail</th><th>Classe</th><th>Compras</th><th>Pendentes</th><th>Última compra</th><th>Cadastro</th></tr></thead>
+              <tbody id="tbodyEmails"><tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -585,6 +632,9 @@
         if (!ehAssin) acoes += ' <a class="btn-acao" href="/api/admin/pedidos/' + p.id + '/download">PDF</a>';
         acoes += " " + botaoStatus;
         if (!ehAssin) acoes += ' <button class="btn-acao amarelo" onclick="editarValor(' + p.id + "," + (p.valor || 0) + ')">Valor</button>';
+        // Excluir: funciona para currículos (id numérico) e planos (rowKey "s-N").
+        var idExclusao = ehAssin ? JSON.stringify(p.rowKey) : p.id;
+        acoes += ' <button class="btn-acao vermelho" onclick="excluirPedido(' + idExclusao + ')">Excluir</button>';
         var nomePlano = { premium: 'Premium', premium_plus: 'Premium+' }[p.modelo] || p.modelo;
         var badgeOrigem = ehAssin
           ? '<span class="badge" style="background:rgba(14,43,68,.08);color:var(--brand,#ff8800)">Plano ' + nomePlano + '</span>'
@@ -644,6 +694,7 @@
       carregarFaturamento();
       carregarDesempenho();
       carregarAuditoria();
+      carregarAbandono();
       carregarParceiros();
       carregarPagamentos();
       carregarConfigRede();
@@ -672,6 +723,13 @@
       if (v === null) return;
       var { ok, data } = await App.api("/api/admin/pedidos/" + id + "/valor", { method: "PUT", body: JSON.stringify({ valor: parseFloat(v) }) });
       setMsg(ok ? "Valor atualizado." : (data.error || "Erro."), ok);
+      carregar();
+    };
+    window.excluirPedido = async function (id) {
+      var ehAssin = typeof id === "string" && id.indexOf("s-") === 0;
+      if (!confirm(ehAssin ? "Excluir este pedido de plano da lista? Esta ação não pode ser desfeita." : "Excluir este pedido? Esta ação não pode ser desfeita.")) return;
+      var { ok, data } = await App.api("/api/admin/pedidos/" + encodeURIComponent(id), { method: "DELETE" });
+      setMsg(ok ? "Pedido excluído." : (data.error || "Erro ao excluir."), ok);
       carregar();
     };
     window.verDetalhes = async function (id) {
@@ -885,14 +943,19 @@
     }
     window.salvarConfigRede = salvarConfigRede;
 
-    // ===== Aba Empresas (Office Express | Companies) =====
+    // ===== Abas (Painel | Empresas | Base de e-mails) =====
     function mostrarAba(aba) {
       var isPrincipal = aba === "principal";
+      var isEmpresas = aba === "empresas";
+      var isEmails = aba === "emails";
       document.getElementById("viewPrincipal").classList.toggle("oculto", !isPrincipal);
-      document.getElementById("viewEmpresas").classList.toggle("oculto", isPrincipal);
+      document.getElementById("viewEmpresas").classList.toggle("oculto", !isEmpresas);
+      document.getElementById("viewEmails").classList.toggle("oculto", !isEmails);
       document.getElementById("tabPrincipal").classList.toggle("ativo", isPrincipal);
-      document.getElementById("tabEmpresas").classList.toggle("ativo", !isPrincipal);
-      if (!isPrincipal) { carregarPrecosPlanos(); carregarEmpresas(); }
+      document.getElementById("tabEmpresas").classList.toggle("ativo", isEmpresas);
+      document.getElementById("tabEmails").classList.toggle("ativo", isEmails);
+      if (isEmpresas) { carregarPrecosPlanos(); carregarEmpresas(); }
+      if (isEmails) carregarBaseEmails();
     }
     window.mostrarAba = mostrarAba;
 
@@ -941,11 +1004,19 @@
         var botaoStatus = e.status === "ativo"
           ? '<button class="btn-acao vermelho" onclick="alternarStatusEmpresa(' + e.id + ',\'inativo\')">Desativar</button>'
           : '<button class="btn-acao verde" onclick="alternarStatusEmpresa(' + e.id + ',\'ativo\')">Ativar</button>';
+        // Foto da empresa: círculo à esquerda do nome (logo enviada pela empresa).
+        var fotoHtml = e.foto_url
+          ? '<a href="' + e.foto_url + '" target="_blank" rel="noopener" title="Ver foto enviada pela empresa">' +
+              '<img src="' + e.foto_url + '" alt="Logo" ' +
+              'style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border);display:block;flex-shrink:0" ' +
+              'onerror="this.style.display=\'none\'" /></a>'
+          : '<span title="Sem foto enviada" style="width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--text-muted);font-weight:700;font-size:.8rem;flex-shrink:0">' + String(e.nome || "E").trim().charAt(0).toUpperCase() + '</span>';
 
         var tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + e.id + "</td>" +
-          "<td><b>" + (e.nome || "-") + "</b></td>" +
+          '<td><div style="display:flex;align-items:center;gap:10px">' + fotoHtml +
+            "<b>" + (e.nome || "-") + "</b></div></td>" +
           "<td>" + (e.cnpj || "-") + "</td>" +
           "<td>" + (e.email || "-") + "</td>" +
           '<td><span class="badge ' + planoBadge + '">' + planoNome + '</span></td>' +
@@ -955,7 +1026,8 @@
           '<td><div class="acoes-linha">' +
             '<button class="btn-acao azul" onclick="abrirModalEmpresa(' + e.id + ')">Detalhes</button>' +
             '<button class="btn-acao amarelo" onclick="alterarPlanoEmpresa(' + e.id + ')">Plano</button>' +
-            '<button class="btn-acao verde" onclick="alterarFotoEmpresa(' + e.id + ')">Foto</button>' +
+            (e.foto_url ? '<button class="btn-acao vermelho" onclick="removerFotoAdmin(' + e.id + ')">Excluir foto</button>' : '') +
+            '<button class="btn-acao verde" onclick="alterarFotoEmpresa(' + e.id + ')">Alterar foto</button>' +
             botaoStatus +
             '<button class="btn-acao vermelho" onclick="excluirEmpresa(' + e.id + ', \'' + String(e.nome || "").replace(/\\/g, "").replace(/'/g, "") + '\')">Excluir</button>' +
           "</div></td>";
@@ -1012,6 +1084,7 @@
       var d = await r.json().catch(function () { return {}; });
       if (!r.ok) { alert(d.error || "Erro ao enviar a foto."); return; }
       setMsg("Foto da empresa #" + empresaFotoId + " atualizada.", true);
+      carregarEmpresas();
     });
     document.body.appendChild(inputFotoAdmin);
 
@@ -1025,6 +1098,7 @@
       var { ok, data } = await App.api("/api/admin/empresas/" + id + "/foto", { method: "DELETE" });
       if (!ok) { alert(data.error || "Erro ao remover a foto."); return; }
       setMsg("Foto da empresa #" + id + " removida.", true);
+      carregarEmpresas();
     };
 
     var empresaAtual = null;
@@ -1287,6 +1361,79 @@
       var tend = await App.api("/api/admin/metricas/tendencia");
       if (tend.ok && tend.data.pontos) renderTendencia(tend.data.pontos);
     }
+
+    // ---- Abandono (onde o cliente mais desiste) ----
+    async function carregarAbandono() {
+      var { ok, data } = await App.api("/api/admin/abandono");
+      if (!ok || !data.ok) return;
+      var stats = document.getElementById("abandonoStats");
+      var lista = document.getElementById("listaAbandono");
+      var destaque = document.getElementById("abandonoDestaque");
+      stats.innerHTML = (data.etapas || []).map(function (e) {
+        return '<div class="stat-card"><div class="stat-value small">' + e.n + '</div><div class="stat-label">' + e.nome + "</div></div>";
+      }).join("");
+      lista.innerHTML = (data.perdas || []).map(function (p) {
+        return '<li><span class="rotulo">' + p.de + " → " + p.para + '</span><span class="valor">' + p.perda + " (" + p.pct + "%)</span></li>";
+      }).join("");
+      if (data.maiorAbandono) {
+        destaque.style.display = "block";
+        destaque.innerHTML = "⚠️ <strong>Maior abandono:</strong> " + data.maiorAbandono.perda + " cliente(s) desistem entre <strong>" +
+          data.maiorAbandono.de + "</strong> e <strong>" + data.maiorAbandono.para + "</strong> (" + data.maiorAbandono.pct + "% de perda).";
+      }
+    }
+
+    // ---- Base de e-mails (aba 3) ----
+    var CLASSE_EMAIL = {
+      assinante: { nome: "Assinante", cor: "#16a34a" },
+      pagante: { nome: "Pagante", cor: "#2563eb" },
+      nunca_pagou: { nome: "Nunca pagou", cor: "#b45309" },
+      inativo: { nome: "Inativo", cor: "#dc2626" },
+    };
+    async function carregarBaseEmails() {
+      var tb = document.getElementById("tbodyEmails");
+      tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Carregando...</td></tr>';
+      var { ok, data } = await App.api("/api/admin/emails/base");
+      if (!ok || !data.ok) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--danger)">Erro ao carregar a base.</td></tr>'; return; }
+      var cont = document.getElementById("emContagem");
+      cont.innerHTML =
+        '<div class="stat-card"><div class="stat-value small">' + data.total + '</div><div class="stat-label">Clientes na base</div></div>' +
+        '<div class="stat-card"><div class="stat-value small">' + (data.contagem.assinante || 0) + '</div><div class="stat-label">Assinantes</div></div>' +
+        '<div class="stat-card"><div class="stat-value small">' + (data.contagem.pagante || 0) + '</div><div class="stat-label">Pagantes</div></div>' +
+        '<div class="stat-card"><div class="stat-value small">' + ((data.contagem.nunca_pagou || 0) + (data.contagem.inativo || 0)) + '</div><div class="stat-label">Sem pagamento</div></div>';
+      tb.innerHTML = "";
+      (data.base || []).forEach(function (u) {
+        var cls = CLASSE_EMAIL[u.classe] || { nome: u.classe, cor: "#64748b" };
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + u.id + "</td>" +
+          "<td>" + (u.nome || "-") + "</td>" +
+          "<td>" + (u.email || "-") + "</td>" +
+          '<td><span class="badge" style="background:rgba(255,255,255,.07);color:' + cls.cor + '">' + cls.nome + "</span></td>" +
+          "<td>" + u.pedidosPagos + "</td>" +
+          "<td>" + u.pendentes + "</td>" +
+          "<td>" + (u.ultimaCompra ? new Date(u.ultimaCompra).toLocaleDateString("pt-BR") : "—") + "</td>" +
+          "<td>" + (u.cadastro ? new Date(u.cadastro).toLocaleDateString("pt-BR") : "-") + "</td>";
+        tb.appendChild(tr);
+      });
+      if (!(data.base || []).length) tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">Nenhum cliente cadastrado ainda.</td></tr>';
+    }
+
+    window.enviarCampanha = async function () {
+      var info = document.getElementById("emInfo");
+      var assunto = document.getElementById("emAssunto").value.trim();
+      var mensagem = document.getElementById("emMensagem").value.trim();
+      var link = document.getElementById("emLink").value.trim();
+      var publico = document.getElementById("emPublico").value;
+      if (!assunto || !mensagem) { info.textContent = "Preencha o assunto e a mensagem."; info.style.color = "var(--danger)"; return; }
+      if (!confirm("Enviar esta campanha para o público selecionado?")) return;
+      info.textContent = "Enviando..."; info.style.color = "var(--text-muted)";
+      var { ok, data } = await App.api("/api/admin/emails/enviar", {
+        method: "POST",
+        body: JSON.stringify({ assunto: assunto, mensagem: mensagem, link: link, publico: publico })
+      });
+      if (ok && data.ok) { info.textContent = "Enviado para " + data.enviados + " de " + data.total + " cliente(s)."; info.style.color = "var(--success, #16a34a)"; }
+      else { info.textContent = (data && data.error) || "Erro ao enviar."; info.style.color = "var(--danger)"; }
+    };
 
     window.limparPedidos = async function () {
       if (!confirm("Tem certeza que deseja apagar TODOS os pedidos? Esta ação não pode ser desfeita.")) return;

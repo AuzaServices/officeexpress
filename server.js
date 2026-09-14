@@ -599,8 +599,11 @@ app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) =>
     const comBanner = !!req.file;
 
     if (!titulo || titulo.length < 3) return res.status(400).json({ error: "Informe o título da vaga (mín. 3 caracteres)." });
-    if (!descricao || descricao.length < 10) return res.status(400).json({ error: "Descreva a vaga (mín. 10 caracteres)." });
     if (!duracaoHoras || duracaoHoras < 1) return res.status(400).json({ error: "Escolha por quanto tempo a vaga fica ativa." });
+    // Cidade e Estado são obrigatórios (as notificações de nova vaga por
+    // cidade dependem deles); descrição é OPCIONAL.
+    if (!cidade) return res.status(400).json({ error: "Informe a cidade da vaga." });
+    if (!estado || estado.length !== 2) return res.status(400).json({ error: "Informe o Estado (UF) da vaga." });
     if (duracaoHoras > limite.duracaoHorasMax) {
       return res.status(403).json({ error: "Seu plano permite no máximo " + (limite.duracaoHorasMax / 24) + " dias por divulgação. Faça upgrade para períodos maiores." });
     }
@@ -634,6 +637,16 @@ app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) =>
       [id, titulo, area, descricao, cidade, estado, comBanner ? req.file.path : null, ativaDe, expiraEm]
     );
     console.log("✅ Vaga criada:", r.insertId, "| empresa:", id, "| expira:", expiraEm.toISOString());
+    // Notifica todos os clientes cadastrados na cidade da vaga (sininho do
+    // painel do cliente). Fire-and-forget: nunca bloqueia a resposta.
+    notificarNovaVaga({
+      id: r.insertId,
+      titulo,
+      cidade,
+      estado,
+      empresaNome: empresa.nome,
+      expiraEm,
+    }).catch((e) => console.error("Aviso: falha ao notificar nova vaga:", e.message));
     res.json({ ok: true, id: r.insertId, expira_em: expiraEm });
   } catch (e) {
     console.error("❌ Erro ao criar vaga:", e.message, "| stack:", e.stack ? e.stack.split("\n")[1] : "");
@@ -1969,6 +1982,38 @@ app.delete("/api/admin/pedidos", protegerAdmin, async (req, res) => {
   res.json({ success: true });
 });
 
+// Excluir UM item da lista unificada de pedidos. Aceita:
+//  - id numérico  → currículo (tabela pedidos)
+//  - rowKey "s-N" → assinatura (tabela usuarios_pagamentos)
+//  - rowKey "c-N" → currículo (mesmo formato do painel)
+app.delete("/api/admin/pedidos/:id", protegerAdmin, async (req, res) => {
+  try {
+    const raw = String(req.params.id || "").trim();
+    const m = raw.match(/^(s|c)-(\d+)$/);
+    if (m) {
+      const alvoId = parseInt(m[2], 10);
+      if (m[1] === "s") {
+        // Assinatura: apaga a transação registrada (a receita permanece
+        // preservada na tabela imutável `transacoes`).
+        await pool.query("DELETE FROM usuarios_pagamentos WHERE id = ?", [alvoId]);
+        await registrarAdminLog("assinatura_excluir", `Assinatura #${alvoId} excluída da lista de pedidos`);
+      } else {
+        await pool.query("DELETE FROM pedidos WHERE id = ?", [alvoId]);
+        await registrarAdminLog("pedido_excluir", `Pedido (currículo) #${alvoId} excluído`);
+      }
+      return res.json({ success: true });
+    }
+    const id = parseInt(raw, 10);
+    if (!id) return res.status(400).json({ error: "Pedido inválido." });
+    await pool.query("DELETE FROM pedidos WHERE id = ?", [id]);
+    await registrarAdminLog("pedido_excluir", `Pedido (currículo) #${id} excluído`);
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao excluir pedido:", e.message);
+    res.status(500).json({ error: "Erro ao excluir o pedido." });
+  }
+});
+
 app.delete("/api/admin/usuarios/:id", protegerAdmin, async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: "Usuário inválido." });
@@ -2513,6 +2558,130 @@ app.get("/api/admin/relatorios/vendas", protegerAdmin, async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// ABANDONO: onde o usuário mais desiste no funil (últimos 30 dias).
+// Compara sessões em cada etapa para apontar a maior perda de clientes.
+// ---------------------------------------------------------------------------
+app.get("/api/admin/abandono", protegerAdmin, async (req, res) => {
+  try {
+    const [f] = await pool.query(`SELECT
+      (SELECT COUNT(DISTINCT sessao) FROM visitas WHERE created_at >= (NOW() - INTERVAL 30 DAY)) AS visitas,
+      (SELECT COUNT(DISTINCT sessao) FROM eventos WHERE tipo='abrir_editor' AND created_at >= (NOW() - INTERVAL 30 DAY)) AS editores,
+      (SELECT COUNT(DISTINCT sessao) FROM eventos WHERE tipo='chegar_pagamento' AND created_at >= (NOW() - INTERVAL 30 DAY)) AS pagamentos,
+      (SELECT COUNT(*) FROM pedidos WHERE created_at >= (NOW() - INTERVAL 30 DAY)) AS pedidos,
+      (SELECT COUNT(*) FROM pedidos WHERE status='pago' AND created_at >= (NOW() - INTERVAL 30 DAY)) AS pagos`);
+    const etapas = [
+      { chave: "visita", nome: "Visitou o site", n: Number(f[0].visitas) || 0 },
+      { chave: "editor", nome: "Abriu o editor", n: Number(f[0].editores) || 0 },
+      { chave: "pagamento", nome: "Chegou ao pagamento", n: Number(f[0].pagamentos) || 0 },
+      { chave: "pedido", nome: "Criou o pedido", n: Number(f[0].pedidos) || 0 },
+      { chave: "pago", nome: "Pagou", n: Number(f[0].pagos) || 0 },
+    ];
+    // Perdas entre etapas consecutivas + maior queda.
+    let maior = null;
+    const perdas = [];
+    for (let i = 0; i < etapas.length - 1; i++) {
+      const perda = Math.max(0, etapas[i].n - etapas[i + 1].n);
+      const pct = etapas[i].n > 0 ? Math.round((perda / etapas[i].n) * 100) : 0;
+      perdas.push({ de: etapas[i].nome, para: etapas[i + 1].nome, perda, pct });
+      if (!maior || perda > maior.perda) maior = { de: etapas[i].nome, para: etapas[i + 1].nome, perda, pct };
+    }
+    res.json({ ok: true, etapas, perdas, maiorAbandono: maior, periodo: "30 dias" });
+  } catch (e) {
+    console.error("Erro ao carregar abandono:", e.message);
+    res.status(500).json({ error: "Erro ao carregar abandono." });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BASE DE E-MAILS: lista de todos os clientes cadastrados com classificação
+// (pagante / assinante / inativo / nunca pagou) + envio manual de campanha.
+// ---------------------------------------------------------------------------
+app.get("/api/admin/emails/base", protegerAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT u.id, u.nome, u.email, u.email_confirmado, u.plano,
+             u.assinatura_ativa, u.assinatura_expira_em, u.created_at,
+             (SELECT COUNT(*) FROM pedidos p WHERE p.usuario_id = u.id AND p.status = 'pago') AS pedidos_pagos,
+             (SELECT COUNT(*) FROM pedidos p WHERE p.usuario_id = u.id AND p.status = 'pendente') AS pedidos_pendentes,
+             (SELECT MAX(p.pago_at) FROM pedidos p WHERE p.usuario_id = u.id AND p.status = 'pago') AS ultima_compra
+      FROM usuarios u
+      ORDER BY u.id DESC
+    `);
+    const assinaturaViva = (r) =>
+      r.assinatura_ativa === 1 && r.assinatura_expira_em && new Date(r.assinatura_expira_em).getTime() > Date.now();
+    const base = rows.map((r) => {
+      let classe;
+      if (assinaturaViva(r)) classe = "assinante";
+      else if (Number(r.pedidos_pagos) > 0) classe = "pagante";
+      else if (Number(r.pedidos_pendentes) > 0 || r.email_confirmado === 0) classe = "inativo";
+      else classe = "nunca_pagou";
+      return {
+        id: r.id, nome: r.nome, email: r.email,
+        emailConfirmado: !!r.email_confirmado,
+        classe,
+        pedidosPagos: Number(r.pedidos_pagos) || 0,
+        pendentes: Number(r.pedidos_pendentes) || 0,
+        ultimaCompra: r.ultima_compra,
+        cadastro: r.created_at,
+      };
+    });
+    const contagem = { assinante: 0, pagante: 0, nunca_pagou: 0, inativo: 0 };
+    base.forEach((b) => { contagem[b.classe] = (contagem[b.classe] || 0) + 1; });
+    res.json({ ok: true, base, contagem, total: base.length });
+  } catch (e) {
+    console.error("Erro ao carregar base de e-mails:", e.message);
+    res.status(500).json({ error: "Erro ao carregar base de e-mails." });
+  }
+});
+
+// Envio manual de campanha para a base de e-mails (com filtro por classe).
+app.post("/api/admin/emails/enviar", protegerAdmin, async (req, res) => {
+  try {
+    const { assunto, mensagem, link, publico } = req.body || {};
+    if (!assunto || !mensagem) return res.status(400).json({ error: "Informe o assunto e a mensagem." });
+    const alvo = ["todos", "assinante", "pagante", "nunca_pagou", "inativo"].includes(publico) ? publico : "todos";
+
+    const [rows] = await pool.query(`
+      SELECT u.id, u.nome, u.email, u.email_confirmado, u.plano, u.assinatura_ativa, u.assinatura_expira_em,
+             (SELECT COUNT(*) FROM pedidos p WHERE p.usuario_id = u.id AND p.status = 'pago') AS pedidos_pagos,
+             (SELECT COUNT(*) FROM pedidos p WHERE p.usuario_id = u.id AND p.status = 'pendente') AS pedidos_pendentes
+      FROM usuarios u WHERE u.email_confirmado = 1
+    `);
+    const assinaturaViva = (r) =>
+      r.assinatura_ativa === 1 && r.assinatura_expira_em && new Date(r.assinatura_expira_em).getTime() > Date.now();
+    const classeDe = (r) => {
+      if (assinaturaViva(r)) return "assinante";
+      if (Number(r.pedidos_pagos) > 0) return "pagante";
+      if (Number(r.pedidos_pendentes) > 0) return "inativo";
+      return "nunca_pagou";
+    };
+    const destinatarios = rows
+      .map((r) => ({ nome: r.nome, email: r.email, classe: classeDe(r) }))
+      .filter((r) => alvo === "todos" || r.classe === alvo);
+    if (!destinatarios.length) return res.status(400).json({ error: "Nenhum destinatário nesse público." });
+
+    const { layoutHtml, botaoHtml, enviarEmail } = require("./lib/email");
+    let enviados = 0;
+    for (const d of destinatarios) {
+      const primeiroNome = String(d.nome || "").trim().split(/\s+/)[0] || "tudo bem";
+      const html = layoutHtml(
+        `<p style="color:#333;line-height:1.6">Olá <strong>${primeiroNome}</strong>,</p>` +
+        `<p style="color:#333;line-height:1.6">${String(mensagem).replace(/\n/g, "<br>")}</p>` +
+        (link ? botaoHtml("Quero aproveitar", String(link)) : ""),
+        assunto
+      );
+      const r = await enviarEmail({ to: d.email, subject: assunto, html, text: mensagem });
+      if (r && r.ok) enviados++;
+    }
+    await registrarAdminLog("email_campanha", `Campanha "${assunto}" enviada para ${enviados} cliente(s) (público: ${alvo})`);
+    res.json({ ok: true, enviados, total: destinatarios.length });
+  } catch (e) {
+    console.error("Erro ao enviar campanha:", e.message);
+    res.status(500).json({ error: "Erro ao enviar campanha." });
+  }
+});
+
 // Troca a senha do admin (valida a senha atual do LOGIN_PASS).
 app.put("/api/admin/senha", protegerAdmin, async (req, res) => {
   try {
@@ -2787,7 +2956,7 @@ app.post("/api/admin/pagamentos/fechar", protegerAdmin, async (req, res) => {
 app.get("/api/admin/empresas", protegerAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT e.id, e.nome, e.cnpj, e.email, e.plano, e.assinatura_ativa, e.status, e.created_at, " +
+      "SELECT e.id, e.nome, e.cnpj, e.email, e.plano, e.assinatura_ativa, e.status, e.created_at, e.foto_url, " +
       "(SELECT COUNT(*) FROM empresas_pagamentos ep WHERE ep.empresa_id = e.id AND ep.status = 'pago') AS pagamentos_pagos " +
       "FROM empresas e ORDER BY e.id DESC"
     );
@@ -4485,14 +4654,9 @@ app.get("/api/companies/me", async (req, res) => {
 app.put("/api/companies/me/dados", async (req, res) => {
   const id = empresaDaSessao(req);
   if (!id) return res.status(401).json({ error: "Não autenticado." });
-  const { nome, cnpj } = req.body || {};
-  if (!nome || !String(nome).trim()) return res.status(400).json({ error: "Informe o nome da empresa." });
+  // Nome, CNPJ e e-mail vêm da Receita Federal / cadastro original e NÃO podem
+  // ser alterados pelo painel da empresa. Este endpoint não os altera.
   try {
-    await pool.query("UPDATE empresas SET nome = ?, cnpj = ? WHERE id = ?", [
-      String(nome).trim(),
-      cnpj != null && String(cnpj).trim() !== "" ? String(cnpj).trim() : null,
-      id,
-    ]);
     const emp = await buscarEmpresaPorId(id);
     res.json({ ok: true, empresa: emp });
   } catch (e) {
@@ -5260,6 +5424,97 @@ async function expirarPedidosPendentes() {
 // Roda na inicialização (garante a regra mesmo que o servidor fique offline).
 expirarPedidosPendentes();
 expirarAssinaturasUsuario();
+
+// ---------------------------------------------------------------------------
+// NOTIFICAÇÕES DO CLIENTE (sininho no painel do cliente)
+// Quando uma empresa publica uma vaga para uma cidade, todos os clientes
+// cadastrados naquela cidade recebem a notificação automaticamente.
+// ---------------------------------------------------------------------------
+async function garantirNotificacoes() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notificacoes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario_id INT NOT NULL,
+        tipo VARCHAR(40) NOT NULL DEFAULT 'vaga',
+        titulo VARCHAR(190) NOT NULL,
+        texto VARCHAR(500) NULL,
+        link VARCHAR(190) NULL,
+        cidade VARCHAR(120) NULL,
+        estado CHAR(2) NULL,
+        lida TINYINT(1) NOT NULL DEFAULT 0,
+        criada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_notif_usuario (usuario_id, lida)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+  } catch (e) {
+    console.error("🚨 FALHA ao garantir tabela de notificações:", e.message);
+  }
+}
+garantirNotificacoes();
+
+// Cria notificações para todos os clientes da cidade da nova vaga.
+// A cidade do cliente vem do banco de talentos (preenchida no currículo/conta).
+async function notificarNovaVaga(vaga) {
+  if (!vaga || !vaga.cidade || !vaga.estado) return;
+  try {
+    const [clientes] = await pool.query(
+      `SELECT DISTINCT usuario_id AS id FROM talentos
+       WHERE usuario_id IS NOT NULL AND cidade = ? AND UPPER(estado) = ?`,
+      [vaga.cidade, String(vaga.estado).toUpperCase()]
+    );
+    if (!clientes.length) return;
+    const valores = clientes.map((c) => [
+      c.id,
+      "vaga",
+      `Nova vaga em ${vaga.cidade}: ${vaga.titulo}`.slice(0, 190),
+      `${vaga.empresaNome || "Uma empresa"} publicou uma vaga na sua cidade. Corra antes que expire!`.slice(0, 500),
+      "/vagas",
+      vaga.cidade,
+      String(vaga.estado).toUpperCase(),
+    ]);
+    await pool.query(
+      `INSERT INTO notificacoes (usuario_id, tipo, titulo, texto, link, cidade, estado) VALUES ?`,
+      [valores]
+    );
+    console.log(`🔔 Notificações de vaga enviadas para ${clientes.length} cliente(s) em ${vaga.cidade}/${vaga.estado}.`);
+  } catch (e) {
+    console.error("Erro ao notificar nova vaga:", e.message);
+  }
+}
+
+// Notificações do cliente logado (lista + contador de não lidas).
+app.get("/api/notificacoes", async (req, res) => {
+  const usuarioId = usuarioDaSessao(req);
+  if (!usuarioId) return res.status(401).json({ error: "Faça login para ver suas notificações." });
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, tipo, titulo, texto, link, lida, criada_em FROM notificacoes WHERE usuario_id = ? ORDER BY id DESC LIMIT 30",
+      [usuarioId]
+    );
+    const [[{ c }]] = await pool.query(
+      "SELECT COUNT(*) AS c FROM notificacoes WHERE usuario_id = ? AND lida = 0",
+      [usuarioId]
+    );
+    res.json({ ok: true, notificacoes: rows, naoLidas: c || 0 });
+  } catch (e) {
+    console.error("Erro ao listar notificações:", e.message);
+    res.status(500).json({ error: "Erro ao carregar notificações." });
+  }
+});
+
+// Marca todas as notificações do cliente como lidas.
+app.post("/api/notificacoes/lidas", async (req, res) => {
+  const usuarioId = usuarioDaSessao(req);
+  if (!usuarioId) return res.status(401).json({ error: "Faça login." });
+  try {
+    await pool.query("UPDATE notificacoes SET lida = 1 WHERE usuario_id = ?", [usuarioId]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao marcar notificações:", e.message);
+    res.status(500).json({ error: "Erro ao atualizar notificações." });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // RECUPERAÇÃO DE VAGANZES: usuários confirmados com currículo pendente que

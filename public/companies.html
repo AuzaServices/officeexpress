@@ -352,7 +352,9 @@
        ============================================================ */
     header.ch-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      background: linear-gradient(135deg, #0e2b44 0%, #174a6b 100%);
+      background: rgba(0, 31, 51, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     .ch-bar { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; gap: 16px; height: 80px; padding: 0 24px; }
@@ -553,9 +555,6 @@
     .portal-topbar-sub { color: var(--text-muted); font-size: .88rem; margin-top: 3px; }
     .portal-menu-desktop { display: none; }
     .portal-menu-desktop svg { width: 20px; height: 20px; }
-    @media (max-width: 900px) {
-      .portal-menu-desktop { display: flex; }
-    }
     .portal-secao { animation: portalFade .25s ease; }
     @keyframes portalFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
     .portal-sidebar-backdrop { display: none; }
@@ -1508,23 +1507,19 @@
                 <div class="alert" id="alertVagas"></div>
                 <div class="vg-form-grid">
                   <div class="campo campo-full">
-                    <label>Título da vaga</label>
+                    <label>Título da vaga <span style="font-weight:400;color:var(--text-muted)">(obrigatório)</span></label>
                     <input type="text" id="vgTitulo" maxlength="160" placeholder="Ex.: Vendedor(a) externo — São Paulo" />
                   </div>
                   <div class="campo">
-                    <label>Área</label>
-                    <input type="text" id="vgArea" maxlength="80" placeholder="Ex.: Vendas, TI, Administrativo" />
-                  </div>
-                  <div class="campo">
-                    <label>Cidade</label>
+                    <label>Cidade <span style="font-weight:400;color:var(--text-muted)">(obrigatório)</span></label>
                     <input type="text" id="vgCidade" maxlength="120" placeholder="Ex.: São Paulo" />
                   </div>
                   <div class="campo">
-                    <label>Estado (UF)</label>
+                    <label>Estado (UF) <span style="font-weight:400;color:var(--text-muted)">(obrigatório)</span></label>
                     <input type="text" id="vgEstado" maxlength="2" placeholder="SP" style="text-transform:uppercase" />
                   </div>
-                  <div class="campo">
-                    <label>Duração da divulgação</label>
+                  <div class="campo campo-full">
+                    <label>Duração da divulgação <span style="font-weight:400;color:var(--text-muted)">(obrigatório — por quanto tempo o post fica ativo)</span></label>
                     <select id="vgDuracao">
                       <option value="6">6 horas</option>
                       <option value="12">12 horas</option>
@@ -1534,9 +1529,13 @@
                       <option value="720">30 dias</option>
                     </select>
                   </div>
+                  <div class="campo">
+                    <label>Área</label>
+                    <input type="text" id="vgArea" maxlength="80" placeholder="Ex.: Vendas, TI, Administrativo" />
+                  </div>
                   <div class="campo campo-full">
-                    <label>Descrição da vaga</label>
-                    <textarea id="vgDescricao" rows="5" maxlength="3000" placeholder="Descreva a função, requisitos, salário/benefícios e como entrar em contato…"></textarea>
+                    <label>Descrição da vaga <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+                    <textarea id="vgDescricao" rows="5" maxlength="3000" placeholder="Se quiser, descreva a função, requisitos, salário/benefícios e como entrar em contato…"></textarea>
                   </div>
                 </div>
                 <div class="campo campo-full" style="margin-top:16px">
@@ -1607,11 +1606,10 @@
                   </div>
                 </div>
 
-                <div class="campo"><label>Nome da empresa</label><input type="text" id="dNome" /></div>
-                <div class="campo"><label>CNPJ</label><input type="text" id="dCnpj" placeholder="00.000.000/0000-00" /></div>
-                <div class="campo"><label>E-mail de acesso</label><input type="email" id="dEmail" disabled style="opacity:.6;cursor:not-allowed" /></div>
-                <div class="alert" id="alertDados"></div>
-                <button class="btn btn-primary" onclick="salvarDadosEmpresa()">Salvar alterações</button>
+                <div class="campo"><label>Nome da empresa <span style="font-weight:400;color:var(--text-muted)">(da Receita Federal — não pode ser alterado)</span></label><input type="text" id="dNome" disabled style="opacity:.6;cursor:not-allowed" /></div>
+                <div class="campo"><label>CNPJ <span style="font-weight:400;color:var(--text-muted)">(da Receita Federal — não pode ser alterado)</span></label><input type="text" id="dCnpj" placeholder="00.000.000/0000-00" disabled style="opacity:.6;cursor:not-allowed" /></div>
+                <div class="campo"><label>E-mail de acesso <span style="font-weight:400;color:var(--text-muted)">(não pode ser alterado)</span></label><input type="email" id="dEmail" disabled style="opacity:.6;cursor:not-allowed" /></div>
+                <div class="alert" id="alertDados" style="display:none"></div>
               </div>
             </div>
 
@@ -2386,8 +2384,12 @@
       async function publicarVaga() {
         var titulo = document.getElementById("vgTitulo").value.trim();
         var descricao = document.getElementById("vgDescricao").value.trim();
+        var cidade = document.getElementById("vgCidade").value.trim();
+        var estado = document.getElementById("vgEstado").value.trim().toUpperCase();
         if (titulo.length < 3) { alertVagas("Informe o título da vaga.", "error"); return; }
-        if (descricao.length < 10) { alertVagas("Descreva a vaga (mín. 10 caracteres).", "error"); return; }
+        if (!cidade) { alertVagas("Informe a cidade da vaga.", "error"); return; }
+        if (estado.length !== 2) { alertVagas("Informe o Estado (UF) da vaga.", "error"); return; }
+        // Descrição é opcional.
         var btn = document.getElementById("btnPublicarVaga");
         btn.disabled = true; btn.textContent = "Publicando…";
         try {
@@ -2642,18 +2644,11 @@
       };
 
       window.salvarDadosEmpresa = async function () {
+        // Nome, CNPJ e e-mail vêm da Receita Federal e não podem ser alterados.
         var alert = document.getElementById("alertDados");
-        alert.className = "alert";
-        var body = {
-          nome: document.getElementById("dNome").value.trim(),
-          cnpj: document.getElementById("dCnpj").value.trim()
-        };
-        if (!body.nome) { alert.textContent = "Informe o nome da empresa."; alert.className = "alert show alert-error"; return; }
-        var { ok, data } = await App.api("/api/companies/me/dados", { method: "PUT", body: JSON.stringify(body) });
-        if (!ok) { alert.textContent = (data && data.error) || "Erro ao salvar."; alert.className = "alert show alert-error"; return; }
-        alert.textContent = "Dados atualizados com sucesso!";
-        alert.className = "alert show alert-success";
-        carregarPainel();
+        alert.style.display = "flex";
+        alert.textContent = "Nome, CNPJ e e-mail vêm diretamente da Receita Federal e não podem ser alterados.";
+        alert.className = "alert show alert-info";
       };
 
       // Busca

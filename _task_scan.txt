@@ -1,0 +1,159 @@
+﻿===== server.js =====
+211: // Página pública de vagas (job board) em /vagas.
+212: app.get("/vagas", (req, res) => res.sendFile(path.join(__dirname, "public", "vagas.html")));
+532: // VAGAS — divulgações das empresas assinantes (job board)
+536: const LIMITES_VAGAS = {
+544: return LIMITES_VAGAS[p] ? p : "starter";
+550: "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NOT NULL AND expira_em > UTC_TIMESTAMP()",
+556: // Expira vagas vencidas: remove banners do Cloudinary e apaga do sistema
+558: async function expirarVagasVencidas() {
+561: "SELECT id, empresa_id, banner_url FROM vagas WHERE expira_em <= UTC_TIMESTAMP()"
+566: await pool.query("DELETE FROM vagas_candidaturas WHERE vaga_id = ?", [v.id]);
+567: await pool.query("DELETE FROM vagas WHERE id = ?", [v.id]);
+569: if (vencidas.length) console.log("🗓️ Vagas expiradas removidas:", vencidas.length);
+571: console.error("Erro ao expirar vagas:", e.message);
+575: garantirVagas().then(expirarVagasVencidas);
+576: cron.schedule("*/15 * * * *", expirarVagasVencidas);
+579: app.post("/api/companies/vagas", uploadVagaBannerMiddleware, async (req, res) => {
+581: if (!id) { console.log("⚠️ POST /vagas sem sessão de empresa"); return res.status(401).json({ error: "Não autenticado." }); }
+582: console.log("📩 POST /vagas empresa", id, "| corpo:", { titulo: req.body.titulo, duracao: req.body.duracaoHoras, banner: !!req.file });
+588: return res.status(403).json({ error: "Sua assinatura precisa estar ativa para divulgar vagas." });
+592: const limite = LIMITES_VAGAS[plano];
+615: "SELECT COUNT(*) AS c FROM vagas WHERE empresa_id = ? AND banner_url IS NULL AND expira_em > UTC_TIMESTAMP()",
+632: `INSERT INTO vagas (empresa_id, titulo, area, descricao, cidade, estado, banner_url, ativa_de, expira_em)
+655: // Empresa logada lista suas vagas (ativas, agendadas e contagem de candidatos).
+656: app.get("/api/companies/vagas", async (req, res) => {
+662: const limite = LIMITES_VAGAS[plano];
+663: const [vagas] = await pool.query(
+664: `SELECT v.*, (SELECT COUNT(*) FROM vagas_candidaturas c WHERE c.vaga_id = v.id) AS candidatos
+665: FROM vagas v WHERE v.empresa_id = ? ORDER BY v.criada_em DESC`,
+671: vagas,
+677: console.error("Erro ao listar vagas da empresa:", e.message);
+683: app.delete("/api/companies/vagas/:id", async (req, res) => {
+687: const [rows] = await pool.query("SELECT banner_url FROM vagas WHERE id = ? AND empresa_id = ?", [req.params.id, id]);
+690: await pool.query("DELETE FROM vagas_candidaturas WHERE vaga_id = ?", [req.params.id]);
+691: await pool.query("DELETE FROM vagas WHERE id = ?", [req.params.id]);
+700: app.get("/api/companies/vagas/:id/candidaturas", async (req, res) => {
+704: const [dono] = await pool.query("SELECT id FROM vagas WHERE id = ? AND empresa_id = ?", [req.params.id, id]);
+709: FROM vagas_candidaturas c
+725: app.get("/api/companies/vagas/:id/candidatos/:uid/curriculo", async (req, res) => {
+730: const [dono] = await pool.query("SELECT id FROM vagas WHERE id = ? AND empresa_id = ?", [req.params.id, id]);
+733: "SELECT id FROM vagas_candidaturas WHERE vaga_id = ? AND usuario_id = ?",
+816: // Lista vagas ativas (página /vagas).
+817: app.get("/api/vagas", async (req, res) => {
+825: FROM vagas v
+840: const [vagas] = await pool.query(sql, params);
+841: res.json({ ok: true, vagas });
+843: console.error("Erro ao listar vagas públicas:", e.message);
+844: res.status(500).json({ error: "Erro ao carregar as vagas." });
+849: app.get("/api/vagas/:id", async (req, res) => {
+853: FROM vagas v JOIN empresas e ON e.id = v.empresa_id
+858: await pool.query("UPDATE vagas SET visualizacoes = visualizacoes + 1 WHERE id = ?", [req.params.id]);
+867: app.post("/api/vagas/:id/candidatar", async (req, res) => {
+872: "SELECT id FROM vagas WHERE id = ? AND UTC_TIMESTAMP() BETWEEN ativa_de AND expira_em",
+877: await pool.query("INSERT INTO vagas_candidaturas (vaga_id, usuario_id) VALUES (?, ?)", [req.params.id, id]);
+891: // Cliente logado: vagas em que se candidatou (para "Minha Conta" futura).
+898: FROM vagas_candidaturas c
+899: JOIN vagas v ON v.id = c.vaga_id
+2189: const PAGINAS_PUBLICAS = ["inicio", "modelos", "editor", "pagamento", "cadastro", "login", "contato", "sobre", "termos", "politica", "vagas", "sucesso", "indicacao", "recuperar-senha", "esqueci-senha", "confirmar-email", "minha-conta", "preview"];
+3264: // Pai cadastra um novo filho (limite de vagas respeitado).
+3721: // vagas que fazem JOIN com e.estado falham ("Unknown column") e a
+3722: // página /vagas fica vazia mesmo com vagas publicadas.
+3728: // ER_DUP_ENTRY: corrida com a migração paralela do garantirVagas — inofensivo.
+3746: // Migração: sistema de vagas (divulgações das empresas assinantes).
+3747: async function garantirVagas() {
+3750: CREATE TABLE IF NOT EXISTS vagas (
+3764: INDEX idx_vagas_ativas (expira_em),
+3765: INDEX idx_vagas_empresa (empresa_id)
+3769: CREATE TABLE IF NOT EXISTS vagas_candidaturas (
+3778: console.log("✅ Tabelas de vagas verificadas");
+3780: console.error("🚨 FALHA ao garantir tabelas de vagas:", e.message);
+3782: // Defensivo: as queries públicas de vagas fazem JOIN com e.estado — se a
+3784: // /vagas quebra com "Unknown column" e a página fica vazia.
+3791: console.log("✅ Coluna empresas.estado adicionada (garantirVagas)");
+3799: garantirVagas();
+3863: // Vagas ativas da empresa e candidaturas recebidas.
+3864: const [vagasRow] = await pool.query(
+3865: "SELECT COUNT(*) AS ativas FROM vagas WHERE empresa_id = ? AND expira_em > UTC_TIMESTAMP()",
+3869: `SELECT COUNT(*) AS total FROM vagas_candidaturas c
+3870: JOIN vagas v ON v.id = c.vaga_id
+3888: vagasAtivas: Number(vagasRow[0].ativas) || 0,
+4871: // do cliente em Minha Conta) — o aceite antigo gravado dentro de
+5316: <p style="color:#333;line-height:1.6">Enquanto isso, <strong>milhares de pessoas estão se candidatando às mesas vagas que você quer</strong>. A diferença entre elas e você? Elas já têm o currículo pronto na mão do recrutador.</p>
+===== public\companies.html =====
+416: /* Hamburguer (só mobile) */
+417: .ch-hamburguer {
+422: .ch-hamburguer span { display: block; height: 2px; width: 100%; background: #fff; border-radius: 2px; transition: transform .25s, opacity .25s; }
+423: .ch-hamburguer.aberto span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+424: .ch-hamburguer.aberto span:nth-child(2) { opacity: 0; }
+425: .ch-hamburguer.aberto span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+618: .ch-hamburguer { display: flex; margin-left: auto; }
+869: /* ===== Vagas do painel ===== */
+979: <button class="ch-hamburguer" id="chHamburguer" aria-label="Abrir menu" aria-expanded="false">
+1255: <button class="portal-nav-item" id="navSecaoVagas" type="button" onclick="mostrarSecao('vagas')">
+1334: <div class="stat-value" id="dbVagasAtivas">—</div>
+1335: <div class="stat-label">Vagas ativas agora</div>
+1494: <!-- ===== Seção: Vagas (divulgações) ===== -->
+1495: <div class="portal-secao oculto" id="secaoVagas">
+1506: Sua vaga aparece na página pública de vagas durante o período escolhido — depois é excluída do sistema automaticamente.
+1508: <div class="alert" id="alertVagas"></div>
+1573: <h3>Candidatos das suas vagas</h3>
+1751: var hamb = document.getElementById("chHamburguer");
+2128: vagas: { nav: "navSecaoVagas", view: "secaoVagas", titulo: "Vagas" },
+2143: if (nome === "vagas") carregarVagasEmpresa();
+2155: // ===== Vagas (divulgações da empresa) =====
+2156: var VAGAS_PLANOS = { starter: 1, pro: 3, enterprise: 7 };
+2159: function alertVagas(msg, tipo) {
+2160: var el = document.getElementById("alertVagas");
+2187: async function carregarVagasEmpresa() {
+2188: vcanVagas = []; // invalida cache do select de candidatos (sub-aba Candidatos)
+2189: var { ok, data } = await App.api("/api/companies/vagas");
+2205: var lista = data.vagas || [];
+2240: window.carregarVagasEmpresa = carregarVagasEmpresa;
+2252: /* ===== Sub-abas da seção Vagas ===== */
+2262: /* ===== Candidatos das vagas ===== */
+2263: var vcanVagas = [];
+2268: if (!vcanVagas.length) {
+2269: var r = await App.api("/api/companies/vagas");
+2270: vcanVagas = (r.ok && r.data && r.data.vagas) ? r.data.vagas : [];
+2271: if (!vcanVagas.length) {
+2276: sel.innerHTML = vcanVagas.map(function (v) {
+2283: var { ok, data } = await App.api("/api/companies/vagas/" + vagaId + "/candidaturas");
+2317: var { ok, data } = await App.api("/api/companies/vagas/" + vagaId + "/candidatos/" + uid + "/curriculo");
+2389: if (titulo.length < 3) { alertVagas("Informe o título da vaga.", "error"); return; }
+2390: if (descricao.length < 10) { alertVagas("Descreva a vaga (mín. 10 caracteres).", "error"); return; }
+2402: var resp = await fetch("/api/companies/vagas", { method: "POST", body: fd, credentials: "same-origin" });
+2405: alertVagas("Divulgação publicada! Ela já aparece na página de vagas.", "success");
+2412: carregarVagasEmpresa();
+2414: alertVagas(data.error || "Erro ao publicar.", "error");
+2417: alertVagas("Erro de conexão ao publicar.", "error");
+2425: var { ok, data } = await App.api("/api/companies/vagas/" + id, { method: "DELETE" });
+2426: if (ok) carregarVagasEmpresa();
+2461: document.getElementById("dbVagasAtivas").textContent = data.vagasAtivas;
+===== public\minha-conta.html =====
+6: <title>Minha Conta - Office Express</title>
+10: <meta property="og:title" content="Minha Conta — Office Express" />
+14: <meta name="twitter:title" content="Minha Conta — Office Express" />
+22: .minha-conta-wrap { max-width: 1040px; margin: 0 auto; }
+184: /* "Pagar agora" sempre em uma linha, sem quebrar em duas */
+222: .minha-conta-wrap { padding: 0 0 calc(84px + env(safe-area-inset-bottom)) !important; }
+408: <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+423: <a href="/vagas" class="tb-novo">
+425: Vagas
+501: <button type="button" class="conta-excluir" onclick="excluirConta()">Excluir minha conta</button>
+507: <div class="minha-conta-wrap">
+661: App.carregarHeader("minha-conta");
+746: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Pagar agora</a>';
+===== public\index.html =====
+7: <meta name="description" content="Crie seu currículo profissional em minutos com a Office Express. Modelos modernos, aprovados por recrutadores. Baixe em PDF na hora e destaque-se nas vagas." />
+108: <button class="hamburguer" id="hamburguer" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+===== public\components.js =====
+39: <button class="hamburguer" id="btnMenu" aria-label="Abrir menu" aria-expanded="false">
+168: btnMenu.classList.add('hamburguer');
+===== public\assets\app.js =====
+71: { href: "/vagas", label: "Vagas" },
+171: '<span class="user-nome">' + (usuario.nome || "Minha conta").split(" ")[0] + '</span>' +
+175: '<a href="/minha-conta"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Minha conta</a>' +
+188: '<span class="user-nome">' + (usuario.nome || "Minha conta") + '</span>' +
+190: '<a href="/minha-conta">Minha conta</a>' +
+408: const h = document.getElementById("hamburguer");
