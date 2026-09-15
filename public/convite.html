@@ -31,6 +31,21 @@
     }
     .auth-side .auth-side-content { display: none; }
 
+    /* O auth-premium.css transforma .auth-side em coluna sticky no desktop
+       (>=1024px) para o layout split. Nesta página a imagem é um fundo
+       imersivo central, então revertemos essas regras explicitamente. */
+    @media (min-width: 1024px) {
+      .auth-side {
+        position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        height: auto; max-height: none; flex: none; overflow: visible;
+        background: none;
+      }
+      .auth-side .auth-side-img {
+        position: absolute; inset: 0; transform: scale(1.04);
+        filter: saturate(1.08) contrast(1.02) brightness(.85) blur(3px);
+      }
+    }
+
     /* ---- Card de vidro fosco elegante ---- */
     .card {
       position: relative; z-index: 2; width: 100%; max-width: 460px;
