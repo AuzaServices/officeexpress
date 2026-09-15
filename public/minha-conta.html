@@ -20,6 +20,13 @@
   <style>
     /* ============ Painel do cliente — estilos específicos ============ */
     .minha-conta-wrap { max-width: 1040px; margin: 0 auto; }
+    /* A section inteira recebe o deslocamento da sidebar via JS (classe
+       .com-sidebar no body) — sem depender só de :has(), que varia entre
+       navegadores/estados e deixava o conteúdo "deslizar" ao rolar. */
+    .section.container.com-sidebar { margin-left: 0; }
+    @media (min-width: 901px) {
+      body.com-sidebar .section.container { margin-left: 308px; margin-right: auto; max-width: calc(100% - 308px); padding-left: 24px; }
+    }
 
     /* Hero de boas-vindas */
     .hero-conta {
@@ -415,7 +422,7 @@
         padding: 18px 14px;
         box-shadow: 4px 0 18px -14px rgba(0,10,20,.25);
       }
-      body:has(#conteudo:not(.oculto)) .minha-conta-wrap { margin-left: 284px; max-width: 1000px; }
+      body.com-sidebar .section.container .minha-conta-wrap { margin-left: 0; max-width: 1000px; }
     }
     /* Componentes da sidebar — idênticos aos do painel de empresas */
     .portal-sidebar-empresa { display: flex; align-items: center; gap: 12px; padding: 4px 6px 14px; border-bottom: 1px solid var(--border); }
@@ -893,6 +900,8 @@
           return;
         }
         IDS.conteudo.classList.remove("oculto");
+        // Marca o body para o CSS deslocar a section (sidebar fixa à esquerda).
+        document.body.classList.add("com-sidebar");
         IDS.saudacao.textContent = "Olá, " + (u.nome ? u.nome.split(" ")[0] : "cliente") + "!";
         // Sidebar desktop (mesmo formato do painel de empresas)
         var pseNome = document.getElementById("pseNome");

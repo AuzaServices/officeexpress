@@ -7,53 +7,80 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="/imagens/icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/estilo.css" />
   <link rel="stylesheet" href="/assets/auth-premium.css" />
   <style>
-    /* A página do convite reutiliza o tema auth-premium (fundo navy, logos
-       desfocadas em movimento, card de vidro azul) e define aqui apenas o
-       que é próprio do fluxo de 3 etapas. */
+    /* ============================================================
+       PÁGINA DE CONVITE — tema premium de autenticação.
+       Layout: imagem imersiva ao fundo (convite.jpg) + card de vidro
+       fosco (glassmorphism) centralizado em todas as telas.
+       ============================================================ */
     * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      font-family: "Inter", system-ui, -apple-system, sans-serif; color: #eef6ff;
+    body { margin: 0; font-family: "Inter", system-ui, -apple-system, sans-serif; }
+
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 16px; position: relative; }
+
+    /* Imagem central: cobre a tela inteira atrás do card (nítida, sem blur) */
+    .auth-side { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .auth-side .auth-side-img { width: 100%; height: 100%; object-fit: cover; object-position: center; filter: saturate(1.08) contrast(1.02) brightness(.85) blur(3px); transform: scale(1.04); }
+    .auth-side .auth-side-overlay {
+      position: absolute; inset: 0;
       background:
-        radial-gradient(1200px 800px at 15% -10%, #003a5c 0%, transparent 60%),
-        radial-gradient(1000px 700px at 110% 110%, #0a4a63 0%, transparent 55%),
-        linear-gradient(160deg, #001f33 0%, #00293f 55%, #003a55 100%);
-      padding: 20px; line-height: 1.5;
+        linear-gradient(180deg, rgba(0, 26, 44, .45) 0%, rgba(0, 31, 51, .52) 50%, rgba(0, 18, 30, .68) 100%),
+        radial-gradient(600px 360px at 50% 42%, rgba(255, 136, 0, .10) 0%, transparent 62%);
     }
+    .auth-side .auth-side-content { display: none; }
+
+    /* ---- Card de vidro fosco elegante ---- */
     .card {
-      position: relative; z-index: 1;
-      background: linear-gradient(150deg, rgba(16, 64, 102, .58), rgba(4, 32, 54, .72));
-      -webkit-backdrop-filter: blur(26px) saturate(1.4);
-      backdrop-filter: blur(26px) saturate(1.4);
-      border: 1px solid rgba(140, 190, 255, .28);
-      border-radius: 24px; width: 100%; max-width: 460px;
-      padding: 40px 34px; color: #eef6ff;
-      box-shadow: 0 30px 80px rgba(0, 10, 20, .55), inset 0 1px 0 rgba(180, 220, 255, .22);
-      animation: authCardIn .6s cubic-bezier(.22, 1, .36, 1) both;
+      position: relative; z-index: 2; width: 100%; max-width: 460px;
+      background: linear-gradient(155deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .08) 100%);
+      -webkit-backdrop-filter: blur(22px) saturate(1.35);
+      backdrop-filter: blur(22px) saturate(1.35);
+      border: 1px solid rgba(255, 255, 255, .24);
+      border-radius: 24px;
+      padding: 40px 34px;
+      color: #fff;
+      box-shadow: 0 30px 70px rgba(2, 12, 22, .5), inset 0 1px 0 rgba(255, 255, 255, .3);
+      animation: cardIn .6s cubic-bezier(.22, 1, .36, 1) both;
     }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }
+
+    /* Botão voltar à home, canto do card */
+    .auth-home-btn {
+      position: absolute; top: 16px; left: 16px; width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 11px; color: rgba(255, 255, 255, .82);
+      background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16);
+      transition: .18s;
+    }
+    .auth-home-btn:hover { color: #fff; background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .3); }
+
     .logo { display: block; margin: 0 auto 18px; height: 48px; filter: drop-shadow(0 4px 14px rgba(0,0,0,.4)); }
-    h1 { margin: 0 0 6px; font-size: 21px; text-align: center; color: #eef6ff; }
-    .sub { margin: 0 0 22px; color: rgba(210, 232, 255, .75); font-size: 14px; text-align: center; }
+    h1 { margin: 0 0 6px; font-size: 21px; text-align: center; color: #fff; }
+    .sub { margin: 0 0 22px; color: rgba(255, 255, 255, .8); font-size: 14px; text-align: center; }
     .sub b { color: #fff; }
     .etapa { display: none; }
     .etapa.ativa { display: block; }
-    label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: rgba(210, 232, 255, .85); }
+    label { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: rgba(255, 255, 255, .88); }
     input[type="email"], input[type="password"], input[type="text"] {
-      width: 100%; padding: 14px 16px; border: 1.5px solid rgba(140, 190, 255, .22);
+      width: 100%; padding: 14px 16px; border: 1px solid rgba(255, 255, 255, .28);
       border-radius: 13px; font-size: 16px; font-family: inherit;
-      background: rgba(2, 20, 36, .5); color: #fff; transition: border-color .15s;
+      background: rgba(255, 255, 255, .10); color: #fff;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      transition: border-color .15s, background .15s;
     }
-    input::placeholder { color: rgba(180, 205, 230, .45); }
-    input:focus { outline: none; border-color: var(--brand); }
+    input::placeholder { color: rgba(255, 255, 255, .45); }
+    input:focus { outline: none; border-color: var(--brand, #ff8800); background: rgba(255, 255, 255, .16); box-shadow: 0 0 0 4px rgba(255, 136, 0, .22); }
+    input[readonly] { background: rgba(255, 255, 255, .07); color: rgba(255, 255, 255, .85); }
     .otp { display: flex; gap: 10px; justify-content: center; margin: 18px 0 6px; }
     .otp input {
       width: 56px; height: 62px; text-align: center; font-size: 26px; font-weight: 800;
-      border: 1.5px solid rgba(140, 190, 255, .25); border-radius: 12px; font-family: inherit;
-      background: rgba(2, 20, 36, .5); color: #fff;
+      border: 1px solid rgba(255, 255, 255, .3); border-radius: 12px; font-family: inherit;
+      background: rgba(255, 255, 255, .10); color: #fff;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     }
-    .otp input:focus { outline: none; border-color: var(--brand); }
+    .otp input:focus { outline: none; border-color: var(--brand, #ff8800); box-shadow: 0 0 0 4px rgba(255, 136, 0, .22); }
     .btn {
       width: 100%; margin-top: 18px; background: linear-gradient(135deg, #ff8800, #e67300);
       color: #fff; border: none; padding: 15px; border-radius: 13px;
@@ -63,34 +90,35 @@
     .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(230, 115, 0, .48); }
     .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
     .erro {
-      display: none; background: rgba(220, 38, 38, .18); color: #fecaca; border: 1px solid rgba(248, 113, 113, .45);
+      display: none; background: rgba(220, 38, 38, .2); color: #fecaca; border: 1px solid rgba(248, 113, 113, .45);
       border-radius: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
     }
     .ok {
-      display: none; background: rgba(22, 163, 74, .16); color: #bbf7d0; border: 1px solid rgba(74, 222, 128, .4);
+      display: none; background: rgba(22, 163, 74, .18); color: #bbf7d0; border: 1px solid rgba(74, 222, 128, .4);
       border-radius: 10px; padding: 11px 14px; font-size: 13.5px; font-weight: 600; margin-top: 14px;
     }
-    .forca { height: 6px; background: rgba(2, 20, 36, .5); border-radius: 999px; margin-top: 8px; overflow: hidden; }
+    .forca { height: 6px; background: rgba(255, 255, 255, .14); border-radius: 999px; margin-top: 8px; overflow: hidden; }
     .forca .fill { height: 100%; width: 0; border-radius: 999px; transition: width .3s, background .3s; }
-    .dica { font-size: 12px; color: rgba(210, 232, 255, .6); margin-top: 6px; }
-    .reenviar { text-align: center; margin-top: 12px; font-size: 13px; color: rgba(210, 232, 255, .65); }
-    .reenviar a { color: #ffb15e; font-weight: 700; cursor: pointer; text-decoration: none; }
-    .reenviar a.disabled { color: rgba(210, 232, 255, .4); cursor: default; opacity: .5; }
+    .dica { font-size: 12px; color: rgba(255, 255, 255, .62); margin-top: 6px; }
+    .reenviar { text-align: center; margin-top: 12px; font-size: 13px; color: rgba(255, 255, 255, .68); }
+    .reenviar a { color: var(--brand, #ff8800); font-weight: 700; cursor: pointer; text-decoration: none; }
+    .reenviar a.disabled { color: rgba(255, 255, 255, .4); cursor: default; opacity: .5; }
     .sucesso-final { text-align: center; padding: 10px 0 4px; }
     .sucesso-final .check {
       width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 50%;
-      background: rgba(22, 163, 74, .2); color: #4ade80; font-size: 38px;
+      background: rgba(22, 163, 74, .22); color: #4ade80; font-size: 38px;
       display: flex; align-items: center; justify-content: center;
     }
     .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
-    .steps span { width: 34px; height: 5px; border-radius: 999px; background: rgba(140, 190, 255, .2); transition: .3s; }
-    .steps span.on { background: var(--brand); }
+    .steps span { width: 34px; height: 5px; border-radius: 999px; background: rgba(255, 255, 255, .2); transition: .3s; }
+    .steps span.on { background: var(--brand, #ff8800); }
     .convite-info {
-      background: rgba(2, 20, 36, .45); border: 1px solid rgba(140, 190, 255, .2);
+      background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .18);
       border-radius: 12px; padding: 14px 16px; margin-bottom: 6px; text-align: center; font-size: 14px;
-      color: rgba(210, 232, 255, .8);
+      color: rgba(255, 255, 255, .82);
     }
     .convite-info b { display: block; font-size: 15px; color: #fff; }
+
     @media (max-width: 480px) {
       .card { padding: 30px 20px; }
       .otp input { width: 48px; height: 56px; font-size: 22px; }
@@ -98,10 +126,14 @@
   </style>
 </head>
 <body>
-  <img class="auth-bg-logo a" src="/imagens/logo.png" alt="" aria-hidden="true" onerror="this.style.display='none'" />
-  <img class="auth-bg-logo b" src="/imagens/marca.png" alt="" aria-hidden="true" onerror="this.style.display='none'" />
-  <div class="card">
+  <!-- Imagem central imersiva (arte exclusiva da página de convite) -->
+  <div class="auth-side">
+    <img class="auth-side-img" src="/imagens/auth/convite.jpg" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='/imagens/auth/empresa.jpg';" />
+    <div class="auth-side-overlay"></div>
+  </div>
 
+  <div class="auth-page">
+    <div class="card">
       <a class="auth-home-btn" href="/" aria-label="Voltar para a página inicial" title="Voltar para a home">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 10.5 12 3l9 7.5"/>
@@ -109,63 +141,64 @@
           <path d="M10 21v-6h4v6"/>
         </svg>
       </a>
-    <img class="logo" src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" />
-    <div class="steps" id="steps"><span></span><span></span><span></span></div>
+      <img class="logo" src="/imagens/logo.png" alt="Office Express" onerror="this.style.display='none'" />
+      <div class="steps" id="steps"><span></span><span></span><span></span></div>
 
-    <!-- ETAPA 0: carregando / erro de convite -->
-    <div class="etapa" id="etapa0">
-      <p class="sub" id="msg0">Validando seu convite...</p>
-      <div class="erro" id="erro0"></div>
-    </div>
-
-    <!-- ETAPA 1: e-mail → receber código -->
-    <div class="etapa" id="etapa1">
-      <div class="convite-info">
-        <b id="nomeConvidado">–</b>
-        convidado por <span id="convidadoPor">–</span>
+      <!-- ETAPA 0: carregando / erro de convite -->
+      <div class="etapa" id="etapa0">
+        <p class="sub" id="msg0">Validando seu convite...</p>
+        <div class="erro" id="erro0"></div>
       </div>
-      <p class="sub">Confirme seu e-mail para começar</p>
-      <label for="email">Seu e-mail</label>
-      <input type="email" id="email" readonly />
-      <div class="erro" id="erro1"></div>
-      <button class="btn" id="btnCodigo" onclick="pedirCodigo()">Receber código de confirmação</button>
-    </div>
 
-    <!-- ETAPA 2: código de 4 dígitos -->
-    <div class="etapa" id="etapa2">
-      <p class="sub">Digite o <b>código de 4 dígitos</b> enviado para<br><b id="emailLabel">–</b></p>
-      <div class="otp">
-        <input type="text" inputmode="numeric" maxlength="1" id="otp0" />
-        <input type="text" inputmode="numeric" maxlength="1" id="otp1" />
-        <input type="text" inputmode="numeric" maxlength="1" id="otp2" />
-        <input type="text" inputmode="numeric" maxlength="1" id="otp3" />
+      <!-- ETAPA 1: e-mail → receber código -->
+      <div class="etapa" id="etapa1">
+        <div class="convite-info">
+          <b id="nomeConvidado">–</b>
+          convidado por <span id="convidadoPor">–</span>
+        </div>
+        <p class="sub">Confirme seu e-mail para começar</p>
+        <label for="email">Seu e-mail</label>
+        <input type="email" id="email" readonly />
+        <div class="erro" id="erro1"></div>
+        <button class="btn" id="btnCodigo" onclick="pedirCodigo()">Receber código de confirmação</button>
       </div>
-      <div class="erro" id="erro2"></div>
-      <div class="ok" id="ok2"></div>
-      <button class="btn" id="btnConfirmar" onclick="confirmarCodigo()">Confirmar código</button>
-      <div class="reenviar">Não recebeu? <a id="linkReenviar" onclick="pedirCodigo()">Reenviar código</a> (<span id="cooldown">30</span>s)</div>
-    </div>
 
-    <!-- ETAPA 3: senha -->
-    <div class="etapa" id="etapa3">
-      <p class="sub">E-mail confirmado! Agora <b>crie sua senha de acesso</b></p>
-      <label for="senha">Nova senha</label>
-      <input type="password" id="senha" oninput="medirForca()" placeholder="Mínimo 8 caracteres, com letras e números" />
-      <div class="forca"><div class="fill" id="forcaFill"></div></div>
-      <p class="dica" id="dicaForca">Use letras e números. Quanto mais longa, mais segura.</p>
-      <label for="confirmar">Confirmar senha</label>
-      <input type="password" id="confirmar" placeholder="Repita a senha" />
-      <div class="erro" id="erro3"></div>
-      <button class="btn" id="btnFinalizar" onclick="completarCadastro()">Concluir cadastro</button>
-    </div>
+      <!-- ETAPA 2: código de 4 dígitos -->
+      <div class="etapa" id="etapa2">
+        <p class="sub">Digite o <b>código de 4 dígitos</b> enviado para<br /><b id="emailLabel">–</b></p>
+        <div class="otp">
+          <input type="text" inputmode="numeric" maxlength="1" id="otp0" />
+          <input type="text" inputmode="numeric" maxlength="1" id="otp1" />
+          <input type="text" inputmode="numeric" maxlength="1" id="otp2" />
+          <input type="text" inputmode="numeric" maxlength="1" id="otp3" />
+        </div>
+        <div class="erro" id="erro2"></div>
+        <div class="ok" id="ok2"></div>
+        <button class="btn" id="btnConfirmar" onclick="confirmarCodigo()">Confirmar código</button>
+        <div class="reenviar">Não recebeu? <a id="linkReenviar" onclick="pedirCodigo()">Reenviar código</a> (<span id="cooldown">30</span>s)</div>
+      </div>
 
-    <!-- ETAPA 4: sucesso -->
-    <div class="etapa" id="etapa4">
-      <div class="sucesso-final">
-        <div class="check">✓</div>
-        <h1>Cadastro concluído!</h1>
-        <p class="sub">Sua conta de parceiro está ativa. Faça login com o seu e-mail e a senha que você acabou de criar.</p>
-        <button class="btn" onclick="location.href='/login-parceiro'">Ir para o login</button>
+      <!-- ETAPA 3: senha -->
+      <div class="etapa" id="etapa3">
+        <p class="sub">E-mail confirmado! Agora <b>crie sua senha de acesso</b></p>
+        <label for="senha">Nova senha</label>
+        <input type="password" id="senha" oninput="medirForca()" placeholder="Mínimo 8 caracteres, com letras e números" />
+        <div class="forca"><div class="fill" id="forcaFill"></div></div>
+        <p class="dica" id="dicaForca">Use letras e números. Quanto mais longa, mais segura.</p>
+        <label for="confirmar">Confirmar senha</label>
+        <input type="password" id="confirmar" placeholder="Repita a senha" />
+        <div class="erro" id="erro3"></div>
+        <button class="btn" id="btnFinalizar" onclick="completarCadastro()">Concluir cadastro</button>
+      </div>
+
+      <!-- ETAPA 4: sucesso -->
+      <div class="etapa" id="etapa4">
+        <div class="sucesso-final">
+          <div class="check">✓</div>
+          <h1>Cadastro concluído!</h1>
+          <p class="sub">Sua conta de parceiro está ativa. Faça login com o seu e-mail e a senha que você acabou de criar.</p>
+          <button class="btn" onclick="location.href='/login-parceiro'">Ir para o login</button>
+        </div>
       </div>
     </div>
   </div>
@@ -198,7 +231,7 @@
           var el = document.getElementById(id);
           if (estado === "verde") {
             el.style.borderColor = "#16a34a";
-            el.style.background = "rgba(34,197,94,.12)";
+            el.style.background = "rgba(34,197,94,.14)";
             el.style.boxShadow = "0 0 0 3px rgba(34,197,94,.2)";
           } else {
             el.style.borderColor = "";
