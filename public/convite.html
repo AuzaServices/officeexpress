@@ -18,7 +18,7 @@
     * { box-sizing: border-box; }
     body { margin: 0; font-family: "Inter", system-ui, -apple-system, sans-serif; }
 
-    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 16px; position: relative; }
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 16px; position: relative; background: transparent; }
 
     /* Imagem central: cobre a tela inteira atrás do card (nítida, sem blur) */
     .auth-side { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
@@ -44,6 +44,9 @@
         position: absolute; inset: 0; transform: scale(1.04);
         filter: saturate(1.08) contrast(1.02) brightness(.85) blur(3px);
       }
+      /* O premium pinta .auth-page de azul opaco no desktop (layout split);
+         aqui a página é transparente para deixar o fundo imersivo aparecer. */
+      .auth-page { display: flex; padding: 28px 16px; background: transparent; align-items: center; justify-content: center; }
     }
 
     /* ---- Card de vidro fosco elegante ---- */
