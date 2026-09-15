@@ -1531,7 +1531,8 @@
         localStorage.setItem("curriculo", JSON.stringify(dadosCrono));
       } catch (e) {}
 
-      // Cria o pedido (modelo Cronológico) e vai direto ao pagamento
+      // Cria o pedido (modelo Cronológico). Assinante Premium: nasce pago e
+      // vai direto ao download; demais, vão ao pagamento.
       App.api("/api/pedidos", {
         method: "POST",
         body: JSON.stringify({ modelo: "cronologico", dados: dadosCrono, tipo: "curriculo", ref: App.obterRef() }),
@@ -1539,7 +1540,11 @@
         btn.disabled = false;
         btn.textContent = "Melhorar meu currículo agora";
         if (r.ok && r.data && r.data.pedido && r.data.pedido.id) {
-          window.location.href = "/pagamento?pedido=" + r.data.pedido.id;
+          if (r.data.pedido.coberto_pelo_plano) {
+            window.location.href = "/sucesso?pedido=" + r.data.pedido.id;
+          } else {
+            window.location.href = "/pagamento?pedido=" + r.data.pedido.id;
+          }
         } else {
           alert((r.data && r.data.error) || "Não foi possível criar o pedido. Tente novamente.");
         }

@@ -230,6 +230,7 @@
     async function irPagamento() {
       var btn = document.getElementById("btnIrPag");
       btn.disabled = true;
+      btn.textContent = "Preparando…";
       // Exige login
       var u = await App.authMe();
       if (!u) {
@@ -242,10 +243,17 @@
         body: JSON.stringify({ modelo: modelo, dados: dados, ref: App.obterRef() }),
       });
       if (ok) {
+        // Assinante Premium: o pedido já nasce pago (coberto pelo plano).
+        // Sem página de pagamento — vai direto para o download.
+        if (data.pedido && data.pedido.coberto_pelo_plano) {
+          window.location.href = "/sucesso?pedido=" + data.pedido.id;
+          return;
+        }
         window.location.href = "/pagamento?pedido=" + data.pedido.id;
       } else {
         alert(data.error || "Erro ao criar o pedido.");
         btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>Continuar para pagamento';
       }
     }
     window.irPagamento = irPagamento;

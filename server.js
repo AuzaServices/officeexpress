@@ -1046,9 +1046,29 @@ app.post("/api/pedidos", async (req, res) => {
   // próprio (configurado no painel admin), usa o preço dele; senão, o padrão.
   const precoParceiro = await getPrecoParceiro(parceiroId);
   const valor = precoParceiro != null ? precoParceiro : await getPreco();
+  // ---- PLANO PREMIUM ATIVO = currículo já coberto pela assinatura ----
+  // O assinante NÃO passa pelo fluxo de pagamento: o pedido nasce PAGO,
+  // arquivado nos documentos dele, pronto para download. Parceiro (se houver)
+  // NÃO recebe comissão duplicada aqui — a comissão dele veio (ou virá) da
+  // transação do PLANO no webhook.
+  const uid = usuarioDaSessao(req);
+  let planoAtivo = null;
+  if (uid) {
+    const p = await planoDoUsuario(uid);
+    if (p.ativo && p.plano !== "gratuito") planoAtivo = p.plano;
+  }
+  if (planoAtivo && tipo === "curriculo") {
+    const [rPago] = await pool.query(
+      "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor, parceiro_id, status, pagamento_id, pagamento_tipo, pago_at, download_token) VALUES (?, ?, ?, ?, ?, 'pago', ?, 'plano', NOW(), ?)",
+      [uid, modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), 0, parceiroId, "plano-" + uid + "-" + planoAtivo + "-coberto-" + Date.now().toString(36), gerarToken()]
+    );
+    try { await arquivarTalento(rPago.insertId); } catch (e) {}
+    try { await incrementarUsoUsuario(uid); } catch (e) {}
+    return res.json({ pedido: { id: rPago.insertId, modelo, tipo, valor: 0, parceiro_id: parceiroId, coberto_pelo_plano: true } });
+  }
   const [result] = await pool.query(
     "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor, parceiro_id) VALUES (?, ?, ?, ?, ?)",
-    [usuarioDaSessao(req), modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), valor, parceiroId]
+    [uid, modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), valor, parceiroId]
   );
   res.json({ pedido: { id: result.insertId, modelo, tipo, valor, parceiro_id: parceiroId } });
 });
@@ -1096,7 +1116,7 @@ app.get("/api/pedidos/meus", async (req, res) => {
   const id = usuarioDaSessao(req);
   if (!id) return res.status(401).json({ error: "Não autenticado." });
   const [rows] = await pool.query(
-    "SELECT id, modelo, valor, status, created_at, pago_at, download_token, dados_json FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
+    "SELECT id, modelo, valor, status, created_at, pago_at, download_token, pagamento_tipo, dados_json FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
     [id]
   );
   // Extrai o consentimento (LGPD) para exibição do selo de compartilhamento.
@@ -1641,7 +1661,7 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
 });
 
 // ===========================================================================
-// ASSINATURAS DO CLIENTE (planos Premium / Premium+)
+// ASSINATURAS DO CLIENTE (plano Premium)
 // ===========================================================================
 
 // Status do plano do usuário logado (para a aba Conta e o paywall do editor).

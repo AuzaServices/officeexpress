@@ -1,0 +1,10 @@
+﻿1 linha~1016 app.post("/api/pedidos", async (req, res) => {
+1 linha~1761 app.get("/api/pedidos/:id/download", async (req, res) => {
+1 linha~140 await registrarPedidoPago(pedidoId, String(pagamentoId) + "-cur", tipo || "pix");
+2 linha~1252 async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
+3 linha~1587 await registrarPedidoPago(pedidoId, String(data.id), pago.payment_method_id || "pix");
+4 linha~1630 // (falha transitória). Chamar registrarPedidoPago de novo é seguro:
+5 linha~1634 await registrarPedidoPago(id, rows[0].pagamento_id || pagamentoId || null, rows[0].pagamento_tipo || tipo || "pix");
+6 linha~1639 await registrarPedidoPago(id, pagamentoId || null, tipo || "pix");
+1 linha~89 async function incrementarUsoUsuario(usuarioId) {
+2 linha~1265 if ((dj._tipo || "curriculo") === "curriculo") await incrementarUsoUsuario(pd[0].usuario_id);

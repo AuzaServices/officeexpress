@@ -806,8 +806,11 @@
         pedidos.forEach(function (p) {
           var tipo = (p.modelo || "").toLowerCase().indexOf("carta") !== -1 ? "carta" : "curriculo";
           var modeloNome = nomesModelo[p.modelo] || p.modelo;
+          // Currículo coberto pelo plano: nasce pago com valor 0 — é tratado
+          // como pago (download), nunca como pendente de pagamento.
+          var coberto = p.status === "pago" && !(parseFloat(p.valor) > 0) && (p.pagamento_tipo === "plano" || !p.pagamento_id);
           var statusCls = p.status === "pago" ? "badge-pago" : (p.status === "pendente" ? "badge-pendente" : "badge-cancelado");
-          var statusTxt = p.status === "pago" ? "Pago" : (p.status === "pendente" ? "Pendente" : "Cancelado");
+          var statusTxt = p.status === "pago" ? (coberto ? "Premium" : "Pago") : (p.status === "pendente" ? "Pendente" : "Cancelado");
           var data = p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "-";
 
           var acao;

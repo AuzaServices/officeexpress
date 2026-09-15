@@ -496,6 +496,22 @@
     var modoEscolhido = null; // 'plano' | 'avulso' | null
     var ehPedidoPlano = pedidoId && pedidoId.indexOf("plano-") === 0;
 
+    // ---- Defensivo: assinante Premium não paga nada aqui ----
+    // Se o plano já está ativo e o pedido é dele e pendente (caso raro de
+    // pedido criado antes da ativação), marca como pago e manda pro download.
+    (function () {
+      App.api("/api/auth/assinatura").then(function (r) {
+        if (r.ok && r.data && r.data.assinatura && r.data.assinatura.ativo && pedidoId && !ehPedidoPlano) {
+          App.api("/api/pedidos/" + encodeURIComponent(pedidoId) + "/confirmar-pago", {
+            method: "POST",
+            body: JSON.stringify({ pagamentoId: "plano-coberto-" + Date.now(), tipo: "plano" })
+          }).then(function (c) {
+            if (c.ok) window.location.href = "/sucesso?pedido=" + encodeURIComponent(pedidoId);
+          });
+        }
+      });
+    })();
+
     document.getElementById("ano").textContent = new Date().getFullYear();
     App.carregarHeader("pagamento");
     try { App.track && App.track("chegar_pagamento"); } catch (e) { /* ignora */ }
