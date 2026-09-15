@@ -8,7 +8,6 @@
   <link rel="icon" href="/imagens/icon.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/estilo.css" />
-  <link rel="stylesheet" href="/assets/auth-premium.css" />
   <style>
     /* ============================================================
        PÁGINA DE CONVITE — tema premium de autenticação.
@@ -20,33 +19,17 @@
 
     .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 16px; position: relative; background: transparent; }
 
-    /* Imagem central: cobre a tela inteira atrás do card (nítida, sem blur) */
-    .auth-side { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-    .auth-side .auth-side-img { width: 100%; height: 100%; object-fit: cover; object-position: center; filter: saturate(1.08) contrast(1.02) brightness(.85) blur(3px); transform: scale(1.04); }
-    .auth-side .auth-side-overlay {
+    /* Fundo imersivo: classes próprias (cv-*) para NÃO colidir com
+       auth-premium.css / estilo.css — a colisão era o motivo de a imagem
+       sumir no desktop. Nenhuma media query necessária: funciona igual
+       em todas as larguras. */
+    .cv-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .cv-bg .cv-img { width: 100%; height: 100%; object-fit: cover; object-position: center; filter: saturate(1.08) contrast(1.02) brightness(.85) blur(3px); transform: scale(1.04); }
+    .cv-bg .cv-overlay {
       position: absolute; inset: 0;
       background:
         linear-gradient(180deg, rgba(0, 26, 44, .45) 0%, rgba(0, 31, 51, .52) 50%, rgba(0, 18, 30, .68) 100%),
         radial-gradient(600px 360px at 50% 42%, rgba(255, 136, 0, .10) 0%, transparent 62%);
-    }
-    .auth-side .auth-side-content { display: none; }
-
-    /* O auth-premium.css transforma .auth-side em coluna sticky no desktop
-       (>=1024px) para o layout split. Nesta página a imagem é um fundo
-       imersivo central, então revertemos essas regras explicitamente. */
-    @media (min-width: 1024px) {
-      .auth-side {
-        position: fixed; inset: 0; z-index: 0; pointer-events: none;
-        height: auto; max-height: none; flex: none; overflow: visible;
-        background: none;
-      }
-      .auth-side .auth-side-img {
-        position: absolute; inset: 0; transform: scale(1.04);
-        filter: saturate(1.08) contrast(1.02) brightness(.85) blur(3px);
-      }
-      /* O premium pinta .auth-page de azul opaco no desktop (layout split);
-         aqui a página é transparente para deixar o fundo imersivo aparecer. */
-      .auth-page { display: flex; padding: 28px 16px; background: transparent; align-items: center; justify-content: center; }
     }
 
     /* ---- Card de vidro fosco elegante ---- */
@@ -144,10 +127,10 @@
   </style>
 </head>
 <body>
-  <!-- Imagem central imersiva (arte exclusiva da página de convite) -->
-  <div class="auth-side">
-    <img class="auth-side-img" src="/imagens/auth/convite.jpg" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='/imagens/auth/empresa.jpg';" />
-    <div class="auth-side-overlay"></div>
+  <!-- Fundo imersivo (arte exclusiva da página de convite) -->
+  <div class="cv-bg">
+    <img class="cv-img" src="/imagens/auth/convite.jpg" alt="" aria-hidden="true" onerror="this.onerror=null;this.src='/imagens/auth/empresa.jpg';" />
+    <div class="cv-overlay"></div>
   </div>
 
   <div class="auth-page">
