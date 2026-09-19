@@ -1660,6 +1660,28 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
   res.json({ success: true });
 });
 
+// Trocar a senha do usuário LOGADO (aba "Minha conta" do painel do cliente).
+// Exige a senha atual: ninguém troca a senha de uma sessão ativa sem prová-la.
+app.post("/api/auth/me/senha", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Não autenticado." });
+  const { senhaAtual, novaSenha } = req.body || {};
+  if (!senhaAtual || !novaSenha) return res.status(400).json({ error: "Preencha a senha atual e a nova senha." });
+  if (!validarSenha(novaSenha)) return res.status(400).json({ error: "A nova senha deve ter no mínimo 8 caracteres, com letras e números." });
+  try {
+    const [rows] = await pool.query("SELECT senha FROM usuarios WHERE id = ?", [id]);
+    if (!rows.length) return res.status(404).json({ error: "Conta não encontrada." });
+    const match = await bcrypt.compare(senhaAtual, rows[0].senha);
+    if (!match) return res.status(401).json({ error: "Senha atual incorreta." });
+    const hash = await bcrypt.hash(novaSenha, 10);
+    await pool.query("UPDATE usuarios SET senha = ? WHERE id = ?", [hash, id]);
+    res.json({ success: true, message: "Senha alterada com sucesso." });
+  } catch (err) {
+    console.error("❌ Erro ao trocar senha:", err.message);
+    res.status(500).json({ error: "Erro ao alterar a senha." });
+  }
+});
+
 // ===========================================================================
 // ASSINATURAS DO CLIENTE (plano Premium)
 // ===========================================================================
@@ -5527,6 +5549,17 @@ async function garantirNotificacoes() {
   }
 }
 garantirNotificacoes();
+
+// Limpa a tabela "notificações" a cada 24 horas (sininho não vira lixo eterno).
+// Roda na inicialização e depois via setInterval diário.
+async function limparNotificacoes24h() {
+  try {
+    const [r] = await pool.query("DELETE FROM notificacoes");
+    if (r.affectedRows) console.log("🧹 Notificações limpas:", r.affectedRows);
+  } catch (e) { console.error("Erro ao limpar notificações:", e.message); }
+}
+limparNotificacoes24h();
+setInterval(limparNotificacoes24h, 24 * 60 * 60 * 1000);
 
 // Cria notificações para todos os clientes da cidade da nova vaga.
 // A cidade do cliente vem do banco de talentos (preenchida no currículo/conta).
