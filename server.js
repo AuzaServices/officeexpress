@@ -1116,7 +1116,7 @@ app.get("/api/pedidos/meus", async (req, res) => {
   const id = usuarioDaSessao(req);
   if (!id) return res.status(401).json({ error: "Não autenticado." });
   const [rows] = await pool.query(
-    "SELECT id, modelo, valor, status, created_at, pago_at, download_token, pagamento_tipo, dados_json FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
+    "SELECT id, modelo, valor, status, created_at, pago_at, download_token, pagamento_id, pagamento_tipo, dados_json FROM pedidos WHERE usuario_id = ? ORDER BY id DESC",
     [id]
   );
   // Extrai o consentimento (LGPD) para exibição do selo de compartilhamento.

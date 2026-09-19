@@ -476,6 +476,22 @@
     .conta-linha b { color: var(--text-primary); font-weight: 700; text-align: right; overflow-wrap: anywhere; }
     .conta-atalho { display: block; text-align: center; font-size: .86rem; font-weight: 700; color: var(--brand); text-decoration: none; padding: 10px; border: 1px dashed var(--border); border-radius: 10px; }
     .conta-atalho:hover { background: var(--card-hover, #f6fafc); }
+    .conta-foto-linha { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .conta-avatar {
+      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+      object-fit: cover; border: 2px solid var(--border);
+      background: var(--card-hover, #f0f4f7); color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;
+      overflow: hidden;
+    }
+    .conta-foto-acoes { display: flex; flex-direction: column; gap: 6px; }
+    .conta-foto-acoes button {
+      border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+      font-size: .78rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      font-family: inherit; transition: border-color .15s, color .15s;
+    }
+    .conta-foto-acoes button:hover { border-color: var(--brand); color: var(--brand); }
+    .conta-foto-acoes input[type="file"] { display: none; }
     .conta-separador { height: 1px; background: var(--border); margin: 16px 0; }
     .conta-titulo-secao { margin: 0 0 12px; font-size: .85rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text-secondary); }
     .conta-msg { display: none; margin-top: 12px; padding: 10px 13px; border-radius: 10px; font-size: .84rem; font-weight: 600; }
@@ -644,6 +660,17 @@
       </div>
 
       <!-- Excluir conta -->
+      <div class="conta-secao">
+        <h4>Segurança</h4>
+        <label class="conta-rotulo">Senha atual</label>
+        <input type="password" id="senhaAtualConta" autocomplete="current-password" placeholder="Sua senha atual" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;background:var(--card-hover,#f6fafc);color:var(--text-primary);margin-bottom:10px" />
+        <label class="conta-rotulo">Nova senha</label>
+        <input type="password" id="senhaNovaConta" autocomplete="new-password" placeholder="Mínimo 8 caracteres, com letras e números" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;background:var(--card-hover,#f6fafc);color:var(--text-primary);margin-bottom:10px" />
+        <label class="conta-rotulo">Confirmar nova senha</label>
+        <input type="password" id="senhaConfConta" autocomplete="new-password" placeholder="Repita a nova senha" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;background:var(--card-hover,#f6fafc);color:var(--text-primary);margin-bottom:12px" />
+        <button type="button" class="conta-excluir" style="background:var(--brand,#ff8800);color:#fff" onclick="salvarNovaSenha()">Alterar senha</button>
+      </div>
+
       <div class="conta-secao conta-zona-perigo">
         <h4>Zona de risco</h4>
         <p>Excluir sua conta é permanente. Seus currículos deixam de aparecer para recrutadores e o acesso é perdido imediatamente.</p>
@@ -764,41 +791,7 @@
     </div>
   </div>
 
-  <div class="conta-modal-fundo" id="contaModalFundo">
-    <div class="conta-modal" role="dialog" aria-modal="true" aria-label="Minha conta">
-      <button type="button" class="conta-fechar" onclick="fecharConta()" aria-label="Fechar">✕</button>
-      <h3>Minha conta</h3>
-      <p class="conta-sub">Visão geral e segurança da sua conta.</p>
-
-      <!-- Visão geral: dados da sessão + atalho para os documentos -->
-      <div class="conta-overview" id="contaOverview">
-        <div class="conta-linha"><span class="rot">Nome</span><b id="contaNome">—</b></div>
-        <div class="conta-linha"><span class="rot">E-mail</span><b id="contaEmail">—</b></div>
-        <div class="conta-linha"><span class="rot">Plano</span><b id="contaPlano">—</b></div>
-      </div>
-      <a class="conta-atalho" href="#tabelaWrap" onclick="fecharConta()">Ver meus documentos</a>
-
-      <div class="conta-separador"></div>
-
-      <!-- Segurança: troca de senha (incluída, sem remover nada) -->
-      <h4 class="conta-titulo-secao">Segurança</h4>
-      <div class="campo">
-        <label for="senhaAtualConta">Senha atual</label>
-        <input type="password" id="senhaAtualConta" autocomplete="current-password" placeholder="Sua senha atual" />
-      </div>
-      <div class="campo">
-        <label for="novaSenhaConta">Nova senha</label>
-        <input type="password" id="novaSenhaConta" autocomplete="new-password" placeholder="Mínimo 8 caracteres, com letras e números" />
-      </div>
-      <div class="campo">
-        <label for="confirmarSenhaConta">Confirmar nova senha</label>
-        <input type="password" id="confirmarSenhaConta" autocomplete="new-password" placeholder="Repita a nova senha" />
-      </div>
-      <button type="button" class="btn btn-primary btn-block" id="btnSalvarSenha" onclick="salvarNovaSenha()">Alterar senha</button>
-      <div class="conta-msg" id="contaMsg"></div>
-    </div>
-  </div>
-  </section>
+    </section>
 
   
 
@@ -807,7 +800,8 @@
     (function () {
       var nomesModelo = {};
       var pedidos = [];
-      document.getElementById("ano").textContent = new Date().getFullYear();
+      var anoEl = document.getElementById("ano");
+      if (anoEl) anoEl.textContent = new Date().getFullYear();
       App.carregarHeader("minha-conta");
 
       App.api("/api/modelos").then(function (r) {
@@ -1195,51 +1189,27 @@
       });
     })();
   
+    
+
     // ============================================================
-    // MODAL "MINHA CONTA" — troca de senha
+    // TROCA DE SENHA — integrada ao modal "Minha conta" (contaOverlay).
     // ============================================================
-    async function abrirConta(e) {
-      if (e) e.preventDefault();
-      document.getElementById("contaModalFundo").classList.add("aberto");
-      contaMsg("", "");
-      // Preenche a visão geral com os dados da sessão (nome, e-mail, plano).
-      try {
-        var r = await App.api("/api/auth/me");
-        if (r.ok && r.data && r.data.usuario) {
-          var u = r.data.usuario;
-          document.getElementById("contaNome").textContent = u.nome || "—";
-          document.getElementById("contaEmail").textContent = u.email || "—";
-        }
-      } catch (e2) { /* silencioso */ }
-      try {
-        var p = await App.api("/api/auth/assinatura");
-        if (p.ok && p.data && p.data.assinatura) {
-          var a = p.data.assinatura;
-          document.getElementById("contaPlano").textContent =
-            a.ativo ? (a.plano === "premium" ? "Premium (ativo)" : (a.plano || "ativo")) : "Gratuito";
-        }
-      } catch (e3) { /* silencioso */ }
-    }
-    function fecharConta() {
-      document.getElementById("contaModalFundo").classList.remove("aberto");
-      ["senhaAtualConta","novaSenhaConta","confirmarSenhaConta"].forEach(function (id) { document.getElementById(id).value = ""; });
-    }
     function contaMsg(tipo, txt) {
-      var el = document.getElementById("contaMsg");
-      el.className = "conta-msg" + (tipo ? " " + tipo : "");
+      var el = document.getElementById("alertaConta");
+      if (!el) return;
+      el.style.display = txt ? "block" : "none";
+      el.className = "alert" + (tipo === "ok" ? " alert-sucesso" : tipo === "erro" ? " alert-erro" : "");
       el.textContent = txt;
     }
-    async function salvarNovaSenha() {
-      var atual = document.getElementById("senhaAtualConta").value;
-      var nova = document.getElementById("novaSenhaConta").value;
-      var conf = document.getElementById("confirmarSenhaConta").value;
+    window.salvarNovaSenha = async function () {
+      var atual = document.getElementById("senhaAtualConta") ? document.getElementById("senhaAtualConta").value : "";
+      var nova = document.getElementById("senhaNovaConta") ? document.getElementById("senhaNovaConta").value : "";
+      var conf = document.getElementById("senhaConfConta") ? document.getElementById("senhaConfConta").value : "";
       if (!atual || !nova) { contaMsg("erro", "Preencha a senha atual e a nova senha."); return; }
       if (nova !== conf) { contaMsg("erro", "As novas senhas não coincidem."); return; }
       if (nova.length < 8 || !/[a-zA-Z]/.test(nova) || !/\d/.test(nova)) {
         contaMsg("erro", "A nova senha deve ter no mínimo 8 caracteres, com letras e números."); return;
       }
-      var btn = document.getElementById("btnSalvarSenha");
-      btn.disabled = true; btn.textContent = "Salvando…";
       try {
         var r = await App.api("/api/auth/me/senha", {
           method: "POST",
@@ -1247,16 +1217,10 @@
         });
         if (r.ok) {
           contaMsg("ok", "Senha alterada com sucesso.");
-          ["senhaAtualConta","novaSenhaConta","confirmarSenhaConta"].forEach(function (id) { document.getElementById(id).value = ""; });
-        } else {
-          contaMsg("erro", (r.data && r.data.error) || "Não foi possível alterar a senha.");
-        }
+          ["senhaAtualConta","senhaNovaConta","senhaConfConta"].forEach(function (id) { var e2 = document.getElementById(id); if (e2) e2.value = ""; });
+        } else contaMsg("erro", (r.data && r.data.error) || "Não foi possível alterar a senha.");
       } catch (e) { contaMsg("erro", "Falha de conexão. Tente novamente."); }
-      btn.disabled = false; btn.textContent = "Alterar senha";
-    }
-    window.abrirConta = abrirConta;
-    window.fecharConta = fecharConta;
-    window.salvarNovaSenha = salvarNovaSenha;
+    };
 
     // ============================================================
     // MODAL DE VISUALIZAÇÃO DO CURRÍCULO (olhinho)
@@ -1312,7 +1276,7 @@
     // Fechar modais clicando fora ou com Esc
     document.addEventListener("click", function (e) {
       if (e.target && e.target.id === "visModalFundo") fecharVis();
-      if (e.target && e.target.id === "contaModalFundo") fecharConta();
+      if (e.target && e.target.id === "contaOverlay") fecharConta(e);
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") { fecharVis(); fecharConta(); }
