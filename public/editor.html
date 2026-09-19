@@ -706,6 +706,8 @@
       if (prev.hobbies) document.getElementById("hobbies").value = prev.hobbies;
       if (prev.infoAdicional) document.getElementById("infoAdicional").value = prev.infoAdicional;
       document.getElementById("primeiroEmprego").checked = !!prev.primeiroEmprego;
+      var ckLgpd = document.getElementById("consentimento");
+      if (ckLgpd) ckLgpd.checked = !!prev.consentimento;
       (prev.telefone || []).forEach(addTelefone);
       (prev.curso || []).forEach(function (_, i) {
         addCurso();

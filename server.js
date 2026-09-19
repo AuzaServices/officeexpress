@@ -137,10 +137,19 @@ async function ativarPlanoELiberarPedido(usuarioId, planoId, pagamentoId, tipo) 
   if (pedidoId) {
     const [pv] = await pool.query("SELECT id, usuario_id, status FROM pedidos WHERE id = ?", [pedidoId]);
     if (pv.length && pv[0].usuario_id === usuarioId && pv[0].status === "pendente") {
+      // Comissão única: o parceiro já recebe a % da ASSINATURA (registrada
+      // logo abaixo). O currículo liberado é "coberto pelo plano" — o valor
+      // dele é zerado para a transação de venda sair com 0 e não gerar
+      // comissão duplicada sobre receita que na prática foi do plano.
+      await pool.query("UPDATE pedidos SET valor = 0, pagamento_id = ? WHERE id = ?", ["plano-" + usuarioId + "-" + planoId + "-coberto-" + Date.now().toString(36), pedidoId]);
       await registrarPedidoPago(pedidoId, String(pagamentoId) + "-cur", tipo || "pix");
-      console.log("✅ Currículo pendente liberado pela assinatura: pedido", pedidoId);
+      console.log("✅ Currículo pendente liberado pela assinatura: pedido", pedidoId, "(valor zerado — comissão única)");
     }
   }
+  // NOTA DE COMISSÃO: o parceiro recebe a comissão SOMENTE da assinatura (uma
+  // vez, logo abaixo). O currículo liberado acima entra no fluxo financeiro
+  // com valor 0 (zerado em registrarPedidoPago via pedido.valor) — sem
+  // comissão duplicada sobre a venda avulsa.
   // Comissão do PARCEIRO sobre a assinatura: se o usuário veio do link de um
   // parceiro, o parceiro recebe a % dele sobre o valor do plano. Registrada
   // como transação do tipo 'assinatura' (pedido_id NULL — não é um pedido).
@@ -1452,7 +1461,7 @@ app.post("/api/pagamento/pix", async (req, res) => {
         payer: { email: req.body.email || (usr[0] && usr[0].email) || "cliente@officeexpress.com.br", first_name: ((usr[0] && usr[0].nome) || "Cliente").split(" ")[0], last_name: ((usr[0] && usr[0].nome) || "Cliente").split(" ").slice(1).join(" ") || "Office" },
         notification_url: `${BASE_URL}/api/webhook/mp`,
       };
-      const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `pix-${pedidoId}-${Date.now()}` } });
+      const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `pix-${pedidoId}` } });
       return res.json({
         id: pago.id,
         status: pago.status,
@@ -1476,7 +1485,7 @@ app.post("/api/pagamento/pix", async (req, res) => {
       payer: { email: req.body.email || "cliente@officeexpress.com.br", first_name: (req.body.nome || "Cliente").split(" ")[0], last_name: (req.body.nome || "Cliente").split(" ").slice(1).join(" ") || "Office" },
       notification_url: `${BASE_URL}/api/webhook/mp`,
     };
-    const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `pix-${pedidoId}-${Date.now()}` } });
+    const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `pix-${pedidoId}` } });
     res.json({
       id: pago.id,
       status: pago.status,
@@ -1513,7 +1522,7 @@ app.post("/api/pagamento/cartao", async (req, res) => {
         external_reference: pedidoId,
         notification_url: `${BASE_URL}/api/webhook/mp`,
       };
-      const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `card-${pedidoId}-${Date.now()}` } });
+      const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `card-${pedidoId}` } });
       return res.json({ id: pago.id, status: pago.status, status_detail: pago.status_detail });
     } catch (err) {
       console.error("❌ Erro no cartão do plano:", err.message);
@@ -1534,7 +1543,7 @@ app.post("/api/pagamento/cartao", async (req, res) => {
       external_reference: `pedido-${pedidoId}`,
       notification_url: `${BASE_URL}/api/webhook/mp`,
     };
-    const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `card-${pedidoId}-${Date.now()}` } });
+    const pago = await paymentMP.create({ body, requestOptions: { idempotencyKey: `card-${pedidoId}` } });
     res.json({ id: pago.id, status: pago.status, status_detail: pago.status_detail });
   } catch (err) {
     console.error("❌ Erro ao criar pagamento cartão:", err.message);
@@ -1561,7 +1570,6 @@ app.post("/api/webhook/mp", async (req, res) => {
     try {
       const pre = await preapprovalMP.get({ id: data.id });
       const ref = pre.external_reference || "";
-      const m = ref.match(/usuario-(\d+)-(premium_plus?|premium_plus)/i);
       const mm = ref.match(/usuario-(\d+)-([a-z_]+)/i);
       if (!mm) return;
       const usuarioId = parseInt(mm[1], 10);
@@ -1591,19 +1599,23 @@ app.post("/api/webhook/mp", async (req, res) => {
     if (pago.status === "approved") {
       const ref = pago.external_reference || "";
       // ---- Pagamento de PLANO do cliente (external_reference: plano-<uid>-<planoId>-...) ----
-      const mPlano = ref.match(/^plano-(\d+)-(premium_plus?_plus|premium_plus|premium)-/i);
-      const mPlano2 = ref.match(/^plano-(\d+)-([a-z_]+)-/i);
-      const mM = mPlano || mPlano2;
-      if (mM) {
-        const usuarioId = parseInt(mM[1], 10);
-        const planoId = mM[2];
-        if (PLANOS_CLIENTE[planoId]) {
+      // Segurança: o plano é identificado por LOOKUP na tabela usuarios_pagamentos
+      // (não por regex), e refs internas "-coberto-" (currículos já cobertos pela
+      // assinatura) NUNCA ativam/renovam plano — evita renovação gratuita por
+      // replay de eventos antigos do MP.
+      if (ref.indexOf("plano-") === 0 && ref.indexOf("-coberto-") < 0) {
+        const [upPlano] = await pool.query(
+          "SELECT id, usuario_id, plano, status FROM usuarios_pagamentos WHERE pagamento_id = ?",
+          [ref]
+        );
+        if (upPlano.length && upPlano[0].status !== "pago" && PLANOS_CLIENTE[upPlano[0].plano]) {
           // Pagamento do ciclo atual: ativa plano por 30 dias e libera o
           // currículo pendente vinculado (escolha feita na tela de pagamento).
-          await ativarPlanoELiberarPedido(usuarioId, planoId, String(data.id), pago.payment_method_id === "account_money" ? "pix" : (pago.payment_method_id || "pix"));
-          console.log("✅ Plano de cliente ativado:", usuarioId, planoId, "| pagamento:", data.id);
+          await ativarPlanoELiberarPedido(upPlano[0].usuario_id, upPlano[0].plano, String(data.id), pago.payment_method_id === "account_money" ? "pix" : (pago.payment_method_id || "pix"));
+          console.log("✅ Plano de cliente ativado:", upPlano[0].usuario_id, upPlano[0].plano, "| pagamento:", data.id);
           return;
         }
+        if (upPlano.length) return; // assinatura já processada (idempotente)
       }
       const pedidoId = parseInt(ref.replace("pedido-", ""), 10);
       if (!isNaN(pedidoId) && pedidoId > 0) {
@@ -1617,6 +1629,35 @@ app.post("/api/webhook/mp", async (req, res) => {
 });
 
 // Confirmar pedido pago (chamado pelo front após polling de status)
+// Assinante Premium ativo cobre o próprio currículo pendente (criado antes
+// da ativação do plano). O backend valida plano ativo + posse — o front nunca
+// envia pagamentoId (que agora é sempre validado no Mercado Pago).
+app.post("/api/pedidos/:id/cobrir-pelo-plano", async (req, res) => {
+  const uid = usuarioDaSessao(req);
+  if (!uid) return res.status(401).json({ error: "Não autenticado." });
+  const idNum = parseInt(req.params.id, 10);
+  if (!idNum) return res.status(400).json({ error: "Pedido inválido." });
+  try {
+    const [pv] = await pool.query("SELECT id, usuario_id, status, valor FROM pedidos WHERE id = ?", [idNum]);
+    if (!pv.length) return res.status(404).json({ error: "Pedido não encontrado." });
+    if (pv[0].usuario_id !== uid) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
+    if (pv[0].status === "pago") return res.json({ success: true, ja_pago: true });
+    const plano = await planoDoUsuario(uid);
+    if (!plano.ativo || plano.plano === "gratuito") return res.status(402).json({ error: "Sem assinatura ativa." });
+    await pool.query(
+      "UPDATE pedidos SET status = 'pago', valor = 0, pagamento_id = ?, pagamento_tipo = 'pix', pago_at = NOW(), download_token = COALESCE(download_token, ?) WHERE id = ?",
+      ["plano-" + uid + "-" + plano.plano + "-coberto-" + Date.now().toString(36), gerarToken(), idNum]
+    );
+    try { await arquivarTalento(idNum); } catch (e) {}
+    try { await incrementarUsoUsuario(uid); } catch (e) {}
+    console.log("✅ Currículo coberto pelo plano ativo: pedido", idNum, "usuário", uid);
+    return res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao cobrir pedido pelo plano:", e.message);
+    return res.status(500).json({ error: "Erro ao cobrir o pedido." });
+  }
+});
+
 app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
   const { id } = req.params;
   const { pagamentoId, tipo } = req.body || {};
@@ -1631,12 +1672,19 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
     if (!up.length) return res.status(404).json({ error: "Assinatura não encontrada." });
     if (up[0].status === "pago") return res.json({ success: true });
     // Consulta o pagamento MP mais recente associado a este plano.
+    // Segurança: o pagamento aprovado precisa corresponder a ESTA assinatura
+    // (external_reference == pagamento_id do plano do próprio usuário).
     if (pagamentoId) {
       try {
-        const pago = await paymentMP.get({ id: pagamentoId });
+        const pago = await paymentMP.get({ id: String(pagamentoId) });
         if (pago.status === "approved") {
+          const refPg = String(pago.external_reference || "");
+          if (refPg !== id) {
+            console.error("⛔ confirmar-pago: pagamento", pagamentoId, "não corresponde ao plano", id, "(ref:", refPg + ")");
+            return res.status(403).json({ error: "Pagamento não corresponde a esta assinatura." });
+          }
           // Ativa plano + libera o currículo pendente vinculado.
-          await ativarPlanoELiberarPedido(uid, up[0].plano, String(pagamentoId), tipo || "pix");
+          await ativarPlanoELiberarPedido(uid, up[0].plano, String(pagamentoId), pago.payment_method_id === "account_money" ? "pix" : (pago.payment_method_id || tipo || "pix"));
           return res.json({ success: true });
         }
       } catch (err) {
@@ -1647,20 +1695,39 @@ app.post("/api/pedidos/:id/confirmar-pago", async (req, res) => {
   }
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [id]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
-  if (rows[0].status === "pago") {
+  const pedido = rows[0];
+  // ---- Segurança (IDOR): exige sessão e que o pedido pertença ao usuário. ----
+  const uidPedido = usuarioDaSessao(req);
+  if (!uidPedido) return res.status(401).json({ error: "Não autenticado." });
+  if (pedido.usuario_id !== uidPedido) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
+  if (pedido.status === "pago") {
     // REDE DE SEGURANÇA 3: o pedido já foi marcado como pago (ex.: webhook
     // chegou antes), mas a transação financeira pode não ter sido criada
     // (falha transitória). Chamar registrarPedidoPago de novo é seguro:
     // o UPDATE é idempotente e a transação usa ON DUPLICATE KEY UPDATE.
     const [t] = await pool.query("SELECT id FROM transacoes WHERE pedido_id = ? AND parceiro_id IS NOT NULL", [id]);
     if (!t.length) {
-      await registrarPedidoPago(id, rows[0].pagamento_id || pagamentoId || null, rows[0].pagamento_tipo || tipo || "pix");
+      await registrarPedidoPago(id, pedido.pagamento_id || pagamentoId || null, pedido.pagamento_tipo || tipo || "pix");
       console.log("🔁 Transação recuperada para o pedido", id, "(pago mas sem transação de parceiro).");
     }
     return res.json({ success: true });
   }
-  await registrarPedidoPago(id, pagamentoId || null, tipo || "pix");
-  res.json({ success: true });
+  // ---- Pendente → pago: SÓ com pagamento real aprovado no Mercado Pago,
+  // vinculado a ESTE pedido (external_reference "pedido-<id>"). ----
+  if (!pagamentoId) return res.status(402).json({ error: "Pagamento ainda não aprovado." });
+  try {
+    const pago = await paymentMP.get({ id: String(pagamentoId) });
+    if (pago.status !== "approved") return res.status(402).json({ error: "Pagamento ainda não aprovado." });
+    const refPg = String(pago.external_reference || "");
+    if (refPg !== "pedido-" + parseInt(id, 10)) {
+      return res.status(403).json({ error: "Pagamento não corresponde a este pedido." });
+    }
+    await registrarPedidoPago(id, String(pagamentoId), pago.payment_method_id === "account_money" ? "pix" : (pago.payment_method_id || tipo || "pix"));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Erro ao validar pagamento no confirmar-pago:", err.message);
+    return res.status(402).json({ error: "Pagamento ainda não aprovado." });
+  }
 });
 
 // Trocar a senha do usuário LOGADO (aba "Minha conta" do painel do cliente).
@@ -1921,7 +1988,7 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
   const cobertoPeloPlano = pedido.status === "pago" && String(pedido.pagamento_id || "").indexOf("plano-") === 0;
-  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, coberto_pelo_plano: cobertoPeloPlano, planos, dados });
+  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, status: pedido.status, coberto_pelo_plano: cobertoPeloPlano, planos, dados });
 });
 
 // ---------------------------------------------------------------------------
@@ -2060,7 +2127,15 @@ app.delete("/api/admin/pedidos/:id", protegerAdmin, async (req, res) => {
       if (m[1] === "s") {
         // Assinatura: apaga a transação registrada (a receita permanece
         // preservada na tabela imutável `transacoes`).
+        // Coerência do plano: se a assinatura excluída estava PAGA, o Premium
+        // da conta é desativado na hora — evita o caso do usuário ficar
+        // premium "eterno" sem registro de pagamento.
+        const [upEx] = await pool.query("SELECT usuario_id, status FROM usuarios_pagamentos WHERE id = ?", [alvoId]);
         await pool.query("DELETE FROM usuarios_pagamentos WHERE id = ?", [alvoId]);
+        if (upEx.length && upEx[0].status === "pago") {
+          await pool.query("UPDATE usuarios SET assinatura_ativa = 0 WHERE id = ?", [upEx[0].usuario_id]);
+          console.log("⛔ Assinatura paga excluída pelo admin: usuário", upEx[0].usuario_id, "desativado");
+        }
         await registrarAdminLog("assinatura_excluir", `Assinatura #${alvoId} excluída da lista de pedidos`);
       } else {
         await pool.query("DELETE FROM pedidos WHERE id = ?", [alvoId]);
@@ -2438,6 +2513,13 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
           await ativarPlanoELiberarPedido(upRow.usuario_id, upRow.plano, upRow.pagamento_id, upRow.tipo || "pix");
         } else {
           await pool.query("UPDATE usuarios_pagamentos SET status = ? WHERE id = ?", [status, upId]);
+          // Coerência do plano: cancelar/pendenciar a assinatura no admin
+          // desativa o Premium da conta NA HORA (o usuário deixa de ter
+          // currículos cobertos e volta a ver marca d'água).
+          if (status === "cancelado" || status === "pendente") {
+            await pool.query("UPDATE usuarios SET assinatura_ativa = 0 WHERE id = ?", [upRow.usuario_id]);
+            console.log("⛔ Assinatura " + status + " pelo admin: usuário", upRow.usuario_id, "desativado");
+          }
         }
         await registrarAdminLog("assinatura_status", "Assinatura " + upId + " -> " + status);
       }
@@ -2505,6 +2587,12 @@ app.put("/api/admin/pedidos/:id/status", protegerAdmin, async (req, res) => {
       try { await arquivarTalento(id); } catch (e) {}
       // Verifica promoção do filho (meta batida).
       if (pedido.parceiro_id) verificarPromocaoFilhoWrapper(pedido.parceiro_id);
+    } else if (pedido.status === "pago" && status !== "pago") {
+      // REGRA PERMANENTE: um pedido PAGO não pode ser revertido para
+      // pendente/cancelado — foi contraprestação real (regra: pago nunca se
+      // perde). O admin pode apagar o registro inteiro, mas o arquivo
+      // permanente em talentos permanece de qualquer forma.
+      return res.status(400).json({ error: "Pedido pago não pode ser revertido (regra: pago é permanente)." });
     } else {
       await pool.query("UPDATE pedidos SET status = ? WHERE id = ?", [status, id]);
     }
@@ -2532,6 +2620,12 @@ app.put("/api/admin/pedidos/:id/valor", protegerAdmin, async (req, res) => {
     }
     const id = parseInt(idBruto, 10);
     if (!id) return res.status(400).json({ error: "Pedido inválido." });
+    // Coerência financeira: pedido PAGO não tem valor editado — a receita já
+    // está registrada na tabela imutável transacoes (fonte de verdade).
+    const [pvVal] = await pool.query("SELECT status FROM pedidos WHERE id = ?", [id]);
+    if (pvVal.length && pvVal[0].status === "pago") {
+      return res.status(400).json({ error: "Pedido pago não tem valor editável (receita já registrada)." });
+    }
     await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [v, id]);
     await registrarAdminLog("pedido_valor", `Pedido ${id} -> ${v}`);
     res.json({ success: true });

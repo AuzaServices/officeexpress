@@ -357,9 +357,11 @@
 
         <!-- Área de pagamento efetivo (avulso OU plano) -->
         <div id="areaPagamento" style="display:none">
+        <!-- Cartão removido: o MP exige CPF real do pagador e o formulário
+             não coleta CPF/e-mail (pagamentos com 000.000.000-00 são
+             rejeitados). Pagamento exclusivo via Pix até a coleta existir. -->
         <div class="tabs">
           <button class="tab active" id="tabPix" onclick="ativarAba('pix')">Pix</button>
-          <button class="tab" id="tabCard" onclick="ativarAba('card')">Cartão de crédito</button>
         </div>
 
         <!-- PIX -->
@@ -399,22 +401,7 @@
         </div>
 
         <!-- CARTÃO -->
-        <div id="abaCard" class="aba" style="display:none">
-          <div class="cartao-aviso">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Seus dados são processados com segurança pelo Mercado Pago.
-          </div>
-          <div id="cardForm">
-            <div class="campo"><label>Número do cartão</label><input id="cardNumber" inputmode="numeric" placeholder="0000 0000 0000 0000" /></div>
-            <div class="campo"><label>Nome no cartão</label><input id="cardHolder" placeholder="Como está no cartão" /></div>
-            <div class="cartao-linha">
-              <div class="campo" style="flex:1"><label>Validade</label><input id="cardExp" placeholder="MM/AA" /></div>
-              <div class="campo" style="flex:1"><label>CVV</label><input id="cardCvv" inputmode="numeric" placeholder="123" /></div>
-            </div>
-            <button class="btn btn-primary btn-block" id="btnPagarCard" onclick="pagarCartao()">Pagar com cartão</button>
-          </div>
-          <div class="status-pag" id="statusCard"></div>
-        </div>
+        
         </div><!-- /areaPagamento -->
       </div>
 
@@ -502,9 +489,10 @@
     (function () {
       App.api("/api/auth/assinatura").then(function (r) {
         if (r.ok && r.data && r.data.assinatura && r.data.assinatura.ativo && pedidoId && !ehPedidoPlano) {
-          App.api("/api/pedidos/" + encodeURIComponent(pedidoId) + "/confirmar-pago", {
-            method: "POST",
-            body: JSON.stringify({ pagamentoId: "plano-coberto-" + Date.now(), tipo: "plano" })
+          // Assinante ativo com pedido pendente (criado antes da ativação):
+          // o BACKEND valida plano ativo + posse e cobre o currículo.
+          App.api("/api/pedidos/" + encodeURIComponent(pedidoId) + "/cobrir-pelo-plano", {
+            method: "POST"
           }).then(function (c) {
             if (c.ok) window.location.href = "/sucesso?pedido=" + encodeURIComponent(pedidoId);
           });
@@ -662,18 +650,20 @@
         if (window.MercadoPago && publicKey) {
           mp = new MercadoPago(publicKey, { locale: "pt-BR" });
         }
-        // Gera o Pix automaticamente assim que a página carrega
-        if (pedidoId) gerarPix();
+        // O Pix só é gerado DEPOIS da escolha (avulso x assinar) — evita
+        // cobranças órfãs no MP quando o usuário troca de opção.
       } else {
         App.mostrarAlerta("alert", "Não foi possível carregar os dados do pagamento. Tente novamente.", "error");
       }
     });
 
     function ativarAba(aba) {
-      document.getElementById("abaPix").style.display = aba === "pix" ? "block" : "none";
-      document.getElementById("abaCard").style.display = aba === "card" ? "block" : "none";
-      document.getElementById("tabPix").classList.toggle("active", aba === "pix");
-      document.getElementById("tabCard").classList.toggle("active", aba === "card");
+      // Somente Pix: os elementos do cartão foram removidos (sem coleta de
+      // CPF real, o MP rejeita o pagamento).
+      var abaPix = document.getElementById("abaPix");
+      var tabPix = document.getElementById("tabPix");
+      if (abaPix) abaPix.style.display = aba === "pix" ? "block" : "none";
+      if (tabPix) tabPix.classList.toggle("active", aba === "pix");
     }
     window.ativarAba = ativarAba;
 
@@ -818,7 +808,11 @@
     }
 
     // ---------- CARTÃO ----------
-    async function pagarCartao() {
+        async function pagarCartao() {
+      App.mostrarAlerta("alert", "Pagamento por cartão indisponível no momento. Use o Pix.", "error");
+      return;
+    }
+    async function pagarCartaoDesativado() {
       App.limparAlerta("alert");
       if (!mp) { App.mostrarAlerta("alert", "Erro ao carregar o processador de cartão. Tente o Pix.", "error"); return; }
       var statusCard = document.getElementById("statusCard");

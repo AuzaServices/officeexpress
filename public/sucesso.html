@@ -109,13 +109,34 @@
       return App.api("/api/pedidos/" + pedidoId + "/dados").then(function (r) {
         if (!r.ok) {
           dadosPedido = null;
+          // Estado de erro: não deixa o check verde + "Pagamento confirmado!"
+          // aparecerem com pedido inexistente/não autenticado.
+          var hErro = document.querySelector(".sucesso-conteudo h2, .card h2, h2");
+          if (hErro) hErro.textContent = "Pedido não identificado";
+          var subErro = document.querySelector(".sucesso-conteudo p, .card p");
+          if (subErro) subErro.textContent = "Não foi possível carregar este pedido. Verifique se você está logado na conta correta.";
+          var btnErro = document.getElementById("btnBaixar") || document.querySelector(".btn-primary");
+          if (btnErro) btnErro.style.display = "none";
+          document.title = "Pedido não identificado - Office Express";
           return;
         }
         dadosPedido = r.data;
+        // Pedido PENDENTE: mensagem coerente (aguardando pagamento).
+        if (r.data.status && r.data.status !== "pago" && r.data.tipo !== "plano") {
+          var hPend = document.querySelector(".sucesso-conteudo h2, .card h2, h2");
+          if (hPend) hPend.textContent = "Pagamento pendente";
+          var subPend = document.querySelector(".sucesso-conteudo p, .card p");
+          if (subPend) subPend.textContent = "Assim que o pagamento for confirmado, seu currículo é liberado para download.";
+          var btnPend = document.getElementById("btnBaixar") || document.querySelector(".btn-primary");
+          if (btnPend) btnPend.style.display = "none";
+          document.title = "Pagamento pendente - Office Express";
+          return;
+        }
         tipoPedido = r.data.tipo || "curriculo";
         // Currículo COBERTO PELO PLANO (assinante premium): não houve pagamento
         // avulso — a mensagem fala do plano, não de pagamento confirmado.
         if (tipoPedido !== "plano" && r.data.coberto_pelo_plano) {
+          document.title = "Currículo pronto - Office Express";
           var hCoberto = document.querySelector(".sucesso-conteudo h2, .card h2, h2");
           if (hCoberto) hCoberto.textContent = "Currículo pronto! 🎉";
           var subCoberto = document.querySelector(".sucesso-conteudo p, .card p");

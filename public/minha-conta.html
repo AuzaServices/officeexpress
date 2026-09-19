@@ -674,7 +674,7 @@
       <div class="conta-secao conta-zona-perigo">
         <h4>Zona de risco</h4>
         <p>Excluir sua conta é permanente. Seus currículos deixam de aparecer para recrutadores e o acesso é perdido imediatamente.</p>
-        <button type="button" class="conta-excluir" onclick="excluirConta()">Excluir minha conta</button>
+        <button id="btnExcluirConta" type="button" class="conta-excluir" onclick="excluirConta()">Excluir minha conta</button>
       </div>
     </div>
   </div>
@@ -1062,7 +1062,7 @@
           var statusEl = document.getElementById("planoStatus");
           var usoEl = document.getElementById("planoUso");
           var acoesEl = document.getElementById("planoAcoes");
-          var nomes = { gratuito: "Gratuito", premium: "Premium", premium_plus: "Premium+" };
+          var nomes = { gratuito: "Gratuito", premium: "Premium" };
           nomeEl.textContent = nomes[a.plano] || "Gratuito";
           if (a.ativo) {
             statusEl.textContent = "Ativo" + (a.expiraEm ? " até " + new Date(a.expiraEm).toLocaleDateString("pt-BR") : "");
@@ -1071,8 +1071,12 @@
             statusEl.textContent = "Inativo";
             statusEl.className = "conta-plano-status";
           }
-          var usoTxt = "Currículos este mês: " + ((a.uso && a.uso.curriculos) || 0);
-          if (a.plano !== "gratuito" && a.ativo) usoTxt += " · ilimitado";
+          var usoTxt;
+          if (a.plano !== "gratuito" && a.ativo) {
+            usoTxt = "Currículos ilimitados (" + ((a.uso && a.uso.curriculos) || 0) + " criados neste mês)";
+          } else {
+            usoTxt = "Currículos criados este mês: " + ((a.uso && a.uso.curriculos) || 0);
+          }
           usoEl.textContent = usoTxt;
           // Ações
           var html = "";
@@ -1172,7 +1176,7 @@
       window.excluirConta = async function () {
         if (!confirm("Tem certeza que deseja excluir sua conta? Esta ação é permanente e não pode ser desfeita.")) return;
         if (!confirm("Última confirmação: seus currículos sairão da busca dos recrutadores e o acesso será perdido. Excluir?")) return;
-        var btn = document.querySelector(".conta-excluir");
+        var btn = document.getElementById("btnExcluirConta") || document.querySelector(".conta-excluir");
         btn.disabled = true;
         try {
           var r = await App.api("/api/auth/conta", { method: "DELETE" });

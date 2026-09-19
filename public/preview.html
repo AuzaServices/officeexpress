@@ -87,7 +87,7 @@
 
   <div class="preview-page container">
     <div class="section-header">
-      <p>Esta é uma prévia do seu currículo no modelo <strong id="modeloNome"></strong>. Após o pagamento, você recebe o arquivo em <strong>PDF</strong>.</p>
+      <p id="headerPrevTxt">Esta é uma prévia do seu currículo no modelo <strong id="modeloNome"></strong>. Após o pagamento, você recebe o arquivo em <strong>PDF</strong>.</p>
     </div>
 
     <div class="preview-layout">
@@ -227,7 +227,10 @@
       dimensionarPreview();
     });
 
+    var irPagamentoEmAndamento = false;
     async function irPagamento() {
+      if (irPagamentoEmAndamento) return; // evita pedido duplicado (duplo clique/autopagamento)
+      irPagamentoEmAndamento = true;
       var btn = document.getElementById("btnIrPag");
       btn.disabled = true;
       btn.textContent = "Preparando…";
@@ -272,6 +275,9 @@
         App.api("/api/auth/assinatura").then(function (r) {
           if (r.ok && r.data.assinatura && r.data.assinatura.ativo && r.data.assinatura.plano !== "gratuito") {
             txt.textContent = "Continuar";
+            // Assinante não paga avulso: o texto do header não fala em pagamento.
+            var hp = document.getElementById("headerPrevTxt");
+            if (hp) hp.innerHTML = 'Esta é uma prévia do seu currículo no modelo <strong id="modeloNome">' + document.getElementById("modeloNome").textContent + '</strong>. Com seu <strong>plano Premium</strong>, o arquivo é liberado em <strong>PDF</strong> na hora.';
           }
         }).catch(function () {});
       });
