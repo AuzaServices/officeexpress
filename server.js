@@ -1476,6 +1476,23 @@ app.post("/api/pagamento/pix", async (req, res) => {
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [pedidoId]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
+  // ---- QR DINÂMICO: valor cobrado = preço ATUAL ----
+  // Se o admin mudou o preço (global ou do parceiro) DEPOIS da criação do
+  // pedido, o QR passaria a cobrar o valor ANTIGO gravado no pedido. Para o
+  // valor cobrado ser sempre o valor exibido no painel (e vice-versa), o
+  // pedido PENDENTE é atualizado para o preço vigente ANTES de gerar o Pix:
+  // preço do parceiro (se o pedido tem vínculo com preço próprio) ou o global.
+  if (pedido.status === "pendente") {
+    try {
+      const precoParceiro = pedido.parceiro_id ? await getPrecoParceiro(pedido.parceiro_id) : null;
+      const precoVigente = precoParceiro != null ? precoParceiro : await getPreco();
+      if (Number(pedido.valor) !== Number(precoVigente)) {
+        await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [precoVigente, pedidoId]);
+        pedido.valor = precoVigente;
+        console.log("🔄 QR dinâmico: pedido", pedidoId, "valor atualizado", pedido.valor, "→", precoVigente);
+      }
+    } catch (e) { console.error("QR dinâmico (fallback ao valor do pedido):", e.message); }
+  }
   try {
     const body = {
       transaction_amount: Number(pedido.valor),
@@ -1987,6 +2004,20 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
+  // ---- Valor dinâmico na exibição: pedido PENDENTE exibe o preço VIGENTE
+  // (parceiro com preço próprio ou global) e o grava no pedido — assim o
+  // valor mostrado no painel é sempre o mesmo que o QR cobrará. Pedidos PAGOS
+  // nunca mudam (receita já registrada em transacoes).
+  if (pedido.status === "pendente") {
+    try {
+      const precoParceiro = pedido.parceiro_id ? await getPrecoParceiro(pedido.parceiro_id) : null;
+      const precoVigente = precoParceiro != null ? precoParceiro : await getPreco();
+      if (Number(pedido.valor) !== Number(precoVigente)) {
+        await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [precoVigente, pedidoId]);
+        pedido.valor = precoVigente;
+      }
+    } catch (e) { /* mantém o valor gravado em caso de falha */ }
+  }
   const cobertoPeloPlano = pedido.status === "pago" && String(pedido.pagamento_id || "").indexOf("plano-") === 0;
   res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, status: pedido.status, coberto_pelo_plano: cobertoPeloPlano, planos, dados });
 });
