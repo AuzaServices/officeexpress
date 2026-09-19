@@ -1059,7 +1059,7 @@ app.post("/api/pedidos", async (req, res) => {
   }
   if (planoAtivo && tipo === "curriculo") {
     const [rPago] = await pool.query(
-      "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor, parceiro_id, status, pagamento_id, pagamento_tipo, pago_at, download_token) VALUES (?, ?, ?, ?, ?, 'pago', ?, 'plano', NOW(), ?)",
+      "INSERT INTO pedidos (usuario_id, modelo, dados_json, valor, parceiro_id, status, pagamento_id, pagamento_tipo, pago_at, download_token) VALUES (?, ?, ?, ?, ?, 'pago', ?, 'pix', NOW(), ?)",
       [uid, modelo, JSON.stringify({ ...dadosLimpos, _tipo: tipo }), 0, parceiroId, "plano-" + uid + "-" + planoAtivo + "-coberto-" + Date.now().toString(36), gerarToken()]
     );
     try { await arquivarTalento(rPago.insertId); } catch (e) {}
@@ -1270,9 +1270,12 @@ async function verificarPromocaoFilho(parceiroId) {
 async function verificarPromocaoFilhoWrapper(parceiroId) { try { await verificarPromocaoFilho(parceiroId); } catch (e) {} }
 
 async function registrarPedidoPago(pedidoId, pagamentoId, tipo) {
+  // O ENUM pedidos.pagamento_tipo só aceita 'pix'/'card': qualquer outro rótulo
+  // (ex.: 'plano') é normalizado para 'pix' — o pagamento_id identifica o resto.
+  const tipoSeguro = (tipo === 'card') ? 'card' : 'pix';
   await pool.query(
     "UPDATE pedidos SET status = 'pago', pagamento_id = ?, pagamento_tipo = ?, pago_at = NOW(), download_token = ? WHERE id = ?",
-    [pagamentoId, tipo, gerarToken(), pedidoId]
+    [pagamentoId, tipoSeguro, gerarToken(), pedidoId]
   );
   // Arquiva o talento no banco permanente (Companies), se houver consentimento.
   try { await arquivarTalento(pedidoId); } catch (e) {}
