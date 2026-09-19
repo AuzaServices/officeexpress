@@ -4441,18 +4441,21 @@ async function arquivarTalento(pedidoId) {
 (async () => {
   try {
     const [rows] = await pool.query(
-      "SELECT id FROM pedidos WHERE status = 'pago' AND dados_json LIKE '%\"consentimento\":true%'"
+      "SELECT id FROM pedidos WHERE status = 'pago'"
     );
     for (const r of rows) await arquivarTalento(r.id);
-    if (rows.length) console.log(`🗄️ Talentos arquivados na inicialização: ${rows.length} currículo(s) pago(s) com consentimento.`);
+    if (rows.length) console.log(`🗄️ Talentos permanentes garantidos na inicialização: ${rows.length} currículo(s) pago(s) arquivado(s).`);
 
-    // LGPD (conformidade retroativa): remove da tabela talentos qualquer
-    // registro que não corresponda a um pedido PAGO atual (ex.: talentos
-    // arquivados de pendentes por versões anteriores do sistema).
+    // REGRA PERMANENTE (pago nunca se perde): remove da tabela talentos apenas
+    // cadastros públicos SEM pedido (sem contraprestação) e SEM consentimento.
+    // Talentos com pedido_id (currículos PAGOS, cobertos por plano ou avulsos
+    // confirmados) são permanentes — mesmo que o pedido original seja excluído
+    // do painel admin, o currículo pago continua arquivado aqui e o dono pode
+    // baixá-lo pelo painel ("Meus documentos").
     const [del] = await pool.query(
-      "DELETE FROM talentos WHERE pedido_id IS NOT NULL AND pedido_id NOT IN (SELECT id FROM pedidos WHERE status = 'pago')"
+      "DELETE FROM talentos WHERE pedido_id IS NULL AND consentimento = 0"
     );
-    if (del.affectedRows > 0) console.log(`🧹 LGPD: ${del.affectedRows} talento(s) sem pagamento confirmado removido(s) do banco.`);
+    if (del.affectedRows > 0) console.log(`🧹 LGPD: ${del.affectedRows} cadastro(s) público(s) sem consentimento removido(s) do banco.`);
   } catch (e) {
     // silencioso: ambiente sem DB (ex.: desenvolvimento offline)
   }
