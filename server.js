@@ -1920,7 +1920,8 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
-  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, planos, dados });
+  const cobertoPeloPlano = pedido.status === "pago" && String(pedido.pagamento_id || "").indexOf("plano-") === 0;
+  res.json({ modelo: pedido.modelo, tipo: dados._tipo || "curriculo", valor: pedido.valor, coberto_pelo_plano: cobertoPeloPlano, planos, dados });
 });
 
 // ---------------------------------------------------------------------------

@@ -113,6 +113,14 @@
         }
         dadosPedido = r.data;
         tipoPedido = r.data.tipo || "curriculo";
+        // Currículo COBERTO PELO PLANO (assinante premium): não houve pagamento
+        // avulso — a mensagem fala do plano, não de pagamento confirmado.
+        if (tipoPedido !== "plano" && r.data.coberto_pelo_plano) {
+          var hCoberto = document.querySelector(".sucesso-conteudo h2, .card h2, h2");
+          if (hCoberto) hCoberto.textContent = "Currículo pronto! 🎉";
+          var subCoberto = document.querySelector(".sucesso-conteudo p, .card p");
+          if (subCoberto) subCoberto.textContent = "Aproveite seu plano Premium: currículos ilimitados e sem marca d'água. Baixe agora:";
+        }
         // Assinatura de plano: sem prévia/download de currículo aqui — mostra
         // mensagem de plano ativo. O currículo vinculado tem o próprio pedido.
         if (tipoPedido === "plano") {
