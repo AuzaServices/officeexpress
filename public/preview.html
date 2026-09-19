@@ -109,8 +109,8 @@
               Trocar modelo
             </button>
             <button class="btn btn-primary" id="btnIrPag" onclick="irPagamento()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
-              Continuar para pagamento
+              <span id="btnIrPagTxt">Continuar</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </button>
           </div>
         </div>
@@ -253,12 +253,29 @@
       } else {
         alert(data.error || "Erro ao criar o pedido.");
         btn.disabled = false;
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>Continuar para pagamento';
+        btn.innerHTML = '<span>Continuar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
       }
     }
     window.irPagamento = irPagamento;
 
     render();
+
+    // Ajusta o botão principal conforme o estado do usuário:
+    //  - Premium logado  → "Continuar" (o pedido nasce pago, sem tela de pagamento)
+    //  - Demais casos    → "Continuar para pagamento"
+    (function () {
+      var txt = document.getElementById("btnIrPagTxt");
+      if (!txt) return;
+      txt.textContent = "Continuar para pagamento";
+      App.authMe().then(function (u) {
+        if (!u) return;
+        App.api("/api/auth/assinatura").then(function (r) {
+          if (r.ok && r.data.assinatura && r.data.assinatura.ativo && r.data.assinatura.plano !== "gratuito") {
+            txt.textContent = "Continuar";
+          }
+        }).catch(function () {});
+      });
+    })();
 
     // Se veio do fluxo login/cadastro com intenção de pagamento, avança direto
     (function () {
