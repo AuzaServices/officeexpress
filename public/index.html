@@ -1191,7 +1191,7 @@
       var bottom = (mv.bottom - mr.bottom) + mr.height * INSET_BASE;
       pessoa.style.width = largura + 'px';
       pessoa.style.height = altura + 'px';
-      pessoa.style.left = ((mr.left - mv.left) + mr.width * INSET_LATERAL) + 'px';
+      pessoa.style.left = ((mr.right - mv.left) - mr.width * INSET_LATERAL - largura) + 'px';
       pessoa.style.bottom = bottom + 'px';
     }
     // Estado base controlado por JS (sem disputa com CSS):
