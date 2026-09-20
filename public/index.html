@@ -77,21 +77,11 @@
       object-fit: contain; object-position: bottom left;
       filter: drop-shadow(0 34px 44px rgba(14,43,68,.22));
       transform-origin: bottom left;
-      animation:
-        hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both,
-        hv-pessoa-alterna 10s ease-in-out 2s infinite;
+      animation: hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both;
     }
     @keyframes hv-pessoa-desliza {
       from { transform: translateX(60px); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes hv-pessoa-alterna {
-      0%   { transform: translateX(0) scale(1); }
-      8%   { transform: translateX(14%) scale(1); }
-      46%  { transform: translateX(14%) scale(1); }
-      56%  { transform: translateX(-16%) scale(.86); }
-      90%  { transform: translateX(-16%) scale(.86); }
-      100% { transform: translateX(0) scale(1); }
     }
     .hv-curriculo {
       position: absolute; z-index: 4;
@@ -141,30 +131,6 @@
     @keyframes hv-sobe { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(8deg); } }
     @keyframes hv-pulsa { 0%,100% { transform: scale(1); opacity: .38; } 50% { transform: scale(1.12); opacity: .55; } }
 
-    /* ---- Cards de UI flutuantes (estilo SaaS 2025) ---- */
-    .hv-card {
-      position: absolute; z-index: 3; display: flex; align-items: center; gap: 10px;
-      background: rgba(255,255,255,.92);
-      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 16px; padding: 12px 16px;
-      box-shadow: 0 18px 44px -16px rgba(14,43,68,.28);
-      animation: hv-flutua 5.5s ease-in-out infinite;
-    }
-    .hv-card strong { display: block; font-size: .82rem; font-weight: 800; color: var(--text-primary); line-height: 1.25; }
-    .hv-card small { display: block; font-size: .7rem; color: var(--text-muted); font-weight: 600; }
-    .hv-card-aprovado { top: 18%; left: -6%; }
-    .hv-card-vaga { bottom: 16%; right: -4%; animation-delay: 2.6s; }
-    .hv-check {
-      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-      color: #fff; display: flex; align-items: center; justify-content: center;
-    }
-    .hv-check svg { width: 14px; height: 14px; }
-    .hv-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--brand); box-shadow: 0 0 0 0 var(--brand-glow); animation: hv-pingo 2s ease-out infinite; }
-    @keyframes hv-flutua { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    @keyframes hv-pingo { 0% { box-shadow: 0 0 0 0 var(--brand-glow); } 70% { box-shadow: 0 0 0 12px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
-
     /* ---- Reveal escalonado do texto (entrada suave) ---- */
     .hero-content > * { animation: hv-revela .8s cubic-bezier(.22,.9,.3,1) both; }
     .hero-content > *:nth-child(1) { animation-delay: .05s; }
@@ -192,14 +158,6 @@
       .hv-q2, .hv-q3, .hv-a2 { display: none; }
       .hv-q1 { top: 4%; left: 4%; width: 10px; height: 10px; }
       .hv-a1 { width: 40px; height: 40px; top: 6%; right: 6%; }
-      /* Cards compactos dentro da foto */
-      .hv-card { padding: 8px 12px; border-radius: 12px; }
-      .hv-card strong { font-size: .72rem; }
-      .hv-card small { font-size: .62rem; }
-      .hv-check { width: 22px; height: 22px; }
-      .hv-check svg { width: 11px; height: 11px; }
-      .hv-card-aprovado { top: 8%; left: 4%; }
-      .hv-card-vaga { bottom: 8%; right: 4%; }
       /* Texto centraliza e CTAs empilham em tela cheia */
       .ctas { flex-direction: column; width: 100%; }
       .ctas > * { width: 100%; justify-content: center; }
@@ -209,7 +167,7 @@
 
     /* ---- Reduced motion: desliga todos os efeitos ---- */
     @media (prefers-reduced-motion: reduce) {
-      .hv-part, .hv-card, .hv-dot, .hero-content > *, .hero-visual { animation: none !important; }
+      .hv-part, .hero-content > *, .hero-visual { animation: none !important; }
       .hero::before { animation: none !important; }
       /* Colagem: estados finais diretos, sem animação */
       .hv-moldura, .hv-pessoa, .hv-curriculo { animation: none !important; }
@@ -322,14 +280,7 @@
       <!-- Currículo que SOBE por cima da pessoa (z-4) -->
       <img class="hv-curriculo" src="/imagens/hero-curriculo.png" alt="" loading="lazy" decoding="async"
            onerror="this.style.display='none'" />
-      <!-- Cards de UI flutuantes -->
-      <div class="hv-card hv-card-aprovado">
-        <span class="hv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-        <div><strong>Currículo aprovado</strong><small>100% legível por IA</small></div>
-      </div>
-      <div class="hv-card hv-card-vaga">
-        <span class="hv-dot"></span>
-        <div><strong>Nova vaga na sua cidade</strong><small>agora mesmo</small></div>
+
       </div>
     </div>
   </section>
