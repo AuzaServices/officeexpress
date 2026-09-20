@@ -174,15 +174,16 @@
       section.section.container { padding-top: 0; }
       .hero-conta {
         position: sticky; top: 64px; z-index: 5;
-        margin: 0 0 20px; border-radius: 0 0 18px 18px;
-        padding: 18px 20px 18px;
+        margin: 0 -14px 20px; /* full-bleed: hero alcança as bordas, igual às empresas */
+        border-radius: 0 0 18px 18px;
+        padding: 18px 34px 18px; /* 34px = 14px wrap + 20px respiro original */
       }
       .hero-conta h2 { font-size: 1.35rem; margin-bottom: 4px; }
       .hero-conta p { font-size: 0.9rem; }
       .hero-acoes .tema-toggle { padding: 7px 12px; font-size: 0.82rem; }
     }
     @media (max-width: 560px) {
-      .hero-conta { padding: 18px 18px 16px; }
+      .hero-conta { padding: 18px 16px 16px; }
       .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
       .stat-card { padding: 16px; }
       .stat-card .stat-value { font-size: 1.5rem; }
@@ -226,14 +227,17 @@
        MOBILE — PAINEL DO CLIENTE (mesmo modelo do painel de empresas)
        ============================================================ */
     @media (max-width: 768px) {
-      .minha-conta-wrap { padding: 0 0 calc(84px + env(safe-area-inset-bottom)) !important; }
+      /* Estrutura de posicionamento das EMPRESAS: padding lateral fixo
+         16px 14px (o conteúdo "respira" igual ao .portal-conteudo delas) —
+         antes herdava o .container 24px e ficava mais largo/estourado. */
+      .minha-conta-wrap { padding: 16px 14px calc(84px + env(safe-area-inset-bottom)) !important; }
       /* Hero compacto */
-      .hero-conta { padding: 22px 18px; border-radius: 16px; margin-bottom: 16px; flex-direction: column; align-items: flex-start; gap: 12px; }
+      .hero-conta { padding: 22px 16px; border-radius: 16px; margin-bottom: 16px; flex-direction: column; align-items: flex-start; gap: 12px; }
       .hero-conta h2 { font-size: 1.3rem; }
       .hero-conta p { font-size: .86rem; }
       /* KPIs 2×2 */
-      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-      .stat-card { padding: 14px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+      .stat-card { padding: 16px; }
       .stat-card .stat-icone { width: 34px; height: 34px; }
       .stat-card .stat-icone svg { width: 16px; height: 16px; }
       .stat-card .stat-value { font-size: 1.35rem; }
