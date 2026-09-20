@@ -57,7 +57,7 @@
     /* ---- Coluna visual: COLAGEM (cores Office Express) ---- */
     /* Colagem alinhada ao bloco de texto: começa no topo do h1 e termina
        junto com os botões (align-self start + altura casada) */
-    .hero-visual { position: relative; z-index: 1; min-height: 520px; max-height: 540px; align-self: start; margin-top: 8px; }
+    .hero-visual { position: relative; z-index: 1; min-height: 500px; max-height: 520px; align-self: start; margin-top: 0; }
     /* Moldura laranja deslocada atrás (o "yellow-box" deles, em --brand) */
     .hv-moldura {
       position: absolute; z-index: 1;
@@ -85,6 +85,11 @@
       from { transform: translateX(60px); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+    /* Mobile: entrada casada com o centramento (translateX -50%) */
+    @keyframes hv-pessoa-desliza-mobile {
+      from { transform: translate(calc(-50% + 40px), 0); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
     .hv-curriculo {
       position: absolute; z-index: 4;
       width: 52%;
@@ -94,7 +99,7 @@
       border: 1px solid var(--border);
       box-shadow: 0 26px 60px -20px rgba(14,43,68,.4);
       transform-origin: bottom right;
-      animation: hv-curriculo-alterna 10s cubic-bezier(.22,1.2,.36,1) 2s infinite;
+      animation: hv-curriculo-alterna 10s cubic-bezier(.22,1.2,.36,1) 2.6s infinite;
     }
     @keyframes hv-curriculo-alterna {
       0%   { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
@@ -150,7 +155,12 @@
       .hero-visual { min-height: 0; width: 100%; }
       /* Colagem compacta no mobile — centralizada na tela */
       .hero-visual { max-width: min(94vw, 420px); margin: 8px auto 20px; min-height: min(122vw, 500px); align-self: center; }
-      .hv-pessoa { max-height: min(114vw, 460px); }
+      /* Composição centralizada: moldura no centro, pessoa centrada */
+      .hv-moldura { left: 7%; right: 7%; width: auto; }
+      .hv-pessoa { left: 50%; transform: translateX(-50%); max-height: min(114vw, 460px); width: auto; }
+      /* A entrada da pessoa (desliza) usa transform — casar com o centramento */
+      .hv-pessoa { animation: hv-pessoa-desliza-mobile .9s cubic-bezier(.12,1.56,.72,.9) .5s both; }
+      .hv-curriculo { right: 6%; }
       .hv-moldura { width: 80%; height: 86%; top: 4%; right: 6%; border-radius: 0 48px 0 0; }
       .hv-pessoa { width: 92%; max-height: min(110vw, 440px); }
       .hv-curriculo { width: 50%; right: 0; bottom: 4%; }
