@@ -431,6 +431,28 @@ app.post("/api/auth/login", async (req, res) => {
     if (par.length) await pool.query("UPDATE usuarios SET parceiro_id = ? WHERE id = ?", [par[0].id, rows[0].id]);
   }
   if (!match) return res.status(401).json({ error: "E-mail ou senha incorretos." });
+  // Sino: conta não confirmada recebe UMA notificação orientando a confirmar
+  // (idempotente: só insere se ainda não existe notificação 'confirmar-email'
+  // para este usuário). O banner no corpo do painel continua como reforço.
+  if (!rows[0].email_confirmado) {
+    try {
+      const [[jaTem]] = await pool.query(
+        "SELECT COUNT(*) AS c FROM notificacoes WHERE usuario_id = ? AND tipo = 'confirmar-email'",
+        [rows[0].id]
+      );
+      if (!jaTem.c) {
+        await pool.query(
+          `INSERT INTO notificacoes (usuario_id, tipo, titulo, texto, link) VALUES (?, 'confirmar-email', ?, ?, '/minha-conta')`,
+          [
+            rows[0].id,
+            'Confirme seu e-mail! ⚠️'.slice(0, 190),
+            'Verifique a caixa de entrada (e o spam) e clique no link de confirmação. Sem confirmação, você não consegue pagar currículos nem assinar o plano — e a conta é removida automaticamente após 24h.'.slice(0, 500),
+          ]
+        );
+        sseEnviar(rows[0].id, { naoLidas: "+1" });
+      }
+    } catch (e) { console.error("Erro ao notificar não confirmado:", e.message); }
+  }
   // Isolamento de sessão: usuário tradicional e empresa NUNCA coexistem no mesmo
   // cookie. Logar na plataforma de currículos encerra a sessão de empresa (e
   // admin/parceiro), evitando que o header de uma plataforma mostre dados da outra.
