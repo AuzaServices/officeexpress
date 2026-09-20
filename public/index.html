@@ -79,19 +79,18 @@
        corta qualquer excesso — impossível sair em nenhuma tela. */
     /* Pessoa DENTRO DA MOLDURA (calculo: moldura x 12%..98% → centro 55%;
        y 3%..99% → bottom 1%. width 67% do container = 78% da moldura) */
+    /* Pessoa: posição/dimensão EXATAS aplicadas por JS (medição do
+       retângulo real da moldura) — ajuste os INSET_* no script lá embaixo */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      max-width: 70%; max-height: 88%;
-      left: 55%; bottom: 1%;
-      transform: translateX(-50%);
       object-fit: contain; object-position: bottom center;
       filter: drop-shadow(0 10px 16px rgba(14,43,68,.22));
       transform-origin: bottom center;
       animation: hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both;
     }
     @keyframes hv-pessoa-desliza {
-      from { transform: translate(calc(-50% + 40px), 0); opacity: 0; }
-      to { transform: translate(-50%, 0); opacity: 1; }
+      from { transform: translateX(40px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
     .hv-curriculo {
       position: absolute; z-index: 4;
@@ -159,7 +158,7 @@
       .hero-visual { max-width: min(94vw, 420px); margin: 8px auto 20px; min-height: min(122vw, 500px); align-self: center; }
       /* Moldura mobile: centralizada (pessoa acompanha: left 50% + -50%) */
       .hv-moldura { left: 6%; right: 6%; width: auto; height: 90%; top: 5%; border-radius: 0 48px 0 0; }
-      .hv-pessoa { max-width: 76%; max-height: 82%; left: 50%; bottom: 5%; }
+
       .hv-curriculo { width: 50%; right: 6%; bottom: 4%; }
       /* Alternância no mobile: entrada mais rápida */
       .hv-pessoa { animation-duration: .7s; }
@@ -182,7 +181,7 @@
       /* Colagem: estados finais diretos, sem animação */
       .hv-moldura, .hv-pessoa, .hv-curriculo { animation: none !important; }
       .hv-moldura { width: 86%; height: 96%; top: 3%; right: 2%; border-radius: 0 70px 0 0; opacity: 1; }
-      .hv-pessoa { transform: translateX(-50%); opacity: 1; }
+
       .hv-curriculo { transform: none; opacity: 1; }
     }
     .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
@@ -1162,6 +1161,61 @@
         mapa.innerHTML = "<span>Mapa indisponível no momento.</span>";
       });
     })();
+  </script>
+  <script>
+  /* ============================================================
+     ENQUADRAMENTO PRECISO DA MULHER NA MOLDURA (pixel-exato)
+     Mede o retângulo REAL da moldura renderizada e posiciona a pessoa
+     DENTRO dela com os insets abaixo — recalculado em resize e quando a
+     moldura mudar de tamanho. Ajuste os valores e veja na hora:
+     - insetLateral: % da largura da moldura (distância das laterais)
+     - insetBase: % da altura da moldura (distância do chão)
+     - alturaDaPessoa: % da altura da moldura (o tamanho dela)
+     ============================================================ */
+  (function () {
+    var INSET_LATERAL = 0.06;   // 6% de folga de cada lado (dentro da moldura)
+    var INSET_BASE = 0.0;       // encostada no chão da moldura
+    var ALTURA_DA_PESSOA = 0.92; // 92% da altura da moldura
+    function sincronizar() {
+      var moldura = document.querySelector('.hv-moldura');
+      var pessoa = document.querySelector('.hv-pessoa');
+      var visual = document.querySelector('.hero-visual');
+      if (!moldura || !pessoa || !visual) return;
+      var mv = visual.getBoundingClientRect();
+      var mr = moldura.getBoundingClientRect();
+      if (!mr.width || !mr.height) return;
+      // Retângulo alvo da pessoa, calculado DO retângulo real da moldura:
+      var largura = mr.width * (1 - INSET_LATERAL * 2);
+      var altura = mr.height * ALTURA_DA_PESSOA;
+      // Posição (relativa ao hero-visual, que é o pai posicionado):
+      var bottom = (mv.bottom - mr.bottom) + mr.height * INSET_BASE;
+      pessoa.style.width = largura + 'px';
+      pessoa.style.height = altura + 'px';
+      pessoa.style.left = ((mr.left - mv.left) + mr.width * INSET_LATERAL) + 'px';
+      pessoa.style.bottom = bottom + 'px';
+    }
+    // Estado base controlado por JS (sem disputa com CSS):
+    pessoa_estilo();
+    function pessoa_estilo() {
+      var pessoa = document.querySelector('.hv-pessoa');
+      if (!pessoa) return;
+      pessoa.style.maxWidth = 'none';
+      pessoa.style.maxHeight = 'none';
+      pessoa.style.transform = 'none';
+      pessoa.style.objectFit = 'contain';
+      pessoa.style.objectPosition = 'bottom center';
+    }
+    window.addEventListener('resize', sincronizar);
+    window.addEventListener('load', sincronizar);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(sincronizar);
+    // Primeira sincronização (e observa mudanças da moldura):
+    document.addEventListener('DOMContentLoaded', function () {
+      sincronizar();
+      if (window.ResizeObserver) {
+        new ResizeObserver(sincronizar).observe(document.querySelector('.hv-moldura'));
+      }
+    });
+  })();
   </script>
 </body>
 </html>
