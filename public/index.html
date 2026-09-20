@@ -67,7 +67,6 @@
       position: absolute; z-index: 1;
       width: 78%; height: 88%;
       top: 6%; right: 4%;
-      overflow: hidden; /* corta TUDO que passar — impossível sair */
       border-radius: 0 70px 0 0;
       box-shadow: 0 30px 70px -28px rgba(230,115,0,.5);
     }
@@ -86,7 +85,7 @@
        corta qualquer excesso — impossível sair em nenhuma tela. */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      width: 88%; max-height: 96%;
+      width: 84%; max-height: 98%;
       left: 50%; bottom: 0;
       transform: translateX(-50%);
       object-fit: contain; object-position: bottom center;
@@ -166,8 +165,8 @@
          QUADRADO — acompanha automaticamente, nada a ajustar aqui) */
       .hv-quadrado { left: 6%; right: 6%; width: auto; height: 88%; top: 4%; border-radius: 0 48px 0 0; }
       .hv-curriculo { width: 50%; right: 6%; bottom: 4%; }
-      /* Alternância no mobile: transições mais curtas (mesmo ciclo) */
-      .hv-pessoa { animation-duration: .7s, 10s; }
+      /* Alternância no mobile: entrada mais rápida */
+      .hv-pessoa { animation-duration: .7s; }
       .hv-curriculo { animation-duration: 10s; }
       /* Efeitos: só 1 quadrado + 1 anel no mobile (performance e elegância) */
       .hv-q2, .hv-q3, .hv-a2 { display: none; }
@@ -297,8 +296,6 @@
       <!-- Currículo que SOBE por cima da pessoa (z-4) -->
       <img class="hv-curriculo" src="/imagens/hero-curriculo.png" alt="" loading="lazy" decoding="async"
            onerror="this.style.display='none'" />
-
-      </div>
     </div>
   </section>
 
