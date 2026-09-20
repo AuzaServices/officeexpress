@@ -65,15 +65,34 @@
       border-radius: 0 70px 0 0; /* canto arredondado em UM canto só */
       box-shadow: 0 30px 70px -28px rgba(230,115,0,.5);
     }
-    /* Pessoa SEM FUNDO (PNG transparente): cobre a moldura, "saindo" dela */
+    /* ============================================================
+       ALTERNÂNCIA DE FOCO: PESSOA ↔ CURRÍCULO (ciclo 10s, infinito)
+       FASE A (0-50%): pessoa em foco; currículo pequeno no canto
+       FASE B (50-100%): currículo em foco (centro, grande); pessoa recua
+       ============================================================ */
     .hv-pessoa {
       position: absolute; z-index: 3;
       width: 88%; max-height: 560px;
       left: 0; bottom: 0;
       object-fit: contain; object-position: bottom left;
       filter: drop-shadow(0 34px 44px rgba(14,43,68,.22));
+      transform-origin: bottom left;
+      animation:
+        hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both,
+        hv-pessoa-alterna 10s ease-in-out 2s infinite;
     }
-    /* Currículo: ALTERNANDO — sobe, fica, desce e sobe de novo (loop 9s) */
+    @keyframes hv-pessoa-desliza {
+      from { transform: translateX(60px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes hv-pessoa-alterna {
+      0%   { transform: translateX(0) scale(1); }
+      8%   { transform: translateX(14%) scale(1); }
+      46%  { transform: translateX(14%) scale(1); }
+      56%  { transform: translateX(-16%) scale(.86); }
+      90%  { transform: translateX(-16%) scale(.86); }
+      100% { transform: translateX(0) scale(1); }
+    }
     .hv-curriculo {
       position: absolute; z-index: 4;
       width: 52%;
@@ -83,27 +102,22 @@
       border: 1px solid var(--border);
       box-shadow: 0 26px 60px -20px rgba(14,43,68,.4);
       transform-origin: bottom right;
-      animation: hv-curriculo-alterna 9s cubic-bezier(.12,1.56,.72,.9) 1s infinite;
+      animation: hv-curriculo-alterna 10s cubic-bezier(.22,1.2,.36,1) 2s infinite;
     }
     @keyframes hv-curriculo-alterna {
-      /* ENTRADA (1o ciclo) */
       0%   { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
-      12%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      /* ESTADO A: firmado */
-      38%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      /* TRANSIÇÃO: desce girando levemente (como quem folheia) */
-      50%  { transform: translateY(6%) scale(.97) rotate(-2deg); opacity: 1; }
-      56%  { transform: translateY(-3%) scale(1.02) rotate(1deg); opacity: 1; }
-      /* ESTADO B: volta a firmar (sobe de novo — alternância visível) */
-      68%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      96%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      10%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      40%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      52%  { transform: translateY(-14%) scale(1.28) rotate(-3deg); }
+      60%  { transform: translateY(-12%) scale(1.32) rotate(-2deg); }
+      88%  { transform: translateY(-12%) scale(1.32) rotate(-2deg); }
+      96%  { transform: translateY(-10%) scale(1.24) rotate(-1deg); }
       100% { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
     }
-    /* Moldura: gira círculo→retângulo NA ENTRADA e depois RESPIRA em loop */
     .hv-moldura {
       animation:
         hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both,
-        hv-moldura-respira 9s ease-in-out 1.4s infinite;
+        hv-moldura-respira 10s ease-in-out 2s infinite;
     }
     @keyframes hv-moldura-gira {
       0% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 0; }
@@ -112,21 +126,9 @@
     }
     @keyframes hv-moldura-respira {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.03); }
-    }
-    /* Pessoa: ENTRADA + oscila suave (flutuação de vida, loop) */
-    .hv-pessoa {
-      animation:
-        hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both,
-        hv-pessoa-flutua 7s ease-in-out 1.4s infinite;
-    }
-    @keyframes hv-pessoa-desliza {
-      from { transform: translateX(60px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes hv-pessoa-flutua {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+      30% { transform: scale(1.02); }
+      60% { transform: scale(1.05); }
+      90% { transform: scale(1.01); }
     }
 
     /* ---- Quadrados e anéis flutuando (efeitos CSS puro, GPU) ---- */
@@ -178,11 +180,14 @@
       .hero { display: flex; flex-direction: column-reverse; text-align: center; padding: 24px 18px 48px; min-height: 0; gap: 8px; }
       .hero .hero-content { max-width: 100%; }
       .hero-visual { min-height: 0; width: 100%; }
-      /* Colagem compacta no mobile */
-      .hero-visual { max-width: 380px; margin: 0 auto 18px; }
+      /* Colagem compacta no mobile — responsiva de verdade */
+      .hero-visual { max-width: min(92vw, 380px); margin: 0 auto 18px; min-height: min(118vw, 480px); }
       .hv-moldura { width: 80%; height: 86%; top: 4%; right: 6%; border-radius: 0 48px 0 0; }
-      .hv-pessoa { width: 92%; max-height: min(92vw, 400px); }
-      .hv-curriculo { width: 46%; right: 0; bottom: 4%; }
+      .hv-pessoa { width: 92%; max-height: min(110vw, 440px); }
+      .hv-curriculo { width: 50%; right: 0; bottom: 4%; }
+      /* Alternância no mobile: transições mais curtas (mesmo ciclo) */
+      .hv-pessoa { animation-duration: .7s, 10s; }
+      .hv-curriculo { animation-duration: 10s; }
       /* Efeitos: só 1 quadrado + 1 anel no mobile (performance e elegância) */
       .hv-q2, .hv-q3, .hv-a2 { display: none; }
       .hv-q1 { top: 4%; left: 4%; width: 10px; height: 10px; }
