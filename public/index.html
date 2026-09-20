@@ -55,7 +55,9 @@
     .hero.hero-solo .ctas, .hero.hero-solo .hero-stats { justify-content: center; }
 
     /* ---- Coluna visual: COLAGEM (cores Office Express) ---- */
-    .hero-visual { position: relative; z-index: 1; min-height: 560px; }
+    /* Colagem alinhada ao bloco de texto: começa no topo do h1 e termina
+       junto com os botões (align-self start + altura casada) */
+    .hero-visual { position: relative; z-index: 1; min-height: 520px; max-height: 540px; align-self: start; margin-top: 8px; }
     /* Moldura laranja deslocada atrás (o "yellow-box" deles, em --brand) */
     .hv-moldura {
       position: absolute; z-index: 1;
@@ -72,7 +74,7 @@
        ============================================================ */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      width: 88%; max-height: 560px;
+      width: 88%; max-height: 520px;
       left: 0; bottom: 0;
       object-fit: contain; object-position: bottom left;
       filter: drop-shadow(0 34px 44px rgba(14,43,68,.22));
@@ -146,8 +148,9 @@
       .hero { display: flex; flex-direction: column-reverse; text-align: center; padding: 24px 18px 48px; min-height: 0; gap: 8px; }
       .hero .hero-content { max-width: 100%; }
       .hero-visual { min-height: 0; width: 100%; }
-      /* Colagem compacta no mobile — responsiva de verdade */
-      .hero-visual { max-width: min(92vw, 380px); margin: 0 auto 18px; min-height: min(118vw, 480px); }
+      /* Colagem compacta no mobile — centralizada na tela */
+      .hero-visual { max-width: min(94vw, 420px); margin: 8px auto 20px; min-height: min(122vw, 500px); align-self: center; }
+      .hv-pessoa { max-height: min(114vw, 460px); }
       .hv-moldura { width: 80%; height: 86%; top: 4%; right: 6%; border-radius: 0 48px 0 0; }
       .hv-pessoa { width: 92%; max-height: min(110vw, 440px); }
       .hv-curriculo { width: 50%; right: 0; bottom: 4%; }
