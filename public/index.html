@@ -259,9 +259,11 @@
         animation: hv-sombra-cresce-m .8s cubic-bezier(.22,1.2,.36,1) .25s forwards;
       }
       @keyframes hv-sombra-cresce-m {
-        0% { width: var(--hv-cx); height: var(--hv-cx); top: calc(100% - var(--hv-cx)); left: calc(100% - var(--hv-cx) - 4%); right: auto; border-radius: 50%; opacity: 0; }
-        55% { width: var(--hv-cx); height: var(--hv-cx); top: calc(100% - var(--hv-cx)); left: calc(100% - var(--hv-cx) - 4%); right: auto; border-radius: 50%; opacity: 1; }
-        100% { width: 88%; height: 90%; top: 5%; left: 4%; right: auto; border-radius: 0 48px 0 0; opacity: 1; }
+        /* Puxada PARA A DIREITA: final right 4% vs moldura right 6% →
+           a sombra aparece 2% deslocada para a direita da forma */
+        0% { width: var(--hv-cx); height: var(--hv-cx); top: calc(100% - var(--hv-cx)); right: calc(100% - var(--hv-cx) - 4%); left: auto; border-radius: 50%; opacity: 0; }
+        55% { width: var(--hv-cx); height: var(--hv-cx); top: calc(100% - var(--hv-cx)); right: calc(100% - var(--hv-cx) - 4%); left: auto; border-radius: 50%; opacity: 1; }
+        100% { width: 88%; height: 90%; top: 5%; right: 4%; left: auto; border-radius: 0 48px 0 0; opacity: 1; }
       }
       /* Keyframe mobile: os valores finais MOBILE (casado com .hv-moldura
        mobile: width auto height 90% top 5% left 6% right 6%) — o círculo
