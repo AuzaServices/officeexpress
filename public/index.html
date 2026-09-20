@@ -58,22 +58,16 @@
     /* Colagem alinhada ao bloco de texto: começa no topo do h1 e termina
        junto com os botões (align-self start + altura casada) */
     .hero-visual { position: relative; z-index: 1; min-height: 540px; max-height: 560px; align-self: start; margin-top: 0; }
-    /* ============================================================
-       QUADRADO (garantia matemática): moldura + pessoa no MESMO wrapper
-       com overflow:hidden — a pessoa é posicionada RELATIVA AO QUADRADO
-       (100% = a moldura), então é impossível sair dele em qualquer tela.
-       ============================================================ */
-    .hv-quadrado {
+    /* MOLDURA: a forma laranja única (sem wrapper — a pessoa usa as
+       MESMAS coordenadas calculadas: centro x = 55%, base y = 99%) */
+    .hv-moldura {
       position: absolute; z-index: 1;
       width: 86%; height: 96%;
       top: 3%; right: 2%;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
       border-radius: 0 70px 0 0;
       box-shadow: 0 30px 70px -28px rgba(230,115,0,.5);
-    }
-    /* Moldura = o visual do fundo do quadrado (100%) */
-    .hv-moldura {
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      animation: hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both;
     }
     /* ============================================================
        ALTERNÂNCIA DE FOCO: PESSOA ↔ CURRÍCULO (ciclo 10s, infinito)
@@ -83,10 +77,12 @@
     /* Pessoa DENTRO do quadrado: coordenadas relativas AO QUADRADO
        (% = % da moldura). À prova de erro: o overflow:hidden do quadrado
        corta qualquer excesso — impossível sair em nenhuma tela. */
+    /* Pessoa DENTRO DA MOLDURA (calculo: moldura x 12%..98% → centro 55%;
+       y 3%..99% → bottom 1%. width 67% do container = 78% da moldura) */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      width: 90%; max-height: 98%;
-      left: 50%; bottom: 0;
+      width: 67%; max-height: 90%;
+      left: 55%; bottom: 1%;
       transform: translateX(-50%);
       object-fit: contain; object-position: bottom center;
       filter: drop-shadow(0 26px 36px rgba(14,43,68,.28));
@@ -161,9 +157,9 @@
       .hero-visual { min-height: 0; width: 100%; }
       /* Colagem compacta no mobile — centralizada na tela */
       .hero-visual { max-width: min(94vw, 420px); margin: 8px auto 20px; min-height: min(122vw, 500px); align-self: center; }
-      /* Quadrado mobile: geometria centralizada (a pessoa é RELATIVA AO
-         QUADRADO — acompanha automaticamente, nada a ajustar aqui) */
-      .hv-quadrado { left: 6%; right: 6%; width: auto; height: 88%; top: 4%; border-radius: 0 48px 0 0; }
+      /* Moldura mobile: centralizada (pessoa acompanha: left 50% + -50%) */
+      .hv-moldura { left: 6%; right: 6%; width: auto; height: 90%; top: 5%; border-radius: 0 48px 0 0; }
+      .hv-pessoa { width: 74%; max-height: 84%; left: 50%; bottom: 3%; }
       .hv-curriculo { width: 50%; right: 6%; bottom: 4%; }
       /* Alternância no mobile: entrada mais rápida */
       .hv-pessoa { animation-duration: .7s; }
@@ -185,7 +181,7 @@
       .hero::before { animation: none !important; }
       /* Colagem: estados finais diretos, sem animação */
       .hv-moldura, .hv-pessoa, .hv-curriculo { animation: none !important; }
-      .hv-moldura { width: 78%; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; opacity: 1; }
+      .hv-moldura { width: 86%; height: 96%; top: 3%; right: 2%; border-radius: 0 70px 0 0; opacity: 1; }
       .hv-pessoa { transform: translateX(-50%); opacity: 1; }
       .hv-curriculo { transform: none; opacity: 1; }
     }
@@ -282,13 +278,11 @@
 
     <!-- ===== 2a COLUNA: colagem (moldura + pessoa sem fundo + currículo) ===== -->
     <div class="hero-visual" aria-hidden="true">
-      <!-- Quadrado: moldura + pessoa DENTRO (overflow hidden = impossível
-           sair; a pessoa é posicionada relativa ao QUADRADO, não ao container) -->
-      <div class="hv-quadrado">
-        <div class="hv-moldura"></div>
-        <img class="hv-pessoa" src="/imagens/hero-pessoa.png" alt="" loading="eager" decoding="async"
-             onerror="this.style.display='none';document.querySelector('.hero').classList.add('hero-solo')" />
-      </div>
+      <!-- Moldura laranja (a forma visual) -->
+      <div class="hv-moldura"></div>
+      <!-- Pessoa DENTRO da moldura (coordenadas calculadas da moldura) -->
+      <img class="hv-pessoa" src="/imagens/hero-pessoa.png" alt="" loading="eager" decoding="async"
+           onerror="this.style.display='none';document.querySelector('.hero').classList.add('hero-solo')" />
       <!-- Quadrados e anéis flutuando (mantidos) -->
       <span class="hv-part hv-q1"></span>
       <span class="hv-part hv-q2"></span>
