@@ -74,7 +74,7 @@
        ============================================================ */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      width: 72%; max-height: 500px;
+      width: 72%; max-height: 94%;
       left: 22%; bottom: 4%;
       object-fit: contain; object-position: bottom left;
       filter: drop-shadow(0 34px 44px rgba(14,43,68,.22));
@@ -92,8 +92,8 @@
     }
     .hv-curriculo {
       position: absolute; z-index: 4;
-      width: 52%;
-      right: 2%; bottom: 6%;
+      width: 50%;
+      right: 5%; bottom: 6%;
       border-radius: 10px;
       background: #fff;
       border: 1px solid var(--border);
@@ -109,11 +109,12 @@
       0%   { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
       10%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
       40%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      52%  { transform: translateY(-14%) scale(1.28) rotate(-3deg); }
-      60%  { transform: translateY(-12%) scale(1.32) rotate(-2deg); }
-      88%  { transform: translateY(-12%) scale(1.32) rotate(-2deg); }
-      96%  { transform: translateY(-10%) scale(1.24) rotate(-1deg); }
-      100% { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
+      52%  { transform: translateY(-12%) scale(1.12) rotate(-3deg); }
+      60%  { transform: translateY(-10%) scale(1.15) rotate(-2deg); }
+      86%  { transform: translateY(-12%) scale(1.15) rotate(-2deg); }
+      92%  { transform: translateY(-6%) scale(1.05) rotate(-1deg); opacity: 1; }
+      96%  { transform: translateY(24%) scale(.96) rotate(1deg); opacity: 0; }
+      100% { transform: translateY(30%) scale(.94) rotate(1deg); opacity: 0; }
     }
     /* Moldura ESTÁTICA após a entrada (a respiração scale fazia a pessoa
        "sair" do quadrado) — só a entrada gira círculo→retângulo */
