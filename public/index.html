@@ -57,7 +57,7 @@
     /* ---- Coluna visual: COLAGEM (cores Office Express) ---- */
     /* Colagem alinhada ao bloco de texto: começa no topo do h1 e termina
        junto com os botões (align-self start + altura casada) */
-    .hero-visual { position: relative; z-index: 1; min-height: 500px; max-height: 520px; align-self: start; margin-top: 0; }
+    .hero-visual { position: relative; z-index: 1; min-height: 540px; max-height: 560px; align-self: start; margin-top: 0; }
     /* ============================================================
        QUADRADO (garantia matemática): moldura + pessoa no MESMO wrapper
        com overflow:hidden — a pessoa é posicionada RELATIVA AO QUADRADO
@@ -65,8 +65,8 @@
        ============================================================ */
     .hv-quadrado {
       position: absolute; z-index: 1;
-      width: 78%; height: 88%;
-      top: 6%; right: 4%;
+      width: 86%; height: 96%;
+      top: 3%; right: 2%;
       border-radius: 0 70px 0 0;
       box-shadow: 0 30px 70px -28px rgba(230,115,0,.5);
     }
@@ -85,7 +85,7 @@
        corta qualquer excesso — impossível sair em nenhuma tela. */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      width: 84%; max-height: 98%;
+      width: 90%; max-height: 98%;
       left: 50%; bottom: 0;
       transform: translateX(-50%);
       object-fit: contain; object-position: bottom center;
