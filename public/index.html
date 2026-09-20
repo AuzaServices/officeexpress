@@ -67,7 +67,7 @@
       background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
       border-radius: 0 70px 0 0;
       box-shadow: 0 30px 70px -28px rgba(230,115,0,.5);
-      animation: hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both;
+      animation: hv-moldura-gira .8s cubic-bezier(.22,1.2,.36,1) .15s both;
     }
     /* ============================================================
        ALTERNÂNCIA DE FOCO: PESSOA ↔ CURRÍCULO (ciclo 10s, infinito)
@@ -79,19 +79,31 @@
        corta qualquer excesso — impossível sair em nenhuma tela. */
     /* Pessoa DENTRO DA MOLDURA (calculo: moldura x 12%..98% → centro 55%;
        y 3%..99% → bottom 1%. width 67% do container = 78% da moldura) */
-    /* Pessoa: posição/dimensão EXATAS aplicadas por JS (medição do
+    /* Pessoa e SOMBA: posição/dimensão EXATAS aplicadas por JS (medição do
        retângulo real da moldura) — ajuste os INSET_* no script lá embaixo */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      object-fit: contain; object-position: bottom center;
-      filter: drop-shadow(0 10px 16px rgba(14,43,68,.22));
+      object-fit: contain; object-position: bottom right;
       transform-origin: bottom center;
-      animation: hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both;
+      opacity: 0;
+      animation: hv-pessoa-entra 1.1s cubic-bezier(.22,.9,.3,1) 1.5s forwards;
     }
-    @keyframes hv-pessoa-desliza {
-      from { transform: translateX(40px); opacity: 0; }
+
+    /* Sombra: silhueta escura atrás da mulher (mesma imagem, tingida) */
+    .hv-sombra {
+      position: absolute; z-index: 2;
+      object-fit: contain; object-position: bottom right;
+      transform-origin: bottom center;
+      filter: brightness(0) blur(14px) opacity(.28);
+      opacity: 0;
+      animation: hv-pessoa-entra 1.1s cubic-bezier(.22,.9,.3,1) 1.45s forwards;
+    }
+
+    @keyframes hv-pessoa-entra {
+      from { transform: translateX(120%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+    /* keyframe antigo substituído por hv-pessoa-entra (acima) */
     .hv-curriculo {
       position: absolute; z-index: 4;
       width: 50%;
@@ -101,22 +113,24 @@
       border: 1px solid var(--border);
       box-shadow: 0 26px 60px -20px rgba(14,43,68,.4);
       transform-origin: bottom right;
-      /* Estado pré-animação: INVISÍVEL durante o delay (2.6s) — o currículo
-         só aparece quando a moldura e a mulher já estiverem formadas */
+      /* Estado pré-animação: invisível até a mulher estar formada (3.2s) */
       transform: translateY(130%) scale(.92) rotate(4deg);
       opacity: 0;
-      animation: hv-curriculo-alterna 10s cubic-bezier(.22,1.2,.36,1) 2.6s infinite;
+      animation: hv-curriculo-alterna 10s cubic-bezier(.22,1.2,.36,1) 3.2s infinite;
     }
     @keyframes hv-curriculo-alterna {
-      0%   { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
-      10%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      40%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-      52%  { transform: translateY(-8%) scale(1.06) rotate(-3deg); }
-      60%  { transform: translateY(-6%) scale(1.1) rotate(-2deg); }
-      86%  { transform: translateY(-12%) scale(1.15) rotate(-2deg); }
-      92%  { transform: translateY(-6%) scale(1.05) rotate(-1deg); opacity: 1; }
-      96%  { transform: translateY(24%) scale(.96) rotate(1deg); opacity: 0; }
-      100% { transform: translateY(30%) scale(.94) rotate(1deg); opacity: 0; }
+      /* De TRÁS da forma: começa pequeno e escuro (atrás da mulher, z baixo)
+         e avança para FRENTE (grande, claro, sombra). Depois VOLTA pelo
+         mesmo caminho e se esconde atrás da forma de novo. */
+      0%   { transform: translateY(120%) scale(.5) rotate(4deg); opacity: 0; z-index: 2; filter: brightness(.55); }
+      8%   { transform: translateY(40%) scale(.72) rotate(2deg); opacity: .9; z-index: 2; filter: brightness(.75); }
+      16%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; z-index: 4; filter: brightness(1); }
+      44%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; z-index: 4; filter: brightness(1); }
+      52%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; z-index: 4; filter: brightness(1); }
+      62%  { transform: translateY(24%) scale(.86) rotate(1deg); opacity: .8; z-index: 4; filter: brightness(.9); }
+      72%  { transform: translateY(60%) scale(.7) rotate(2deg); opacity: .4; z-index: 2; filter: brightness(.7); }
+      84%  { transform: translateY(120%) scale(.5) rotate(4deg); opacity: 0; z-index: 2; filter: brightness(.55); }
+      100% { transform: translateY(120%) scale(.5) rotate(4deg); opacity: 0; z-index: 2; filter: brightness(.55); }
     }
     /* Moldura ESTÁTICA após a entrada (a respiração scale fazia a pessoa
        "sair" do quadrado) — só a entrada gira círculo→retângulo */
@@ -279,6 +293,8 @@
     <div class="hero-visual" aria-hidden="true">
       <!-- Moldura laranja (a forma visual) -->
       <div class="hv-moldura"></div>
+      <!-- Sombra (silhueta) atrás da mulher -->
+      <img class="hv-sombra" src="/imagens/hero-pessoa.png" alt="" loading="eager" decoding="async" aria-hidden="true" />
       <!-- Pessoa DENTRO da moldura (coordenadas calculadas da moldura) -->
       <img class="hv-pessoa" src="/imagens/hero-pessoa.png" alt="" loading="eager" decoding="async"
            onerror="this.style.display='none';document.querySelector('.hero').classList.add('hero-solo')" />
@@ -1189,10 +1205,19 @@
       var altura = mr.height * ALTURA_DA_PESSOA;
       // Posição (relativa ao hero-visual, que é o pai posicionado):
       var bottom = (mv.bottom - mr.bottom) + mr.height * INSET_BASE;
+      var pxLeft = ((mr.right - mv.left) - mr.width * INSET_LATERAL - largura);
       pessoa.style.width = largura + 'px';
       pessoa.style.height = altura + 'px';
-      pessoa.style.left = ((mr.right - mv.left) - mr.width * INSET_LATERAL - largura) + 'px';
+      pessoa.style.left = pxLeft + 'px';
       pessoa.style.bottom = bottom + 'px';
+      // Sombra: mesmo retângulo, ligeiramente deslocada para a direita/baixo
+      var sombra = document.querySelector('.hv-sombra');
+      if (sombra) {
+        sombra.style.width = largura + 'px';
+        sombra.style.height = altura + 'px';
+        sombra.style.left = (pxLeft + largura * 0.045) + 'px';
+        sombra.style.bottom = (bottom - mr.height * 0.012) + 'px';
+      }
     }
     // Estado base controlado por JS (sem disputa com CSS):
     pessoa_estilo();
