@@ -73,7 +73,7 @@
       object-fit: contain; object-position: bottom left;
       filter: drop-shadow(0 34px 44px rgba(14,43,68,.22));
     }
-    /* Currículo: SOBE por cima da pessoa (o "resume-img" deles) */
+    /* Currículo: ALTERNANDO — sobe, fica, desce e sobe de novo (loop 9s) */
     .hv-curriculo {
       position: absolute; z-index: 4;
       width: 52%;
@@ -82,31 +82,51 @@
       background: #fff;
       border: 1px solid var(--border);
       box-shadow: 0 26px 60px -20px rgba(14,43,68,.4);
-      /* estado inicial: escondido ABAIXO (fora da moldura) */
-      transform: translateY(120%) scale(.92);
-      opacity: 0;
-      animation: hv-curriculo-sobe 1s cubic-bezier(.12,1.56,.72,.9) .9s forwards;
+      transform-origin: bottom right;
+      animation: hv-curriculo-alterna 9s cubic-bezier(.12,1.56,.72,.9) 1s infinite;
     }
-    @keyframes hv-curriculo-sobe {
-      from { transform: translateY(120%) scale(.92); opacity: 0; }
-      to { transform: translateY(0) scale(1); opacity: 1; }
+    @keyframes hv-curriculo-alterna {
+      /* ENTRADA (1o ciclo) */
+      0%   { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
+      12%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      /* ESTADO A: firmado */
+      38%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      /* TRANSIÇÃO: desce girando levemente (como quem folheia) */
+      50%  { transform: translateY(6%) scale(.97) rotate(-2deg); opacity: 1; }
+      56%  { transform: translateY(-3%) scale(1.02) rotate(1deg); opacity: 1; }
+      /* ESTADO B: volta a firmar (sobe de novo — alternância visível) */
+      68%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      96%  { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
     }
-    /* Entrada da moldura: gira de círculo para retângulo (elástico) */
+    /* Moldura: gira círculo→retângulo NA ENTRADA e depois RESPIRA em loop */
     .hv-moldura {
-      animation: hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both;
+      animation:
+        hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both,
+        hv-moldura-respira 9s ease-in-out 1.4s infinite;
     }
     @keyframes hv-moldura-gira {
       0% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 0; }
       55% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 1; }
       100% { width: 78%; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; }
     }
-    /* Entrada da pessoa: desliza da direita (elástico, igual ao deles) */
+    @keyframes hv-moldura-respira {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    /* Pessoa: ENTRADA + oscila suave (flutuação de vida, loop) */
     .hv-pessoa {
-      animation: hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both;
+      animation:
+        hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both,
+        hv-pessoa-flutua 7s ease-in-out 1.4s infinite;
     }
     @keyframes hv-pessoa-desliza {
       from { transform: translateX(60px); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes hv-pessoa-flutua {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
 
     /* ---- Quadrados e anéis flutuando (efeitos CSS puro, GPU) ---- */
