@@ -99,6 +99,10 @@
       border: 1px solid var(--border);
       box-shadow: 0 26px 60px -20px rgba(14,43,68,.4);
       transform-origin: bottom right;
+      /* Estado pré-animação: INVISÍVEL durante o delay (2.6s) — o currículo
+         só aparece quando a moldura e a mulher já estiverem formadas */
+      transform: translateY(130%) scale(.92) rotate(4deg);
+      opacity: 0;
       animation: hv-curriculo-alterna 10s cubic-bezier(.22,1.2,.36,1) 2.6s infinite;
     }
     @keyframes hv-curriculo-alterna {
@@ -111,21 +115,15 @@
       96%  { transform: translateY(-10%) scale(1.24) rotate(-1deg); }
       100% { transform: translateY(130%) scale(.92) rotate(4deg); opacity: 0; }
     }
+    /* Moldura ESTÁTICA após a entrada (a respiração scale fazia a pessoa
+       "sair" do quadrado) — só a entrada gira círculo→retângulo */
     .hv-moldura {
-      animation:
-        hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both,
-        hv-moldura-respira 10s ease-in-out 2s infinite;
+      animation: hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both;
     }
     @keyframes hv-moldura-gira {
       0% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 0; }
       55% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 1; }
       100% { width: 78%; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; }
-    }
-    @keyframes hv-moldura-respira {
-      0%, 100% { transform: scale(1); }
-      30% { transform: scale(1.02); }
-      60% { transform: scale(1.05); }
-      90% { transform: scale(1.01); }
     }
 
     /* ---- Quadrados e anéis flutuando (efeitos CSS puro, GPU) ---- */
