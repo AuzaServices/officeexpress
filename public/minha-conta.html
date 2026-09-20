@@ -973,6 +973,15 @@
         // Marca o body para o CSS deslocar a section (sidebar fixa à esquerda).
         document.body.classList.add("com-sidebar");
         IDS.saudacao.textContent = "Olá, " + (u.nome ? u.nome.split(" ")[0] : "cliente") + "!";
+        // Aviso proativo: email não confirmado bloqueia pagamento/assinatura
+        // e a conta é excluída pelo cron após 24h.
+        if (u.email_confirmado === 0 || u.email_confirmado === false) {
+          var aviso = document.createElement("div");
+          aviso.style.cssText = "background:rgba(234,88,12,.1);border:1px solid rgba(234,88,12,.35);color:#ea580c;padding:14px 18px;border-radius:12px;margin-bottom:18px;font-size:.9rem;line-height:1.5";
+          aviso.innerHTML = '<strong>Confirme seu e-mail!</strong> Verifique a caixa de entrada (e o spam). Sem confirmação, você não consegue pagar currículos nem assinar o plano — e a conta é removida automaticamente após 24h.';
+          var pai = IDS.saudacao.parentNode;
+          if (pai) pai.insertBefore(aviso, IDS.saudacao.nextSibling);
+        }
         // Sidebar desktop (mesmo formato do painel de empresas)
         var pseNome = document.getElementById("pseNome");
         var pseAvatar = document.getElementById("pseAvatar");

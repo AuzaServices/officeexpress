@@ -1027,6 +1027,16 @@ app.post("/api/pedidos", async (req, res) => {
   const catalogo = tipo === "carta" ? CARTAS : MODELOS;
   if (!modelo || !catalogo.find((m) => m.id === modelo)) return res.status(400).json({ error: "Modelo inválido." });
   if (!dados || !dados.nome) return res.status(400).json({ error: "Dados do currículo incompletos." });
+  // Email não confirmado: usuário com conta NÃO pode criar currículo (e por
+  // consequência não paga nem assina) — evita o caso do assinante excluído
+  // pelo cron de limpeza (24h) depois de já ter pagado.
+  const uidCriacao = usuarioDaSessao(req);
+  if (uidCriacao) {
+    const [uConf] = await pool.query("SELECT email_confirmado FROM usuarios WHERE id = ?", [uidCriacao]);
+    if (uConf.length && !uConf[0].email_confirmado) {
+      return res.status(403).json({ error: "Confirme seu e-mail antes de continuar. Verifique a caixa de entrada (e o spam)." });
+    }
+  }
   // ---- Nova lógica: NÃO existe currículo gratuito. Todo currículo criado
   // gera um pedido pendente; a escolha (pagar avulso ou assinar plano) é
   // feita pelo usuário na página de pagamento. Cartas seguem avulsas. ----
@@ -1476,6 +1486,14 @@ app.post("/api/pagamento/pix", async (req, res) => {
   const [rows] = await pool.query("SELECT * FROM pedidos WHERE id = ?", [pedidoId]);
   if (!rows.length) return res.status(404).json({ error: "Pedido não encontrado." });
   const pedido = rows[0];
+  // Email não confirmado: dono do pedido NÃO gera cobrança (o cron de 24h
+  // exclui não confirmados — pagamento seria perdido com a conta).
+  if (pedido.usuario_id) {
+    const [uPg] = await pool.query("SELECT email_confirmado FROM usuarios WHERE id = ?", [pedido.usuario_id]);
+    if (uPg.length && !uPg[0].email_confirmado) {
+      return res.status(403).json({ error: "Confirme seu e-mail antes de pagar. Verifique a caixa de entrada (e o spam)." });
+    }
+  }
   // ---- QR DINÂMICO: valor cobrado = preço ATUAL ----
   // Se o admin mudou o preço (global ou do parceiro) DEPOIS da criação do
   // pedido, o QR passaria a cobrar o valor ANTIGO gravado no pedido. Para o
@@ -1799,8 +1817,13 @@ app.post("/api/auth/assinatura/assinar", async (req, res) => {
   const { plano: planoId, pedidoPendenteId } = req.body || {};
   const plano = PLANOS_CLIENTE[planoId];
   if (!plano) return res.status(400).json({ error: "Plano inválido." });
-  const [u] = await pool.query("SELECT email, nome FROM usuarios WHERE id = ?", [id]);
+  const [u] = await pool.query("SELECT email, nome, email_confirmado FROM usuarios WHERE id = ?", [id]);
   if (!u.length) return res.status(401).json({ error: "Não autenticado." });
+  // Email não confirmado: NÃO assina (o cron de 24h exclui não confirmados —
+  // um assinante não confirmado seria excluído com o plano pago).
+  if (!u[0].email_confirmado) {
+    return res.status(403).json({ error: "Confirme seu e-mail antes de assinar o plano. Verifique a caixa de entrada (e o spam)." });
+  }
   // Se o usuário veio da página de pagamento de um currículo, valida que o
   // pedido existe, é dele e está pendente — ele será liberado junto com a
   // assinatura (o currículo que ele acabou de fazer entra no plano).
@@ -5903,8 +5926,13 @@ async function apagarNaoConfirmados() {
          SELECT id FROM usuarios WHERE email_confirmado = 0 AND created_at < (NOW() - INTERVAL 24 HOUR)
        )`
     );
+    // PROTEÇÃO FINANCEIRA: usuários não confirmados com PAGAMENTO registrado
+    // (assinatura paga ou transação) NUNCA são excluídos pelo cron — evita o
+    // caso do assinante excluído com o plano pago depois de 24h.
     const [r] = await pool.query(
-      "DELETE FROM usuarios WHERE email_confirmado = 0 AND created_at < (NOW() - INTERVAL 24 HOUR)"
+      `DELETE FROM usuarios WHERE email_confirmado = 0 AND created_at < (NOW() - INTERVAL 24 HOUR)
+         AND id NOT IN (SELECT usuario_id FROM usuarios_pagamentos WHERE usuario_id IS NOT NULL)
+         AND id NOT IN (SELECT usuario_id FROM transacoes WHERE usuario_id IS NOT NULL)`
     );
     if (r.affectedRows > 0) {
       console.log(`🧹 Contas não confirmadas apagadas (24h): ${r.affectedRows} usuário(s), ${tokens.affectedRows} token(s).`);
