@@ -54,17 +54,59 @@
     .hero.hero-solo .hero-visual { display: none; }
     .hero.hero-solo .ctas, .hero.hero-solo .hero-stats { justify-content: center; }
 
-    /* ---- Coluna visual ---- */
-    .hero-visual { position: relative; z-index: 1; min-height: 480px; }
-    .hv-foto {
-      width: 100%; height: clamp(480px, 60vh, 640px); object-fit: cover;
-      object-position: center 20%;
-      border-radius: 24px;
-      box-shadow: 0 40px 90px -30px rgba(14,43,68,.35);
-      display: block;
-      /* Degrade de integração: a foto "nasce" do fundo da página */
-      -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
-      mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    /* ---- Coluna visual: COLAGEM (cores Office Express) ---- */
+    .hero-visual { position: relative; z-index: 1; min-height: 560px; }
+    /* Moldura laranja deslocada atrás (o "yellow-box" deles, em --brand) */
+    .hv-moldura {
+      position: absolute; z-index: 1;
+      width: 78%; height: 88%;
+      top: 6%; right: 4%;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      border-radius: 0 70px 0 0; /* canto arredondado em UM canto só */
+      box-shadow: 0 30px 70px -28px rgba(230,115,0,.5);
+    }
+    /* Pessoa SEM FUNDO (PNG transparente): cobre a moldura, "saindo" dela */
+    .hv-pessoa {
+      position: absolute; z-index: 3;
+      width: 88%; max-height: 560px;
+      left: 0; bottom: 0;
+      object-fit: contain; object-position: bottom left;
+      filter: drop-shadow(0 34px 44px rgba(14,43,68,.22));
+    }
+    /* Currículo: SOBE por cima da pessoa (o "resume-img" deles) */
+    .hv-curriculo {
+      position: absolute; z-index: 4;
+      width: 52%;
+      right: 2%; bottom: 6%;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 26px 60px -20px rgba(14,43,68,.4);
+      /* estado inicial: escondido ABAIXO (fora da moldura) */
+      transform: translateY(120%) scale(.92);
+      opacity: 0;
+      animation: hv-curriculo-sobe 1s cubic-bezier(.12,1.56,.72,.9) .9s forwards;
+    }
+    @keyframes hv-curriculo-sobe {
+      from { transform: translateY(120%) scale(.92); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    /* Entrada da moldura: gira de círculo para retângulo (elástico) */
+    .hv-moldura {
+      animation: hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both;
+    }
+    @keyframes hv-moldura-gira {
+      0% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 0; }
+      55% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 1; }
+      100% { width: 78%; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; }
+    }
+    /* Entrada da pessoa: desliza da direita (elástico, igual ao deles) */
+    .hv-pessoa {
+      animation: hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both;
+    }
+    @keyframes hv-pessoa-desliza {
+      from { transform: translateX(60px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
 
     /* ---- Quadrados e anéis flutuando (efeitos CSS puro, GPU) ---- */
@@ -116,7 +158,11 @@
       .hero { display: flex; flex-direction: column-reverse; text-align: center; padding: 24px 18px 48px; min-height: 0; gap: 8px; }
       .hero .hero-content { max-width: 100%; }
       .hero-visual { min-height: 0; width: 100%; }
-      .hv-foto { height: min(52vw, 340px); border-radius: 20px; object-position: center 15%; box-shadow: 0 24px 50px -24px rgba(14,43,68,.3); }
+      /* Colagem compacta no mobile */
+      .hero-visual { max-width: 380px; margin: 0 auto 18px; }
+      .hv-moldura { width: 80%; height: 86%; top: 4%; right: 6%; border-radius: 0 48px 0 0; }
+      .hv-pessoa { width: 92%; max-height: min(92vw, 400px); }
+      .hv-curriculo { width: 46%; right: 0; bottom: 4%; }
       /* Efeitos: só 1 quadrado + 1 anel no mobile (performance e elegância) */
       .hv-q2, .hv-q3, .hv-a2 { display: none; }
       .hv-q1 { top: 4%; left: 4%; width: 10px; height: 10px; }
@@ -140,6 +186,11 @@
     @media (prefers-reduced-motion: reduce) {
       .hv-part, .hv-card, .hv-dot, .hero-content > *, .hero-visual { animation: none !important; }
       .hero::before { animation: none !important; }
+      /* Colagem: estados finais diretos, sem animação */
+      .hv-moldura, .hv-pessoa, .hv-curriculo { animation: none !important; }
+      .hv-moldura { width: 78%; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; opacity: 1; }
+      .hv-pessoa { transform: none; opacity: 1; }
+      .hv-curriculo { transform: none; opacity: 1; }
     }
     .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
     .feature-card h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
@@ -232,17 +283,20 @@
       </div>
     </div>
 
-    <!-- ===== 2a COLUNA: foto + efeitos de última geração ===== -->
+    <!-- ===== 2a COLUNA: colagem (moldura + pessoa sem fundo + currículo) ===== -->
     <div class="hero-visual" aria-hidden="true">
-      <!-- Efeitos: quadrados e anéis flutuando (CSS puro, GPU-friendly) -->
+      <!-- Moldura laranja deslocada (z-1) -->
+      <div class="hv-moldura"></div>
+      <!-- Quadrados e anéis flutuando (mantidos) -->
       <span class="hv-part hv-q1"></span>
       <span class="hv-part hv-q2"></span>
-      <span class="hv-part hv-q3"></span>
       <span class="hv-part hv-a1"></span>
-      <span class="hv-part hv-a2"></span>
-      <!-- Foto -->
-      <img class="hv-foto" src="/imagens/hero-pessoa.jpg" alt="" loading="eager" decoding="async"
-           onerror="this.closest('.hero-visual').style.display='none';document.querySelector('.hero').classList.add('hero-solo')" />
+      <!-- Pessoa SEM FUNDO (z-3): PNG transparente recortado por você -->
+      <img class="hv-pessoa" src="/imagens/hero-pessoa.png" alt="" loading="eager" decoding="async"
+           onerror="this.style.display='none';document.querySelector('.hero').classList.add('hero-solo')" />
+      <!-- Currículo que SOBE por cima da pessoa (z-4) -->
+      <img class="hv-curriculo" src="/imagens/hero-curriculo.png" alt="" loading="lazy" decoding="async"
+           onerror="this.style.display='none'" />
       <!-- Cards de UI flutuantes -->
       <div class="hv-card hv-card-aprovado">
         <span class="hv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
