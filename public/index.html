@@ -58,35 +58,43 @@
     /* Colagem alinhada ao bloco de texto: começa no topo do h1 e termina
        junto com os botões (align-self start + altura casada) */
     .hero-visual { position: relative; z-index: 1; min-height: 500px; max-height: 520px; align-self: start; margin-top: 0; }
-    /* Moldura laranja deslocada atrás (o "yellow-box" deles, em --brand) */
-    .hv-moldura {
+    /* ============================================================
+       QUADRADO (garantia matemática): moldura + pessoa no MESMO wrapper
+       com overflow:hidden — a pessoa é posicionada RELATIVA AO QUADRADO
+       (100% = a moldura), então é impossível sair dele em qualquer tela.
+       ============================================================ */
+    .hv-quadrado {
       position: absolute; z-index: 1;
       width: 78%; height: 88%;
       top: 6%; right: 4%;
-      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-      border-radius: 0 70px 0 0; /* canto arredondado em UM canto só */
+      overflow: hidden; /* corta TUDO que passar — impossível sair */
+      border-radius: 0 70px 0 0;
       box-shadow: 0 30px 70px -28px rgba(230,115,0,.5);
+    }
+    /* Moldura = o visual do fundo do quadrado (100%) */
+    .hv-moldura {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
     }
     /* ============================================================
        ALTERNÂNCIA DE FOCO: PESSOA ↔ CURRÍCULO (ciclo 10s, infinito)
        FASE A (0-50%): pessoa em foco; currículo pequeno no canto
        FASE B (50-100%): currículo em foco (centro, grande); pessoa recua
        ============================================================ */
+    /* Pessoa DENTRO do quadrado: coordenadas relativas AO QUADRADO
+       (% = % da moldura). À prova de erro: o overflow:hidden do quadrado
+       corta qualquer excesso — impossível sair em nenhuma tela. */
     .hv-pessoa {
       position: absolute; z-index: 3;
-      width: 72%; max-height: 94%;
-      left: 22%; bottom: 4%;
-      object-fit: contain; object-position: bottom left;
-      filter: drop-shadow(0 34px 44px rgba(14,43,68,.22));
-      transform-origin: bottom left;
+      width: 88%; max-height: 96%;
+      left: 50%; bottom: 0;
+      transform: translateX(-50%);
+      object-fit: contain; object-position: bottom center;
+      filter: drop-shadow(0 26px 36px rgba(14,43,68,.28));
+      transform-origin: bottom center;
       animation: hv-pessoa-desliza .9s cubic-bezier(.12,1.56,.72,.9) .5s both;
     }
     @keyframes hv-pessoa-desliza {
-      from { transform: translateX(60px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    /* Mobile: entrada casada com o centramento (translateX -50%) */
-    @keyframes hv-pessoa-desliza-mobile {
       from { transform: translate(calc(-50% + 40px), 0); opacity: 0; }
       to { transform: translate(-50%, 0); opacity: 1; }
     }
@@ -154,15 +162,10 @@
       .hero-visual { min-height: 0; width: 100%; }
       /* Colagem compacta no mobile — centralizada na tela */
       .hero-visual { max-width: min(94vw, 420px); margin: 8px auto 20px; min-height: min(122vw, 500px); align-self: center; }
-      /* Composição centralizada: moldura no centro, pessoa centrada */
-      .hv-moldura { left: 7%; right: 7%; width: auto; }
-      .hv-pessoa { left: 50%; transform: translateX(-50%); max-height: min(108vw, 440px); width: auto; max-width: 78%; }
-      /* A entrada da pessoa (desliza) usa transform — casar com o centramento */
-      .hv-pessoa { animation: hv-pessoa-desliza-mobile .9s cubic-bezier(.12,1.56,.72,.9) .5s both; }
-      .hv-curriculo { right: 6%; }
-      .hv-moldura { width: 80%; height: 86%; top: 4%; right: 6%; border-radius: 0 48px 0 0; }
-      .hv-pessoa { width: 92%; max-height: min(110vw, 440px); }
-      .hv-curriculo { width: 50%; right: 0; bottom: 4%; }
+      /* Quadrado mobile: geometria centralizada (a pessoa é RELATIVA AO
+         QUADRADO — acompanha automaticamente, nada a ajustar aqui) */
+      .hv-quadrado { left: 6%; right: 6%; width: auto; height: 88%; top: 4%; border-radius: 0 48px 0 0; }
+      .hv-curriculo { width: 50%; right: 6%; bottom: 4%; }
       /* Alternância no mobile: transições mais curtas (mesmo ciclo) */
       .hv-pessoa { animation-duration: .7s, 10s; }
       .hv-curriculo { animation-duration: 10s; }
@@ -184,7 +187,7 @@
       /* Colagem: estados finais diretos, sem animação */
       .hv-moldura, .hv-pessoa, .hv-curriculo { animation: none !important; }
       .hv-moldura { width: 78%; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; opacity: 1; }
-      .hv-pessoa { transform: none; opacity: 1; }
+      .hv-pessoa { transform: translateX(-50%); opacity: 1; }
       .hv-curriculo { transform: none; opacity: 1; }
     }
     .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
@@ -280,15 +283,17 @@
 
     <!-- ===== 2a COLUNA: colagem (moldura + pessoa sem fundo + currículo) ===== -->
     <div class="hero-visual" aria-hidden="true">
-      <!-- Moldura laranja deslocada (z-1) -->
-      <div class="hv-moldura"></div>
+      <!-- Quadrado: moldura + pessoa DENTRO (overflow hidden = impossível
+           sair; a pessoa é posicionada relativa ao QUADRADO, não ao container) -->
+      <div class="hv-quadrado">
+        <div class="hv-moldura"></div>
+        <img class="hv-pessoa" src="/imagens/hero-pessoa.png" alt="" loading="eager" decoding="async"
+             onerror="this.style.display='none';document.querySelector('.hero').classList.add('hero-solo')" />
+      </div>
       <!-- Quadrados e anéis flutuando (mantidos) -->
       <span class="hv-part hv-q1"></span>
       <span class="hv-part hv-q2"></span>
       <span class="hv-part hv-a1"></span>
-      <!-- Pessoa SEM FUNDO (z-3): PNG transparente recortado por você -->
-      <img class="hv-pessoa" src="/imagens/hero-pessoa.png" alt="" loading="eager" decoding="async"
-           onerror="this.style.display='none';document.querySelector('.hero').classList.add('hero-solo')" />
       <!-- Currículo que SOBE por cima da pessoa (z-4) -->
       <img class="hv-curriculo" src="/imagens/hero-curriculo.png" alt="" loading="lazy" decoding="async"
            onerror="this.style.display='none'" />
