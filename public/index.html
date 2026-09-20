@@ -62,7 +62,9 @@
        MESMAS coordenadas calculadas: centro x = 55%, base y = 99%) */
     .hv-moldura {
       position: absolute; z-index: 1;
-      width: 86%; height: 96%;
+      /* Tamanho final casado com o 100% do keyframe. --hv-cx: definido
+         por JS = 30% do MENOR eixo (círculo perfeito, impossível oval). */
+      width: var(--hv-cx, 86%); height: var(--hv-cx, 86%);
       top: 3%; right: 2%;
       background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
       border-radius: 0 70px 0 0;
@@ -188,11 +190,17 @@
       animation: hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both;
     }
     @keyframes hv-moldura-gira {
-      /* Círculo PERFEITO: height fixo + aspect-ratio 1 (não oval em
-         containers não quadrados). right p/ centralizar. */
-      0% { height: 30%; aspect-ratio: 1; top: 35%; right: 30%; border-radius: 50%; opacity: 0; }
-      55% { height: 30%; aspect-ratio: 1; top: 35%; right: 30%; border-radius: 50%; opacity: 1; }
-      100% { aspect-ratio: auto; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; }
+      /* Círculo PERFEITO em QUALQUER container: width E height AMBOS em
+         aspect-ratio 1 — % de eixos diferentes dava oval. A parcela
+         resolvida: usar UM QUADRADO de TAMANHO FIXO EM px (menor eixo) via
+         scale? Não — interpolação de width+height juntos: usar a MESMA
+         porcentagem em CH (container query units)? Suporte limitado.
+         SOLUÇÃO PERFEITA: o círculo é um QUADRADO EM PX (var --hv-cx
+         definida por JS = 30% do MENOR eixo da coluna) — impossível oval.
+      */
+      0% { width: var(--hv-cx); height: var(--hv-cx); top: 35%; right: 30%; border-radius: 50%; opacity: 0; }
+      55% { width: var(--hv-cx); height: var(--hv-cx); top: 35%; right: 30%; border-radius: 50%; opacity: 1; }
+      100% { width: 86%; height: 96%; top: 3%; right: 2%; border-radius: 0 70px 0 0; }
     }
 
     /* ---- Quadrados e anéis flutuando (efeitos CSS puro, GPU) ---- */
@@ -230,7 +238,16 @@
       /* Alternância no mobile: entrada mais rápida */
       .hv-pessoa { animation-duration: .7s; }
       .hv-curriculo { animation-duration: 10s; }
-      /* Efeitos: só 1 quadrado + 1 anel no mobile (performance e elegância) */
+      /* Keyframe mobile: os valores finais MOBILE (casado com .hv-moldura
+       mobile: width auto height 90% top 5% left 6% right 6%) — o círculo
+       inicial também quadrado em px (mesma var). */
+      @keyframes hv-moldura-gira {
+        0% { width: var(--hv-cx); height: var(--hv-cx); top: 35%; right: 30%; border-radius: 50%; opacity: 0; }
+        55% { width: var(--hv-cx); height: var(--hv-cx); top: 35%; right: 30%; border-radius: 50%; opacity: 1; }
+        100% { width: auto; height: 90%; top: 5%; left: 6%; right: 6%; border-radius: 0 48px 0 0; }
+      }
+
+    /* Efeitos: só 1 quadrado + 1 anel no mobile (performance e elegância) */
       .hv-q2, .hv-q3, .hv-a2 { display: none; }
       .hv-q1 { top: 4%; left: 4%; width: 10px; height: 10px; }
       .hv-a1 { width: 40px; height: 40px; top: 6%; right: 6%; }
@@ -1292,16 +1309,46 @@
         'tradicional'
       ];
       var iM = 0;
-      // O ciclo CSS é 10s: trocar em 8.6s (folha já escondida atrás da
-      // forma, antes de renascer) — o src troca invisível ao usuário:
-      setInterval(function () {
+
+    }
+    document.addEventListener('DOMContentLoaded', iniciarLoopDeModelos);
+
+    /* ===== --hv-cx: 30% do MENOR eixo da coluna (círculo perfeito) ===== */
+    function definirCx() {
+      var visual = document.querySelector('.hero-visual');
+      if (!visual) return;
+      var r = visual.getBoundingClientRect();
+      var cx = Math.round(Math.min(r.width, r.height) * 0.30);
+      visual.style.setProperty('--hv-cx', cx + 'px');
+    }
+    window.addEventListener('resize', definirCx);
+    window.addEventListener('load', definirCx);
+    document.addEventListener('DOMContentLoaded', definirCx);
+
+    /* ===== TROCA DE MODELO SÓ QUANDO A FOLHA ESTÁ ESCONDIDA =====
+       A troca por setInterval 8600ms podia descasar do ciclo CSS de 10s
+       (drift acumulado → troca em tempo indevido, com a folha visível).
+       SOLUÇÃO PERFEITA: escutar animationiteration da folha (dispara no
+       EXATO momento em que o ciclo renicia = folha escondida atrás da
+       forma) e trocar então. IMPOSSÍVEL trocar com a folha visível. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var folha = document.querySelector('.hv-curriculo');
+      if (!folha) return;
+      var modelos = [
+        'classico', 'moderno', 'minimal', 'executivo', 'criativo',
+        'harvard', 'funcional', 'elegante', 'compacto', 'transicao',
+        'profissional', 'limpo', 'contemporaneo', 'diplomatico',
+        'educador', 'estudante', 'impacto', 'juridico', 'marketing',
+        'tradicional'
+      ];
+      var iM = 0;
+      folha.addEventListener('animationiteration', function () {
         iM = (iM + 1) % modelos.length;
         var prox = new Image();
         prox.onload = function () { folha.src = prox.src; };
         prox.src = '/imagens/miniaturas/' + modelos[iM] + '.png';
-      }, 8600);
-    }
-    document.addEventListener('DOMContentLoaded', iniciarLoopDeModelos);
+      });
+    });
     function pessoa_estilo() {
       var pessoa = document.querySelector('.hv-pessoa');
       if (!pessoa) return;
