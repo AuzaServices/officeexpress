@@ -232,11 +232,14 @@
        borda). A forma tem overflow hidden? O círculo é IRMÃO da moldura
        (não filho) — então fica visível fora dela, como pedido. */
     .hv-azul {
-      position: absolute; z-index: 0;
-      width: var(--hv-az, 140px); height: var(--hv-az, 140px);
-      top: -18%; right: 4%;
+      position: absolute; z-index: 2;
+      /* MENOR: 22% do menor eixo (var --hv-az) */
+      width: var(--hv-az, 76px); height: var(--hv-az, 76px);
+      top: -14%; right: 8%;
       border-radius: 50%;
-      border: 3px solid var(--blue, #1a6fc4);
+      /* Contorno AZUL ESCURO (era laranja — mudou apenas a cor), acima da
+         forma (z-2): por cima da moldura e da pessoa */
+      border: 3px solid var(--blue-dark, #124e8c);
       opacity: .85;
       /* Nasce em BAIXO-ESQUERDA (próximo ao círculo laranja) e sobe */
       animation: hv-azul-sobe 1.2s cubic-bezier(.22,1.2,.36,1) .35s both;
@@ -245,7 +248,7 @@
     @keyframes hv-azul-sobe {
       0%   { top: 68%; right: 62%; opacity: 0; }
       12%  { opacity: .85; }
-      100% { top: -18%; right: 4%; opacity: .85; }
+      100% { top: -14%; right: 8%; opacity: .85; }
     }
     .hv-a2 { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--brand-light); opacity: .3; bottom: 8%; left: 8%; animation: hv-pulsa 7s ease-in-out 2s infinite; }
     @keyframes hv-sobe { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(8deg); } }
@@ -273,7 +276,7 @@
 
       .hv-sombra { width: 88%; height: 92%; right: 4%; bottom: 0; }
       .hv-mao { width: 50%; right: 6%; bottom: 4%; }
-      .hv-azul { width: var(--hv-az); height: var(--hv-az); top: -14%; right: 2%; border-width: 2px; }
+      .hv-azul { width: var(--hv-az); height: var(--hv-az); top: -12%; right: 4%; border-width: 2px; }
       /* Alternância no mobile: entrada mais rápida */
       .hv-pessoa { animation-duration: .7s; }
       .hv-curriculo { animation-duration: 10s; }
@@ -1368,8 +1371,8 @@
       visual.style.setProperty('--hv-cx', cx + 'px');
       // Círculo grande: 55% do menor eixo (encolhe enquanto a forma cresce)
       visual.style.setProperty('--hv-cg', Math.round(menor * 0.55) + 'px');
-      // Círculo azul: 40% do menor eixo (sobe e fica metade fora da forma)
-      visual.style.setProperty('--hv-az', Math.round(menor * 0.40) + 'px');
+      // Anel azul escuro: 22% do menor eixo (menor, sobe, metade fora)
+      visual.style.setProperty('--hv-az', Math.round(menor * 0.22) + 'px');
     }
     window.addEventListener('resize', definirCx);
     window.addEventListener('load', definirCx);
