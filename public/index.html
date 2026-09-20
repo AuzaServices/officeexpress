@@ -231,10 +231,11 @@
        esquerda), SOBE até o topo direito da forma e assenta METADE FORA dela
        (top -14%), por cima da forma (z-2). ÚNICA mudança: cor AZUL. */
     .hv-a2 {
-      position: absolute; z-index: 2;
+      position: absolute; z-index: 4;
       width: 36px; height: 36px; border-radius: 50%;
-      border: 2px solid var(--blue, #1a6fc4);
-      opacity: .8;
+      /* AZUL ESCURO + contorno mais grosso (4px) */
+      border: 4px solid var(--blue-dark, #124e8c);
+      opacity: .9;
       top: -14%; right: 8%;
       animation: hv-a2-sobe 1.2s cubic-bezier(.22,1.2,.36,1) .35s both;
     }
