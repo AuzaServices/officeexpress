@@ -188,9 +188,11 @@
       animation: hv-moldura-gira 1.2s cubic-bezier(.22,1.4,.36,1) .15s both;
     }
     @keyframes hv-moldura-gira {
-      0% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 0; }
-      55% { width: 30%; height: 30%; top: 35%; right: 28%; border-radius: 50%; opacity: 1; }
-      100% { width: 78%; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; }
+      /* Círculo PERFEITO: height fixo + aspect-ratio 1 (não oval em
+         containers não quadrados). right p/ centralizar. */
+      0% { height: 30%; aspect-ratio: 1; top: 35%; right: 30%; border-radius: 50%; opacity: 0; }
+      55% { height: 30%; aspect-ratio: 1; top: 35%; right: 30%; border-radius: 50%; opacity: 1; }
+      100% { aspect-ratio: auto; height: 88%; top: 6%; right: 4%; border-radius: 0 70px 0 0; }
     }
 
     /* ---- Quadrados e anéis flutuando (efeitos CSS puro, GPU) ---- */
@@ -355,9 +357,10 @@
       <span class="hv-part hv-q1"></span>
       <span class="hv-part hv-q2"></span>
       <span class="hv-part hv-a1"></span>
-      <!-- Currículo: folha presa à mão — nasce ATRÁS da forma (recortada
-           pelo overflow) e é jogada para FRENTE; depois volta para trás -->
-      <div class="hv-mao">
+      <!-- Currículos: MODELOS DAS MINIATURAS — loop infinito em que cada
+           folha é tirada ATRÁS da forma (recortada pelo overflow), jogada
+           para FRENTE em foco, volta para trás; entra o próximo modelo -->
+      <div class="hv-mao" id="hvMao">
         <img class="hv-curriculo" src="/imagens/hero-curriculo.png" alt="" loading="lazy" decoding="async"
              onerror="this.style.display='none'" />
       </div>
@@ -1271,6 +1274,34 @@
     }
     // Estado base controlado por JS (sem disputa com CSS):
     pessoa_estilo();
+
+    /* ===== LOOP DE MODELOS: cada folha é um modelo das miniaturas =====
+       O ciclo da folha é 10s (CSS). A cada ciclo, ANTES de a folha emergir
+       de trás da forma, o JS troca o src para o próximo modelo das
+       miniaturas. A folha que nasce ATRÁS da forma JÁ É o novo modelo —
+       entra um, sai outro, loop infinito por todos os modelos. */
+    function iniciarLoopDeModelos() {
+      var folha = document.querySelector('.hv-curriculo');
+      var mao = document.getElementById('hvMao');
+      if (!folha || !mao) return;
+      var modelos = [
+        'classico', 'moderno', 'minimal', 'executivo', 'criativo',
+        'harvard', 'funcional', 'elegante', 'compacto', 'transicao',
+        'profissional', 'limpo', 'contemporaneo', 'diplomatico',
+        'educador', 'estudante', 'impacto', 'juridico', 'marketing',
+        'tradicional'
+      ];
+      var iM = 0;
+      // O ciclo CSS é 10s: trocar em 8.6s (folha já escondida atrás da
+      // forma, antes de renascer) — o src troca invisível ao usuário:
+      setInterval(function () {
+        iM = (iM + 1) % modelos.length;
+        var prox = new Image();
+        prox.onload = function () { folha.src = prox.src; };
+        prox.src = '/imagens/miniaturas/' + modelos[iM] + '.png';
+      }, 8600);
+    }
+    document.addEventListener('DOMContentLoaded', iniciarLoopDeModelos);
     function pessoa_estilo() {
       var pessoa = document.querySelector('.hv-pessoa');
       if (!pessoa) return;
