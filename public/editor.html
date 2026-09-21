@@ -900,49 +900,38 @@
     showEtapa(0);
   </script>
 
-      <script>
+        <script>
     /* ===== LIMITE DO OLHINHO NO FOOTER (casinha) =====
-       O botão SEMPRE acompanha o scroll (fixed) enquanto a "casinha" não
-       apareceu. A casinha = poucos pixels acima do TOPO do footer.
-       Quando o ponto de pouso aparece na viewport, ele CONGELA NELE
-       (absolute, parado — não desce mais). Se o formulário é curto (a
-       casinha já está visível sem scroll), congela direto na casinha. */
+       O botão SEMPRE acompanha o scroll (fixed). Quando a "casinha" (poucos
+       pixels acima do topo do footer) aparece na viewport, ele congela NELA.
+       Se o usuário sobe o scroll e a casinha sai da tela, ele VOLTA a
+       acompanhar. Form curto (casinha já visível no load)? Congela direto. */
     (function () {
       var botao = document.getElementById("btnVisualizar");
       var footer = document.querySelector(".footer");
       if (!botao || !footer) return;
-      var RESPIRO = 12; // pixels acima do topo do footer
-      function topDaCasinha() {
-        // Offset do topo do footer relativo ao DOCUMENTO:
+      var RESPIRO = 12;
+      function casinhaTop() {
         var topFooter = footer.getBoundingClientRect().top + window.scrollY;
         return topFooter - RESPIRO - botao.offsetHeight;
       }
-      var congelado = false;
       function limitar() {
-        var casinha = topDaCasinha();
+        var casinha = casinhaTop();
         var fundoVisivel = window.scrollY + (window.innerHeight || document.documentElement.clientHeight);
-        // A casinha já apareceu na viewport (ou o form é curto)?
         if (casinha <= fundoVisivel) {
-          if (!congelado) {
-            congelado = true;
-            botao.style.position = "absolute";
-            botao.style.top = casinha + "px";
-            botao.style.bottom = "auto";
-            botao.style.right = "20px";
-          }
+          // Congela NA casinha (idempotente — sempre recalcula, sem estado):
+          botao.style.position = "absolute";
+          botao.style.top = casinha + "px";
+          botao.style.bottom = "auto";
         } else {
-          // Ainda não chegou: acompanha o scroll (fixed, cantinho)
+          // Acompanha (fixed) — descongela automaticamente ao subir:
           botao.style.position = "fixed";
           botao.style.bottom = "20px";
           botao.style.top = "auto";
-          botao.style.right = "20px";
         }
       }
-      // Etapas do editor mudam a altura do form — observar mudanças:
-      if (window.ResizeObserver) {
-        new ResizeObserver(function () { if (!congelado) limitar(); })
-          .observe(document.body);
-      }
+      // Etapas mudam a altura — observar e recalcular SEMPRE (sem guard):
+      if (window.ResizeObserver) new ResizeObserver(limitar).observe(document.body);
       window.addEventListener("scroll", limitar, { passive: true });
       window.addEventListener("resize", limitar);
       limitar();
