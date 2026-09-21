@@ -900,26 +900,53 @@
     showEtapa(0);
   </script>
 
-  <script>
+    <script>
     /* ===== LIMITE DO OLHINHO NO FOOTER =====
-       O botão segue o scroll (position fixed), mas NUNCA entra no footer:
-       quando o footer aparece na tela, o bottom do botão cresce junto com a
-       parte visível do footer — o botão "senta" sobre o topo dele. */
+       O botão acompanha o scroll (position fixed) ATÉ o TOPO do footer
+       chegar ao fundo da tela. Nesse momento ele CONGELA nessa posição
+       (deixa de ser fixed e vira absolute sobre a página, parado — não
+       desce nem sobe mais). Subiu o scroll? Volta a acompanhar (fixed). */
     (function () {
       var botao = document.getElementById("btnVisualizar");
       var footer = document.querySelector(".footer");
       if (!botao || !footer) return;
+      var congelado = false;
+      var topCongelado = 0;
       function limitar() {
+        if (congelado) return; // parado — não acompanha mais
         var vis = window.innerHeight || document.documentElement.clientHeight;
         var rf = footer.getBoundingClientRect();
-        var footerNaTela = vis - rf.top;
-        if (footerNaTela > 0) {
-          botao.style.bottom = (footerNaTela + 12) + "px";
+        // O TOPO do footer chegou ao fundo da tela (menos 12px de respiro)?
+        if (rf.top <= vis - 12) {
+          // Congela: vira absolute, parado no ponto exato da página onde
+          // o footer começou a aparecer:
+          var docTop = window.scrollY + (rf.top - 12);
+          botao.style.position = "absolute";
+          botao.style.top = docTop + "px";
+          botao.style.bottom = "auto";
+          congelado = true;
+          topCongelado = docTop;
         } else {
+          botao.style.position = "fixed";
           botao.style.bottom = "20px";
+          botao.style.top = "auto";
         }
       }
-      window.addEventListener("scroll", limitar, { passive: true });
+      window.addEventListener("scroll", function () {
+        // Descongelar quando o scroll sobe e o footer sai da área:
+        if (congelado) {
+          var vis = window.innerHeight || document.documentElement.clientHeight;
+          var rf = footer.getBoundingClientRect();
+          if (rf.top > vis - 12) {
+            congelado = false;
+            botao.style.position = "fixed";
+            botao.style.bottom = "20px";
+            botao.style.top = "auto";
+          }
+          return;
+        }
+        limitar();
+      }, { passive: true });
       window.addEventListener("resize", limitar);
       limitar();
     })();
