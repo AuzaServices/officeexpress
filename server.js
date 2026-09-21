@@ -2185,17 +2185,24 @@ app.get("/api/pedidos/:id/dados", async (req, res) => {
   if (pedido.usuario_id !== usuarioId) return res.status(403).json({ error: "Pedido não pertence a esta conta." });
   let dados;
   try { dados = JSON.parse(pedido.dados_json || "{}"); } catch (e) { dados = {}; }
-  // ---- Valor dinâmico na exibição: pedido PENDENTE exibe o preço VIGENTE
-  // (parceiro com preço próprio ou global) e o grava no pedido — assim o
-  // valor mostrado no painel é sempre o mesmo que o QR cobrará. Pedidos PAGOS
-  // nunca mudam (receita já registrada em transacoes).
+  // ---- Valor na exibição: respeita o valor JÁ definido no pedido (preço do
+  // parceiro na criação ou valor editado pelo admin). Só preenche com o preço
+  // global quando o pedido nasceu sem valor (0/null) — antes, este bloco SEMPRE
+  // re-escrevia o valor com a config global: a página piscava 7,99 → editado
+  // e o QR cobrava 7,99, apagando a edição do admin. Pedidos PAGOS nunca mudam
+  // (receita já registrada em transacoes).
   if (pedido.status === "pendente") {
     try {
-      const precoParceiro = pedido.parceiro_id ? await getPrecoParceiro(pedido.parceiro_id) : null;
-      const precoVigente = precoParceiro != null ? precoParceiro : await getPreco();
-      if (Number(pedido.valor) !== Number(precoVigente)) {
-        await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [precoVigente, pedidoId]);
-        pedido.valor = precoVigente;
+      const valorProprio = Number(pedido.valor);
+      const temValorProprio = !isNaN(valorProprio) && valorProprio > 0;
+      if (!temValorProprio) {
+        const precoParceiro = pedido.parceiro_id ? await getPrecoParceiro(pedido.parceiro_id) : null;
+        const precoVigente = precoParceiro != null ? precoParceiro : await getPreco();
+        if (valorProprio !== Number(precoVigente)) {
+          await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [precoVigente, pedidoId]);
+          pedido.valor = precoVigente;
+          console.log("🔄 /dados: pedido", pedidoId, "sem valor próprio → preenchido com", precoVigente);
+        }
       }
     } catch (e) { /* mantém o valor gravado em caso de falha */ }
   }
