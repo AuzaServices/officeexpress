@@ -153,6 +153,47 @@
     }
     .vaga-candidatar:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(255,136,0,.4); }
     .vaga-candidatar:disabled { opacity: .75; cursor: default; transform: none; }
+    /* ---- Modal "Qual currículo enviar?" ---- */
+    .cur-modal-overlay {
+      position: fixed; inset: 0; z-index: 3200; display: flex; align-items: center; justify-content: center;
+      background: rgba(6,18,30,.62); backdrop-filter: blur(3px); padding: 20px;
+    }
+    .cur-modal {
+      background: var(--card, #fff); border-radius: 20px; max-width: 460px; width: 100%;
+      max-height: 86dvh; overflow-y: auto; position: relative; padding: 24px 22px 22px;
+      box-shadow: 0 30px 80px rgba(0,10,20,.4); animation: vagaModal .25s cubic-bezier(.22,1,.3,1);
+    }
+    .cur-modal-fechar {
+      position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 999px;
+      border: none; cursor: pointer; background: rgba(14,43,68,.1); color: var(--text-muted);
+      font-size: 1.25rem; line-height: 1; transition: background .15s;
+    }
+    .cur-modal-fechar:hover { background: rgba(14,43,68,.2); }
+    .cur-modal h3 { font-size: 1.15rem; font-weight: 900; margin: 0 0 4px; color: var(--text-primary, #0f172a); }
+    .cur-modal-sub { font-size: .88rem; color: var(--text-secondary, #475569); margin: 0 0 16px; }
+    .cur-lista { display: flex; flex-direction: column; gap: 10px; }
+    .cur-item {
+      display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+      padding: 13px 14px; border-radius: 14px; border: 2px solid rgba(14,43,68,.12);
+      background: var(--card, #fff); cursor: pointer; transition: border-color .15s, background .15s, transform .12s;
+    }
+    .cur-item:hover { border-color: var(--brand, #ff8800); background: rgba(255,136,0,.06); transform: translateY(-1px); }
+    .cur-item-foto {
+      flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; overflow: hidden;
+      background: linear-gradient(135deg, rgba(14,43,68,.14), rgba(14,43,68,.06));
+      display: flex; align-items: center; justify-content: center; font-weight: 800;
+      color: var(--text-primary, #0f172a); font-size: .95rem;
+    }
+    .cur-item-foto img { width: 100%; height: 100%; object-fit: cover; }
+    .cur-item-info { flex: 1; min-width: 0; }
+    .cur-item-nome { font-weight: 800; font-size: .95rem; color: var(--text-primary, #0f172a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cur-item-meta { font-size: .8rem; color: var(--text-secondary, #475569); margin-top: 2px; }
+    .cur-item-seta { flex-shrink: 0; color: var(--brand, #ff8800); font-weight: 900; font-size: 1.05rem; }
+    .cur-enviando { opacity: .7; pointer-events: none; }
+    @media (max-width: 520px) {
+      .cur-modal { padding: 20px 16px 18px; }
+      .cur-item { padding: 12px; gap: 10px; }
+    }
     .vaga-compartilhar {
       width: 100%; margin-top: 10px; padding: 12px 18px; border-radius: 14px; cursor: pointer;
       border: 1.5px solid var(--border, #e2e8f0); background: transparent;
@@ -345,33 +386,117 @@
         if (e.key === "Escape") fecharVagaModal();
       });
 
-      window.candidatar = async function (id) {
-        var btn = document.getElementById("btnCandidatar");
-        btn.disabled = true; btn.textContent = "Enviando…";
+      // Busca os currículos PAGOS do usuário (pedidos + talentos, sem duplicar):
+      window.buscarMeusCurriculos = async function () {
         try {
-          var resp = await fetch("/api/vagas/" + id + "/candidatar", { method: "POST", credentials: "same-origin" });
-          var data = await resp.json();
-          if (resp.status === 401) {
-            // deslogado: leva para login com retorno
-            sessionStorage.setItem("posLoginVaga", id);
-            location.href = "/login?retorno=/vagas";
-            return;
-          }
-          if (resp.ok && data.ok) {
-            btn.textContent = data.ja_candidatado ? "✓ Você já se candidatou" : "✓ Candidatura enviada!";
-            setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
-          } else if (resp.status === 403 && data.precisa_curriculo) {
-            // Sem currículo (pago): mensagem no botão + leva para criar
-            btn.textContent = "Crie seu currículo para se candidatar";
-            setTimeout(function () { location.href = "/modelos"; }, 1800);
-          } else {
-            btn.textContent = data.error || "Erro ao candidatar.";
-            setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
-          }
-        } catch (e) {
-          btn.textContent = "Erro de conexão.";
+          var r = await App.api("/api/pedidos/meus");
+          if (!r || !r.ok || !Array.isArray(r.pedidos)) return [];
+          return r.pedidos.filter(function (p) { return p.status === "pago"; });
+        } catch (e) { return []; }
+      };
+
+      // Candidata de fato, enviando QUAL currículo foi escolhido:
+      window.enviarCandidatura = async function (id, talentoId, btn) {
+        var resp = await fetch("/api/vagas/" + id + "/candidatar", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ talento_id: talentoId || null })
+        });
+        var data = await resp.json().catch(function () { return {}; });
+        if (resp.status === 401) {
+          sessionStorage.setItem("posLoginVaga", id);
+          location.href = "/login?retorno=/vagas";
+          return;
+        }
+        if (resp.ok && data.ok) {
+          btn.textContent = data.ja_candidatado ? "✓ Você já se candidatou" : "✓ Candidatura enviada!";
+          setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
+        } else if (resp.status === 403 && data.precisa_curriculo) {
+          btn.textContent = "Crie seu currículo para se candidatar";
+          setTimeout(function () { location.href = "/modelos"; }, 1800);
+        } else {
+          btn.textContent = data.error || "Erro ao candidatar.";
           setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
         }
+      };
+
+      // Modal "Qual currículo você quer enviar?" — só com 2+ currículos pagos.
+      // O usuário envia APENAS UM: clicar em um item candidata com ele na hora:
+      window.abrirModalCurriculos = function (id, curriculos) {
+        fecharModalCurriculos();
+        var overlay = document.createElement("div");
+        overlay.className = "cur-modal-overlay";
+        overlay.id = "curModalOverlay";
+        overlay.addEventListener("click", function (e) { if (e.target === overlay) fecharModalCurriculos(); });
+        var itens = curriculos.map(function (p, i) {
+          var nome = p.nome || (p.dados && p.dados.nome) || "Currículo " + (i + 1);
+          var meta = [];
+          if (p.modelo) meta.push(escapar(p.modelo));
+          if (p.talento_id) meta.push("Banco de talentos");
+          if (p.created_at) meta.push(escapar(new Date(p.created_at).toLocaleDateString("pt-BR")));
+          return '<button class="cur-item" data-i="' + i + '">' +
+            '<span class="cur-item-foto">' + escapar((nome || "C").trim().charAt(0).toUpperCase()) + '</span>' +
+            '<span class="cur-item-info">' +
+              '<span class="cur-item-nome">' + escapar(nome) + '</span>' +
+              '<span class="cur-item-meta">' + (meta.join(" · ") || "Currículo pago") + '</span>' +
+            '</span>' +
+            '<span class="cur-item-seta">→</span>' +
+          '</button>';
+        }).join("");
+        overlay.innerHTML =
+          '<div class="cur-modal" role="dialog" aria-modal="true" aria-label="Qual currículo enviar">' +
+            '<button class="cur-modal-fechar" onclick="fecharModalCurriculos()" aria-label="Fechar">&times;</button>' +
+            '<h3>Qual currículo você quer enviar?</h3>' +
+            '<p class="cur-modal-sub">Escolha um dos seus currículos pagos para enviar a essa empresa. Apenas um será enviado.</p>' +
+            '<div class="cur-lista">' + itens + '</div>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        document.body.style.overflow = "hidden";
+        overlay.querySelectorAll(".cur-item").forEach(function (item) {
+          item.addEventListener("click", async function () {
+            var btn = document.getElementById("btnCandidatar");
+            overlay.classList.add("cur-enviando");
+            var p = curriculos[Number(item.getAttribute("data-i"))];
+            fecharModalCurriculos();
+            if (!btn) { location.reload(); return; }
+            btn.disabled = true; btn.textContent = "Enviando…";
+            try { await enviarCandidatura(id, p && (p.talento_id || null), btn); }
+            catch (e) { btn.textContent = "Erro de conexão."; setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600); }
+          });
+        });
+      };
+
+      window.fecharModalCurriculos = function () {
+        var ov = document.getElementById("curModalOverlay");
+        if (ov) { ov.remove(); if (!document.querySelector(".vaga-modal-overlay")) document.body.style.overflow = ""; }
+      };
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") fecharModalCurriculos(); });
+
+      // FLUXO ao clicar "Quero esta vaga":
+      // 0 currículos pagos → mantém botão normal (server bloqueia com 403 +
+      // CTA para criar). 1 → candidata direto. 2+ → modal de escolha (envia um):
+      window.candidatar = async function (id) {
+        var btn = document.getElementById("btnCandidatar");
+        btn.disabled = true; btn.textContent = "Carregando…";
+        var curriculos = [];
+        try { curriculos = await buscarMeusCurriculos(); } catch (e) { curriculos = []; }
+        if (!curriculos.length) {
+          // Sem currículo (pago): mensagem no botão + leva para criar
+          btn.textContent = "Crie seu currículo para se candidatar";
+          setTimeout(function () { location.href = "/modelos"; }, 1800);
+          return;
+        }
+        if (curriculos.length === 1) {
+          btn.textContent = "Enviando…";
+          var p = curriculos[0];
+          try { await enviarCandidatura(id, p && (p.talento_id || null), btn); }
+          catch (e) { btn.textContent = "Erro de conexão."; setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600); }
+          return;
+        }
+        // 2+ currículos: modal "Qual currículo você quer enviar?"
+        btn.disabled = false; btn.textContent = "Quero esta vaga";
+        abrirModalCurriculos(id, curriculos);
       };
 
       window.compartilharVaga = function () {

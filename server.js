@@ -923,7 +923,16 @@ app.get("/api/companies/vagas/:id/candidatos/:uid/curriculo", async (req, res) =
     }
 
     // Currículo permanente do candidato (tabela talentos).
-    const [rows] = await pool.query("SELECT id, pedido_id, dados_json FROM talentos WHERE usuario_id = ? ORDER BY id DESC LIMIT 1", [req.params.uid]);
+    // REGRA: abre o currículo que o candidato ESCOLHEU enviar na candidatura
+    // (vagas_candidaturas.talento_id). Fallback: o mais recente dele:
+    const [escolha] = await pool.query(
+      "SELECT talento_id FROM vagas_candidaturas WHERE vaga_id = ? AND usuario_id = ? ORDER BY id DESC LIMIT 1",
+      [req.params.id, req.params.uid]
+    );
+    const talentoIdEscolhido = escolha.length ? Number(escolha[0].talento_id) || null : null;
+    const [rows] = talentoIdEscolhido
+      ? await pool.query("SELECT id, pedido_id, dados_json FROM talentos WHERE id = ? AND usuario_id = ?", [talentoIdEscolhido, req.params.uid])
+      : await pool.query("SELECT id, pedido_id, dados_json FROM talentos WHERE usuario_id = ? ORDER BY id DESC LIMIT 1", [req.params.uid]);
     let d = {};
     let talentoId = null, pedidoId = null;
     if (rows.length) {
@@ -1051,7 +1060,12 @@ app.post("/api/vagas/:id/candidatar", async (req, res) => {
       return res.status(403).json({ error: "Você precisa criar um currículo (pago) antes de se candidatar.", precisa_curriculo: true });
     }
     try {
-      await pool.query("INSERT INTO vagas_candidaturas (vaga_id, usuario_id) VALUES (?, ?)", [req.params.id, id]);
+      // Grava QUAL currículo (pago) o candidato escolheu enviar:
+      const talentoEscolhido = Number(req.body && req.body.talento_id) || null;
+      await pool.query(
+        "INSERT INTO vagas_candidaturas (vaga_id, usuario_id, talento_id) VALUES (?, ?, ?)",
+        [req.params.id, id, talentoEscolhido]
+      );
     } catch (dup) {
       if (dup && dup.code === "ER_DUP_ENTRY") {
         return res.json({ ok: true, ja_candidatado: true });
@@ -1638,12 +1652,20 @@ app.post("/api/pagamento/pix", async (req, res) => {
   // preço do parceiro (se o pedido tem vínculo com preço próprio) ou o global.
   if (pedido.status === "pendente") {
     try {
-      const precoParceiro = pedido.parceiro_id ? await getPrecoParceiro(pedido.parceiro_id) : null;
-      const precoVigente = precoParceiro != null ? precoParceiro : await getPreco();
-      if (Number(pedido.valor) !== Number(precoVigente)) {
-        await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [precoVigente, pedidoId]);
-        pedido.valor = precoVigente;
-        console.log("🔄 QR dinâmico: pedido", pedidoId, "valor atualizado", pedido.valor, "→", precoVigente);
+      // Respeita o valor JÁ definido no pedido (preço do parceiro na criação
+      // ou valor editado pelo admin). Só preenche com o preço global quando o
+      // pedido nasceu sem valor (0/null) — antes, o QR dinâmico SEMPRE re-
+      // escrevia o valor com a config global, apagando a edição do admin:
+      const valorProprio = Number(pedido.valor);
+      const temValorProprio = !isNaN(valorProprio) && valorProprio > 0;
+      if (!temValorProprio) {
+        const precoParceiro = pedido.parceiro_id ? await getPrecoParceiro(pedido.parceiro_id) : null;
+        const precoVigente = precoParceiro != null ? precoParceiro : await getPreco();
+        if (valorProprio !== Number(precoVigente)) {
+          await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [precoVigente, pedidoId]);
+          pedido.valor = precoVigente;
+          console.log("🔄 QR dinâmico: pedido", pedidoId, "sem valor próprio → preenchido com", precoVigente);
+        }
       }
     } catch (e) { console.error("QR dinâmico (fallback ao valor do pedido):", e.message); }
   }
@@ -4306,6 +4328,16 @@ async function garantirVagas() {
         INDEX idx_cand_vaga (vaga_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+    // Coluna talento_id: QUAL currículo (pago) o candidato escolheu enviar.
+    // MySQL do Render não suporta ADD COLUMN IF NOT EXISTS — usa try/catch
+    // capturando errno 1060 (coluna já existe), padrão do resto do projeto:
+    try {
+      await pool.query("ALTER TABLE vagas_candidaturas ADD COLUMN talento_id INT NULL");
+      await pool.query("CREATE INDEX idx_cand_talento ON vagas_candidaturas (talento_id)");
+      console.log("✅ Coluna talento_id adicionada às candidaturas");
+    } catch (eTal) {
+      if (eTal.errno !== 1060 && !/duplicate/i.test(eTal.message)) throw eTal;
+    }
     console.log("✅ Tabelas de vagas verificadas");
   } catch (e) {
     console.error("🚨 FALHA ao garantir tabelas de vagas:", e.message);
