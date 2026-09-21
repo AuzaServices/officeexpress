@@ -389,16 +389,60 @@
     .conta-excluir:hover { background: #dc2626; color: #fff; box-shadow: 0 6px 18px rgba(220,38,38,.35); }
     .conta-excluir:disabled { opacity: .55; cursor: not-allowed; }
 
-    /* ===== Cidade e estado (notificações de vagas) ===== */
+    /* ===== Cidades de notificação (principal + extras) ===== */
     .conta-local-info { margin: 0 0 12px; font-size: .82rem; color: var(--text-muted); line-height: 1.5; }
+    .conta-local-bloco {
+      padding: 12px; border-radius: 12px;
+      background: linear-gradient(180deg, #f2f6fa, #f8fafc);
+      border: 1.5px solid var(--border);
+    }
+    html[data-tema="escuro"] .conta-local-bloco { background: #0f2030; }
+    .conta-local-titulo { font-size: .78rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
+    .conta-local-linha { display: flex; gap: 8px; margin-bottom: 10px; }
+    .conta-local-linha input {
+      flex: 1; min-width: 0; box-sizing: border-box;
+      padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+      font-family: inherit; font-size: .9rem;
+      background: var(--card, #fff); color: var(--text-primary);
+    }
+    .conta-local-linha input:last-child { flex: 0 0 72px; text-align: center; text-transform: uppercase; }
     .conta-local-salvar {
-      width: 100%; padding: 12px 16px; border-radius: 11px; border: none;
+      width: 100%; padding: 11px 16px; border-radius: 10px; border: none;
       background: var(--brand, #ff8800); color: #fff;
-      font-family: inherit; font-size: .92rem; font-weight: 800;
+      font-family: inherit; font-size: .88rem; font-weight: 800;
       cursor: pointer; transition: filter .15s, box-shadow .15s;
     }
     .conta-local-salvar:hover { filter: brightness(1.06); box-shadow: 0 6px 18px rgba(255,136,0,.3); }
     .conta-local-salvar:disabled { opacity: .55; cursor: not-allowed; }
+    .conta-cidades-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .conta-cidade-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      background: var(--card); border: 1.5px solid var(--border);
+      font-size: .9rem; font-weight: 700; color: var(--text-primary);
+    }
+    .conta-cidade-item.principal { border-color: var(--brand, #ff8800); background: rgba(255,136,0,.06); }
+    .conta-cidade-item .tag-principal {
+      font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+      padding: 3px 8px; border-radius: 999px;
+      background: var(--brand, #ff8800); color: #fff;
+    }
+    .conta-cidade-remover {
+      flex: none; width: 30px; height: 30px; border-radius: 999px; border: none;
+      background: rgba(220,38,38,.1); color: #dc2626;
+      font-size: 1rem; line-height: 1; cursor: pointer; font-weight: 800;
+      transition: background .15s, color .15s;
+    }
+    .conta-cidade-remover:hover { background: #dc2626; color: #fff; }
+    .conta-local-add {
+      width: 100%; padding: 10px 16px; border-radius: 10px;
+      border: 1.5px dashed var(--brand, #ff8800); background: transparent;
+      color: var(--brand, #ff8800); font-family: inherit; font-size: .88rem; font-weight: 800;
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    .conta-local-add:hover { background: rgba(255,136,0,.08); }
+    .conta-local-add:disabled { opacity: .5; cursor: not-allowed; }
+    .conta-cidades-vazio { font-size: .84rem; color: var(--text-muted); padding: 8px 0; }
     .conta-local-msg { margin: 10px 0 0; font-size: .82rem; font-weight: 700; display: none; }
     .conta-local-msg.ok { display: block; color: #16a34a; }
     .conta-local-msg.erro { display: block; color: #dc2626; }
@@ -665,15 +709,35 @@
         </div>
       </div>
 
-      <!-- Mudar cidade e estado (notificações de vagas da sua cidade) -->
+      <!-- Cidades de notificação (principal + extras, até 5) -->
       <div class="conta-secao">
-        <h4>Cidade e estado</h4>
-        <p class="conta-local-info">Receba notificações de vagas publicadas na sua cidade.</p>
-        <label class="conta-rotulo">Cidade</label>
-        <input type="text" id="contaCidade" maxlength="120" placeholder="Sua cidade (ex.: São Paulo)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;background:var(--card-hover,#f6fafc);color:var(--text-primary);margin-bottom:10px" />
-        <label class="conta-rotulo">Estado (UF)</label>
-        <input type="text" id="contaEstado" maxlength="2" placeholder="UF (ex.: SP)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;background:var(--card-hover,#f6fafc);color:var(--text-primary);text-transform:uppercase;margin-bottom:12px" />
-        <button class="conta-local-salvar" id="btnSalvarLocal" onclick="salvarLocalizacao()">Salvar cidade e estado</button>
+        <h4>Cidades de notificação</h4>
+        <p class="conta-local-info">Receba vagas das cidades que você quiser acompanhar (até 5).</p>
+
+        <!-- Cidade principal (onde você mora) -->
+        <div class="conta-local-bloco">
+          <div class="conta-local-titulo">Cidade principal</div>
+          <div class="conta-local-linha">
+            <input type="text" id="contaCidade" maxlength="120" placeholder="Cidade (ex.: São Paulo)" />
+            <input type="text" id="contaEstado" maxlength="2" placeholder="UF" />
+          </div>
+          <button class="conta-local-salvar" id="btnSalvarLocal" onclick="salvarLocalizacao()">Salvar cidade principal</button>
+        </div>
+
+        <!-- Lista de cidades cadastradas -->
+        <div class="conta-local-titulo" style="margin-top:14px">Cidades que você acompanha</div>
+        <div id="contaListaCidades" class="conta-cidades-lista"></div>
+
+        <!-- Adicionar cidade extra -->
+        <div class="conta-local-bloco">
+          <div class="conta-local-titulo">Adicionar outra cidade</div>
+          <div class="conta-local-linha">
+            <input type="text" id="contaCidadeExtra" maxlength="120" placeholder="Cidade" />
+            <input type="text" id="contaEstadoExtra" maxlength="2" placeholder="UF" />
+          </div>
+          <button type="button" class="conta-local-add" id="btnAddCidade" onclick="adicionarCidade()">+ Adicionar cidade</button>
+        </div>
+
         <p class="conta-local-msg" id="contaLocalMsg"></p>
       </div>
 
@@ -1070,30 +1134,78 @@
         }
       }
 
-      /* ===== Cidade e estado (notificações de vagas da sua cidade) ===== */
+      /* ===== Cidades de notificação (principal + extras) ===== */
+      function msgLocal(texto, tipo) {
+        var msg = document.getElementById("contaLocalMsg");
+        msg.textContent = texto;
+        msg.className = "conta-local-msg " + (tipo || "erro");
+      }
+      function esc(s) { return String(s).replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }); }
+      function renderListaCidades(cidades, principal) {
+        var box = document.getElementById("contaListaCidades");
+        box.innerHTML = "";
+        if (!cidades.length) { box.innerHTML = '<div class="conta-cidades-vazio">Nenhuma cidade cadastrada ainda.</div>'; return; }
+        cidades.forEach(function (cd) {
+          var ehPrincipal = principal &&
+            String(cd.cidade).toLowerCase() === String(principal.cidade).toLowerCase() &&
+            String(cd.estado).toUpperCase() === String(principal.estado).toUpperCase();
+          var div = document.createElement("div");
+          div.className = "conta-cidade-item" + (ehPrincipal ? " principal" : "");
+          div.innerHTML =
+            '<span>' + esc(cd.cidade) + ' — ' + esc(String(cd.estado).toUpperCase()) + '</span>' +
+            (ehPrincipal
+              ? '<span class="tag-principal">Principal</span>'
+              : '<button type="button" class="conta-cidade-remover" onclick="removerCidade(' + cd.id + ')" title="Remover">×</button>');
+          box.appendChild(div);
+        });
+      }
       async function carregarLocalizacao() {
         try {
           var r = await App.api("/api/auth/me/localizacao");
           if (!r || !r.ok) return;
           document.getElementById("contaCidade").value = r.data.cidade || "";
           document.getElementById("contaEstado").value = r.data.estado || "";
+          renderListaCidades(r.data.cidades || [], { cidade: r.data.cidade, estado: r.data.estado });
         } catch (e) { /* ignora */ }
       }
       window.salvarLocalizacao = async function () {
         var btn = document.getElementById("btnSalvarLocal");
-        var msg = document.getElementById("contaLocalMsg");
         var cidade = document.getElementById("contaCidade").value.trim();
         var estado = document.getElementById("contaEstado").value.trim().toUpperCase();
-        msg.className = "conta-local-msg";
-        if (!cidade) { msg.textContent = "Informe a sua cidade."; msg.className = "conta-local-msg erro"; return; }
-        if (estado.length !== 2) { msg.textContent = "Informe o Estado (UF) com 2 letras."; msg.className = "conta-local-msg erro"; return; }
+        if (!cidade) { msgLocal("Informe a sua cidade."); return; }
+        if (estado.length !== 2) { msgLocal("Informe o Estado (UF) com 2 letras."); return; }
         btn.disabled = true;
         try {
           var r = await App.api("/api/auth/me/localizacao", { method: "POST", body: JSON.stringify({ cidade: cidade, estado: estado }) });
-          if (r && r.ok) { msg.textContent = "✅ Cidade e estado salvos! Você receberá vagas da sua cidade."; msg.className = "conta-local-msg ok"; }
-          else { msg.textContent = (r && r.error) || "Erro ao salvar."; msg.className = "conta-local-msg erro"; }
-        } catch (e) { msg.textContent = "Erro ao salvar."; msg.className = "conta-local-msg erro"; }
+          if (r && r.ok) { msgLocal("✅ Cidade principal salva! Você receberá vagas dela.", "ok"); await carregarLocalizacao(); }
+          else msgLocal((r && r.error) || "Erro ao salvar.");
+        } catch (e) { msgLocal("Erro ao salvar."); }
         btn.disabled = false;
+      };
+      window.adicionarCidade = async function () {
+        var btn = document.getElementById("btnAddCidade");
+        var cidade = document.getElementById("contaCidadeExtra").value.trim();
+        var estado = document.getElementById("contaEstadoExtra").value.trim().toUpperCase();
+        if (!cidade) { msgLocal("Informe a cidade."); return; }
+        if (estado.length !== 2) { msgLocal("Informe o Estado (UF) com 2 letras."); return; }
+        btn.disabled = true;
+        try {
+          var r = await App.api("/api/auth/me/localizacao/cidades", { method: "POST", body: JSON.stringify({ cidade: cidade, estado: estado }) });
+          if (r && r.ok) {
+            msgLocal("✅ Cidade adicionada!", "ok");
+            document.getElementById("contaCidadeExtra").value = "";
+            document.getElementById("contaEstadoExtra").value = "";
+            await carregarLocalizacao();
+          } else msgLocal((r && r.error) || "Erro ao adicionar.");
+        } catch (e) { msgLocal("Erro ao adicionar."); }
+        btn.disabled = false;
+      };
+      window.removerCidade = async function (cid) {
+        try {
+          var r = await App.api("/api/auth/me/localizacao/cidades/" + cid, { method: "DELETE" });
+          if (r && r.ok) { msgLocal("Cidade removida.", "ok"); await carregarLocalizacao(); }
+          else msgLocal((r && r.error) || "Erro ao remover.");
+        } catch (e) { msgLocal("Erro ao remover."); }
       };
       carregarLocalizacao();
 

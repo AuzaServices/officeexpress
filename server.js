@@ -501,17 +501,73 @@ app.post("/api/auth/me/localizacao", async (req, res) => {
   if (!cidade) return res.status(400).json({ error: "Informe a sua cidade." });
   if (estado.length !== 2) return res.status(400).json({ error: "Informe o Estado (UF) com 2 letras." });
   try {
+    // Cidade PRINCIPAL (conta + espelhada nos currículos):
     await pool.query("UPDATE usuarios SET cidade = ?, estado = ? WHERE id = ?", [cidade, estado, id]);
-    // Espelha nos currículos do usuário (talentos) — as notificações
-    // consideram a cidade do currículo também:
     await pool.query(
       "UPDATE talentos SET cidade = ?, estado = ?, updated_at = NOW() WHERE usuario_id = ?",
       [cidade, estado, id]
+    );
+    // Entra também na LISTA de cidades (se ainda não estiver):
+    await pool.query(
+      "INSERT IGNORE INTO usuario_cidades (usuario_id, cidade, estado) VALUES (?, ?, ?)",
+      [id, cidade, estado]
     );
     res.json({ ok: true, cidade, estado });
   } catch (e) {
     console.error("Erro ao salvar localização:", e.message);
     res.status(500).json({ error: "Erro ao salvar cidade e estado." });
+  }
+});
+
+// Adiciona uma cidade EXTRA à lista de notificações (até 5 cidades):
+app.post("/api/auth/me/localizacao/cidades", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Faça login." });
+  const cidade = String(req.body.cidade || "").trim().slice(0, 120);
+  const estado = String(req.body.estado || "").trim().toUpperCase().slice(0, 2);
+  if (!cidade) return res.status(400).json({ error: "Informe a cidade." });
+  if (estado.length !== 2) return res.status(400).json({ error: "Informe o Estado (UF) com 2 letras." });
+  try {
+    const [[{ c }]] = await pool.query(
+      "SELECT COUNT(*) AS c FROM usuario_cidades WHERE usuario_id = ?", [id]
+    );
+    if (c >= 5) return res.status(400).json({ error: "Limite de 5 cidades atingido. Remova uma para adicionar outra." });
+    await pool.query(
+      "INSERT IGNORE INTO usuario_cidades (usuario_id, cidade, estado) VALUES (?, ?, ?)",
+      [id, cidade, estado]
+    );
+    const [rows] = await pool.query(
+      "SELECT cidade, estado FROM usuario_cidades WHERE usuario_id = ? ORDER BY id",
+      [id]
+    );
+    res.json({ ok: true, cidades: rows });
+  } catch (e) {
+    console.error("Erro ao adicionar cidade:", e.message);
+    res.status(500).json({ error: "Erro ao adicionar a cidade." });
+  }
+});
+
+// Remove uma cidade EXTRA da lista (pelo id do registro):
+app.delete("/api/auth/me/localizacao/cidades/:cid", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Faça login." });
+  try {
+    // A cidade PRINCIPAL (mesma da conta) não pode ser removida da lista
+    // enquanto for a principal — protege a notificação "de onde mora":
+    const [reg] = await pool.query(
+      "SELECT cidade, estado FROM usuario_cidades WHERE id = ? AND usuario_id = ?",
+      [req.params.cid, id]
+    );
+    if (!reg.length) return res.status(404).json({ error: "Cidade não encontrada." });
+    const [conta] = await pool.query("SELECT cidade, estado FROM usuarios WHERE id = ?", [id]);
+    if (conta.length && String(conta[0].cidade || "").toLowerCase() === String(reg[0].cidade).toLowerCase() && String(conta[0].estado || "").toUpperCase() === String(reg[0].estado).toUpperCase()) {
+      return res.status(400).json({ error: "Esta é sua cidade principal. Cadastre outra como principal para removê-la." });
+    }
+    await pool.query("DELETE FROM usuario_cidades WHERE id = ? AND usuario_id = ?", [req.params.cid, id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Erro ao remover cidade:", e.message);
+    res.status(500).json({ error: "Erro ao remover a cidade." });
   }
 });
 
@@ -521,7 +577,19 @@ app.get("/api/auth/me/localizacao", async (req, res) => {
   if (!id) return res.status(401).json({ error: "Faça login." });
   try {
     const [rows] = await pool.query("SELECT cidade, estado FROM usuarios WHERE id = ?", [id]);
-    res.json({ ok: true, cidade: rows[0].cidade || "", estado: rows[0].estado || "" });
+    const principal = { cidade: rows[0].cidade || "", estado: rows[0].estado || "" };
+    // Se a principal não está na lista (ex.: contas antigas), entra agora:
+    if (principal.cidade) {
+      await pool.query(
+        "INSERT IGNORE INTO usuario_cidades (usuario_id, cidade, estado) VALUES (?, ?, ?)",
+        [id, principal.cidade, principal.estado]
+      );
+    }
+    const [cidades] = await pool.query(
+      "SELECT id, cidade, estado FROM usuario_cidades WHERE usuario_id = ? ORDER BY id",
+      [id]
+    );
+    res.json({ ok: true, ...principal, cidades });
   } catch (e) {
     res.status(500).json({ error: "Erro ao carregar cidade e estado." });
   }
@@ -5741,8 +5809,9 @@ expirarAssinaturasUsuario();
 // Quando uma empresa publica uma vaga para uma cidade, todos os clientes
 // cadastrados naquela cidade recebem a notificação automaticamente.
 // ---------------------------------------------------------------------------
-// Garante colunas cidade/estado da CONTA do cliente (notificações de vagas
-// da cidade onde mora — independentes do currículo).
+// Cidades de notificação do cliente: a PRINCIPAL fica em usuarios.cidade/
+// estado (compatibilidade + currículos) e as EXTRAS na tabela usuario_cidades
+// (cliente pode acompanhar vagas de várias cidades).
 async function garantirLocalizacaoUsuarios() {
   try {
     try {
@@ -5750,12 +5819,20 @@ async function garantirLocalizacaoUsuarios() {
       await pool.query("ALTER TABLE usuarios ADD COLUMN estado VARCHAR(4) NULL");
       console.log("✅ Colunas cidade/estado adicionadas à conta do cliente");
     } catch (e2) {
-      // ER_DUP_FIELDNAME (1060): colunas já existem — inofensivo.
       if (e2.errno !== 1060 && !/duplicate/i.test(e2.message)) throw e2;
     }
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS usuario_cidades (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario_id INT NOT NULL,
+        cidade VARCHAR(120) NOT NULL,
+        estado VARCHAR(4) NOT NULL,
+        criada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_usuario_cidade (usuario_id, cidade, estado),
+        KEY idx_ucidade_busca (cidade, estado)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
   } catch (e) {
-    // MySQL não suporta IF NOT EXISTS em ADD COLUMN antes do 8.0.29 — ignora
-    // duplicadas (o erro é inofensivo se as colunas já existem).
     if (!/duplicate/i.test(e.message)) console.error("🚨 FALHA ao garantir cidade/estado:", e.message);
   }
 }
@@ -5800,9 +5877,14 @@ setInterval(limparNotificacoes24h, 24 * 60 * 60 * 1000);
 async function notificarNovaVaga(vaga) {
   if (!vaga || !vaga.cidade || !vaga.estado) return;
   try {
-    // Clientes atingidos: cidade/estado da CONTA (usuarios) OU do CURRÍCULO
-    // (talentos) — quem cadastrou em qualquer um dos dois recebe:
+    // Clientes atingidos: TODAS as cidades cadastradas na conta (lista),
+    // a cidade da conta (principal) OU a cidade do currículo (talentos):
     const ufVaga = String(vaga.estado).toUpperCase();
+    const [daLista] = await pool.query(
+      `SELECT usuario_id AS id FROM usuario_cidades
+       WHERE cidade = ? AND UPPER(estado) = ?`,
+      [vaga.cidade, ufVaga]
+    );
     const [daConta] = await pool.query(
       `SELECT id FROM usuarios
        WHERE cidade = ? AND UPPER(estado) = ?`,
@@ -5813,9 +5895,11 @@ async function notificarNovaVaga(vaga) {
        WHERE usuario_id IS NOT NULL AND cidade = ? AND UPPER(estado) = ?`,
       [vaga.cidade, ufVaga]
     );
-    // Dedupe por id (conta + talento = 1 notificação só):
+    // Dedupe por id (lista + conta + talento = 1 notificação só):
     const ids = Array.from(new Set(
-      daConta.map((r) => r.id).concat(doTalento.map((r) => r.id))
+      daLista.map((r) => r.id)
+        .concat(daConta.map((r) => r.id))
+        .concat(doTalento.map((r) => r.id))
     ));
     const clientes = ids.map((id) => ({ id }));
     if (!clientes.length) return;
