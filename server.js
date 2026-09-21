@@ -5745,9 +5745,14 @@ expirarAssinaturasUsuario();
 // da cidade onde mora — independentes do currículo).
 async function garantirLocalizacaoUsuarios() {
   try {
-    await pool.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cidade VARCHAR(120) NULL");
-    await pool.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado CHAR(2) NULL");
-    await pool.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado VARCHAR(4) NULL");
+    try {
+      await pool.query("ALTER TABLE usuarios ADD COLUMN cidade VARCHAR(120) NULL");
+      await pool.query("ALTER TABLE usuarios ADD COLUMN estado VARCHAR(4) NULL");
+      console.log("✅ Colunas cidade/estado adicionadas à conta do cliente");
+    } catch (e2) {
+      // ER_DUP_FIELDNAME (1060): colunas já existem — inofensivo.
+      if (e2.errno !== 1060 && !/duplicate/i.test(e2.message)) throw e2;
+    }
   } catch (e) {
     // MySQL não suporta IF NOT EXISTS em ADD COLUMN antes do 8.0.29 — ignora
     // duplicadas (o erro é inofensivo se as colunas já existem).
