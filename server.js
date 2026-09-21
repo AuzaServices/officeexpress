@@ -1041,6 +1041,15 @@ app.post("/api/vagas/:id/candidatar", async (req, res) => {
       [req.params.id]
     );
     if (!vaga.length) return res.status(404).json({ error: "Vaga não encontrada ou expirada." });
+    // REGRA: candidatura exige CURRÍCULO FEITO (pago) — registro arquivado
+    // na tabela de talentos do usuário logado. Sem currículo, bloqueia:
+    const [curriculos] = await pool.query(
+      "SELECT COUNT(*) AS c FROM talentos WHERE usuario_id = ?",
+      [id]
+    );
+    if (Number(curriculos[0].c) === 0) {
+      return res.status(403).json({ error: "Você precisa criar um currículo (pago) antes de se candidatar.", precisa_curriculo: true });
+    }
     try {
       await pool.query("INSERT INTO vagas_candidaturas (vaga_id, usuario_id) VALUES (?, ?)", [req.params.id, id]);
     } catch (dup) {

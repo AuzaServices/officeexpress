@@ -360,6 +360,10 @@
           if (resp.ok && data.ok) {
             btn.textContent = data.ja_candidatado ? "✓ Você já se candidatou" : "✓ Candidatura enviada!";
             setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
+          } else if (resp.status === 403 && data.precisa_curriculo) {
+            // Sem currículo (pago): mensagem no botão + leva para criar
+            btn.textContent = "Crie seu currículo para se candidatar";
+            setTimeout(function () { location.href = "/modelos"; }, 1800);
           } else {
             btn.textContent = data.error || "Erro ao candidatar.";
             setTimeout(function () { btn.textContent = "Quero esta vaga"; btn.disabled = false; }, 2600);
