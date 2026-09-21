@@ -73,6 +73,12 @@
       .preview-doc-col { display: flex; justify-content: center; }
       .preview-paper { max-width: 100%; border-radius: 8px; }
     }
+    /* Respiro lateral da frase de prévia no mobile (não colar na borda) */
+    @media (max-width: 800px) {
+      .preview-page .section-header { padding: 0 10px; }
+      .preview-page .section-header p { max-width: 92%; margin: 0 auto; }
+    }
+  
   </style>
 </head>
 <body>

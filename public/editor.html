@@ -899,5 +899,29 @@
 
     showEtapa(0);
   </script>
+
+    /* ===== LIMITE DO OLHINHO NO FOOTER =====
+       O botão segue o scroll (position fixed), mas NUNCA entra no footer:
+       quando o footer aparece na tela, o bottom do botão cresce junto com a
+       parte visível do footer — o botão "senta" sobre o topo dele. */
+    (function () {
+      var botao = document.getElementById("btnVisualizar");
+      var footer = document.querySelector(".footer");
+      if (!botao || !footer) return;
+      function limitar() {
+        var vis = window.innerHeight || document.documentElement.clientHeight;
+        var rf = footer.getBoundingClientRect();
+        var footerNaTela = vis - rf.top;
+        if (footerNaTela > 0) {
+          botao.style.bottom = (footerNaTela + 12) + "px";
+        } else {
+          botao.style.bottom = "20px";
+        }
+      }
+      window.addEventListener("scroll", limitar, { passive: true });
+      window.addEventListener("resize", limitar);
+      limitar();
+    })();
+  
 </body>
 </html>
