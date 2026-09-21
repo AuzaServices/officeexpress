@@ -2839,13 +2839,25 @@ app.put("/api/admin/pedidos/:id/valor", protegerAdmin, async (req, res) => {
     }
     const id = parseInt(idBruto, 10);
     if (!id) return res.status(400).json({ error: "Pedido inválido." });
-    // Coerência financeira: pedido PAGO não tem valor editado — a receita já
-    // está registrada na tabela imutável transacoes (fonte de verdade).
+    // Permite editar o valor MESMO em pedido PAGO (pedidos de assinante nascem
+    // pagos — antes o endpoint rejeitava com 400 e o valor "não alterava no
+    // banco, apenas visualmente"). Coerência financeira: o UPDATE sincroniza a
+    // transação registrada (valor da venda) e recomputa a comissão do parceiro:
     const [pvVal] = await pool.query("SELECT status FROM pedidos WHERE id = ?", [id]);
-    if (pvVal.length && pvVal[0].status === "pago") {
-      return res.status(400).json({ error: "Pedido pago não tem valor editável (receita já registrada)." });
-    }
     await pool.query("UPDATE pedidos SET valor = ? WHERE id = ?", [v, id]);
+    if (pvVal.length && pvVal[0].status === "pago") {
+      // Receita já registrada: atualiza a transação da venda com o valor novo
+      // e recomputa a comissão (% do parceiro) para os relatórios baterem:
+      try {
+        await pool.query(
+          `UPDATE transacoes
+             SET valor = ?,
+                 comissao_pct = IF(parceiro_id IS NULL, comissao_pct, COALESCE((SELECT comissao FROM parceiros WHERE id = parceiro_id), comissao_pct))
+           WHERE pedido_id = ?`,
+          [v, id]
+        );
+      } catch (eTx) { console.error("Aviso: transação do pedido " + id + " não sincronizada:", eTx.message); }
+    }
     await registrarAdminLog("pedido_valor", `Pedido ${id} -> ${v}`);
     res.json({ success: true });
   } catch (e) {
