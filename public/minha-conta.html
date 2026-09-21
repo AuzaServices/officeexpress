@@ -389,6 +389,20 @@
     .conta-excluir:hover { background: #dc2626; color: #fff; box-shadow: 0 6px 18px rgba(220,38,38,.35); }
     .conta-excluir:disabled { opacity: .55; cursor: not-allowed; }
 
+    /* ===== Cidade e estado (notificações de vagas) ===== */
+    .conta-local-info { margin: 0 0 12px; font-size: .82rem; color: var(--text-muted); line-height: 1.5; }
+    .conta-local-salvar {
+      width: 100%; padding: 12px 16px; border-radius: 11px; border: none;
+      background: var(--brand, #ff8800); color: #fff;
+      font-family: inherit; font-size: .92rem; font-weight: 800;
+      cursor: pointer; transition: filter .15s, box-shadow .15s;
+    }
+    .conta-local-salvar:hover { filter: brightness(1.06); box-shadow: 0 6px 18px rgba(255,136,0,.3); }
+    .conta-local-salvar:disabled { opacity: .55; cursor: not-allowed; }
+    .conta-local-msg { margin: 10px 0 0; font-size: .82rem; font-weight: 700; display: none; }
+    .conta-local-msg.ok { display: block; color: #16a34a; }
+    .conta-local-msg.erro { display: block; color: #dc2626; }
+
     /* ===== Seu plano (assinatura) ===== */
     .conta-plano-box {
       padding: 16px; border-radius: 14px;
@@ -649,6 +663,18 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <span id="contaEmail">—</span>
         </div>
+      </div>
+
+      <!-- Mudar cidade e estado (notificações de vagas da sua cidade) -->
+      <div class="conta-secao">
+        <h4>Cidade e estado</h4>
+        <p class="conta-local-info">Receba notificações de vagas publicadas na sua cidade.</p>
+        <label class="conta-rotulo">Cidade</label>
+        <input type="text" id="contaCidade" maxlength="120" placeholder="Sua cidade (ex.: São Paulo)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;background:var(--card-hover,#f6fafc);color:var(--text-primary);margin-bottom:10px" />
+        <label class="conta-rotulo">Estado (UF)</label>
+        <input type="text" id="contaEstado" maxlength="2" placeholder="UF (ex.: SP)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;background:var(--card-hover,#f6fafc);color:var(--text-primary);text-transform:uppercase;margin-bottom:12px" />
+        <button class="conta-local-salvar" id="btnSalvarLocal" onclick="salvarLocalizacao()">Salvar cidade e estado</button>
+        <p class="conta-local-msg" id="contaLocalMsg"></p>
       </div>
 
       <!-- Seu plano (assinatura) -->
@@ -1043,6 +1069,33 @@
           botoes[i].classList.toggle("ativo", botoes[i].getAttribute("data-tema") === atual);
         }
       }
+
+      /* ===== Cidade e estado (notificações de vagas da sua cidade) ===== */
+      async function carregarLocalizacao() {
+        try {
+          var r = await App.api("/api/auth/me/localizacao");
+          if (!r || !r.ok) return;
+          document.getElementById("contaCidade").value = r.data.cidade || "";
+          document.getElementById("contaEstado").value = r.data.estado || "";
+        } catch (e) { /* ignora */ }
+      }
+      window.salvarLocalizacao = async function () {
+        var btn = document.getElementById("btnSalvarLocal");
+        var msg = document.getElementById("contaLocalMsg");
+        var cidade = document.getElementById("contaCidade").value.trim();
+        var estado = document.getElementById("contaEstado").value.trim().toUpperCase();
+        msg.className = "conta-local-msg";
+        if (!cidade) { msg.textContent = "Informe a sua cidade."; msg.className = "conta-local-msg erro"; return; }
+        if (estado.length !== 2) { msg.textContent = "Informe o Estado (UF) com 2 letras."; msg.className = "conta-local-msg erro"; return; }
+        btn.disabled = true;
+        try {
+          var r = await App.api("/api/auth/me/localizacao", { method: "POST", body: JSON.stringify({ cidade: cidade, estado: estado }) });
+          if (r && r.ok) { msg.textContent = "✅ Cidade e estado salvos! Você receberá vagas da sua cidade."; msg.className = "conta-local-msg ok"; }
+          else { msg.textContent = (r && r.error) || "Erro ao salvar."; msg.className = "conta-local-msg erro"; }
+        } catch (e) { msg.textContent = "Erro ao salvar."; msg.className = "conta-local-msg erro"; }
+        btn.disabled = false;
+      };
+      carregarLocalizacao();
 
       window.definirTema = function (tema) {
         aplicarTema(tema);

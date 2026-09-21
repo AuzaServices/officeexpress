@@ -490,6 +490,43 @@ app.get("/api/auth/me", async (req, res) => {
   }
 });
 
+// Cliente salva cidade/estado da conta (para receber notificações de vagas
+// da cidade onde mora). Atualiza usuarios E espelha nos talentos do usuário
+// (as notificações consideram os dois).
+app.post("/api/auth/me/localizacao", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Faça login." });
+  const cidade = String(req.body.cidade || "").trim().slice(0, 120);
+  const estado = String(req.body.estado || "").trim().toUpperCase().slice(0, 2);
+  if (!cidade) return res.status(400).json({ error: "Informe a sua cidade." });
+  if (estado.length !== 2) return res.status(400).json({ error: "Informe o Estado (UF) com 2 letras." });
+  try {
+    await pool.query("UPDATE usuarios SET cidade = ?, estado = ? WHERE id = ?", [cidade, estado, id]);
+    // Espelha nos currículos do usuário (talentos) — as notificações
+    // consideram a cidade do currículo também:
+    await pool.query(
+      "UPDATE talentos SET cidade = ?, estado = ?, updated_at = NOW() WHERE usuario_id = ?",
+      [cidade, estado, id]
+    );
+    res.json({ ok: true, cidade, estado });
+  } catch (e) {
+    console.error("Erro ao salvar localização:", e.message);
+    res.status(500).json({ error: "Erro ao salvar cidade e estado." });
+  }
+});
+
+// Retorna a localização salva da conta (pré-carregar na aba Conta):
+app.get("/api/auth/me/localizacao", async (req, res) => {
+  const id = usuarioDaSessao(req);
+  if (!id) return res.status(401).json({ error: "Faça login." });
+  try {
+    const [rows] = await pool.query("SELECT cidade, estado FROM usuarios WHERE id = ?", [id]);
+    res.json({ ok: true, cidade: rows[0].cidade || "", estado: rows[0].estado || "" });
+  } catch (e) {
+    res.status(500).json({ error: "Erro ao carregar cidade e estado." });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // CONTA DO CLIENTE: foto de perfil + exclusão de conta
 // ---------------------------------------------------------------------------
@@ -5704,6 +5741,21 @@ expirarAssinaturasUsuario();
 // Quando uma empresa publica uma vaga para uma cidade, todos os clientes
 // cadastrados naquela cidade recebem a notificação automaticamente.
 // ---------------------------------------------------------------------------
+// Garante colunas cidade/estado da CONTA do cliente (notificações de vagas
+// da cidade onde mora — independentes do currículo).
+async function garantirLocalizacaoUsuarios() {
+  try {
+    await pool.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cidade VARCHAR(120) NULL");
+    await pool.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado CHAR(2) NULL");
+    await pool.query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado VARCHAR(4) NULL");
+  } catch (e) {
+    // MySQL não suporta IF NOT EXISTS em ADD COLUMN antes do 8.0.29 — ignora
+    // duplicadas (o erro é inofensivo se as colunas já existem).
+    if (!/duplicate/i.test(e.message)) console.error("🚨 FALHA ao garantir cidade/estado:", e.message);
+  }
+}
+garantirLocalizacaoUsuarios();
+
 async function garantirNotificacoes() {
   try {
     await pool.query(`
@@ -5743,11 +5795,24 @@ setInterval(limparNotificacoes24h, 24 * 60 * 60 * 1000);
 async function notificarNovaVaga(vaga) {
   if (!vaga || !vaga.cidade || !vaga.estado) return;
   try {
-    const [clientes] = await pool.query(
+    // Clientes atingidos: cidade/estado da CONTA (usuarios) OU do CURRÍCULO
+    // (talentos) — quem cadastrou em qualquer um dos dois recebe:
+    const ufVaga = String(vaga.estado).toUpperCase();
+    const [daConta] = await pool.query(
+      `SELECT id FROM usuarios
+       WHERE cidade = ? AND UPPER(estado) = ?`,
+      [vaga.cidade, ufVaga]
+    );
+    const [doTalento] = await pool.query(
       `SELECT DISTINCT usuario_id AS id FROM talentos
        WHERE usuario_id IS NOT NULL AND cidade = ? AND UPPER(estado) = ?`,
-      [vaga.cidade, String(vaga.estado).toUpperCase()]
+      [vaga.cidade, ufVaga]
     );
+    // Dedupe por id (conta + talento = 1 notificação só):
+    const ids = Array.from(new Set(
+      daConta.map((r) => r.id).concat(doTalento.map((r) => r.id))
+    ));
+    const clientes = ids.map((id) => ({ id }));
     if (!clientes.length) return;
     const valores = clientes.map((c) => [
       c.id,
