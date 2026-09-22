@@ -54,49 +54,6 @@
     .hero.hero-solo .hero-visual { display: none; }
     .hero.hero-solo .ctas, .hero.hero-solo .hero-stats { justify-content: center; }
 
-    /* ============================================================
-       PACOTE DE EFEITOS DO HERO (tilt 3D + flutuação + sheen)
-       .hv-fx: wrapper que recebe o tilt 3D do mouse (JS) e a flutuação
-       suave em loop — a colagem fica viva sem brigar com as animações
-       internas (moldura gira, pessoa entra, mão lança).
-       ============================================================ */
-    .hv-fx {
-      position: absolute; inset: 0;
-      transform-style: preserve-3d;
-      will-change: transform;
-      transition: transform .18s ease-out;
-    }
-    /* Flutuação: sobe/desce alguns px em loop — a colagem "respira" */
-    .hv-fx-float {
-      animation: hv-flutua 6s ease-in-out 2.5s infinite;
-    }
-    @keyframes hv-flutua {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-9px); }
-    }
-    /* Sheen: brilho diagonal que atravessa a moldura de vez em quando
-       (reflexo de vidro). Fica DENTRO da moldura (recortado pelo overflow) */
-    .hv-moldura::after {
-      content: ""; position: absolute; z-index: 6; pointer-events: none;
-      top: -30%; left: -80%; width: 55%; height: 160%;
-      background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,.28) 45%, rgba(255,255,255,.42) 50%, rgba(255,255,255,.28) 55%, transparent 100%);
-      transform: skewX(-18deg);
-      animation: hv-sheen 7s ease-in-out 3.5s infinite;
-    }
-    @keyframes hv-sheen {
-      0%, 72% { left: -80%; opacity: 0; }
-      76% { opacity: 1; }
-      96% { left: 150%; opacity: 0; }
-      100% { left: 150%; opacity: 0; }
-    }
-    /* Glow pulsante sutil na sombra (respiração da camada de trás) */
-    .hv-sombra-forma { box-shadow: -18px 22px 60px -30px rgba(8,42,74,.55); }
-    .hv-sombra-forma { animation: hv-sombra-cresce .8s cubic-bezier(.22,1.2,.36,1) .25s forwards, hv-sombra-respira 6s ease-in-out 3s infinite; }
-    @keyframes hv-sombra-respira {
-      0%, 100% { filter: brightness(1); }
-      50% { filter: brightness(1.22); }
-    }
-
     /* ---- Coluna visual: COLAGEM (cores Office Express) ---- */
     /* Colagem alinhada ao bloco de texto: começa no topo do h1 e termina
        junto com os botões (align-self start + altura casada) */
@@ -328,9 +285,6 @@
 
     /* ---- Reduced motion: desliga todos os efeitos ---- */
     @media (prefers-reduced-motion: reduce) {
-      .hv-fx { transition: none !important; }
-      .hv-fx-float, .hv-moldura::after { animation: none !important; }
-      .hv-sombra-forma { animation: hv-sombra-cresce .8s cubic-bezier(.22,1.2,.36,1) .25s forwards !important; }
       .hv-part, .hero-content > *, .hero-visual { animation: none !important; }
       .hero::before { animation: none !important; }
       /* Colagem: estados finais diretos, sem animação */
@@ -437,7 +391,6 @@
            assenta com METADE FORA da forma (é irmão dela — não recortado) -->
       <!-- Camada sombra azul-escura: atrás da forma, PUXADA PARA A DIREITA
            (mesma geometria, deslocada) — cresce junto com a forma -->
-      <div class="hv-fx">
       <div class="hv-sombra-forma"></div>
       <!-- Moldura laranja (a forma visual) — overflow hidden: TUDO que
            entra/sai é recortado DENTRO da forma, nunca na página -->
@@ -457,7 +410,6 @@
         <img class="hv-curriculo" src="/imagens/hero-curriculo.png" alt="" loading="lazy" decoding="async"
              onerror="this.style.display='none'" />
       </div>
-      </div><!-- /.hv-fx -->
     </div>
   </section>
 
@@ -1445,63 +1397,6 @@
       if (window.ResizeObserver) {
         new ResizeObserver(sincronizar).observe(document.querySelector('.hv-moldura'));
       }
-    });
-  })();
-  </script>
-  <script>
-  /* ============================================================
-     PACOTE DE EFEITOS DO HERO — tilt 3D + flutuação
-     - Desktop (pointer fino): a colagem inclina seguindo o mouse,
-       com a sombra em contra-movimento (profundidade real).
-     - Sempre: flutuação suave em loop (a colagem "respira").
-     - prefers-reduced-motion: nada é aplicado.
-     ============================================================ */
-  (function () {
-    var fx = document.querySelector('.hv-fx');
-    if (!fx) return;
-    var sombra = fx.querySelector('.hv-sombra-forma');
-    var reduz = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var pointerFino = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-
-    // Flutuação: classe própria (animação CSS em loop) — só se movimento ok:
-    if (!reduz) fx.classList.add('hv-fx-float');
-
-    // Tilt 3D: só desktop com pointer fino e sem reduced-motion:
-    if (reduz || !pointerFino) return;
-    var hero = document.querySelector('.hero');
-    if (!hero) return;
-    var alvoX = 0, alvoY = 0, curX = 0, curY = 0, rafId = null;
-    var MAX = 5;            // graus máximos de inclinação
-    var SOMBRAC = 2.2;      // contra-movimento da sombra (px por grau)
-
-    function tick() {
-      // Interpolação suave (ease) em direção ao alvo:
-      curX += (alvoX - curX) * 0.10;
-      curY += (alvoY - curY) * 0.10;
-      fx.style.transform = 'perspective(1100px) rotateX(' + curY.toFixed(3) + 'deg) rotateY(' + curX.toFixed(3) + 'deg)';
-      if (sombra) {
-        // Sombra em contra-tempo: reforça a sensação de camada atrás
-        sombra.style.transform = 'translate(' + (-curX * SOMBRAC).toFixed(2) + 'px,' + (-curY * SOMBRAC).toFixed(2) + 'px)';
-      }
-      if (Math.abs(alvoX - curX) > 0.01 || Math.abs(alvoY - curY) > 0.01) {
-        rafId = requestAnimationFrame(tick);
-      } else {
-        rafId = null;
-      }
-    }
-    function agendaTick() { if (rafId === null) rafId = requestAnimationFrame(tick); }
-
-    hero.addEventListener('mousemove', function (e) {
-      var r = hero.getBoundingClientRect();
-      // -1..1 a partir do centro do hero:
-      var nx = ((e.clientX - r.left) / r.width) * 2 - 1;
-      var ny = ((e.clientY - r.top) / r.height) * 2 - 1;
-      alvoX = Math.max(-1, Math.min(1, nx)) * MAX;
-      alvoY = Math.max(-1, Math.min(1, ny)) * -MAX;
-      agendaTick();
-    });
-    hero.addEventListener('mouseleave', function () {
-      alvoX = 0; alvoY = 0; agendaTick();
     });
   })();
   </script>
