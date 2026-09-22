@@ -1364,6 +1364,10 @@
     var INSET_LATERAL = 0.0;   // 6% de folga de cada lado (dentro da moldura)
     var INSET_BASE = 0.0;       // encostada no chão da moldura
     var ALTURA_DA_PESSOA = 0.92; // 92% da altura da moldura
+    // BRAÇO DIREITO COLADO NA FORMA AZUL: desloca a pessoa para a DIREITA
+    // (% da largura da moldura) até o braço dela encostar na faixa visível
+    // da forma azul (que fica além da borda direita da moldura):
+    var BRACO_DIREITA = 0.03;
     function sincronizar() {
       var moldura = document.querySelector('.hv-moldura');
       var pessoa = document.querySelector('.hv-pessoa');
@@ -1377,7 +1381,8 @@
       var altura = mr.height * ALTURA_DA_PESSOA;
       // Posição (relativa ao hero-visual, que é o pai posicionado):
       var bottom = (mv.bottom - mr.bottom) + mr.height * INSET_BASE;
-      var pxLeft = ((mr.right - mv.left) - mr.width * INSET_LATERAL - largura);
+      var pxLeft = ((mr.right - mv.left) - mr.width * INSET_LATERAL - largura)
+                 + mr.width * BRACO_DIREITA; // desloca p/ direita: braço colado na forma azul
       pessoa.style.width = largura + 'px';
       pessoa.style.height = altura + 'px';
       pessoa.style.left = pxLeft + 'px';
